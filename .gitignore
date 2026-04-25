@@ -43,6 +43,7 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
+<<<<<<< HEAD
 # Variables de entorno
 .env
 .env.local
@@ -50,3 +51,5 @@ Thumbs.db
 
 # Credenciales base de datos
 config/database.js
+=======
+>>>>>>> main
