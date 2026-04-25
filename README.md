@@ -11,21 +11,12 @@ comerciales e industriales.
 
 ## Equipo de desarrollo
 
-<<<<<<< HEAD
 | Nombre                      | GitHub                  |
 |-----------------------------|-------------------------|
 | César Garcés González       | @usuario-cesar          |
 | Humberto Vargas Contreras   | @usuario-humberto       |
 | Jesé Arath Bonilla Chaparro | @usuario-jese           |
 | Omar Gerardo Panduro Casas  | @usuario-omar           |
-=======
-| Nombre                      | GitHub            |
-|-----------------------------|-------------------|
-| César Garcés González       | @Licxek           |
-| Humberto Vargas Contreras   | @usuario-humberto |
-| Jesé Arath Bonilla Chaparro | @usuario-jese     |
-| Omar Gerardo Panduro Casas  | @usuario-omar     |
->>>>>>> main
 
 ---
 
