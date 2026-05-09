@@ -2,28 +2,38 @@ services:
 
   frontend:
     build: ./frontend
+    container_name: vortiz_frontend
     ports:
       - "4200:4200"
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - /app/.angular
     depends_on:
       - backend
+    environment:
+      - NODE_ENV=development
 
   backend:
     build: ./backend
+    container_name: vortiz_backend
     ports:
       - "3000:3000"
     volumes:
       - ./backend:/app
       - /app/node_modules
+      - /app/dist
     env_file:
       - .env
     depends_on:
-      - database
+      database:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
 
   database:
     image: postgres:16-alpine
+    container_name: vortiz_database
     ports:
       - "5433:5432"
     environment:
@@ -33,6 +43,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
