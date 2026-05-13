@@ -18,7 +18,6 @@ export class FooterComponent implements OnInit {
     { label: 'Servicios', path: '/servicios' },
     { label: 'Proyectos', path: '/proyectos' },
     { label: 'Nosotros', path: '/nosotros' },
-    { label: 'Agendar Cita', path: '/citas' },
   ];
 
   constructor(private configuracionService: ConfiguracionService) {}

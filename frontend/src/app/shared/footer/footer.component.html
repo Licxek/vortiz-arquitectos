@@ -3,16 +3,16 @@
   <!-- Contenido principal -->
   <div class="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
-    <!-- Columna 1 - Logo y descripción -->
-    <div class="flex flex-col gap-4">
-      <img
-        [src]="configuracion?.logo_url || '/assets/img/logo_vortiz.png'"
-        alt="Vortiz Arquitectos"
-        class="h-12 w-auto object-contain"
-      />
-      <p class="text-sm text-gray-400 leading-relaxed">
-        Claridad en el proceso,resultados reales
-      </p>
+    <!-- Columna 1 - Logo y descripción centrado -->
+      <div class="flex flex-col items-center text-center gap-4 md:col-span-2 lg:col-span-1">
+        <img
+          [src]="configuracion?.logo_url || '/assets/img/logo_vortiz.png'"
+          alt="Vortiz Arquitectos"
+          class="h-28 w-auto object-contain"
+        />
+        <p class="text-sm text-gray-400 leading-relaxed">
+          Diseñamos espacios, construimos confianza. Firma especializada en diseño arquitectónico y gestión de proyectos.
+        </p>
       <!-- Redes sociales -->
       <div class="flex gap-4 mt-2">
         <a [href]="configuracion?.instagram" target="_blank" aria-label="Instagram"
