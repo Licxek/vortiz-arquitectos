@@ -1,6 +1,7 @@
 CREATE TABLE configuracion (
     id SERIAL PRIMARY KEY,
     logo_url VARCHAR(255),
+    logo_footer_url VARCHAR(255),
     telefono VARCHAR(20),
     correo_contacto VARCHAR(150),
     direccion TEXT,
@@ -12,9 +13,9 @@ CREATE TABLE configuracion (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insertar configuracion inicial
 INSERT INTO configuracion (
     logo_url,
+    logo_footer_url,
     telefono,
     correo_contacto,
     direccion,
@@ -24,7 +25,8 @@ INSERT INTO configuracion (
     whatsapp,
     horario
 ) VALUES (
-    '/assets/images/logo.png',
+    '/assets/img/logo.png',
+    '/assets/img/logo_vortiz.png',
     '+52 000-000-0000',
     'contacto@vortizarquitectos.com',
     'Milpillas 101, La Forestal, 34217 Durango, Dgo.',

@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ConfiguracionService, Configuracion } from '../../core/services/configuracion.service';
+import { RevealDirective } from '../../core/directives/reveal.directive';
 
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule,RevealDirective],
   templateUrl: './footer.component.html',
 })
 export class FooterComponent implements OnInit {

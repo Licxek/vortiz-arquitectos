@@ -1,11 +1,7 @@
-<app-navbar></app-navbar>
-
-<main class="min-h-screen bg-gray-100 flex items-center justify-center">
-  <h1 class="text-4xl font-bold text-gray-800">Contenido principal aquí</h1>
-</main>
-
-<app-footer></app-footer>
+<app-navbar *ngIf="!esRutaAdmin"></app-navbar>
 
 <router-outlet></router-outlet>
+
+<app-footer *ngIf="!esRutaAdmin"></app-footer>
 
 

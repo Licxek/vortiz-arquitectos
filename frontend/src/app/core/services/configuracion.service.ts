@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 export interface Configuracion {
   id: number;
   logo_url: string;
+  logo_footer_url: string;
   telefono: string;
   correo_contacto: string;
   direccion: string;
@@ -28,7 +29,8 @@ export class ConfiguracionService {
     return this.http.get<Configuracion>(this.apiUrl).pipe(
       catchError(() => of({
         id: 1,
-        logo_url: '/assets/images/logo.png',
+        logo_url: '/assets/img/logo.png',
+        logo_footer_url: '/assets/img/logo_vortiz.png',
         telefono: '+52 000-000-0000',
         correo_contacto: 'contacto@vortizarquitectos.com',
         direccion: 'Milpillas 101, La Forestal, 34217 Durango, Dgo.',

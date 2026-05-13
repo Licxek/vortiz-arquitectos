@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ConfiguracionService, Configuracion } from '../../core/services/configuracion.service';
@@ -15,13 +15,15 @@ interface NavItem {
   imports: [CommonModule, RouterModule],
   templateUrl: './navbar.component.html',
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit, OnDestroy {
   configuracion: Configuracion | null = null;
   paginasDinamicas: Pagina[] = [];
 
   menuAbierto = false;
   buscadorAbierto = false;
   masAbierto = false;
+  scrolled = false;
+  buscadorEscritorioAbierto = false;
 
   fixedLinks: NavItem[] = [
     { label: 'Inicio', path: '/' },
@@ -35,8 +37,31 @@ export class NavbarComponent implements OnInit {
 
   constructor(
     private configuracionService: ConfiguracionService,
-    private paginasService: PaginasService
+    private paginasService: PaginasService,
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef
   ) {}
+
+  private scrollHandler = () => {
+  const y = window.scrollY;
+  let newScrolled = this.scrolled;
+
+  // Para activar necesita pasar de 100px
+  if (!this.scrolled && y > 100) {
+    newScrolled = true;
+  }
+  // Para desactivar necesita bajar de 30px
+  else if (this.scrolled && y < 30) {
+    newScrolled = false;
+  }
+
+  if (newScrolled !== this.scrolled) {
+    this.ngZone.run(() => {
+      this.scrolled = newScrolled;
+      this.cdr.markForCheck();
+    });
+  }
+};
 
   ngOnInit() {
     this.configuracionService.getConfiguracion().subscribe({
@@ -48,6 +73,14 @@ export class NavbarComponent implements OnInit {
       next: (data) => this.paginasDinamicas = data,
       error: () => this.paginasDinamicas = []
     });
+
+    this.ngZone.runOutsideAngular(() => {
+      window.addEventListener('scroll', this.scrollHandler, { passive: true });
+    });
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('scroll', this.scrollHandler);
   }
 
   get inlineDynamic(): Pagina[] {
@@ -82,6 +115,9 @@ export class NavbarComponent implements OnInit {
     if (!target.closest('.mas-dropdown')) {
       this.masAbierto = false;
     }
+    if (!target.closest('.buscador-escritorio')) {
+      this.buscadorEscritorioAbierto = false;
+    }
   }
 
   @HostListener('document:keydown.escape')
@@ -89,5 +125,11 @@ export class NavbarComponent implements OnInit {
     this.menuAbierto = false;
     this.buscadorAbierto = false;
     this.masAbierto = false;
+    this.buscadorEscritorioAbierto = false;
+  }
+
+  toggleBuscadorEscritorio(event: Event) {
+    event.stopPropagation();
+    this.buscadorEscritorioAbierto = !this.buscadorEscritorioAbierto;
   }
 }

@@ -1,12 +1,12 @@
 <footer class="bg-[#0a1628] text-gray-300">
 
   <!-- Contenido principal -->
-  <div class="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+  <div class="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
 
     <!-- Columna 1 - Logo y descripción centrado -->
-      <div class="flex flex-col items-center text-center gap-4 md:col-span-2 lg:col-span-1">
+      <div [appReveal]="0" class="flex flex-col items-center text-center gap-4 md:col-span-2 lg:col-span-1">
         <img
-          [src]="configuracion?.logo_url || '/assets/img/logo_vortiz.png'"
+          [src]="configuracion?.logo_footer_url || '/assets/img/logo_vortiz.png'"
           alt="Vortiz Arquitectos"
           class="h-28 w-auto object-contain"
         />
@@ -43,7 +43,7 @@
     </div>
 
     <!-- Columna 2 - Navegación -->
-    <div>
+    <div [appReveal]="150">
       <h3 class="text-white font-semibold text-sm uppercase tracking-wider mb-4">Navegación</h3>
       <ul class="flex flex-col gap-2">
         <li *ngFor="let link of navLinks">
@@ -56,7 +56,7 @@
     </div>
 
     <!-- Columna 3 - Contacto -->
-    <div>
+    <div [appReveal]="300">
       <h3 class="text-white font-semibold text-sm uppercase tracking-wider mb-4">Contacto</h3>
       <ul class="flex flex-col gap-3 text-sm">
         <li class="flex items-start gap-2">
@@ -88,7 +88,7 @@
     </div>
 
     <!-- Columna 4 - Mapa -->
-    <div>
+    <div [appReveal]="450">
       <h3 class="text-white font-semibold text-sm uppercase tracking-wider mb-4">Ubicación</h3>
       <div class="rounded-lg overflow-hidden border border-gray-700">
         <iframe
@@ -114,5 +114,4 @@
       <span>Diseñado por el equipo de desarrollo Ou shiet · ITD</span>
     </div>
   </div>
-
 </footer>
