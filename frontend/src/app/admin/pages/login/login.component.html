@@ -1,0 +1,106 @@
+<div class="min-h-screen flex flex-col bg-white">
+
+  <!-- Header con gradiente y logo -->
+  <header class="bg-gradient-to-b from-black via-[#071020] to-[#0a1f3d] px-6 py-10">
+    <div class="max-w-3xl mx-auto flex items-center justify-center gap-5">
+      <img [src]="configuracion?.logo_url || '/assets/img/logo.png'" alt="Vortiz" class="h-20 w-auto" />
+      <div class="text-white">
+        <h1 class="text-3xl md:text-4xl font-bold">Vortiz Arquitectos</h1>
+        <p class="text-sm md:text-base text-gray-400 mt-1">Diseñamos espacios, construimos confianza.</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Cuerpo del login -->
+  <main class="flex-1 flex flex-col items-center px-4 py-12 md:py-16">
+
+    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-center">
+      Bienvenido de nuevo
+    </h2>
+
+    <!-- Card del formulario -->
+    <form (ngSubmit)="iniciarSesion()"
+      class="w-full max-w-md bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(10,31,61,0.25)] border border-gray-100 p-6 md:p-8 space-y-5 ring-1 ring-gray-100">
+
+      <!-- Correo -->
+      <div class="relative">
+        <svg class="w-5 h-5 text-[#0a1f3d] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        <input type="email"
+              [(ngModel)]="correo"
+              name="correo"
+              placeholder="Dirección de correo electrónico"
+              class="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-500 outline-none focus:border-[#0a1f3d] focus:ring-2 focus:ring-[#0a1f3d]/10 transition-all"
+              required />
+      </div>
+
+      <!-- Contraseña -->
+      <div>
+        <div class="relative">
+          <svg class="w-5 h-5 text-[#0a1f3d] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+              fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          <input [type]="mostrarPassword ? 'text' : 'password'"
+                [(ngModel)]="password"
+                name="password"
+                placeholder="Contraseña"
+                class="w-full pl-12 pr-12 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-500 outline-none focus:border-[#0a1f3d] focus:ring-2 focus:ring-[#0a1f3d]/10 transition-all"
+                required />
+          <button type="button" (click)="togglePassword()"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 p-1">
+            <svg *ngIf="!mostrarPassword" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+            <svg *ngIf="mostrarPassword" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+            </svg>
+          </button>
+        </div>
+        <a routerLink="/admin/recuperar"
+          class="inline-block mt-2 text-xs text-[#0a1f3d] hover:text-blue-700 hover:underline transition-colors">
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
+
+      <!-- Mensaje de error -->
+      <div *ngIf="errorMensaje"
+          class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 animate-[fadeIn_0.3s_ease-out]">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span>{{errorMensaje}}</span>
+      </div>
+
+      <!-- Botón -->
+      <button type="submit"
+              [disabled]="cargando"
+              class="w-full py-3.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white font-semibold text-base rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+        <svg *ngIf="cargando" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle>
+          <path fill="currentColor" class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        {{cargando ? 'Iniciando sesión...' : 'Iniciar Sesión'}}
+      </button>
+
+    </form>
+
+  </main>
+
+  <!-- Footer con gradiente igual al header -->
+<footer class="bg-gradient-to-b from-[#0a1f3d] via-[#071020] to-black px-6 py-6 border-t border-white/5">
+  <div class="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <img [src]="configuracion?.logo_url || '/assets/img/logo.png'" alt="Vortiz" class="h-12 w-auto" />
+      <span class="text-white font-semibold text-sm">Vortiz Arquitectos</span>
+    </div>
+    <p class="text-xs text-gray-400">
+      © 2026 · Panel de Administración
+    </p>
+  </div>
+</footer>
+
+</div>
