@@ -1,0 +1,26 @@
+.active-menu-item {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.active-menu-item span:last-child:not(.absolute) {
+  color: white;
+}
+
+/* Animación del texto del sidebar */
+.nav-text {
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 200px;
+  opacity: 1;
+  transition:
+    max-width 0.3s ease 0s,
+    opacity 0.2s ease 0.15s;
+}
+
+.sidebar-collapsed .nav-text {
+  max-width: 0;
+  opacity: 0;
+  transition:
+    max-width 0.3s ease 0s,
+    opacity 0.1s ease 0s;
+}

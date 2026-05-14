@@ -3,8 +3,7 @@ import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
 
-  // ============ RUTAS DEL ADMIN (más específicas primero) ============
-
+  // Login y recuperación (sin layout)
   {
     path: 'admin/login',
     loadComponent: () =>
@@ -26,27 +25,21 @@ export const routes: Routes = [
       import('./admin/pages/nueva-password/nueva-password.component').then(m => m.NuevaPasswordComponent)
   },
 
-  // Dashboard del admin (protegido)
+  // Panel admin (todas las rutas hijas usan el layout)
   {
     path: 'admin',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./admin/pages/login/login.component').then(m => m.LoginComponent)
-    // Cuando hagamos el dashboard real, cambiar esta línea
+      import('./admin/layout/layout.component').then(m => m.AdminLayoutComponent),
+    children: [
+      { path: '', redirectTo: 'inicio', pathMatch: 'full' },
+      // Estas se irán agregando conforme creemos cada pestaña
+      // { path: 'inicio', loadComponent: ... },
+      // { path: 'paginas', loadComponent: ... },
+    ]
   },
 
-  // ============ RUTAS PÚBLICAS ============
-
-  // Home (cuando hagamos el componente)
-  // {
-  //   path: '',
-  //   loadComponent: () =>
-  //     import('./public/pages/home/home.component').then(m => m.HomeComponent)
-  // },
-
-  // ============ RUTA WILDCARD AL FINAL ============
-
-  // Si no coincide ninguna, regresa al inicio
+  // Wildcard
   {
     path: '**',
     redirectTo: ''
