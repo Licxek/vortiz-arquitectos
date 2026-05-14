@@ -1,0 +1,102 @@
+<div class="min-h-screen flex flex-col bg-white">
+
+  <!-- Header -->
+  <header class="bg-gradient-to-b from-black via-[#071020] to-[#0a1f3d] px-6 py-10">
+    <div class="max-w-3xl mx-auto flex items-center justify-center gap-5">
+      <img [src]="configuracion?.logo_url || '/assets/img/logo.png'" alt="Vortiz" class="h-20 w-auto" />
+      <div class="text-white">
+        <h1 class="text-3xl md:text-4xl font-bold">Vortiz Arquitectos</h1>
+        <p class="text-sm md:text-base text-gray-400 mt-1">Diseñamos espacios, construimos confianza.</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Cuerpo -->
+  <main class="flex-1 flex flex-col items-center px-4 py-12 md:py-16">
+
+    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center">
+      Verifica tu identidad
+    </h2>
+    <p class="text-gray-500 text-sm md:text-base text-center mb-2 max-w-md">
+      Ingresa el código de 6 dígitos que enviamos a
+    </p>
+    <p class="text-[#0a1f3d] font-semibold text-sm mb-10 break-all">{{correo}}</p>
+
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(10,31,61,0.25)] border border-gray-100 p-6 md:p-8 space-y-6 ring-1 ring-gray-100">
+
+      <!-- Inputs del código -->
+      <div class="flex justify-center gap-2 md:gap-3" (paste)="onPaste($event)">
+        <input *ngFor="let digito of digitos; let i = index"
+               #digitInput
+               type="text"
+               inputmode="numeric"
+               maxlength="1"
+               [(ngModel)]="digitos[i]"
+               [name]="'digit' + i"
+               (input)="onInput(i, $event)"
+               (keydown)="onKeyDown(i, $event)"
+               class="w-11 h-14 md:w-12 md:h-16 text-center text-xl md:text-2xl font-bold bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 outline-none focus:border-[#0a1f3d] focus:ring-2 focus:ring-[#0a1f3d]/10 focus:bg-white transition-all" />
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="errorMensaje"
+           class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span>{{errorMensaje}}</span>
+      </div>
+
+      <!-- Botón verificar -->
+      <button (click)="verificar()"
+              [disabled]="cargando"
+              class="w-full py-3.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white font-semibold text-base rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+        <svg *ngIf="cargando" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle>
+          <path fill="currentColor" class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        {{cargando ? 'Verificando...' : 'Verificar código'}}
+      </button>
+
+      <!-- Reenviar código -->
+      <div class="text-center text-sm">
+        <span class="text-gray-500">¿No recibiste el código?</span>
+        <button (click)="reenviarCodigo()"
+                [disabled]="tiempoRestante > 0"
+                class="ml-1 font-semibold transition-colors"
+                [class.text-gray-400]="tiempoRestante > 0"
+                [class.text-[#0a1f3d]]="tiempoRestante === 0"
+                [class.hover:text-blue-700]="tiempoRestante === 0"
+                [class.hover:underline]="tiempoRestante === 0"
+                [class.cursor-not-allowed]="tiempoRestante > 0">
+          <span *ngIf="tiempoRestante > 0">Reenviar en {{tiempoRestante}}s</span>
+          <span *ngIf="tiempoRestante === 0">Reenviar código</span>
+        </button>
+      </div>
+
+      <button type="button" (click)="volver()"
+              class="w-full flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-[#0a1f3d] transition-colors py-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Cambiar correo electrónico
+      </button>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gradient-to-b from-[#0a1f3d] via-[#071020] to-black px-6 py-6 border-t border-white/5">
+    <div class="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <img [src]="configuracion?.logo_url || '/assets/img/logo.png'" alt="Vortiz" class="h-12 w-auto" />
+        <span class="text-white font-semibold text-sm">Vortiz Arquitectos</span>
+      </div>
+      <p class="text-xs text-gray-400">
+        © 2026 · Panel de Administración
+      </p>
+    </div>
+  </footer>
+
+</div>
