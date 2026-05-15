@@ -1,0 +1,690 @@
+<div class="space-y-6">
+
+  <!-- Encabezado -->
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Citas</h1>
+      <p class="text-sm text-gray-500 mt-1">Gestiona las citas con tus clientes</p>
+    </div>
+    <button class="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nueva Cita
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-gray-900">{{ citasHoy }}</p>
+          <p class="text-xs text-gray-500">Citas hoy</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+          <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-gray-900">{{ citasSemana }}</p>
+          <p class="text-xs text-gray-500">Esta semana</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+          <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-gray-900">{{ citasPendientes }}</p>
+          <p class="text-xs text-gray-500">Pendientes</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-gray-900">{{ citasConfirmadas }}</p>
+          <p class="text-xs text-gray-500">Confirmadas</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controles: Vista + Buscador + Filtros -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+    <div class="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+
+      <!-- Toggle de vista -->
+      <div class="flex bg-gray-100 rounded-lg p-1 self-start">
+        <button (click)="vista = 'lista'"
+                class="flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all"
+                [class.bg-white]="vista === 'lista'"
+                [class.shadow-sm]="vista === 'lista'"
+                [class.text-gray-900]="vista === 'lista'"
+                [class.text-gray-500]="vista !== 'lista'">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+          Lista
+        </button>
+        <button (click)="vista = 'calendario'"
+                class="flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all"
+                [class.bg-white]="vista === 'calendario'"
+                [class.shadow-sm]="vista === 'calendario'"
+                [class.text-gray-900]="vista === 'calendario'"
+                [class.text-gray-500]="vista !== 'calendario'">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          Calendario
+        </button>
+      </div>
+
+      <!-- Buscador y filtros -->
+      <div class="flex flex-col sm:flex-row gap-2">
+        <div class="relative">
+          <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+          </svg>
+          <input type="text"
+                [(ngModel)]="busqueda"
+                placeholder="Buscar cliente o servicio..."
+                class="w-full sm:w-64 pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+        </div>
+
+        <div class="relative" (click)="$event.stopPropagation()">
+  <button (click)="toggleFiltroEstado($event)"
+          class="w-full sm:w-52 flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all">
+    <span class="w-2 h-2 rounded-full shrink-0"
+          [class.bg-gray-400]="filtroEstadoActual?.color === 'gray'"
+          [class.bg-green-500]="filtroEstadoActual?.color === 'green'"
+          [class.bg-orange-500]="filtroEstadoActual?.color === 'orange'"
+          [class.bg-red-500]="filtroEstadoActual?.color === 'red'"></span>
+    <span class="flex-1 text-left">{{ filtroEstadoActual?.label }}</span>
+    <svg class="w-4 h-4 text-gray-500 transition-transform" [class.rotate-180]="filtroEstadoAbierto"
+         fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+
+  <div *ngIf="filtroEstadoAbierto"
+        class="absolute right-0 top-full mt-1 w-full sm:w-52 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-[fadeIn_0.15s_ease-out]">
+      <button *ngFor="let opcion of opcionesEstado"
+              (click)="seleccionarFiltro(opcion.value)"
+              class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 transition-colors"
+              [class.bg-blue-50]="filtroEstado === opcion.value"
+              [class.text-blue-700]="filtroEstado === opcion.value"
+              [class.font-semibold]="filtroEstado === opcion.value"
+              [class.text-gray-700]="filtroEstado !== opcion.value">
+        <span class="w-2 h-2 rounded-full"
+              [class.bg-gray-400]="opcion.color === 'gray'"
+              [class.bg-green-500]="opcion.color === 'green'"
+              [class.bg-orange-500]="opcion.color === 'orange'"
+              [class.bg-red-500]="opcion.color === 'red'"></span>
+        <span class="flex-1">{{ opcion.label }}</span>
+        <svg *ngIf="filtroEstado === opcion.value" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISTA LISTA -->
+  <div *ngIf="vista === 'lista'" class="space-y-5">
+    <div *ngFor="let grupo of citasAgrupadas">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3 capitalize">{{ grupo.titulo }}</h2>
+      <div class="space-y-2">
+        <div *ngFor="let cita of grupo.citas"
+          (click)="abrirDetalle(cita)"
+          class="relative bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 cursor-pointer flex items-stretch">
+
+        <!-- Barra lateral de color por estado -->
+        <div class="w-1.5 shrink-0 rounded-l-xl"
+            [class.bg-green-500]="cita.estado === 'confirmada'"
+            [class.bg-orange-500]="cita.estado === 'pendiente'"
+            [class.bg-red-500]="cita.estado === 'cancelada'"></div>
+
+          <!-- Contenido principal -->
+          <div class="flex-1 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+
+            <!-- Hora -->
+            <div class="flex flex-col items-center justify-center w-16 h-16 rounded-xl shrink-0"
+                [class.bg-green-50]="cita.estado === 'confirmada'"
+                [class.bg-orange-50]="cita.estado === 'pendiente'"
+                [class.bg-red-50]="cita.estado === 'cancelada'">
+              <span class="text-lg font-bold"
+                    [class.text-green-700]="cita.estado === 'confirmada'"
+                    [class.text-orange-700]="cita.estado === 'pendiente'"
+                    [class.text-red-700]="cita.estado === 'cancelada'">
+                {{ cita.hora }}
+              </span>
+              <span class="text-[10px] text-gray-500 uppercase font-medium">{{ cita.duracion }}min</span>
+            </div>
+
+            <!-- Info principal -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="font-semibold text-gray-900 truncate">{{ cita.cliente }}</h3>
+                <span class="text-xs px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider"
+                      [class.bg-blue-50]="cita.tipo === 'consulta'"
+                      [class.text-blue-700]="cita.tipo === 'consulta'"
+                      [class.bg-purple-50]="cita.tipo === 'proyecto'"
+                      [class.text-purple-700]="cita.tipo === 'proyecto'">
+                  {{ cita.tipo === 'consulta' ? 'Consulta' : 'Proyecto' }}
+                </span>
+              </div>
+              <p class="text-sm text-gray-500 mt-0.5 truncate">{{ cita.servicio }}</p>
+            </div>
+
+            <!-- Estado -->
+            <span class="text-xs font-semibold px-3 py-1 rounded-full self-start sm:self-center"
+                  [class.bg-green-50]="cita.estado === 'confirmada'"
+                  [class.text-green-700]="cita.estado === 'confirmada'"
+                  [class.bg-orange-50]="cita.estado === 'pendiente'"
+                  [class.text-orange-700]="cita.estado === 'pendiente'"
+                  [class.bg-red-50]="cita.estado === 'cancelada'"
+                  [class.text-red-700]="cita.estado === 'cancelada'">
+              {{ cita.estado | titlecase }}
+            </span>
+
+            <!-- Menu acciones -->
+            <div class="relative">
+              <button (click)="toggleMenu($event, cita.id)"
+                      class="w-9 h-9 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors">
+                <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                  <circle cx="5" cy="12" r="2"/>
+                  <circle cx="12" cy="12" r="2"/>
+                  <circle cx="19" cy="12" r="2"/>
+                </svg>
+              </button>
+              <div *ngIf="menuAbiertoId === cita.id"
+                  (click)="$event.stopPropagation()"
+                  class="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-20">
+                <button (click)="abrirDetalle(cita); menuAbiertoId = null"
+                        class="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  Ver detalles
+                </button>
+                <button *ngIf="cita.estado !== 'confirmada'"
+                        (click)="confirmarCita(cita)"
+                        class="w-full px-4 py-2.5 text-left text-sm text-green-700 hover:bg-green-50 flex items-center gap-2 border-t border-gray-100">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  Confirmar
+                </button>
+                <button *ngIf="cita.estado !== 'cancelada'"
+                        (click)="cancelarCita(cita)"
+                        class="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                  Cancelar cita
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vacío -->
+    <div *ngIf="citasAgrupadas.length === 0" class="text-center py-12 bg-white rounded-2xl border border-gray-100">
+      <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <h3 class="text-base font-semibold text-gray-900">No hay citas</h3>
+      <p class="text-sm text-gray-500 mt-1">Intenta cambiar los filtros o agrega una nueva cita</p>
+    </div>
+  </div>
+
+  <!-- VISTA CALENDARIO -->
+  <div *ngIf="vista === 'calendario'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+
+    <!-- Toolbar del calendario -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+
+      <!-- Título + selector rápido + navegación -->
+      <div class="flex items-center gap-2">
+        <div class="relative" (click)="$event.stopPropagation()">
+          <button (click)="toggleSelectorMes($event)"
+                  class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors">
+            <h2 class="text-lg md:text-xl font-bold text-gray-900">{{ tituloEncabezado }}</h2>
+            <svg class="w-4 h-4 text-gray-500 transition-transform" [class.rotate-180]="selectorMesAbierto"
+                fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          <!-- Selector rápido de mes/año -->
+          <div *ngIf="selectorMesAbierto"
+              class="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 p-4 w-72 animate-[fadeIn_0.15s_ease-out]">
+            <!-- Selector de año -->
+            <div class="flex items-center justify-between mb-3">
+              <button (click)="cambiarAnio(-1)"
+                      class="w-8 h-8 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+              <span class="font-bold text-lg text-gray-900">{{ anioSeleccionado  }}</span>
+              <button (click)="cambiarAnio(1)"
+                      class="w-8 h-8 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Grid de meses -->
+            <div class="grid grid-cols-3 gap-1">
+              <button *ngFor="let mes of meses; let i = index"
+                      (click)="seleccionarMes(i)"
+                      class="px-2 py-2 text-sm rounded-lg transition-colors text-center"
+                      [class.bg-[#0a4d7a]]="i === mesActual.getMonth() && anioSeleccionado  === mesActual.getFullYear()"
+                      [class.text-white]="i === mesActual.getMonth() && anioSeleccionado  === mesActual.getFullYear()"
+                      [class.font-semibold]="i === mesActual.getMonth() && anioSeleccionado  === mesActual.getFullYear()"
+                      [class.hover:bg-gray-100]="!(i === mesActual.getMonth() && anioSeleccionado  === mesActual.getFullYear())"
+                      [class.text-gray-700]="!(i === mesActual.getMonth() && anioSeleccionado  === mesActual.getFullYear())">
+                {{ mes.slice(0, 3) }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button (click)="irHoy()"
+                class="hidden md:inline-block px-3 py-1.5 text-xs font-semibold text-[#0a4d7a] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+          Hoy
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Toggle Mes/Semana/Día -->
+        <div class="flex bg-gray-100 rounded-lg p-1">
+          <button (click)="modoCalendario = 'mes'"
+                  class="px-3 py-1.5 text-xs font-medium rounded-md transition-all"
+                  [class.bg-white]="modoCalendario === 'mes'"
+                  [class.shadow-sm]="modoCalendario === 'mes'"
+                  [class.text-gray-900]="modoCalendario === 'mes'"
+                  [class.text-gray-500]="modoCalendario !== 'mes'">Mes</button>
+          <button (click)="modoCalendario = 'semana'"
+                  class="px-3 py-1.5 text-xs font-medium rounded-md transition-all"
+                  [class.bg-white]="modoCalendario === 'semana'"
+                  [class.shadow-sm]="modoCalendario === 'semana'"
+                  [class.text-gray-900]="modoCalendario === 'semana'"
+                  [class.text-gray-500]="modoCalendario !== 'semana'">Semana</button>
+          <button (click)="modoCalendario = 'dia'"
+                  class="px-3 py-1.5 text-xs font-medium rounded-md transition-all"
+                  [class.bg-white]="modoCalendario === 'dia'"
+                  [class.shadow-sm]="modoCalendario === 'dia'"
+                  [class.text-gray-900]="modoCalendario === 'dia'"
+                  [class.text-gray-500]="modoCalendario !== 'dia'">Día</button>
+        </div>
+
+        <!-- Navegación -->
+        <button (click)="navegarAnterior()"
+                class="w-9 h-9 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors">
+          <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <button (click)="navegarSiguiente()"
+                class="w-9 h-9 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors">
+          <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- VISTA MES -->
+    <div *ngIf="modoCalendario === 'mes'">
+      <div class="grid grid-cols-7 mb-2">
+        <div *ngFor="let dia of diasSemana"
+            class="text-center text-xs font-bold uppercase tracking-wider text-gray-500 py-2">
+          {{ dia }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-7 gap-1 md:gap-2">
+        <div *ngFor="let dia of diasMes"
+            (click)="abrirDia(dia)"
+            class="aspect-square md:aspect-auto md:min-h-[100px] p-1 md:p-2 rounded-lg border transition-all cursor-pointer hover:shadow-sm"
+            [class.bg-white]="dia.esMesActual && !dia.esHoy"
+            [class.bg-gray-50]="!dia.esMesActual"
+            [class.bg-blue-50]="dia.esHoy"
+            [class.border-blue-300]="dia.esHoy"
+            [class.border-gray-100]="!dia.esHoy"
+            [class.hover:border-gray-300]="!dia.esHoy">
+
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs md:text-sm font-semibold"
+                  [class.text-gray-900]="dia.esMesActual && !dia.esHoy"
+                  [class.text-gray-400]="!dia.esMesActual"
+                  [class.text-blue-700]="dia.esHoy">
+              {{ dia.diaMes }}
+            </span>
+            <span *ngIf="dia.citas.length > 0"
+                  class="text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 bg-[#0a4d7a] text-white rounded-full">
+              {{ dia.citas.length }}
+            </span>
+          </div>
+
+          <div class="space-y-0.5 overflow-hidden">
+            <div *ngFor="let cita of dia.citas.slice(0, 2)"
+                class="text-[9px] md:text-[10px] truncate px-1 md:px-1.5 py-0.5 rounded font-medium hidden md:block"
+                [class.bg-green-100]="cita.estado === 'confirmada'"
+                [class.text-green-700]="cita.estado === 'confirmada'"
+                [class.bg-orange-100]="cita.estado === 'pendiente'"
+                [class.text-orange-700]="cita.estado === 'pendiente'"
+                [class.bg-red-100]="cita.estado === 'cancelada'"
+                [class.text-red-700]="cita.estado === 'cancelada'">
+              {{ cita.hora }} {{ cita.cliente.split(' ')[0] }}
+            </div>
+            <div *ngIf="dia.citas.length > 2" class="text-[10px] text-gray-500 px-1.5 hidden md:block">
+              +{{ dia.citas.length - 2 }} más
+            </div>
+            <div *ngIf="dia.citas.length > 0" class="md:hidden flex justify-center gap-0.5 mt-1">
+              <span *ngFor="let _ of [].constructor(dia.citas.length > 3 ? 3 : dia.citas.length)"
+                    class="w-1 h-1 bg-[#0a4d7a] rounded-full"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISTA SEMANA -->
+    <div *ngIf="modoCalendario === 'semana'" class="overflow-x-auto">
+      <div class="min-w-[700px]">
+        <!-- Encabezado con días -->
+        <div class="grid grid-cols-[60px_repeat(7,1fr)] border-b border-gray-200">
+          <div></div>
+          <div *ngFor="let dia of diasSemanaActual"
+              class="text-center py-3 border-l border-gray-100"
+              [class.bg-blue-50]="dia.esHoy">
+            <p class="text-xs uppercase font-semibold"
+              [class.text-blue-700]="dia.esHoy"
+              [class.text-gray-500]="!dia.esHoy">
+              {{ diasSemana[dia.fecha.getDay()] }}
+            </p>
+            <p class="text-2xl font-bold mt-1"
+              [class.text-blue-700]="dia.esHoy"
+              [class.text-gray-900]="!dia.esHoy">
+              {{ dia.diaMes }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Grid de horas -->
+        <div class="grid grid-cols-[60px_repeat(7,1fr)] relative">
+          <!-- Columna de horas -->
+          <div>
+            <div *ngFor="let hora of horasDia" class="h-[60px] text-xs text-gray-500 text-right pr-2 pt-1 border-b border-gray-100">
+              {{ hora }}
+            </div>
+          </div>
+
+          <!-- Columnas de días -->
+          <div *ngFor="let dia of diasSemanaActual" class="relative border-l border-gray-100"
+              [class.bg-blue-50/30]="dia.esHoy">
+            <div *ngFor="let _ of horasDia" class="h-[60px] border-b border-gray-100 hover:bg-gray-50/50 transition-colors"></div>
+
+            <!-- Citas posicionadas -->
+            <div *ngFor="let cita of dia.citas"
+                (click)="abrirDetalle(cita)"
+                class="absolute left-1 right-1 rounded-lg p-1.5 cursor-pointer hover:shadow-md transition-all overflow-hidden border-l-4"
+                [style.top.px]="calcularTop(cita.hora)"
+                [style.height.px]="calcularAltura(cita.duracion)"
+                [class.bg-green-50]="cita.estado === 'confirmada'"
+                [class.border-green-500]="cita.estado === 'confirmada'"
+                [class.bg-orange-50]="cita.estado === 'pendiente'"
+                [class.border-orange-500]="cita.estado === 'pendiente'"
+                [class.bg-red-50]="cita.estado === 'cancelada'"
+                [class.border-red-500]="cita.estado === 'cancelada'">
+              <p class="text-[10px] font-bold truncate"
+                [class.text-green-700]="cita.estado === 'confirmada'"
+                [class.text-orange-700]="cita.estado === 'pendiente'"
+                [class.text-red-700]="cita.estado === 'cancelada'">
+                {{ cita.hora }} - {{ cita.cliente.split(' ')[0] }}
+              </p>
+              <p class="text-[9px] text-gray-600 truncate" *ngIf="cita.duracion >= 60">{{ cita.servicio }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISTA DÍA -->
+    <!-- VISTA DÍA -->
+  <div *ngIf="modoCalendario === 'dia'">
+    <div class="bg-gradient-to-r rounded-xl p-4 mb-4"
+        [class.from-blue-50]="diaActual.esHoy"
+        [class.to-blue-100]="diaActual.esHoy"
+        [class.from-gray-50]="!diaActual.esHoy"
+        [class.to-gray-100]="!diaActual.esHoy">
+      <p class="text-xs uppercase tracking-wider font-semibold"
+        [class.text-blue-700]="diaActual.esHoy"
+        [class.text-gray-500]="!diaActual.esHoy">
+        {{ diaActual.esHoy ? 'Hoy' : 'Día' }}
+      </p>
+      <p class="text-sm text-gray-600 mt-1">
+        {{ diaActual.citas.length }} {{ diaActual.citas.length === 1 ? 'cita programada' : 'citas programadas' }}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-[80px_1fr]">
+      <!-- Columna de horas -->
+      <div>
+        <div *ngFor="let hora of horasDia" class="h-[80px] relative border-b border-gray-100">
+          <span class="text-sm text-gray-500 text-right pr-3 pt-1 block">{{ hora }}</span>
+          <span class="absolute right-3 top-[42px] text-[10px] text-gray-300">{{ hora.split(':')[0] }}:30</span>
+        </div>
+      </div>
+
+      <!-- Columna de eventos con posicionamiento absoluto -->
+      <div class="relative border-l border-gray-100">
+        <!-- Grid de fondo con horas y media hora -->
+        <div *ngFor="let hora of horasDia"
+            class="h-[80px] border-b border-gray-100 hover:bg-gray-50/40 transition-colors relative">
+          <!-- Línea de media hora -->
+          <div class="absolute left-0 right-0 top-[40px] border-t border-dashed border-gray-100"></div>
+        </div>
+
+        <!-- Citas posicionadas absolutamente sobre el grid -->
+        <div *ngFor="let cita of diaActual.citas"
+            (click)="abrirDetalle(cita)"
+            class="absolute left-2 right-2 rounded-lg p-3 cursor-pointer hover:shadow-md transition-all border-l-4 z-10"
+            [style.top.px]="calcularTopDia(cita.hora)"
+            [style.height.px]="calcularAlturaDia(cita.duracion)"
+            [class.bg-green-50]="cita.estado === 'confirmada'"
+            [class.border-green-500]="cita.estado === 'confirmada'"
+            [class.bg-orange-50]="cita.estado === 'pendiente'"
+            [class.border-orange-500]="cita.estado === 'pendiente'"
+            [class.bg-red-50]="cita.estado === 'cancelada'"
+            [class.border-red-500]="cita.estado === 'cancelada'">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-semibold text-sm truncate"
+              [class.text-green-700]="cita.estado === 'confirmada'"
+              [class.text-orange-700]="cita.estado === 'pendiente'"
+              [class.text-red-700]="cita.estado === 'cancelada'">
+              {{ cita.cliente }}
+            </p>
+            <span class="text-xs font-semibold text-gray-600 shrink-0">{{ cita.hora }} · {{ cita.duracion }}min</span>
+          </div>
+          <p class="text-xs text-gray-600 mt-0.5 truncate" *ngIf="cita.duracion >= 45">{{ cita.servicio }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="diaActual.citas.length === 0" class="text-center py-12">
+      <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <p class="text-sm text-gray-500">No hay citas programadas para este día</p>
+    </div>
+  </div>
+
+  </div>
+
+  <!-- Modal de detalle de cita -->
+  <div *ngIf="citaSeleccionada"
+      (click)="cerrarDetalle()"
+      class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+    <div (click)="$event.stopPropagation()"
+        class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+
+      <!-- Header del modal -->
+      <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative">
+        <button (click)="cerrarDetalle()"
+                class="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+
+        <span class="text-xs font-semibold px-2 py-1 rounded-full inline-block mb-3"
+              [class.bg-green-500]="citaSeleccionada.estado === 'confirmada'"
+              [class.bg-orange-500]="citaSeleccionada.estado === 'pendiente'"
+              [class.bg-red-500]="citaSeleccionada.estado === 'cancelada'">
+          {{ citaSeleccionada.estado | titlecase }}
+        </span>
+        <h2 class="text-2xl font-bold">{{ citaSeleccionada.cliente }}</h2>
+        <p class="text-sm text-gray-300 mt-1">{{ citaSeleccionada.servicio }}</p>
+      </div>
+
+      <!-- Cuerpo del modal -->
+      <div class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Fecha</p>
+            <p class="text-sm font-medium text-gray-900">{{ citaSeleccionada.fecha | date: 'EEEE d MMM' }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Hora</p>
+            <p class="text-sm font-medium text-gray-900">{{ citaSeleccionada.hora }} ({{ citaSeleccionada.duracion }} min)</p>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Tipo</p>
+            <p class="text-sm font-medium text-gray-900">{{ citaSeleccionada.tipo | titlecase }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Teléfono</p>
+            <p class="text-sm font-medium text-gray-900">{{ citaSeleccionada.telefono || 'No disponible' }}</p>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Correo</p>
+          <p class="text-sm font-medium text-gray-900 break-all">{{ citaSeleccionada.correo || 'No disponible' }}</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
+          <button *ngIf="citaSeleccionada.estado !== 'confirmada'"
+                  (click)="confirmarCita(citaSeleccionada); cerrarDetalle()"
+                  class="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium shadow-md transition-all">
+            Confirmar
+          </button>
+          <button *ngIf="citaSeleccionada.estado !== 'cancelada'"
+                  (click)="cancelarCita(citaSeleccionada); cerrarDetalle()"
+                  class="flex-1 px-4 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-all">
+            Cancelar cita
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal con todas las citas del día (vista mes) -->
+  <div *ngIf="diaSeleccionado"
+      (click)="cerrarDia()"
+      class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+    <div (click)="$event.stopPropagation()"
+        class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto">
+
+      <!-- Header del modal -->
+      <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative">
+        <button (click)="cerrarDia()"
+                class="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+
+        <p class="text-xs text-gray-300 uppercase tracking-wider mb-1">{{ diaSeleccionado.fecha | date: 'EEEE' }}</p>
+        <h2 class="text-2xl font-bold">{{ diaSeleccionado.fecha | date: 'd \'de\' MMMM' }}</h2>
+        <p class="text-sm text-gray-300 mt-1">
+          {{ diaSeleccionado.citas.length }} {{ diaSeleccionado.citas.length === 1 ? 'cita' : 'citas' }} programadas
+        </p>
+      </div>
+
+      <!-- Lista de citas del día -->
+      <div class="p-4 space-y-2">
+        <div *ngFor="let cita of diaSeleccionado.citas"
+            (click)="cerrarDia(); abrirDetalle(cita)"
+            class="bg-gray-50 hover:bg-white border border-gray-100 hover:border-gray-300 hover:shadow-md rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-all">
+
+          <!-- Hora -->
+          <div class="flex flex-col items-center justify-center w-14 h-14 rounded-xl shrink-0"
+              [class.bg-green-100]="cita.estado === 'confirmada'"
+              [class.bg-orange-100]="cita.estado === 'pendiente'"
+              [class.bg-red-100]="cita.estado === 'cancelada'">
+            <span class="text-sm font-bold"
+                  [class.text-green-700]="cita.estado === 'confirmada'"
+                  [class.text-orange-700]="cita.estado === 'pendiente'"
+                  [class.text-red-700]="cita.estado === 'cancelada'">
+              {{ cita.hora }}
+            </span>
+          </div>
+
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-gray-900 truncate">{{ cita.cliente }}</p>
+            <p class="text-xs text-gray-500 truncate mt-0.5">{{ cita.servicio }}</p>
+          </div>
+
+          <!-- Badge tipo -->
+          <span class="text-xs px-2 py-1 rounded-full font-semibold shrink-0"
+                [class.bg-blue-50]="cita.tipo === 'consulta'"
+                [class.text-blue-700]="cita.tipo === 'consulta'"
+                [class.bg-purple-50]="cita.tipo === 'proyecto'"
+                [class.text-purple-700]="cita.tipo === 'proyecto'">
+            {{ cita.tipo === 'consulta' ? 'Consulta' : 'Proyecto' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

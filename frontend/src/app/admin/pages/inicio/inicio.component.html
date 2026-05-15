@@ -1,0 +1,916 @@
+<div class="space-y-8">
+
+  <!-- Encabezado con filtro temporal -->
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p class="text-sm text-gray-500 mt-1 capitalize">{{ fechaHoy }}</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nuevo proyecto
+        </button>
+        <button class="flex items-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          Agendar cita
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtro temporal -->
+    <div class="flex flex-wrap gap-2 bg-white rounded-xl shadow-sm border border-gray-100 p-1.5 self-start">
+      <button (click)="cambiarPeriodo('hoy')"
+              class="px-4 py-1.5 text-sm font-medium rounded-lg transition-all"
+              [class.bg-[#0a4d7a]]="periodoActivo === 'hoy'"
+              [class.text-white]="periodoActivo === 'hoy'"
+              [class.shadow-md]="periodoActivo === 'hoy'"
+              [class.text-gray-600]="periodoActivo !== 'hoy'"
+              [class.hover:bg-gray-50]="periodoActivo !== 'hoy'">
+        Hoy
+      </button>
+      <button (click)="cambiarPeriodo('semana')"
+              class="px-4 py-1.5 text-sm font-medium rounded-lg transition-all"
+              [class.bg-[#0a4d7a]]="periodoActivo === 'semana'"
+              [class.text-white]="periodoActivo === 'semana'"
+              [class.shadow-md]="periodoActivo === 'semana'"
+              [class.text-gray-600]="periodoActivo !== 'semana'"
+              [class.hover:bg-gray-50]="periodoActivo !== 'semana'">
+        Esta semana
+      </button>
+      <button (click)="cambiarPeriodo('mes')"
+              class="px-4 py-1.5 text-sm font-medium rounded-lg transition-all"
+              [class.bg-[#0a4d7a]]="periodoActivo === 'mes'"
+              [class.text-white]="periodoActivo === 'mes'"
+              [class.shadow-md]="periodoActivo === 'mes'"
+              [class.text-gray-600]="periodoActivo !== 'mes'"
+              [class.hover:bg-gray-50]="periodoActivo !== 'mes'">
+        Este mes
+      </button>
+      <button (click)="cambiarPeriodo('año')"
+              class="px-4 py-1.5 text-sm font-medium rounded-lg transition-all"
+              [class.bg-[#0a4d7a]]="periodoActivo === 'año'"
+              [class.text-white]="periodoActivo === 'año'"
+              [class.shadow-md]="periodoActivo === 'año'"
+              [class.text-gray-600]="periodoActivo !== 'año'"
+              [class.hover:bg-gray-50]="periodoActivo !== 'año'">
+        Este año
+      </button>
+    </div>
+  </div>
+
+  <!-- Stat Cards con comparativas -->
+  <div>
+    <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Resumen</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div *ngFor="let stat of stats"
+           class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
+        <div class="flex items-start justify-between mb-4">
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center"
+               [class.bg-blue-100]="stat.color === 'blue'"
+               [class.bg-orange-100]="stat.color === 'orange'"
+               [class.bg-green-100]="stat.color === 'green'"
+               [class.bg-purple-100]="stat.color === 'purple'">
+            <ng-container [ngSwitch]="stat.icon">
+              <svg *ngSwitchCase="'projects'" class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+              </svg>
+              <svg *ngSwitchCase="'calendar'" class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <svg *ngSwitchCase="'chat'" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+              <svg *ngSwitchCase="'eye'" class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </ng-container>
+          </div>
+
+          <!-- Comparativa con flecha -->
+          <div *ngIf="stat.cambioTipo !== 'neutral'"
+               class="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
+               [class.bg-green-50]="stat.cambioTipo === 'positive'"
+               [class.text-green-700]="stat.cambioTipo === 'positive'"
+               [class.bg-red-50]="stat.cambioTipo === 'negative'"
+               [class.text-red-700]="stat.cambioTipo === 'negative'">
+            <svg *ngIf="stat.cambioTipo === 'positive'" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+            </svg>
+            <svg *ngIf="stat.cambioTipo === 'negative'" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+            {{ stat.cambioValor > 0 ? '+' : '' }}{{ stat.cambioValor }}%
+          </div>
+          <span *ngIf="stat.cambioTipo === 'neutral'"
+                class="text-xs font-semibold px-2 py-1 rounded-full bg-orange-50 text-orange-700">
+            {{ stat.cambioValor }} {{ stat.cambioEtiqueta }}
+          </span>
+        </div>
+        <p class="text-3xl font-bold text-gray-900">{{ stat.value | number }}</p>
+        <p class="text-sm text-gray-500 mt-1">{{ stat.label }}</p>
+        <p *ngIf="stat.cambioTipo !== 'neutral'" class="text-xs text-gray-400 mt-1">{{ stat.cambioEtiqueta }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visión General (las gráficas tal como estaban) -->
+  <div>
+    <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Visión General</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-sm font-semibold text-gray-900">Proyectos por Mes</h3>
+            <p class="text-xs text-gray-500">Últimos 6 meses</p>
+          </div>
+          <button (click)="abrirGrafica('proyectos-mes')"
+            class="text-xs text-[#0a4d7a] hover:underline">Ver detalle</button>
+        </div>
+        <div class="flex items-end justify-between gap-2 h-32 px-2">
+          <div class="flex flex-col items-center flex-1 gap-2">
+            <div class="w-full bg-blue-100 rounded-t-lg" style="height: 40%"></div>
+            <span class="text-xs text-gray-500">Dic</span>
+          </div>
+          <div class="flex flex-col items-center flex-1 gap-2">
+            <div class="w-full bg-blue-200 rounded-t-lg" style="height: 60%"></div>
+            <span class="text-xs text-gray-500">Ene</span>
+          </div>
+          <div class="flex flex-col items-center flex-1 gap-2">
+            <div class="w-full bg-blue-300 rounded-t-lg" style="height: 50%"></div>
+            <span class="text-xs text-gray-500">Feb</span>
+          </div>
+          <div class="flex flex-col items-center flex-1 gap-2">
+            <div class="w-full bg-blue-400 rounded-t-lg" style="height: 75%"></div>
+            <span class="text-xs text-gray-500">Mar</span>
+          </div>
+          <div class="flex flex-col items-center flex-1 gap-2">
+            <div class="w-full bg-blue-500 rounded-t-lg" style="height: 85%"></div>
+            <span class="text-xs text-gray-500">Abr</span>
+          </div>
+          <div class="flex flex-col items-center flex-1 gap-2">
+            <div class="w-full bg-[#0a4d7a] rounded-t-lg" style="height: 100%"></div>
+            <span class="text-xs text-gray-900 font-semibold">May</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-sm font-semibold text-gray-900">Tipos de Proyectos</h3>
+            <p class="text-xs text-gray-500">Distribución actual</p>
+          </div>
+          <button (click)="abrirGrafica('tipos-proyectos')"
+            class="text-xs text-[#0a4d7a] hover:underline">Ver detalle</button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="font-medium text-gray-700">Residencial</span>
+              <span class="text-gray-500">45%</span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-blue-500 rounded-full" style="width: 45%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="font-medium text-gray-700">Comercial</span>
+              <span class="text-gray-500">30%</span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-orange-500 rounded-full" style="width: 30%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="font-medium text-gray-700">Industrial</span>
+              <span class="text-gray-500">15%</span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-green-500 rounded-full" style="width: 15%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="font-medium text-gray-700">Remodelación</span>
+              <span class="text-gray-500">10%</span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-purple-500 rounded-full" style="width: 10%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-sm font-semibold text-gray-900">Actividad de Citas</h3>
+            <p class="text-xs text-gray-500">Últimos 7 días</p>
+          </div>
+          <button (click)="abrirGrafica('actividad-citas')"
+            class="text-xs text-[#0a4d7a] hover:underline">Ver detalle</button>
+        </div>
+        <svg viewBox="0 0 300 120" class="w-full">
+          <defs>
+            <linearGradient id="gradLine" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0a4d7a" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#0a4d7a" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <polygon points="0,80 50,60 100,70 150,40 200,55 250,30 300,45 300,120 0,120" fill="url(#gradLine)"/>
+          <polyline points="0,80 50,60 100,70 150,40 200,55 250,30 300,45"
+                    fill="none" stroke="#0a4d7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="0" cy="80" r="4" fill="#0a4d7a"/>
+          <circle cx="50" cy="60" r="4" fill="#0a4d7a"/>
+          <circle cx="100" cy="70" r="4" fill="#0a4d7a"/>
+          <circle cx="150" cy="40" r="4" fill="#0a4d7a"/>
+          <circle cx="200" cy="55" r="4" fill="#0a4d7a"/>
+          <circle cx="250" cy="30" r="4" fill="#0a4d7a"/>
+          <circle cx="300" cy="45" r="4" fill="#0a4d7a"/>
+        </svg>
+        <div class="flex justify-between text-xs text-gray-500 mt-2">
+          <span>Lun</span>
+          <span>Mar</span>
+          <span>Mié</span>
+          <span>Jue</span>
+          <span>Vie</span>
+          <span>Sáb</span>
+          <span>Dom</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-sm font-semibold text-gray-900">Clientes Nuevos</h3>
+            <p class="text-xs text-gray-500">Crecimiento mensual</p>
+          </div>
+          <button (click)="abrirGrafica('clientes-nuevos')"
+            class="text-xs text-[#0a4d7a] hover:underline">Ver detalle</button>
+        </div>
+        <div class="flex items-end justify-between gap-2 h-32 px-2">
+          <div class="flex flex-col items-center flex-1 gap-2">
+            <div class="w-full bg-green-100 rounded-t-lg" style="height: 30%"></div>
+            <span class="text-xs text-gray-500">Ene</span>
+          </div>
+          <div class="flex flex-col items-center flex-1 gap-2">
+            <div class="w-full bg-green-200 rounded-t-lg" style="height: 50%"></div>
+            <span class="text-xs text-gray-500">Feb</span>
+          </div>
+          <div class="flex flex-col items-center flex-1 gap-2">
+            <div class="w-full bg-green-300 rounded-t-lg" style="height: 45%"></div>
+            <span class="text-xs text-gray-500">Mar</span>
+          </div>
+          <div class="flex flex-col items-center flex-1 gap-2">
+            <div class="w-full bg-green-400 rounded-t-lg" style="height: 70%"></div>
+            <span class="text-xs text-gray-500">Abr</span>
+          </div>
+          <div class="flex flex-col items-center flex-1 gap-2">
+            <div class="w-full bg-green-600 rounded-t-lg" style="height: 95%"></div>
+            <span class="text-xs text-gray-900 font-semibold">May</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DOS COLUMNAS: Proyectos Recientes + Actividad -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+    <!-- Proyectos Recientes (2 columnas) -->
+    <div class="lg:col-span-2">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Proyectos Recientes</h2>
+        <a (click)="abrirTodosProyectos()" class="text-xs text-[#0a4d7a] hover:underline font-medium cursor-pointer">Ver todos</a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div *ngFor="let proyecto of proyectosRecientes"
+            (click)="abrirProyecto(proyecto)"
+          class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden group">
+          <div class="aspect-video bg-gray-100 overflow-hidden">
+            <img [src]="proyecto.imagen" [alt]="proyecto.nombre"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="p-4">
+            <h3 class="text-sm font-semibold text-gray-900 truncate">{{ proyecto.nombre }}</h3>
+            <div class="flex items-center justify-between mt-2">
+              <span class="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">{{ proyecto.estado }}</span>
+              <span class="text-xs text-gray-500">{{ proyecto.fecha }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Centro de Actividad -->
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-2">
+          Actividad reciente
+          <span *ngIf="notificacionesNoLeidas > 0"
+                class="text-[10px] font-bold px-2 py-0.5 bg-red-500 text-white rounded-full">
+            {{ notificacionesNoLeidas }}
+          </span>
+        </h2>
+        <button (click)="marcarTodasLeidas()"
+                class="text-xs text-[#0a4d7a] hover:underline font-medium cursor-pointer">
+          Marcar leídas
+        </button>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="divide-y divide-gray-100 max-h-[420px] overflow-y-auto">
+          <div *ngFor="let notif of notificaciones"
+              class="p-3 hover:bg-gray-50 transition-colors cursor-pointer flex gap-3"
+              [class.bg-blue-50/30]="!notif.leida">
+
+            <!-- Punto indicador -->
+            <div class="w-2 h-2 rounded-full mt-2 shrink-0"
+                [class.bg-blue-500]="!notif.leida"
+                [class.bg-transparent]="notif.leida"></div>
+
+            <!-- Icono por tipo -->
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                [class.bg-blue-100]="notif.tipo === 'cita'"
+                [class.bg-green-100]="notif.tipo === 'consulta' || notif.tipo === 'confirmacion'"
+                [class.bg-red-100]="notif.tipo === 'cancelacion'"
+                [class.bg-orange-100]="notif.tipo === 'mensaje'">
+              <ng-container [ngSwitch]="notif.tipo">
+                <svg *ngSwitchCase="'cita'" class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <svg *ngSwitchCase="'consulta'" class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+                <svg *ngSwitchCase="'confirmacion'" class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <svg *ngSwitchCase="'cancelacion'" class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                <svg *ngSwitchCase="'mensaje'" class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-5l-5 5v-5H5a2 2 0 01-2-2V5z"/>
+                </svg>
+              </ng-container>
+            </div>
+
+            <!-- Contenido -->
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-gray-900 truncate" [class.font-bold]="!notif.leida">{{ notif.titulo }}</p>
+              <p class="text-xs text-gray-500 line-clamp-2 mt-0.5">{{ notif.descripcion }}</p>
+              <p class="text-[11px] text-gray-400 mt-1">{{ notif.tiempo }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- DOS COLUMNAS: Consultas Pendientes + Agenda -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+    <!-- Consultas pendientes -->
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-2">
+          Consultas pendientes
+          <span *ngIf="totalConsultasPendientes > 0"
+                class="text-[10px] font-bold px-2 py-0.5 bg-orange-500 text-white rounded-full">
+            {{ totalConsultasPendientes }}
+          </span>
+        </h2>
+        <a (click)="abrirTodasConsultas()" class="text-xs text-[#0a4d7a] hover:underline font-medium cursor-pointer">Ver todas</a>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="divide-y divide-gray-100">
+          <div *ngFor="let consulta of consultasPendientes"
+              class="p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <div class="flex items-center gap-2">
+                <p class="text-sm font-semibold text-gray-900">{{ consulta.nombre }}</p>
+                <span *ngIf="consulta.urgente"
+                      class="text-[10px] font-bold px-2 py-0.5 bg-red-50 text-red-700 rounded-full">
+                  Urgente
+                </span>
+              </div>
+              <span class="text-[11px] text-gray-400 shrink-0">{{ consulta.fecha }}</span>
+            </div>
+            <p class="text-xs font-medium text-gray-700 mb-1">{{ consulta.asunto }}</p>
+            <p class="text-xs text-gray-500 line-clamp-2">{{ consulta.mensaje }}</p>
+            <div class="flex items-center gap-2 mt-3">
+              <button (click)="responderConsulta(consulta)"
+                      class="text-xs px-3 py-1.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg font-medium transition-colors">
+                Responder
+              </button>
+              <button (click)="abrirConsulta(consulta)"
+                      class="text-xs px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg font-medium transition-colors">
+                Ver completo
+              </button>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="consultasPendientes.length === 0" class="p-8 text-center">
+          <p class="text-sm text-gray-500">No hay consultas pendientes</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agenda del día -->
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Agenda del día</h2>
+        <a class="text-xs text-[#0a4d7a] hover:underline font-medium cursor-pointer">Ver calendario</a>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="divide-y divide-gray-100">
+          <div *ngFor="let cita of citasHoy"
+              class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+            <div class="flex flex-col items-center justify-center w-14 h-14 rounded-xl shrink-0"
+                [class.bg-blue-50]="cita.estado === 'confirmada'"
+                [class.bg-orange-50]="cita.estado === 'pendiente'">
+              <span class="text-sm font-bold"
+                    [class.text-blue-700]="cita.estado === 'confirmada'"
+                    [class.text-orange-700]="cita.estado === 'pendiente'">
+                {{ cita.hora }}
+              </span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-gray-900 truncate">{{ cita.cliente }}</p>
+              <p class="text-xs text-gray-500">{{ cita.tipo }}</p>
+            </div>
+            <span class="text-xs font-semibold px-3 py-1 rounded-full"
+                  [class.bg-green-50]="cita.estado === 'confirmada'"
+                  [class.text-green-700]="cita.estado === 'confirmada'"
+                  [class.bg-orange-50]="cita.estado === 'pendiente'"
+                  [class.text-orange-700]="cita.estado === 'pendiente'">
+              {{ cita.estado | titlecase }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Accesos Rápidos -->
+  <div>
+    <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Accesos Rápidos</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <button class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left">
+        <div class="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+        <p class="text-sm font-semibold text-gray-900">Nuevo Proyecto</p>
+        <p class="text-xs text-gray-500 mt-0.5">Crear desde cero</p>
+      </button>
+
+      <button class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left">
+        <div class="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center mb-3">
+          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+          </svg>
+        </div>
+        <p class="text-sm font-semibold text-gray-900">Nuevo Cliente</p>
+        <p class="text-xs text-gray-500 mt-0.5">Agregar al sistema</p>
+      </button>
+
+      <button class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left">
+        <div class="w-11 h-11 bg-orange-100 rounded-xl flex items-center justify-center mb-3">
+          <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <p class="text-sm font-semibold text-gray-900">Agendar Cita</p>
+        <p class="text-xs text-gray-500 mt-0.5">Reservar horario</p>
+      </button>
+
+      <button class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left">
+        <div class="w-11 h-11 bg-purple-100 rounded-xl flex items-center justify-center mb-3">
+          <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+        </div>
+        <p class="text-sm font-semibold text-gray-900">Nueva Página</p>
+        <p class="text-xs text-gray-500 mt-0.5">Agregar al sitio</p>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: Detalle de proyecto ============ -->
+<div *ngIf="proyectoSeleccionado"
+     (click)="cerrarProyecto()"
+     class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div (click)="$event.stopPropagation()"
+       class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="relative aspect-video bg-gray-100 overflow-hidden">
+      <img [src]="proyectoSeleccionado.imagen" class="w-full h-full object-cover" />
+      <button (click)="cerrarProyecto()"
+              class="absolute top-4 right-4 w-9 h-9 bg-white/90 hover:bg-white rounded-lg flex items-center justify-center shadow-md">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <span class="absolute top-4 left-4 px-3 py-1 bg-white/90 rounded-full text-xs font-semibold text-gray-800">
+        {{ proyectoSeleccionado.estado }}
+      </span>
+    </div>
+    <div class="p-6 space-y-5">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">{{ proyectoSeleccionado.nombre }}</h2>
+        <p class="text-sm text-gray-500 mt-1">{{ proyectoSeleccionado.descripcion }}</p>
+      </div>
+
+      <div *ngIf="proyectoSeleccionado.progreso !== undefined">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-gray-500">Progreso</span>
+          <span class="text-sm font-bold text-[#0a4d7a]">{{ proyectoSeleccionado.progreso }}%</span>
+        </div>
+        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-blue-400 to-[#0a4d7a] rounded-full" [style.width.%]="proyectoSeleccionado.progreso"></div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Cliente</p>
+          <p class="text-sm font-medium text-gray-900">{{ proyectoSeleccionado.cliente }}</p>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Ubicación</p>
+          <p class="text-sm font-medium text-gray-900">{{ proyectoSeleccionado.ubicacion }}</p>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Superficie</p>
+          <p class="text-sm font-medium text-gray-900">{{ proyectoSeleccionado.superficie }}</p>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Fecha de entrega</p>
+          <p class="text-sm font-medium text-gray-900">{{ proyectoSeleccionado.fechaEntrega }}</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
+        <button class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all">
+          Editar proyecto
+        </button>
+        <button (click)="cerrarProyecto()"
+                class="flex-1 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: Todos los proyectos ============ -->
+<div *ngIf="mostrarTodosProyectos"
+     (click)="cerrarTodosProyectos()"
+     class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div (click)="$event.stopPropagation()"
+       class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative">
+      <button (click)="cerrarTodosProyectos()"
+              class="absolute top-4 right-4 w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <h2 class="text-2xl font-bold">Todos los Proyectos</h2>
+      <p class="text-sm text-gray-300 mt-1">{{ todosLosProyectos.length }} proyectos en total</p>
+    </div>
+    <div class="p-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div *ngFor="let proyecto of todosLosProyectos"
+             (click)="cerrarTodosProyectos(); abrirProyecto(proyecto)"
+             class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden group">
+          <div class="aspect-video bg-gray-100 overflow-hidden">
+            <img [src]="proyecto.imagen" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="p-4">
+            <h3 class="text-sm font-semibold text-gray-900 truncate">{{ proyecto.nombre }}</h3>
+            <div class="flex items-center justify-between mt-2">
+              <span class="text-xs px-2 py-1 rounded-full font-medium"
+                    [class.bg-blue-50]="proyecto.estado === 'En proceso'"
+                    [class.text-blue-700]="proyecto.estado === 'En proceso'"
+                    [class.bg-orange-50]="proyecto.estado === 'En diseño' || proyecto.estado === 'En revisión'"
+                    [class.text-orange-700]="proyecto.estado === 'En diseño' || proyecto.estado === 'En revisión'"
+                    [class.bg-green-50]="proyecto.estado === 'Finalizado'"
+                    [class.text-green-700]="proyecto.estado === 'Finalizado'"
+                    [class.bg-gray-100]="proyecto.estado === 'Pausado'"
+                    [class.text-gray-700]="proyecto.estado === 'Pausado'">
+                {{ proyecto.estado }}
+              </span>
+              <span class="text-xs text-gray-500">{{ proyecto.fecha }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: Detalle de consulta ============ -->
+<div *ngIf="consultaSeleccionada && !mostrarRespuesta"
+     (click)="cerrarConsulta()"
+     class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div (click)="$event.stopPropagation()"
+       class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative">
+      <button (click)="cerrarConsulta()"
+              class="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <div class="flex items-center gap-2 mb-2">
+        <span *ngIf="consultaSeleccionada.urgente" class="text-[10px] font-bold px-2 py-1 bg-red-500 rounded-full">URGENTE</span>
+        <span class="text-xs text-gray-300">{{ consultaSeleccionada.fecha }}</span>
+      </div>
+      <h2 class="text-2xl font-bold">{{ consultaSeleccionada.nombre }}</h2>
+      <p class="text-sm text-gray-300 mt-1">{{ consultaSeleccionada.correo }}</p>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Asunto</p>
+        <p class="text-base font-semibold text-gray-900">{{ consultaSeleccionada.asunto }}</p>
+      </div>
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Mensaje</p>
+        <p class="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl p-4">{{ consultaSeleccionada.mensaje }}</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
+        <button (click)="responderConsulta(consultaSeleccionada)"
+                class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all">
+          Responder
+        </button>
+        <button (click)="cerrarConsulta()"
+                class="flex-1 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: Responder consulta ============ -->
+<div *ngIf="mostrarRespuesta && consultaSeleccionada"
+     (click)="cerrarRespuesta()"
+     class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div (click)="$event.stopPropagation()"
+       class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative">
+      <button (click)="cerrarRespuesta()"
+              class="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <h2 class="text-xl font-bold">Responder a {{ consultaSeleccionada.nombre }}</h2>
+      <p class="text-sm text-gray-300 mt-1">{{ consultaSeleccionada.correo }}</p>
+    </div>
+    <div class="p-6 space-y-4">
+      <div class="bg-gray-50 rounded-xl p-3">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Asunto</p>
+        <p class="text-sm font-medium text-gray-900">Re: {{ consultaSeleccionada.asunto }}</p>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Tu respuesta</label>
+        <textarea [(ngModel)]="respuestaTexto"
+                  rows="6"
+                  placeholder="Escribe aquí tu respuesta..."
+                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"></textarea>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
+        <button (click)="enviarRespuesta()"
+                [disabled]="!respuestaTexto.trim()"
+                class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+          Enviar respuesta
+        </button>
+        <button (click)="cerrarRespuesta()"
+                class="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: Todas las consultas ============ -->
+<div *ngIf="mostrarTodasConsultas"
+     (click)="cerrarTodasConsultas()"
+     class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div (click)="$event.stopPropagation()"
+       class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative">
+      <button (click)="cerrarTodasConsultas()"
+              class="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <h2 class="text-2xl font-bold">Todas las consultas</h2>
+      <p class="text-sm text-gray-300 mt-1">{{ consultasPendientes.length }} pendientes de respuesta</p>
+    </div>
+    <div class="divide-y divide-gray-100">
+      <div *ngFor="let consulta of consultasPendientes"
+           class="p-4 hover:bg-gray-50 transition-colors">
+        <div class="flex items-start justify-between gap-2 mb-1">
+          <div class="flex items-center gap-2">
+            <p class="text-sm font-semibold text-gray-900">{{ consulta.nombre }}</p>
+            <span *ngIf="consulta.urgente" class="text-[10px] font-bold px-2 py-0.5 bg-red-50 text-red-700 rounded-full">Urgente</span>
+          </div>
+          <span class="text-xs text-gray-400">{{ consulta.fecha }}</span>
+        </div>
+        <p class="text-xs font-medium text-gray-700 mb-1">{{ consulta.asunto }}</p>
+        <p class="text-xs text-gray-500 line-clamp-2">{{ consulta.mensaje }}</p>
+        <div class="flex items-center gap-2 mt-3">
+          <button (click)="cerrarTodasConsultas(); responderConsulta(consulta)"
+                  class="text-xs px-3 py-1.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg font-medium transition-colors">
+            Responder
+          </button>
+          <button (click)="cerrarTodasConsultas(); abrirConsulta(consulta)"
+                  class="text-xs px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg font-medium transition-colors">
+            Ver completo
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: Detalle de gráfica ============ -->
+<div *ngIf="graficaSeleccionada"
+     (click)="cerrarGrafica()"
+     class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div (click)="$event.stopPropagation()"
+       class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative">
+      <button (click)="cerrarGrafica()"
+              class="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <h2 class="text-2xl font-bold">
+        <ng-container [ngSwitch]="graficaSeleccionada">
+          <span *ngSwitchCase="'proyectos-mes'">Proyectos por Mes</span>
+          <span *ngSwitchCase="'tipos-proyectos'">Tipos de Proyectos</span>
+          <span *ngSwitchCase="'actividad-citas'">Actividad de Citas</span>
+          <span *ngSwitchCase="'clientes-nuevos'">Clientes Nuevos</span>
+        </ng-container>
+      </h2>
+      <p class="text-sm text-gray-300 mt-1">Análisis detallado</p>
+    </div>
+    <div class="p-6 space-y-5">
+
+      <!-- Proyectos por Mes -->
+      <ng-container *ngIf="graficaSeleccionada === 'proyectos-mes'">
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-blue-50 rounded-xl p-4">
+            <p class="text-xs text-blue-700 font-semibold uppercase">Total año</p>
+            <p class="text-2xl font-bold text-blue-900 mt-1">42</p>
+          </div>
+          <div class="bg-green-50 rounded-xl p-4">
+            <p class="text-xs text-green-700 font-semibold uppercase">Promedio</p>
+            <p class="text-2xl font-bold text-green-900 mt-1">7/mes</p>
+          </div>
+          <div class="bg-orange-50 rounded-xl p-4">
+            <p class="text-xs text-orange-700 font-semibold uppercase">Mejor mes</p>
+            <p class="text-2xl font-bold text-orange-900 mt-1">Mayo</p>
+          </div>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <table class="w-full text-sm">
+            <thead><tr class="text-xs text-gray-500 uppercase tracking-wider"><th class="text-left py-2">Mes</th><th class="text-right">Proyectos</th><th class="text-right">vs Anterior</th></tr></thead>
+            <tbody class="divide-y divide-gray-200">
+              <tr><td class="py-2">Diciembre</td><td class="text-right">4</td><td class="text-right text-gray-500">-</td></tr>
+              <tr><td class="py-2">Enero</td><td class="text-right">6</td><td class="text-right text-green-600">+50%</td></tr>
+              <tr><td class="py-2">Febrero</td><td class="text-right">5</td><td class="text-right text-red-600">-17%</td></tr>
+              <tr><td class="py-2">Marzo</td><td class="text-right">7</td><td class="text-right text-green-600">+40%</td></tr>
+              <tr><td class="py-2">Abril</td><td class="text-right">8</td><td class="text-right text-green-600">+14%</td></tr>
+              <tr class="font-bold"><td class="py-2">Mayo</td><td class="text-right">10</td><td class="text-right text-green-600">+25%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+
+      <!-- Tipos de Proyectos -->
+      <ng-container *ngIf="graficaSeleccionada === 'tipos-proyectos'">
+        <div class="space-y-3">
+          <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+              <div><p class="text-sm font-semibold text-gray-900">Residencial</p><p class="text-xs text-gray-500">19 proyectos</p></div>
+            </div>
+            <p class="text-2xl font-bold text-blue-700">45%</p>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 rounded-full bg-orange-500"></div>
+              <div><p class="text-sm font-semibold text-gray-900">Comercial</p><p class="text-xs text-gray-500">13 proyectos</p></div>
+            </div>
+            <p class="text-2xl font-bold text-orange-700">30%</p>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 rounded-full bg-green-500"></div>
+              <div><p class="text-sm font-semibold text-gray-900">Industrial</p><p class="text-xs text-gray-500">6 proyectos</p></div>
+            </div>
+            <p class="text-2xl font-bold text-green-700">15%</p>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 rounded-full bg-purple-500"></div>
+              <div><p class="text-sm font-semibold text-gray-900">Remodelación</p><p class="text-xs text-gray-500">4 proyectos</p></div>
+            </div>
+            <p class="text-2xl font-bold text-purple-700">10%</p>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Actividad de Citas -->
+      <ng-container *ngIf="graficaSeleccionada === 'actividad-citas'">
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-blue-50 rounded-xl p-4">
+            <p class="text-xs text-blue-700 font-semibold uppercase">Total semana</p>
+            <p class="text-2xl font-bold text-blue-900 mt-1">38</p>
+          </div>
+          <div class="bg-green-50 rounded-xl p-4">
+            <p class="text-xs text-green-700 font-semibold uppercase">Confirmadas</p>
+            <p class="text-2xl font-bold text-green-900 mt-1">32</p>
+          </div>
+          <div class="bg-red-50 rounded-xl p-4">
+            <p class="text-xs text-red-700 font-semibold uppercase">Canceladas</p>
+            <p class="text-2xl font-bold text-red-900 mt-1">6</p>
+          </div>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <p class="text-sm font-semibold text-gray-900 mb-3">Citas por día</p>
+          <div class="space-y-2">
+            <div *ngFor="let dia of [{nombre:'Lunes', valor:5},{nombre:'Martes', valor:7},{nombre:'Miércoles', valor:6},{nombre:'Jueves', valor:8},{nombre:'Viernes', valor:9},{nombre:'Sábado', valor:3},{nombre:'Domingo', valor:0}]" class="flex items-center gap-3">
+              <span class="text-xs text-gray-600 w-20">{{ dia.nombre }}</span>
+              <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-[#0a4d7a] rounded-full" [style.width.%]="(dia.valor * 100) / 10"></div>
+              </div>
+              <span class="text-sm font-bold text-gray-900 w-8 text-right">{{ dia.valor }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Clientes Nuevos -->
+      <ng-container *ngIf="graficaSeleccionada === 'clientes-nuevos'">
+        <div class="grid grid-cols-3 gap-3">
+          <div class="bg-green-50 rounded-xl p-4">
+            <p class="text-xs text-green-700 font-semibold uppercase">Total año</p>
+            <p class="text-2xl font-bold text-green-900 mt-1">124</p>
+          </div>
+          <div class="bg-blue-50 rounded-xl p-4">
+            <p class="text-xs text-blue-700 font-semibold uppercase">Este mes</p>
+            <p class="text-2xl font-bold text-blue-900 mt-1">28</p>
+          </div>
+          <div class="bg-purple-50 rounded-xl p-4">
+            <p class="text-xs text-purple-700 font-semibold uppercase">Tasa conversión</p>
+            <p class="text-2xl font-bold text-purple-900 mt-1">68%</p>
+          </div>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <p class="text-sm font-semibold text-gray-900 mb-3">Crecimiento mensual</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-xs text-gray-500 uppercase tracking-wider"><th class="text-left py-2">Mes</th><th class="text-right">Nuevos</th><th class="text-right">Total acumulado</th></tr></thead>
+            <tbody class="divide-y divide-gray-200">
+              <tr><td class="py-2">Enero</td><td class="text-right">12</td><td class="text-right text-gray-500">12</td></tr>
+              <tr><td class="py-2">Febrero</td><td class="text-right">18</td><td class="text-right text-gray-500">30</td></tr>
+              <tr><td class="py-2">Marzo</td><td class="text-right">22</td><td class="text-right text-gray-500">52</td></tr>
+              <tr><td class="py-2">Abril</td><td class="text-right">26</td><td class="text-right text-gray-500">78</td></tr>
+              <tr class="font-bold"><td class="py-2">Mayo</td><td class="text-right">28</td><td class="text-right">106</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+
+      <div class="flex justify-end pt-2">
+        <button (click)="cerrarGrafica()" class="px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>

@@ -1,5 +1,5 @@
-<nav class="sticky top-0 z-30 bg-gradient-to-b from-black via-[#071020] to-[#0a1f3d] text-white shadow-lg transition-all duration-300"
-    [class.shadow-2xl]="scrolled">
+<nav class="sticky top-0 z-30 text-white shadow-lg transition-all duration-300"
+     [style.background]="'linear-gradient(to bottom, ' + (configuracion?.color_degradado_inicio || '#000000') + ', ' + (configuracion?.color_degradado_fin || '#0a1f3d') + ')'">
 
   <!-- Barra principal escritorio -->
   <div class="navbar-container w-full hidden md:flex items-center justify-between transition-all duration-300"

@@ -28,15 +28,37 @@ export const routes: Routes = [
   // Panel admin (todas las rutas hijas usan el layout)
   {
     path: 'admin',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./admin/layout/layout.component').then(m => m.AdminLayoutComponent),
-    children: [
-      { path: '', redirectTo: 'inicio', pathMatch: 'full' },
-      // Estas se irán agregando conforme creemos cada pestaña
-      // { path: 'inicio', loadComponent: ... },
-      // { path: 'paginas', loadComponent: ... },
-    ]
+      canActivate: [authGuard],
+      loadComponent: () =>
+        import('./admin/layout/layout.component').then(m => m.AdminLayoutComponent),
+      children: [
+        { path: '', redirectTo: 'inicio', pathMatch: 'full' },
+        {
+          path: 'inicio',
+          loadComponent: () =>
+            import('./admin/pages/inicio/inicio.component').then(m => m.InicioComponent)
+        },
+        {
+          path: 'paginas',
+          loadComponent: () =>
+            import('./admin/pages/paginas/paginas.component').then(m => m.PaginasComponent)
+        },
+        {
+          path: 'perfil',
+          loadComponent: () =>
+            import('./admin/pages/perfil/perfil.component').then(m => m.PerfilComponent)
+        },
+        {
+          path: 'citas',
+          loadComponent: () =>
+            import('./admin/pages/citas/citas.component').then(m => m.CitasComponent)
+        },
+        {
+          path: 'configuracion',
+          loadComponent: () =>
+            import('./admin/pages/configuracion/configuracion.component').then(m => m.ConfiguracionComponent)
+        }
+      ]
   },
 
   // Wildcard

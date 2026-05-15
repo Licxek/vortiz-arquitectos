@@ -34,5 +34,7 @@ INSERT INTO configuracion (
     'https://www.facebook.com/',
     'https://www.linkedin.com/',
     '000-000-0000',
-    'Lunes - Viernes 9:00 - 18:00'
+    'Lunes - Viernes 9:00 - 18:00',
+    '#000000',
+    '#0a1f3d'
 );

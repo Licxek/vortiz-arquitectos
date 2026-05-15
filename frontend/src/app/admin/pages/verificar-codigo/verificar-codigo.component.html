@@ -27,20 +27,20 @@
       <!-- Inputs del código -->
       <div class="flex justify-center gap-2 md:gap-3" (paste)="onPaste($event)">
         <input *ngFor="let digito of digitos; let i = index"
-               #digitInput
-               type="text"
-               inputmode="numeric"
-               maxlength="1"
-               [(ngModel)]="digitos[i]"
-               [name]="'digit' + i"
-               (input)="onInput(i, $event)"
-               (keydown)="onKeyDown(i, $event)"
-               class="w-11 h-14 md:w-12 md:h-16 text-center text-xl md:text-2xl font-bold bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 outline-none focus:border-[#0a1f3d] focus:ring-2 focus:ring-[#0a1f3d]/10 focus:bg-white transition-all" />
+              #digitInput
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              [(ngModel)]="digitos[i]"
+              [name]="'digit' + i"
+              (input)="onInput(i, $event)"
+              (keydown)="onKeyDown(i, $event)"
+              class="w-11 h-14 md:w-12 md:h-16 text-center text-xl md:text-2xl font-bold bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 outline-none focus:border-[#0a1f3d] focus:ring-2 focus:ring-[#0a1f3d]/10 focus:bg-white transition-all" />
       </div>
 
       <!-- Error -->
       <div *ngIf="errorMensaje"
-           class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
         </svg>

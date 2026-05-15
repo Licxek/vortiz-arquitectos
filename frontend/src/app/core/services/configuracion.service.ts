@@ -15,6 +15,8 @@ export interface Configuracion {
   linkedin: string;
   whatsapp: string;
   horario: string;
+  color_degradado_inicio: string;
+  color_degradado_fin: string;
 }
 
 @Injectable({
@@ -38,7 +40,9 @@ export class ConfiguracionService {
         facebook: 'https://www.facebook.com/',
         linkedin: 'https://www.linkedin.com/',
         whatsapp: '0000000000',
-        horario: 'Lunes - Viernes 9:00 - 18:00'
+        horario: 'Lunes - Viernes 9:00 - 18:00',
+        color_degradado_inicio: '#000000',
+        color_degradado_fin: '#0a1f3d'
       }))
     );
   }
