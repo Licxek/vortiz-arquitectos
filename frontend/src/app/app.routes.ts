@@ -40,8 +40,11 @@ export const routes: Routes = [
   },
 
   // Wildcard
+
   {
-    path: '**',
-    redirectTo: ''
-  }
+  path: 'servicios',
+  loadComponent: () =>
+    import('./public/servicios/servicios.component').then(m => m.ServiciosComponent),
+},
+
 ];
