@@ -26,7 +26,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   buscadorEscritorioAbierto = false;
 
   fixedLinks: NavItem[] = [
-    { label: 'Inicio', path: '/' },
+    { label: 'Inicio', path: '/home' },
     { label: 'Servicios', path: '/servicios' },
     { label: 'Proyectos', path: '/proyectos' },
     { label: 'Nosotros', path: '/nosotros' },

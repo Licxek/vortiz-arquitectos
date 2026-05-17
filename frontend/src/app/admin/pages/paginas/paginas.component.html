@@ -17,7 +17,7 @@
                placeholder="Buscar página..."
                class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-[#0a4d7a] focus:ring-2 focus:ring-[#0a4d7a]/10 transition-all" />
       </div>
-      <button class="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5">
+      <button (click)="abrirNuevaPagina()" class="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
         </svg>
@@ -246,7 +246,7 @@
     </div>
 
     <!-- Card de "Agregar nueva página" -->
-    <button class="group min-h-[260px] bg-white rounded-2xl border-2 border-dashed border-gray-200 hover:border-[#0a4d7a] hover:bg-blue-50/30 flex flex-col items-center justify-center gap-3 p-6 transition-all duration-200 cursor-pointer hover:-translate-y-1">
+    <button (click)="abrirNuevaPagina()" class="group min-h-[260px] bg-white rounded-2xl border-2 border-dashed border-gray-200 hover:border-[#0a4d7a] hover:bg-blue-50/30 flex flex-col items-center justify-center gap-3 p-6 transition-all duration-200 cursor-pointer hover:-translate-y-1">
       <div class="w-16 h-16 bg-gray-100 group-hover:bg-[#0a4d7a] rounded-2xl flex items-center justify-center transition-colors">
         <svg class="w-8 h-8 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
@@ -270,5 +270,664 @@
     <h3 class="text-base font-semibold text-gray-900">No se encontraron páginas</h3>
     <p class="text-sm text-gray-500 mt-1">Intenta cambiar los filtros o el término de búsqueda</p>
   </div>
+  <!-- MODAL: Nueva página -->
+<div *ngIf="mostrarNuevaPagina"
+     class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[92vh] flex flex-col overflow-hidden">
 
+    <!-- HEADER -->
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-5 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-4">
+        <div class="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold">{{ formNuevaPagina.titulo || 'Nueva página' }}</h2>
+          <p class="text-xs text-gray-300">Crea contenido nuevo para tu sitio</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider"
+              [class.bg-orange-500]="formNuevaPagina.estado === 'borrador'"
+              [class.bg-green-500]="formNuevaPagina.estado === 'publicada'"
+              [class.bg-blue-500]="formNuevaPagina.estado === 'programada'">
+          {{ formNuevaPagina.estado }}
+        </span>
+        <button (click)="cerrarNuevaPagina()"
+                class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- BODY: SIDEBAR + CONTENT -->
+    <div class="flex-1 flex overflow-hidden">
+
+      <!-- SIDEBAR -->
+      <div class="w-64 border-r border-gray-200 bg-gray-50 shrink-0 flex flex-col overflow-hidden">
+        <nav class="p-3 space-y-1 flex-1 overflow-y-auto">
+          <button *ngFor="let s of secciones; let i = index"
+                  (click)="irASeccion(s.id)"
+                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
+                  [class.bg-[#0a4d7a]]="seccionActiva === s.id"
+                  [class.text-white]="seccionActiva === s.id"
+                  [class.shadow-md]="seccionActiva === s.id"
+                  [class.text-gray-600]="seccionActiva !== s.id"
+                  [class.hover:bg-white]="seccionActiva !== s.id">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                  [class.bg-white]="seccionActiva === s.id"
+                  [class.text-[#0a4d7a]]="seccionActiva === s.id"
+                  [class.bg-gray-200]="seccionActiva !== s.id"
+                  [class.text-gray-600]="seccionActiva !== s.id">
+              {{ i + 1 }}
+            </span>
+            {{ s.label }}
+          </button>
+        </nav>
+
+        <!-- Progress -->
+        <div class="p-4 border-t border-gray-200 shrink-0">
+          <p class="text-xs text-gray-500 mb-2">Progreso</p>
+          <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-[#0a4d7a] to-[#1a3a5c] rounded-full transition-all"
+                 [style.width.%]="progresoCreacion"></div>
+          </div>
+          <p class="text-xs font-semibold text-gray-700 mt-2">{{ progresoCreacion }}% completado</p>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div class="flex-1 overflow-y-auto">
+
+        <!-- SECCIÓN 1: PLANTILLA -->
+        <div *ngIf="seccionActiva === 'plantilla'" class="p-8">
+          <div class="mb-6">
+            <h3 class="text-2xl font-bold text-gray-900">Selecciona una plantilla</h3>
+            <p class="text-sm text-gray-500 mt-1">Empieza con un layout pre-armado o desde cero</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div *ngFor="let p of plantillas"
+                 (click)="seleccionarPlantilla(p.id)"
+                 class="p-5 rounded-2xl border-2 cursor-pointer transition-all hover:-translate-y-0.5"
+                 [class.border-[#0a4d7a]]="plantillaSeleccionada === p.id"
+                 [class.bg-blue-50]="plantillaSeleccionada === p.id"
+                 [class.shadow-lg]="plantillaSeleccionada === p.id"
+                 [class.border-gray-200]="plantillaSeleccionada !== p.id"
+                 [class.hover:border-gray-300]="plantillaSeleccionada !== p.id">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0a4d7a] to-[#0a1f3d] flex items-center justify-center mb-3">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <h4 class="font-semibold text-gray-900">{{ p.nombre }}</h4>
+              <p class="text-xs text-gray-500 mt-1">{{ p.descripcion }}</p>
+              <p *ngIf="p.bloquesIniciales.length > 0" class="text-[10px] text-gray-400 mt-3 uppercase tracking-wider font-semibold">
+                {{ p.bloquesIniciales.length }} bloques incluidos
+              </p>
+              <div *ngIf="plantillaSeleccionada === p.id" class="mt-3 flex items-center gap-1 text-xs font-bold text-[#0a4d7a]">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                Seleccionada
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 2: INFORMACIÓN -->
+        <div *ngIf="seccionActiva === 'info'" class="p-8 max-w-3xl">
+          <div class="mb-6">
+            <h3 class="text-2xl font-bold text-gray-900">Información básica</h3>
+            <p class="text-sm text-gray-500 mt-1">Datos principales de la página</p>
+          </div>
+
+          <div class="space-y-5">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Título de la página</label>
+              <input type="text" [(ngModel)]="formNuevaPagina.titulo" (input)="actualizarSlug()"
+                     placeholder="Ej: Servicios de remodelación"
+                     class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-base font-medium outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">URL de la página</label>
+              <div class="flex items-stretch">
+                <span class="px-3 py-2.5 bg-gray-100 border border-r-0 border-gray-200 rounded-l-lg text-sm text-gray-500 flex items-center font-mono">
+                  /pages/
+                </span>
+                <input type="text" [(ngModel)]="formNuevaPagina.slug"
+                       class="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-r-lg text-sm font-mono outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+              </div>
+              <p class="text-xs text-gray-500 mt-1.5">Se genera automáticamente del título</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Descripción corta</label>
+              <textarea [(ngModel)]="formNuevaPagina.descripcion" rows="3"
+                        placeholder="Una breve descripción que verán los visitantes..."
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Imagen destacada</label>
+              <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 hover:border-[#0a4d7a] transition-colors">
+                <img *ngIf="formNuevaPagina.imagenDestacada" [src]="formNuevaPagina.imagenDestacada" class="w-full max-w-md mx-auto aspect-video object-cover rounded-lg mb-3" />
+                <div *ngIf="!formNuevaPagina.imagenDestacada" class="aspect-video bg-gray-50 rounded-lg flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
+                  <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  <p class="text-sm text-gray-500">Sin imagen seleccionada</p>
+                </div>
+                <input type="text" [(ngModel)]="formNuevaPagina.imagenDestacada"
+                       placeholder="URL de la imagen"
+                       class="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] transition-all mt-2" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Categoría</label>
+              <div class="relative" (click)="$event.stopPropagation()">
+                <button (click)="toggleSelectorCategoria($event)"
+                        class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all">
+                  <span class="font-medium">{{ categoriaLabel }}</span>
+                  <svg class="w-4 h-4 text-gray-500 transition-transform"
+                      [class.rotate-180]="mostrarSelectorCategoria"
+                      fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+
+                <div *ngIf="mostrarSelectorCategoria"
+                    class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-[fadeIn_0.15s_ease-out]">
+                  <button *ngFor="let cat of categoriasOpciones"
+                          (click)="seleccionarCategoria(cat.value)"
+                          class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center justify-between border-b border-gray-50 last:border-0"
+                          [class.bg-blue-50]="formNuevaPagina.categoria === cat.value">
+                    <div>
+                      <p class="text-sm font-semibold text-gray-900">{{ cat.label }}</p>
+                      <p class="text-xs text-gray-500 mt-0.5">{{ cat.descripcion }}</p>
+                    </div>
+                    <svg *ngIf="formNuevaPagina.categoria === cat.value"
+                        class="w-4 h-4 text-[#0a4d7a] shrink-0 ml-2"
+                        fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 3: CONTENIDO -->
+        <div *ngIf="seccionActiva === 'contenido'" class="p-8">
+          <div class="mb-6 flex items-start justify-between">
+            <div>
+              <h3 class="text-2xl font-bold text-gray-900">Editor de contenido</h3>
+              <p class="text-sm text-gray-500 mt-1">Agrega y organiza los bloques de tu página</p>
+            </div>
+            <div class="relative" (click)="$event.stopPropagation()">
+              <button (click)="mostrarMenuBloques = !mostrarMenuBloques"
+                      class="flex items-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                Agregar bloque
+              </button>
+
+              <div *ngIf="mostrarMenuBloques"
+                   class="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 w-80 z-30 max-h-96 overflow-y-auto animate-[fadeIn_0.15s_ease-out]">
+                <div class="p-2">
+                  <button *ngFor="let tipo of tiposBloques"
+                          (click)="agregarBloque(tipo.tipo)"
+                          class="w-full flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                         [class.bg-blue-100]="tipo.color === 'blue'"
+                         [class.bg-gray-200]="tipo.color === 'gray'"
+                         [class.bg-green-100]="tipo.color === 'green'"
+                         [class.bg-purple-100]="tipo.color === 'purple'"
+                         [class.bg-orange-100]="tipo.color === 'orange'"
+                         [class.bg-red-100]="tipo.color === 'red'">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                           [class.text-blue-600]="tipo.color === 'blue'"
+                           [class.text-gray-600]="tipo.color === 'gray'"
+                           [class.text-green-600]="tipo.color === 'green'"
+                           [class.text-purple-600]="tipo.color === 'purple'"
+                           [class.text-orange-600]="tipo.color === 'orange'"
+                           [class.text-red-600]="tipo.color === 'red'">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-sm font-semibold text-gray-900">{{ tipo.label }}</p>
+                      <p class="text-xs text-gray-500">{{ tipo.descripcion }}</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de bloques -->
+          <div *ngIf="formNuevaPagina.bloques.length === 0" class="text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+            <svg class="w-16 h-16 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/>
+            </svg>
+            <p class="text-sm text-gray-500">No hay bloques aún</p>
+            <p class="text-xs text-gray-400 mt-1">Haz clic en "Agregar bloque" para empezar</p>
+          </div>
+
+          <div class="space-y-3">
+            <div *ngFor="let bloque of formNuevaPagina.bloques; let i = index"
+                 class="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+              <div class="p-4 flex items-center gap-3 bg-gray-50">
+                <span class="text-xs font-bold text-gray-400 w-6 text-center">{{ i + 1 }}</span>
+                <div class="w-9 h-9 rounded-lg bg-[#0a4d7a]/10 flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-gray-900">{{ obtenerLabelBloque(bloque.tipo) }}</p>
+                  <p class="text-xs text-gray-500 truncate">{{ bloque.titulo || 'Sin título asignado' }}</p>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button (click)="moverBloque(bloque.id, 'arriba')" [disabled]="i === 0"
+                          class="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-white rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
+                    </svg>
+                  </button>
+                  <button (click)="moverBloque(bloque.id, 'abajo')" [disabled]="i === formNuevaPagina.bloques.length - 1"
+                          class="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-white rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </button>
+                  <button (click)="toggleBloque(bloque.id)"
+                          class="p-1.5 text-[#0a4d7a] hover:bg-blue-50 rounded transition-colors">
+                    <svg class="w-4 h-4 transition-transform" [class.rotate-180]="bloque.expandido" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </button>
+                  <button (click)="eliminarBloque(bloque.id)"
+                          class="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Editor expandido del bloque -->
+              <div *ngIf="bloque.expandido" class="p-4 border-t border-gray-200 space-y-3 bg-white">
+                <ng-container [ngSwitch]="bloque.tipo">
+
+  <!-- Hero -->
+  <div *ngSwitchCase="'hero'" class="space-y-3">
+    <input type="text" [(ngModel)]="bloque.titulo" placeholder="Título principal"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+    <input type="text" [(ngModel)]="bloque.subtitulo" placeholder="Subtítulo"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+    <input type="text" [(ngModel)]="bloque.imagenUrl" placeholder="URL de imagen de fondo"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+    <input type="text" [(ngModel)]="bloque.textoBoton" placeholder="Texto del botón (opcional)"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+  </div>
+
+  <!-- Texto -->
+  <div *ngSwitchCase="'texto'" class="space-y-3">
+    <input type="text" [(ngModel)]="bloque.titulo" placeholder="Encabezado de sección"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+    <textarea [(ngModel)]="bloque.contenido" rows="5" placeholder="Escribe el contenido del párrafo..."
+              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white resize-none"></textarea>
+  </div>
+
+  <!-- Imagen -->
+  <div *ngSwitchCase="'imagen'" class="space-y-3">
+    <input type="text" [(ngModel)]="bloque.imagenUrl" placeholder="URL de la imagen"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+    <input type="text" [(ngModel)]="bloque.titulo" placeholder="Caption (opcional)"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+    <img *ngIf="bloque.imagenUrl" [src]="bloque.imagenUrl" class="w-full max-w-sm aspect-video object-cover rounded-lg" />
+  </div>
+
+  <!-- Galería -->
+  <div *ngSwitchCase="'galeria'" class="space-y-3">
+    <input type="text" [(ngModel)]="bloque.titulo" placeholder="Título de la galería"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+
+    <div class="space-y-2">
+      <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Imágenes ({{ bloque.imagenes?.length || 0 }})</p>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div *ngFor="let img of bloque.imagenes; let i = index"
+             class="relative group aspect-video bg-gray-100 rounded-lg overflow-hidden">
+          <img [src]="img" class="w-full h-full object-cover" />
+          <button (click)="eliminarImagenGaleria(bloque, i)"
+                  class="absolute top-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-2">
+      <input #nuevaImg type="text" placeholder="URL de la imagen a agregar"
+             class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+      <button (click)="agregarImagenGaleria(bloque, nuevaImg.value); nuevaImg.value = ''"
+              class="px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium transition-colors">
+        Agregar
+      </button>
+    </div>
+  </div>
+
+  <!-- Cita -->
+  <div *ngSwitchCase="'cita'" class="space-y-3">
+    <textarea [(ngModel)]="bloque.contenido" rows="3" placeholder="La cita o testimonio..."
+              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white resize-none italic"></textarea>
+    <input type="text" [(ngModel)]="bloque.titulo" placeholder="Autor"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+    <input type="text" [(ngModel)]="bloque.subtitulo" placeholder="Cargo o empresa (opcional)"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+  </div>
+
+  <!-- CTA -->
+  <div *ngSwitchCase="'cta'" class="space-y-3">
+    <input type="text" [(ngModel)]="bloque.titulo" placeholder="Título del CTA"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+    <input type="text" [(ngModel)]="bloque.subtitulo" placeholder="Descripción"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+    <input type="text" [(ngModel)]="bloque.textoBoton" placeholder="Texto del botón"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+  </div>
+
+  <!-- Estadísticas -->
+  <div *ngSwitchCase="'estadisticas'" class="space-y-3">
+    <input type="text" [(ngModel)]="bloque.titulo" placeholder="Título de la sección (ej: 'Nuestros números')"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+
+    <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-3">Estadísticas</p>
+    <div class="space-y-2">
+      <div *ngFor="let item of bloque.items; let i = index" class="flex gap-2 items-center">
+        <input [(ngModel)]="item.valor" placeholder="50+" maxlength="10"
+               class="w-24 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-center outline-none focus:border-[#0a4d7a] focus:bg-white" />
+        <input [(ngModel)]="item.titulo" placeholder="Etiqueta de la estadística"
+               class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+        <button (click)="eliminarItemBloque(bloque.id, i)"
+                class="p-2 text-red-500 hover:bg-red-50 rounded transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <button (click)="agregarItemBloque(bloque.id)"
+            class="w-full px-3 py-2 border border-dashed border-gray-300 hover:border-[#0a4d7a] hover:bg-blue-50 text-gray-600 hover:text-[#0a4d7a] rounded-lg text-xs font-medium transition-all">
+      + Agregar estadística
+    </button>
+  </div>
+
+  <!-- Servicios -->
+  <div *ngSwitchCase="'servicios'" class="space-y-3">
+    <input type="text" [(ngModel)]="bloque.titulo" placeholder="Título de la sección"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+
+    <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-3">Servicios</p>
+    <div class="space-y-2">
+      <div *ngFor="let item of bloque.items; let i = index"
+           class="p-3 bg-gray-50 rounded-lg space-y-2">
+        <div class="flex gap-2">
+          <input [(ngModel)]="item.icono" placeholder="🔨" maxlength="3"
+                 class="w-14 px-2 py-2 bg-white border border-gray-200 rounded-lg text-lg text-center outline-none focus:border-[#0a4d7a]" />
+          <input [(ngModel)]="item.titulo" placeholder="Título del servicio"
+                 class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold outline-none focus:border-[#0a4d7a]" />
+          <button (click)="eliminarItemBloque(bloque.id, i)"
+                  class="p-2 text-red-500 hover:bg-red-50 rounded transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <input [(ngModel)]="item.descripcion" placeholder="Descripción breve del servicio"
+               class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-[#0a4d7a]" />
+      </div>
+    </div>
+
+    <button (click)="agregarItemBloque(bloque.id)"
+            class="w-full px-3 py-2 border border-dashed border-gray-300 hover:border-[#0a4d7a] hover:bg-blue-50 text-gray-600 hover:text-[#0a4d7a] rounded-lg text-xs font-medium transition-all">
+      + Agregar servicio
+    </button>
+  </div>
+
+  <!-- Formulario de Contacto -->
+  <div *ngSwitchCase="'contacto'" class="space-y-3">
+    <input type="text" [(ngModel)]="bloque.titulo" placeholder="Título del formulario"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+    <input type="text" [(ngModel)]="bloque.subtitulo" placeholder="Descripción"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+
+    <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-3">Campos del formulario</p>
+    <div class="flex flex-wrap gap-2">
+      <span *ngFor="let campo of bloque.campos; let i = index"
+            class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium">
+        {{ campo }}
+        <button (click)="eliminarCampoFormulario(bloque, i)" class="hover:text-blue-900">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </span>
+    </div>
+
+    <div class="flex gap-2">
+      <input #nuevoCampo type="text" placeholder="Nombre del campo (ej: Empresa)"
+             class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+      <button (click)="agregarCampoFormulario(bloque, nuevoCampo.value); nuevoCampo.value = ''"
+              class="px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium transition-colors">
+        Agregar
+      </button>
+    </div>
+
+    <input type="text" [(ngModel)]="bloque.textoBoton" placeholder="Texto del botón de envío"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+  </div>
+
+  <!-- Mapa -->
+  <div *ngSwitchCase="'mapa'" class="space-y-3">
+    <input type="text" [(ngModel)]="bloque.titulo" placeholder="Título de la sección"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+    <input type="text" [(ngModel)]="bloque.direccion" placeholder="Dirección a mostrar"
+           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+    <p class="text-xs text-gray-500">El mapa se generará automáticamente con la dirección</p>
+  </div>
+
+</ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 4: SEO -->
+        <div *ngIf="seccionActiva === 'seo'" class="p-8 max-w-3xl">
+          <div class="mb-6">
+            <h3 class="text-2xl font-bold text-gray-900">SEO y compartir</h3>
+            <p class="text-sm text-gray-500 mt-1">Optimiza cómo aparece esta página en Google y redes sociales</p>
+          </div>
+
+          <div class="space-y-5">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold uppercase tracking-wider text-gray-500">Meta título</label>
+                <span class="text-xs text-gray-400">{{ formNuevaPagina.seo.metaTitle.length }} / 60</span>
+              </div>
+              <input type="text" [(ngModel)]="formNuevaPagina.seo.metaTitle" maxlength="60"
+                     class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold uppercase tracking-wider text-gray-500">Meta descripción</label>
+                <span class="text-xs text-gray-400">{{ formNuevaPagina.seo.metaDescription.length }} / 160</span>
+              </div>
+              <textarea [(ngModel)]="formNuevaPagina.seo.metaDescription" rows="3" maxlength="160"
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white resize-none"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Palabras clave</label>
+              <input type="text" [(ngModel)]="formNuevaPagina.seo.keywords" placeholder="Separadas por comas"
+                     class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl p-4 mt-6">
+              <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Vista previa en Google</p>
+              <p class="text-xs text-gray-700 mb-1">vortizarquitectos.com/pages/{{ formNuevaPagina.slug || 'mi-pagina' }}</p>
+              <h4 class="text-lg text-blue-700 hover:underline cursor-pointer mb-1">{{ formNuevaPagina.seo.metaTitle || formNuevaPagina.titulo || 'Título de la página' }}</h4>
+              <p class="text-sm text-gray-600">{{ formNuevaPagina.seo.metaDescription || formNuevaPagina.descripcion || 'Descripción de la página...' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 5: CONFIGURACIÓN -->
+        <div *ngIf="seccionActiva === 'config'" class="p-8 max-w-3xl">
+          <div class="mb-6">
+            <h3 class="text-2xl font-bold text-gray-900">Configuración avanzada</h3>
+            <p class="text-sm text-gray-500 mt-1">Controla cómo y cuándo se publica esta página</p>
+          </div>
+
+          <div class="space-y-6">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Estado de publicación</label>
+              <div class="grid grid-cols-3 gap-2">
+                <button (click)="formNuevaPagina.estado = 'borrador'"
+                        class="p-4 rounded-xl border-2 transition-all"
+                        [class.border-orange-500]="formNuevaPagina.estado === 'borrador'"
+                        [class.bg-orange-50]="formNuevaPagina.estado === 'borrador'"
+                        [class.border-gray-200]="formNuevaPagina.estado !== 'borrador'">
+                  <p class="text-sm font-semibold">Borrador</p>
+                  <p class="text-xs text-gray-500 mt-1">Solo visible para ti</p>
+                </button>
+                <button (click)="formNuevaPagina.estado = 'publicada'"
+                        class="p-4 rounded-xl border-2 transition-all"
+                        [class.border-green-500]="formNuevaPagina.estado === 'publicada'"
+                        [class.bg-green-50]="formNuevaPagina.estado === 'publicada'"
+                        [class.border-gray-200]="formNuevaPagina.estado !== 'publicada'">
+                  <p class="text-sm font-semibold">Publicada</p>
+                  <p class="text-xs text-gray-500 mt-1">Visible al público</p>
+                </button>
+                <button (click)="formNuevaPagina.estado = 'programada'"
+                        class="p-4 rounded-xl border-2 transition-all"
+                        [class.border-blue-500]="formNuevaPagina.estado === 'programada'"
+                        [class.bg-blue-50]="formNuevaPagina.estado === 'programada'"
+                        [class.border-gray-200]="formNuevaPagina.estado !== 'programada'">
+                  <p class="text-sm font-semibold">Programada</p>
+                  <p class="text-xs text-gray-500 mt-1">Se publica después</p>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="formNuevaPagina.estado === 'programada'">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Fecha de publicación</label>
+              <input type="datetime-local" [(ngModel)]="formNuevaPagina.fechaPublicacion"
+                     class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Visibilidad</label>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer">
+                  <input type="radio" [(ngModel)]="formNuevaPagina.visibilidad" value="publica" class="accent-[#0a4d7a]" />
+                  <div>
+                    <p class="text-sm font-semibold text-gray-900">Pública</p>
+                    <p class="text-xs text-gray-500">Cualquier persona puede acceder</p>
+                  </div>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer">
+                  <input type="radio" [(ngModel)]="formNuevaPagina.visibilidad" value="registrados" class="accent-[#0a4d7a]" />
+                  <div>
+                    <p class="text-sm font-semibold text-gray-900">Solo registrados</p>
+                    <p class="text-xs text-gray-500">Requiere iniciar sesión</p>
+                  </div>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer">
+                  <input type="radio" [(ngModel)]="formNuevaPagina.visibilidad" value="contrasena" class="accent-[#0a4d7a]" />
+                  <div>
+                    <p class="text-sm font-semibold text-gray-900">Con contraseña</p>
+                    <p class="text-xs text-gray-500">Requiere contraseña para ver</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+              <button (click)="formNuevaPagina.mostrarEnMenu = !formNuevaPagina.mostrarEnMenu"
+                      class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+                      [class.bg-green-500]="formNuevaPagina.mostrarEnMenu"
+                      [class.bg-gray-300]="!formNuevaPagina.mostrarEnMenu">
+                <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                      [class.translate-x-5]="formNuevaPagina.mostrarEnMenu"></span>
+              </button>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-gray-900">Mostrar en menú principal</p>
+                <p class="text-xs text-gray-500">La página aparecerá en el navbar del sitio</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+              <button (click)="formNuevaPagina.permitirComentarios = !formNuevaPagina.permitirComentarios"
+                      class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+                      [class.bg-green-500]="formNuevaPagina.permitirComentarios"
+                      [class.bg-gray-300]="!formNuevaPagina.permitirComentarios">
+                <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                      [class.translate-x-5]="formNuevaPagina.permitirComentarios"></span>
+              </button>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-gray-900">Permitir comentarios</p>
+                <p class="text-xs text-gray-500">Los visitantes podrán dejar comentarios</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="border-t border-gray-200 bg-white p-4 flex justify-between items-center shrink-0">
+      <button (click)="cerrarNuevaPagina()"
+              class="px-5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium">
+        Cancelar
+      </button>
+      <div class="flex gap-2">
+        <button (click)="irAnterior()" *ngIf="seccionActiva !== 'plantilla'"
+                class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm">
+          ← Anterior
+        </button>
+        <button (click)="irSiguiente()" *ngIf="seccionActiva !== 'config'"
+                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium">
+          Siguiente →
+        </button>
+        <button (click)="guardarPagina(false)"
+                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium">
+          Guardar borrador
+        </button>
+        <button (click)="guardarPagina(true)"
+                [disabled]="!formNuevaPagina.titulo.trim()"
+                class="flex items-center gap-2 px-5 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+          Publicar página
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 </div>

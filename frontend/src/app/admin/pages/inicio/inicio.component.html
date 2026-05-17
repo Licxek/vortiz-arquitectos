@@ -8,13 +8,15 @@
         <p class="text-sm text-gray-500 mt-1 capitalize">{{ fechaHoy }}</p>
       </div>
       <div class="flex gap-2">
-        <button class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+        <button (click)="nuevoProyecto()"
+                class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
           </svg>
           Nuevo proyecto
         </button>
-        <button class="flex items-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5">
+        <button (click)="irACitas()"
+                class="flex items-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
@@ -296,17 +298,45 @@
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div *ngFor="let proyecto of proyectosRecientes"
-            (click)="abrirProyecto(proyecto)"
-          class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden group">
-          <div class="aspect-video bg-gray-100 overflow-hidden">
+            class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden group flex flex-col">
+          <div class="aspect-video bg-gray-100 overflow-hidden cursor-pointer" (click)="abrirProyecto(proyecto)">
             <img [src]="proyecto.imagen" [alt]="proyecto.nombre"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
           </div>
-          <div class="p-4">
-            <h3 class="text-sm font-semibold text-gray-900 truncate">{{ proyecto.nombre }}</h3>
+          <div class="p-4 flex-1 flex flex-col">
+            <h3 class="text-sm font-semibold text-gray-900 truncate cursor-pointer" (click)="abrirProyecto(proyecto)">
+              {{ proyecto.nombre }}
+            </h3>
             <div class="flex items-center justify-between mt-2">
-              <span class="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">{{ proyecto.estado }}</span>
+              <span class="text-xs px-2 py-1 rounded-full font-medium"
+                    [class.bg-blue-50]="proyecto.estado === 'En proceso'"
+                    [class.text-blue-700]="proyecto.estado === 'En proceso'"
+                    [class.bg-orange-50]="proyecto.estado === 'En diseño' || proyecto.estado === 'En revisión'"
+                    [class.text-orange-700]="proyecto.estado === 'En diseño' || proyecto.estado === 'En revisión'"
+                    [class.bg-green-50]="proyecto.estado === 'Finalizado'"
+                    [class.text-green-700]="proyecto.estado === 'Finalizado'"
+                    [class.bg-gray-100]="proyecto.estado === 'Pausado'"
+                    [class.text-gray-700]="proyecto.estado === 'Pausado'">
+                {{ proyecto.estado }}
+              </span>
               <span class="text-xs text-gray-500">{{ proyecto.fecha }}</span>
+            </div>
+
+            <button *ngIf="proyecto.estado !== 'Finalizado'"
+                    (click)="terminarProyecto(proyecto)"
+                    class="mt-3 w-full px-3 py-1.5 text-xs font-semibold bg-green-50 hover:bg-green-500 hover:text-white text-green-700 rounded-lg transition-all flex items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+              </svg>
+              Marcar como terminado
+            </button>
+
+            <div *ngIf="proyecto.estado === 'Finalizado'"
+                class="mt-3 w-full px-3 py-1.5 text-xs font-semibold bg-green-100 text-green-700 rounded-lg flex items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+              </svg>
+              Proyecto finalizado
             </div>
           </div>
         </div>
@@ -331,8 +361,9 @@
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="divide-y divide-gray-100 max-h-[420px] overflow-y-auto">
           <div *ngFor="let notif of notificaciones"
-              class="p-3 hover:bg-gray-50 transition-colors cursor-pointer flex gap-3"
-              [class.bg-blue-50/30]="!notif.leida">
+                (click)="abrirNotificacion(notif)"
+                class="p-3 hover:bg-gray-50 transition-colors cursor-pointer flex gap-3"
+                [class.bg-blue-50/30]="!notif.leida">
 
             <!-- Punto indicador -->
             <div class="w-2 h-2 rounded-full mt-2 shrink-0"
@@ -430,12 +461,13 @@
     <div>
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Agenda del día</h2>
-        <a class="text-xs text-[#0a4d7a] hover:underline font-medium cursor-pointer">Ver calendario</a>
+        <a (click)="irACitas()" class="text-xs text-[#0a4d7a] hover:underline font-medium cursor-pointer">Ver calendario</a>
       </div>
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="divide-y divide-gray-100">
           <div *ngFor="let cita of citasHoy"
-              class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                (click)="abrirCita(cita)"
+                class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors cursor-pointer">
             <div class="flex flex-col items-center justify-center w-14 h-14 rounded-xl shrink-0"
                 [class.bg-blue-50]="cita.estado === 'confirmada'"
                 [class.bg-orange-50]="cita.estado === 'pendiente'">
@@ -467,7 +499,7 @@
   <div>
     <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Accesos Rápidos</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <button class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left">
+      <button (click)="nuevoProyecto()" class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left">
         <div class="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
           <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
@@ -477,17 +509,19 @@
         <p class="text-xs text-gray-500 mt-0.5">Crear desde cero</p>
       </button>
 
-      <button class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left">
-        <div class="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center mb-3">
-          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+      <button (click)="irAConfiguracion()"
+              class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left">
+        <div class="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+          <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
         </div>
-        <p class="text-sm font-semibold text-gray-900">Nuevo Cliente</p>
-        <p class="text-xs text-gray-500 mt-0.5">Agregar al sistema</p>
+        <p class="text-sm font-semibold text-gray-900">Configuración</p>
+        <p class="text-xs text-gray-500 mt-0.5">Personalizar el sitio</p>
       </button>
 
-      <button class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left">
+      <button (click)="irACitas()" class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left">
         <div class="w-11 h-11 bg-orange-100 rounded-xl flex items-center justify-center mb-3">
           <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -497,7 +531,7 @@
         <p class="text-xs text-gray-500 mt-0.5">Reservar horario</p>
       </button>
 
-      <button class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left">
+      <button (click)="irAPaginas()" class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left">
         <div class="w-11 h-11 bg-purple-100 rounded-xl flex items-center justify-center mb-3">
           <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -563,7 +597,8 @@
       </div>
 
       <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
-        <button class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all">
+        <button (click)="abrirEditarProyecto(proyectoSeleccionado)"
+                class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all">
           Editar proyecto
         </button>
         <button (click)="cerrarProyecto()"
@@ -576,32 +611,75 @@
 </div>
 
 <!-- ============ MODAL: Todos los proyectos ============ -->
+<!-- MODAL: Todos los proyectos -->
 <div *ngIf="mostrarTodosProyectos"
      (click)="cerrarTodosProyectos()"
      class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
   <div (click)="$event.stopPropagation()"
-       class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative">
+       class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+
+    <!-- Header -->
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 relative shrink-0">
       <button (click)="cerrarTodosProyectos()"
-              class="absolute top-4 right-4 w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
+              class="absolute top-4 right-4 w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
         </svg>
       </button>
       <h2 class="text-2xl font-bold">Todos los Proyectos</h2>
-      <p class="text-sm text-gray-300 mt-1">{{ todosLosProyectos.length }} proyectos en total</p>
+      <p class="text-sm text-gray-300 mt-1">{{ todosLosProyectos.length }} proyectos en total · {{ proyectosPublicos.length }} publicados</p>
     </div>
-    <div class="p-6">
+
+    <!-- Filtros y buscador -->
+    <div class="bg-gray-50 border-b border-gray-200 p-4 flex flex-col md:flex-row gap-3 shrink-0">
+      <div class="relative flex-1">
+        <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+        </svg>
+        <input type="text" [(ngModel)]="busquedaProyectos"
+               placeholder="Buscar por nombre, cliente o ubicación..."
+               class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] transition-all" />
+      </div>
+      <select [(ngModel)]="filtroEstadoProyectos"
+              class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] transition-all cursor-pointer">
+        <option value="todos">Todos los estados</option>
+        <option value="En diseño">En diseño</option>
+        <option value="En proceso">En proceso</option>
+        <option value="En revisión">En revisión</option>
+        <option value="Pausado">Pausado</option>
+        <option value="Finalizado">Finalizado</option>
+      </select>
+      <button (click)="abrirNuevoDesdeTodos()"
+              class="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nuevo proyecto
+      </button>
+    </div>
+
+    <!-- Lista -->
+    <div class="overflow-y-auto p-6">
+      <div *ngIf="proyectosFiltrados.length === 0" class="text-center py-12">
+        <p class="text-sm text-gray-500">No se encontraron proyectos</p>
+      </div>
+
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div *ngFor="let proyecto of todosLosProyectos"
-             (click)="cerrarTodosProyectos(); abrirProyecto(proyecto)"
-             class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden group">
-          <div class="aspect-video bg-gray-100 overflow-hidden">
+        <div *ngFor="let proyecto of proyectosFiltrados"
+            class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden group">
+
+          <div class="aspect-video bg-gray-100 overflow-hidden relative cursor-pointer" (click)="abrirProyectoDesdeTodos(proyecto)">
             <img [src]="proyecto.imagen" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <span *ngIf="proyecto.estado === 'Finalizado'"
+                  class="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 bg-green-500 text-white rounded-full uppercase tracking-wider">
+              Finalizado
+            </span>
           </div>
+
           <div class="p-4">
             <h3 class="text-sm font-semibold text-gray-900 truncate">{{ proyecto.nombre }}</h3>
-            <div class="flex items-center justify-between mt-2">
+            <p class="text-xs text-gray-500 truncate mt-0.5">{{ proyecto.cliente }}</p>
+            <div class="flex items-center justify-between mt-3">
               <span class="text-xs px-2 py-1 rounded-full font-medium"
                     [class.bg-blue-50]="proyecto.estado === 'En proceso'"
                     [class.text-blue-700]="proyecto.estado === 'En proceso'"
@@ -613,10 +691,201 @@
                     [class.text-gray-700]="proyecto.estado === 'Pausado'">
                 {{ proyecto.estado }}
               </span>
-              <span class="text-xs text-gray-500">{{ proyecto.fecha }}</span>
+              <button (click)="abrirEditarProyectoDesdeTodos(proyecto)"
+                      class="text-xs px-3 py-1 text-[#0a4d7a] hover:bg-blue-50 rounded-lg font-medium transition-colors">
+                Editar
+              </button>
+            </div>
+
+            <button *ngIf="proyecto.estado !== 'Finalizado'"
+                    (click)="cerrarTodosProyectos(); terminarProyecto(proyecto)"
+                    class="mt-3 w-full px-3 py-1.5 text-xs font-semibold bg-green-50 hover:bg-green-500 hover:text-white text-green-700 rounded-lg transition-all flex items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+              </svg>
+              Marcar como terminado
+            </button>
+
+            <div *ngIf="proyecto.estado === 'Finalizado'"
+                class="mt-3 w-full px-3 py-1.5 text-xs font-semibold bg-green-100 text-green-700 rounded-lg flex items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+              </svg>
+              Proyecto finalizado
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Editar/Crear proyecto -->
+<div *ngIf="mostrarEditarProyecto && proyectoEditando"
+     (click)="cerrarEditarProyecto()"
+     class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div (click)="$event.stopPropagation()"
+       class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative">
+      <button (click)="cerrarEditarProyecto()"
+              class="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <h2 class="text-2xl font-bold">{{ esNuevoProyecto ? 'Nuevo proyecto' : 'Editar proyecto' }}</h2>
+      <p class="text-sm text-gray-300 mt-1">{{ esNuevoProyecto ? 'Crea un nuevo proyecto en el sistema' : 'Modifica los datos del proyecto' }}</p>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Nombre del proyecto</label>
+        <input type="text" [(ngModel)]="proyectoEditando.nombre"
+               class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Cliente</label>
+          <input type="text" [(ngModel)]="proyectoEditando.cliente"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Ubicación</label>
+          <input type="text" [(ngModel)]="proyectoEditando.ubicacion"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Superficie</label>
+          <input type="text" [(ngModel)]="proyectoEditando.superficie"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Estado</label>
+          <select [(ngModel)]="proyectoEditando.estado"
+                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all cursor-pointer">
+            <option *ngFor="let estado of estadosProyecto" [value]="estado">{{ estado }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Fecha de entrega</label>
+          <input type="text" [(ngModel)]="proyectoEditando.fechaEntrega"
+                 placeholder="Ej: 15 Oct 2026"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Progreso (%)</label>
+          <input type="number" min="0" max="100" [(ngModel)]="proyectoEditando.progreso"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Descripción</label>
+        <textarea [(ngModel)]="proyectoEditando.descripcion" rows="3"
+                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"></textarea>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">URL de imagen</label>
+        <input type="text" [(ngModel)]="proyectoEditando.imagen"
+               class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
+        <button type="button" (click)="guardarEdicion()"
+                class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all">
+          Guardar cambios
+        </button>
+        <button type="button" (click)="cerrarEditarProyecto()"
+                class="flex-1 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar Finalizado -->
+<div *ngIf="mostrarConfirmarFinalizado"
+     class="fixed inset-0 z-[110] bg-black/60 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      </svg>
+    </div>
+
+    <h3 class="text-xl font-bold text-gray-900 text-center mb-2">¡Proyecto finalizado!</h3>
+    <p class="text-sm text-gray-600 text-center mb-6">
+      ¿Quieres agregar este proyecto a la página pública de <strong>Proyectos</strong> para mostrarlo en tu sitio web?
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-2">
+      <button (click)="confirmarFinalizado(true)"
+              class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all">
+        Sí, agregar al sitio
+      </button>
+      <button (click)="confirmarFinalizado(false)"
+              class="flex-1 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all">
+        Solo finalizar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Agregar a Proyectos Públicos -->
+<div *ngIf="mostrarAgregarPublico"
+     class="fixed inset-0 z-[110] bg-black/60 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl">
+      <h2 class="text-2xl font-bold">Publicar proyecto</h2>
+      <p class="text-sm text-gray-300 mt-1">Configura cómo aparecerá en tu página pública de Proyectos</p>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Imagen / Logo del proyecto</label>
+        <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center gap-3 hover:border-[#0a4d7a] transition-colors">
+          <img [src]="formPublico.imagenUrl" class="w-full max-w-xs aspect-video object-cover rounded-lg" />
+          <input type="text" [(ngModel)]="formPublico.imagenUrl"
+                 placeholder="URL de la imagen"
+                 class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Título público</label>
+        <input type="text" [(ngModel)]="formPublico.titulo"
+               class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+        <p class="text-xs text-gray-500 mt-1.5">Este es el nombre que verán los visitantes del sitio</p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Categoría</label>
+        <select [(ngModel)]="formPublico.categoria"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all cursor-pointer">
+          <option *ngFor="let cat of categoriasProyecto" [value]="cat">{{ cat }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Descripción</label>
+        <textarea [(ngModel)]="formPublico.descripcion" rows="4"
+                  placeholder="Describe el proyecto para que aparezca en tu portafolio público..."
+                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"></textarea>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
+        <button (click)="guardarProyectoPublico()"
+                [disabled]="!formPublico.titulo.trim()"
+                class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+          Publicar en sitio
+        </button>
+        <button (click)="cerrarAgregarPublico()"
+                class="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all">
+          Cancelar
+        </button>
       </div>
     </div>
   </div>
@@ -740,11 +1009,11 @@
         <p class="text-xs font-medium text-gray-700 mb-1">{{ consulta.asunto }}</p>
         <p class="text-xs text-gray-500 line-clamp-2">{{ consulta.mensaje }}</p>
         <div class="flex items-center gap-2 mt-3">
-          <button (click)="cerrarTodasConsultas(); responderConsulta(consulta)"
+          <button (click)="responderConsultaDesdeTodas(consulta)"
                   class="text-xs px-3 py-1.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg font-medium transition-colors">
             Responder
           </button>
-          <button (click)="cerrarTodasConsultas(); abrirConsulta(consulta)"
+          <button (click)="abrirConsultaDesdeTodas(consulta)"
                   class="text-xs px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg font-medium transition-colors">
             Ver completo
           </button>
@@ -907,6 +1176,128 @@
 
       <div class="flex justify-end pt-2">
         <button (click)="cerrarGrafica()" class="px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Detalle de notificación -->
+<div *ngIf="notificacionSeleccionada"
+     (click)="cerrarNotificacion()"
+     class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div (click)="$event.stopPropagation()"
+       class="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative">
+      <button (click)="cerrarNotificacion()"
+              class="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-white/10">
+          <ng-container [ngSwitch]="notificacionSeleccionada.tipo">
+            <svg *ngSwitchCase="'cita'" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <svg *ngSwitchCase="'consulta'" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            <svg *ngSwitchCase="'confirmacion'" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <svg *ngSwitchCase="'cancelacion'" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            <svg *ngSwitchCase="'mensaje'" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-5l-5 5v-5H5a2 2 0 01-2-2V5z"/></svg>
+          </ng-container>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold">{{ notificacionSeleccionada.titulo }}</h2>
+          <p class="text-xs text-gray-300">{{ notificacionSeleccionada.tiempo }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-6">
+      <p class="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl p-4">{{ notificacionSeleccionada.descripcion }}</p>
+
+      <div class="mt-5 grid grid-cols-2 gap-3 text-xs">
+        <div class="bg-gray-50 rounded-xl p-3">
+          <p class="text-gray-500 uppercase tracking-wider font-semibold mb-1">Tipo</p>
+          <p class="font-semibold text-gray-900 capitalize">{{ notificacionSeleccionada.tipo }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-3">
+          <p class="text-gray-500 uppercase tracking-wider font-semibold mb-1">Estado</p>
+          <p class="font-semibold text-green-700">Leída</p>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mt-5 pt-4 border-t border-gray-100">
+        <button (click)="cerrarNotificacion()"
+                class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Detalle de cita -->
+<div *ngIf="citaSeleccionada"
+     (click)="cerrarCita()"
+     class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div (click)="$event.stopPropagation()"
+       class="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative">
+      <button (click)="cerrarCita()"
+              class="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <div class="flex items-center gap-3">
+        <div class="w-14 h-14 rounded-xl flex items-center justify-center bg-white/10 text-xl font-bold">
+          {{ citaSeleccionada.hora }}
+        </div>
+        <div>
+          <h2 class="text-xl font-bold">{{ citaSeleccionada.cliente }}</h2>
+          <p class="text-xs text-gray-300">{{ citaSeleccionada.tipo }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <div class="grid grid-cols-2 gap-3 text-xs">
+        <div class="bg-gray-50 rounded-xl p-3">
+          <p class="text-gray-500 uppercase tracking-wider font-semibold mb-1">Hora</p>
+          <p class="font-semibold text-gray-900">{{ citaSeleccionada.hora }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-3">
+          <p class="text-gray-500 uppercase tracking-wider font-semibold mb-1">Tipo</p>
+          <p class="font-semibold text-gray-900">{{ citaSeleccionada.tipo }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-3 col-span-2">
+          <p class="text-gray-500 uppercase tracking-wider font-semibold mb-1">Estado</p>
+          <span class="text-xs font-bold px-2 py-1 rounded-full"
+                [class.bg-green-100]="citaSeleccionada.estado === 'confirmada'"
+                [class.text-green-700]="citaSeleccionada.estado === 'confirmada'"
+                [class.bg-orange-100]="citaSeleccionada.estado === 'pendiente'"
+                [class.text-orange-700]="citaSeleccionada.estado === 'pendiente'">
+            {{ citaSeleccionada.estado | titlecase }}
+          </span>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
+        <button *ngIf="citaSeleccionada.estado === 'pendiente'"
+                (click)="confirmarCita()"
+                class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium shadow-md transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+          Confirmar
+        </button>
+        <button (click)="irACitas()"
+                class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all">
+          Ver en calendario
+        </button>
+        <button (click)="cerrarCita()"
+                class="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all">
           Cerrar
         </button>
       </div>

@@ -6,11 +6,12 @@
       <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Citas</h1>
       <p class="text-sm text-gray-500 mt-1">Gestiona las citas con tus clientes</p>
     </div>
-    <button class="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+    <button (click)="abrirNuevaCita()"
+            class="flex items-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm shadow-md transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
       </svg>
-      Nueva Cita
+      Nueva cita
     </button>
   </div>
 
@@ -240,14 +241,10 @@
                   </svg>
                   Confirmar
                 </button>
-                <button *ngIf="cita.estado !== 'cancelada'"
-                        (click)="cancelarCita(cita)"
-                        class="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
-                  Cancelar cita
-                </button>
+               <button (click)="solicitarCancelarCita(cita, $event)"
+                      class="text-xs px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors">
+                Cancelar
+              </button>
               </div>
             </div>
 
@@ -266,8 +263,53 @@
       <h3 class="text-base font-semibold text-gray-900">No hay citas</h3>
       <p class="text-sm text-gray-500 mt-1">Intenta cambiar los filtros o agrega una nueva cita</p>
     </div>
-  </div>
+  <!-- Toggle Historial -->
+<div class="mt-6 pt-6 border-t-2 border-dashed border-gray-200">
+  <button (click)="toggleHistorial()"
+          class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 bg-gray-200 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div class="text-left">
+        <p class="text-sm font-semibold text-gray-900">Historial de citas pasadas</p>
+        <p class="text-xs text-gray-500">{{ citasPasadas.length }} citas registradas</p>
+      </div>
+    </div>
+    <svg class="w-5 h-5 text-gray-500 transition-transform" [class.rotate-180]="mostrarHistorial"
+         fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
 
+  <div *ngIf="mostrarHistorial" class="mt-4 space-y-3 animate-[fadeIn_0.2s_ease-out]">
+    <div *ngFor="let cita of citasPasadas"
+         class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 opacity-75 hover:opacity-100 transition-opacity flex items-center gap-4">
+      <div class="w-1 h-12 rounded-full bg-gray-300 shrink-0"></div>
+      <div class="flex flex-col items-center justify-center w-14 h-14 bg-gray-50 rounded-xl shrink-0">
+        <span class="text-sm font-bold text-gray-700">{{ cita.hora }}</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-gray-700 truncate">{{ cita.cliente }}</p>
+        <p class="text-xs text-gray-500 truncate">{{ cita.servicio }} · {{ cita.fecha | date: 'd MMM' }}</p>
+      </div>
+      <span class="text-xs font-semibold px-3 py-1 rounded-full"
+            [class.bg-green-50]="cita.estado === 'confirmada'"
+            [class.text-green-700]="cita.estado === 'confirmada'"
+            [class.bg-red-50]="cita.estado === 'cancelada'"
+            [class.text-red-700]="cita.estado === 'cancelada'">
+        {{ cita.estado | titlecase }}
+      </span>
+    </div>
+
+    <p *ngIf="citasPasadas.length === 0" class="text-center text-sm text-gray-500 py-6">
+      No hay citas en el historial
+    </p>
+  </div>
+</div>
+</div>
   <!-- VISTA CALENDARIO -->
   <div *ngIf="vista === 'calendario'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
 
@@ -351,6 +393,7 @@
                   [class.text-gray-500]="modoCalendario !== 'dia'">Día</button>
         </div>
 
+
         <!-- Navegación -->
         <button (click)="navegarAnterior()"
                 class="w-9 h-9 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors">
@@ -402,6 +445,8 @@
 
           <div class="space-y-0.5 overflow-hidden">
             <div *ngFor="let cita of dia.citas.slice(0, 2)"
+                [class.opacity-50]="esCitaPasada(cita)"
+                [class.grayscale]="esCitaPasada(cita)"
                 class="text-[9px] md:text-[10px] truncate px-1 md:px-1.5 py-0.5 rounded font-medium hidden md:block"
                 [class.bg-green-100]="cita.estado === 'confirmada'"
                 [class.text-green-700]="cita.estado === 'confirmada'"
@@ -462,6 +507,8 @@
             <!-- Citas posicionadas -->
             <div *ngFor="let cita of dia.citas"
                 (click)="abrirDetalle(cita)"
+                [class.opacity-50]="esCitaPasada(cita)"
+                [class.grayscale]="esCitaPasada(cita)"
                 class="absolute left-1 right-1 rounded-lg p-1.5 cursor-pointer hover:shadow-md transition-all overflow-hidden border-l-4"
                 [style.top.px]="calcularTop(cita.hora)"
                 [style.height.px]="calcularAltura(cita.duracion)"
@@ -523,6 +570,8 @@
         <!-- Citas posicionadas absolutamente sobre el grid -->
         <div *ngFor="let cita of diaActual.citas"
             (click)="abrirDetalle(cita)"
+            [class.opacity-50]="esCitaPasada(cita)"
+            [class.grayscale]="esCitaPasada(cita)"
             class="absolute left-2 right-2 rounded-lg p-3 cursor-pointer hover:shadow-md transition-all border-l-4 z-10"
             [style.top.px]="calcularTopDia(cita.hora)"
             [style.height.px]="calcularAlturaDia(cita.duracion)"
@@ -686,5 +735,127 @@
       </div>
     </div>
   </div>
+  <!-- MODAL: Nueva cita -->
+<div *ngIf="mostrarNuevaCita"
+     (click)="cerrarNuevaCita()"
+     class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div (click)="$event.stopPropagation()"
+       class="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative">
+      <button (click)="cerrarNuevaCita()"
+              class="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <h2 class="text-2xl font-bold">Nueva cita</h2>
+      <p class="text-sm text-gray-300 mt-1">Agenda una cita manualmente</p>
+    </div>
 
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Cliente</label>
+        <input type="text" [(ngModel)]="nuevaCita.cliente" placeholder="Nombre completo"
+               class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Correo</label>
+          <input type="email" [(ngModel)]="nuevaCita.correo"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Teléfono</label>
+          <input type="tel" [(ngModel)]="nuevaCita.telefono"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Fecha</label>
+          <input type="date" [(ngModel)]="nuevaCita.fecha"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Hora</label>
+          <input type="time" [(ngModel)]="nuevaCita.hora"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Tipo de cita</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button (click)="nuevaCita.tipo = 'consulta'"
+                  class="p-3 rounded-lg border-2 transition-all"
+                  [class.border-[#0a4d7a]]="nuevaCita.tipo === 'consulta'"
+                  [class.bg-blue-50]="nuevaCita.tipo === 'consulta'"
+                  [class.border-gray-200]="nuevaCita.tipo !== 'consulta'">
+            <p class="text-sm font-semibold">Consulta</p>
+            <p class="text-xs text-gray-500">Reunión inicial</p>
+          </button>
+          <button (click)="nuevaCita.tipo = 'proyecto'"
+                  class="p-3 rounded-lg border-2 transition-all"
+                  [class.border-[#0a4d7a]]="nuevaCita.tipo === 'proyecto'"
+                  [class.bg-blue-50]="nuevaCita.tipo === 'proyecto'"
+                  [class.border-gray-200]="nuevaCita.tipo !== 'proyecto'">
+            <p class="text-sm font-semibold">Proyecto</p>
+            <p class="text-xs text-gray-500">Trabajo en curso</p>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Notas (opcional)</label>
+        <textarea [(ngModel)]="nuevaCita.notas" rows="3" placeholder="Detalles adicionales..."
+                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white resize-none"></textarea>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
+        <button (click)="guardarNuevaCita()"
+                [disabled]="!nuevaCita.cliente.trim() || !nuevaCita.fecha || !nuevaCita.hora"
+                class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+          Agendar cita
+        </button>
+        <button (click)="cerrarNuevaCita()"
+                class="flex-1 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar cancelación -->
+<div *ngIf="mostrarConfirmarCancelar"
+     class="fixed inset-0 z-[110] bg-black/60 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+    </div>
+
+    <h3 class="text-xl font-bold text-gray-900 text-center mb-2">¿Cancelar esta cita?</h3>
+    <p class="text-sm text-gray-600 text-center mb-2">
+      Vas a cancelar la cita de <strong>{{ citaACancelar?.cliente }}</strong>.
+    </p>
+    <p class="text-xs text-gray-500 text-center mb-6">
+      Esta acción se puede revertir cambiando manualmente el estado.
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-2">
+      <button (click)="confirmarCancelacion()"
+              class="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium shadow-md transition-all">
+        Sí, cancelar cita
+      </button>
+      <button (click)="cerrarConfirmarCancelar()"
+              class="flex-1 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all">
+        Mantener cita
+      </button>
+    </div>
+  </div>
+</div>
 </div>

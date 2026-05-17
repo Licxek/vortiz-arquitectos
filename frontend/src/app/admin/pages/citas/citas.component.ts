@@ -52,6 +52,10 @@ export class CitasComponent implements OnInit {
     { id: 6, cliente: 'Daniela Ramos', fecha: this.fechaEnDias(3), hora: '14:00', duracion: 90, tipo: 'proyecto', estado: 'confirmada', servicio: 'Supervisión de obra', telefono: '618-678-9012', correo: 'daniela@example.com' },
     { id: 7, cliente: 'Roberto Silva', fecha: this.fechaEnDias(5), hora: '16:30', duracion: 60, tipo: 'consulta', estado: 'cancelada', servicio: 'Consulta cancelada', telefono: '618-789-0123', correo: 'roberto@example.com' },
     { id: 8, cliente: 'Patricia Vargas', fecha: this.fechaEnDias(7), hora: '10:30', duracion: 60, tipo: 'proyecto', estado: 'confirmada', servicio: 'Proyecto residencial', telefono: '618-890-1234', correo: 'patricia@example.com' },
+    // Agregar al array citas
+    { id: 100, cliente: 'Roberto Silva', correo: 'roberto@example.com', telefono: '6181234567', fecha: new Date(2026, 4, 10), hora: '10:00', duracion: 60, tipo: 'consulta', servicio: 'Consulta inicial', estado: 'confirmada' },
+    { id: 101, cliente: 'Andrea Torres', correo: 'andrea@example.com', telefono: '6182345678', fecha: new Date(2026, 4, 8), hora: '15:30', duracion: 90, tipo: 'proyecto', servicio: 'Revisión de planos', estado: 'confirmada' },
+    { id: 102, cliente: 'Miguel Castro', correo: 'miguel@example.com', telefono: '6183456789', fecha: new Date(2026, 4, 5), hora: '11:00', duracion: 60, tipo: 'consulta', servicio: 'Cotización', estado: 'cancelada' }
   ];
 
   // Nueva propiedad para el modo del calendario
@@ -66,6 +70,28 @@ export class CitasComponent implements OnInit {
     '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
     '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
   ];
+
+  // Nueva cita
+  mostrarNuevaCita = false;
+  nuevaCita = {
+    cliente: '',
+    correo: '',
+    telefono: '',
+    fecha: '',
+    hora: '',
+    duracion: 60,
+    tipo: 'consulta' as 'consulta' | 'proyecto',
+    servicio: '',
+    notas: ''
+  };
+
+  // Confirmación de cancelación
+  mostrarConfirmarCancelar = false;
+  citaACancelar: any = null;
+
+  // Historial
+  mostrarHistorial = false;
+
 
   ngOnInit() {}
 
@@ -398,5 +424,86 @@ export class CitasComponent implements OnInit {
 
   cerrarDia() {
     this.diaSeleccionado = null;
+  }
+
+  // Nueva cita
+  abrirNuevaCita() {
+    this.mostrarNuevaCita = true;
+    this.nuevaCita = {
+      cliente: '',
+      correo: '',
+      telefono: '',
+      fecha: '',
+      hora: '',
+      duracion: 60,
+      tipo: 'consulta',
+      servicio: '',
+      notas: ''
+    };
+  }
+
+  cerrarNuevaCita() {
+    this.mostrarNuevaCita = false;
+  }
+
+  guardarNuevaCita() {
+    if (!this.nuevaCita.cliente.trim() || !this.nuevaCita.fecha || !this.nuevaCita.hora) return;
+
+    const nueva: Cita = {
+      id: Date.now(),
+      cliente: this.nuevaCita.cliente,
+      correo: this.nuevaCita.correo,
+      telefono: this.nuevaCita.telefono,
+      fecha: new Date(this.nuevaCita.fecha),
+      hora: this.nuevaCita.hora,
+      duracion: this.nuevaCita.duracion,
+      tipo: this.nuevaCita.tipo,
+      servicio: this.nuevaCita.servicio || 'Consulta general',
+      estado: 'pendiente',
+      notas: this.nuevaCita.notas
+    };
+
+    this.citas.unshift(nueva);
+    this.cerrarNuevaCita();
+  }
+
+  // Confirmar cancelación
+  solicitarCancelarCita(cita: any, event?: Event) {
+    if (event) event.stopPropagation();
+    this.citaACancelar = cita;
+    this.mostrarConfirmarCancelar = true;
+  }
+
+  confirmarCancelacion() {
+    if (this.citaACancelar) {
+      this.citaACancelar.estado = 'cancelada';
+    }
+    this.cerrarConfirmarCancelar();
+  }
+
+  cerrarConfirmarCancelar() {
+    this.mostrarConfirmarCancelar = false;
+    this.citaACancelar = null;
+  }
+
+  // Historial
+  toggleHistorial() {
+    this.mostrarHistorial = !this.mostrarHistorial;
+  }
+
+  esCitaPasada(cita: any): boolean {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const fechaCita = new Date(cita.fecha);
+    fechaCita.setHours(0, 0, 0, 0);
+    return fechaCita < hoy;
+  }
+
+  get citasFuturas() {
+    return this.citas.filter(c => !this.esCitaPasada(c));
+  }
+
+  get citasPasadas() {
+    return this.citas.filter(c => this.esCitaPasada(c));
   }
 }
