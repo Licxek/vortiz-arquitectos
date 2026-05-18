@@ -463,6 +463,18 @@ export class InicioComponent implements OnInit {
     this.consultaSeleccionada = consulta;
     this.mostrarRespuesta = true;
     this.respuestaTexto = '';
+
+    // Limpiar todos los flags porque viene del dashboard (sin contexto previo)
+    this.volverADetalleDesdeRespuesta = false;
+    this.volverATodasDesdeRespuesta = false;
+    this.volverATodasDespuesDeRespuesta = false;
+    this.volverATodasDesdeConsulta = false;
+  }
+
+  responderDesdeDetalle() {
+    if (!this.consultaSeleccionada) return;
+    this.mostrarRespuesta = true;
+    this.respuestaTexto = '';
     this.volverADetalleDesdeRespuesta = true;
     this.volverATodasDespuesDeRespuesta = this.volverATodasDesdeConsulta;
     this.volverATodasDesdeConsulta = false;

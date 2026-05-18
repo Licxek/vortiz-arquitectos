@@ -31,7 +31,7 @@ export class ProyectosComponent {
   busqueda = signal<string>('');
 
   proyectos: Proyecto[] = [
-    { nombre: 'Toyota', iniciales: 'TY', categoria: 'corporativo', ubicacion: 'Guanajuato', anio: 2018, colorMarca: '#EB0A1E', descripcion: 'Planta automotriz y áreas corporativas.' },
+    { nombre: 'Toyota', iniciales: 'TY',logoUrl: '/assets/img/logoToyota.ico', categoria: 'corporativo', ubicacion: 'Guanajuato', anio: 2018, colorMarca: '#EB0A1E', descripcion: 'Planta automotriz y áreas corporativas.' },
     { nombre: 'Bancomer', iniciales: 'BX', categoria: 'corporativo', ubicacion: 'Durango', anio: 2015, colorMarca: '#004481', descripcion: 'Remodelación de sucursales bancarias.' },
     { nombre: 'Aeropuerto de Cancún', iniciales: 'AC', categoria: 'infraestructura', ubicacion: 'Quintana Roo', anio: 2019, colorMarca: '#00A859', descripcion: 'Ampliación de terminal de pasajeros.' },
     { nombre: 'Puente Baluarte', iniciales: 'PB', categoria: 'infraestructura', ubicacion: 'Durango–Sinaloa', anio: 2012, colorMarca: '#6B7280', descripcion: 'Obra hidráulica complementaria.' },

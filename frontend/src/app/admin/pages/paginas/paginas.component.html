@@ -191,21 +191,26 @@
 
           <!-- Dropdown menu -->
           <div *ngIf="menuAbiertoId === pagina.id"
-               (click)="$event.stopPropagation()"
-               class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-20">
-            <button class="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2">
+              (click)="$event.stopPropagation()"
+              class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-20">
+
+            <button (click)="editarPagina(pagina)"
+                    class="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
               </svg>
               Editar
             </button>
-            <button class="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2">
+
+            <button (click)="previsualizarPagina(pagina)"
+                    class="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
               </svg>
               Previsualizar
             </button>
+
             <button (click)="toggleVisibilidad(pagina)"
                     class="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2 border-t border-gray-100">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -215,6 +220,7 @@
               </svg>
               {{ pagina.visible ? 'Ocultar' : 'Mostrar' }}
             </button>
+
             <button *ngIf="pagina.tipo === 'personalizada'"
                     (click)="eliminarPagina(pagina)"
                     class="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 border-t border-gray-100">
@@ -926,6 +932,233 @@
           </svg>
           Publicar página
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Editar página fija -->
+<div *ngIf="mostrarEditarPaginaFija && paginaEditando"
+     class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[92vh] flex flex-col overflow-hidden">
+
+    <!-- HEADER -->
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-5 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-4">
+        <div class="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-xs text-gray-300 uppercase tracking-wider">Editando página</p>
+          <h2 class="text-xl font-bold">{{ paginaEditando.titulo }}</h2>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span *ngIf="mensajeGuardado"
+              class="text-xs px-3 py-1.5 bg-green-500 text-white rounded-full font-medium animate-[fadeIn_0.2s_ease-out]">
+          ✓ {{ mensajeGuardado }}
+        </span>
+        <button (click)="previsualizarPagina(paginaEditando)"
+                class="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+          Previsualizar
+        </button>
+        <button (click)="cerrarEditarPagina()"
+                class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- BODY: SIDEBAR + EDITOR -->
+    <div class="flex-1 flex overflow-hidden">
+
+      <!-- SIDEBAR DE SECCIONES -->
+      <div class="w-72 border-r border-gray-200 bg-gray-50 shrink-0 overflow-y-auto">
+        <div class="p-4 border-b border-gray-200">
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Secciones</p>
+          <p class="text-xs text-gray-400 mt-1">Selecciona una sección para editarla</p>
+        </div>
+        <nav class="p-3 space-y-1">
+          <button *ngFor="let s of seccionesPaginaActual"
+                  (click)="seleccionarSeccionEdicion(s.id)"
+                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left"
+                  [class.bg-[#0a4d7a]]="seccionEditandoActiva === s.id"
+                  [class.text-white]="seccionEditandoActiva === s.id"
+                  [class.shadow-md]="seccionEditandoActiva === s.id"
+                  [class.text-gray-600]="seccionEditandoActiva !== s.id"
+                  [class.hover:bg-white]="seccionEditandoActiva !== s.id">
+            <span class="text-lg">{{ s.icono }}</span>
+            <span class="flex-1">{{ s.nombre }}</span>
+            <svg *ngIf="seccionEditandoActiva === s.id" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </nav>
+      </div>
+
+      <!-- EDITOR DE CAMPOS -->
+      <div class="flex-1 overflow-y-auto p-8">
+        <div *ngIf="seccionActualSchema" class="max-w-3xl">
+          <div class="mb-6 pb-4 border-b border-gray-100">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="text-3xl">{{ seccionActualSchema.icono }}</span>
+              <h3 class="text-2xl font-bold text-gray-900">{{ seccionActualSchema.nombre }}</h3>
+            </div>
+            <p class="text-sm text-gray-500">Edita los textos e imágenes de esta sección</p>
+          </div>
+
+          <div class="space-y-5">
+            <div *ngFor="let campo of seccionActualSchema.campos">
+              <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">
+                {{ campo.label }}
+              </label>
+
+              <!-- Texto / URL -->
+              <input *ngIf="campo.tipo === 'texto' || campo.tipo === 'url'"
+                     type="text"
+                     [value]="contenidoSeccionActual[campo.key] || ''"
+                     (input)="actualizarCampo(campo.key, $any($event.target).value)"
+                     [placeholder]="campo.placeholder || ''"
+                     [maxLength]="campo.maxLength || null"
+                     class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+
+              <!-- Textarea -->
+              <textarea *ngIf="campo.tipo === 'textarea'"
+                        rows="4"
+                        [value]="contenidoSeccionActual[campo.key] || ''"
+                        (input)="actualizarCampo(campo.key, $any($event.target).value)"
+                        [placeholder]="campo.placeholder || ''"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"></textarea>
+
+              <!-- Imagen -->
+              <div *ngIf="campo.tipo === 'imagen'" class="space-y-2">
+                <input type="text"
+                      [value]="contenidoSeccionActual[campo.key] || ''"
+                      (input)="actualizarCampo(campo.key, $any($event.target).value)"
+                      [placeholder]="campo.placeholder || 'Pega la URL de la imagen'"
+                      class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+                <div *ngIf="contenidoSeccionActual[campo.key]"
+                    class="aspect-video bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
+                  <img [src]="contenidoSeccionActual[campo.key]"
+                      class="w-full h-full object-cover"
+                      (error)="$any($event.target).style.display='none'" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="border-t border-gray-200 bg-white p-4 flex justify-between items-center shrink-0">
+      <button (click)="cerrarEditarPagina()"
+              class="px-5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium">
+        Cancelar
+      </button>
+      <div class="flex gap-2">
+        <button (click)="guardarEdicionPagina()"
+                class="flex items-center gap-2 px-5 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+          Guardar cambios
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Preview de página -->
+<div *ngIf="mostrarPreviewPagina && paginaPrevisualizando"
+     class="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[94vh] flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-4 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-xs text-gray-300 uppercase tracking-wider">Vista previa</p>
+          <h2 class="text-lg font-bold">{{ paginaPrevisualizando.titulo }}</h2>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Toggle de dispositivos -->
+        <div class="flex bg-white/10 rounded-lg p-1">
+          <button (click)="dispositivoPreview = 'desktop'"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all"
+                  [class.bg-white]="dispositivoPreview === 'desktop'"
+                  [class.text-gray-900]="dispositivoPreview === 'desktop'"
+                  [class.text-gray-300]="dispositivoPreview !== 'desktop'">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span class="hidden sm:inline">Desktop</span>
+          </button>
+          <button (click)="dispositivoPreview = 'tablet'"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all"
+                  [class.bg-white]="dispositivoPreview === 'tablet'"
+                  [class.text-gray-900]="dispositivoPreview === 'tablet'"
+                  [class.text-gray-300]="dispositivoPreview !== 'tablet'">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+            <span class="hidden sm:inline">Tablet</span>
+          </button>
+          <button (click)="dispositivoPreview = 'mobile'"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all"
+                  [class.bg-white]="dispositivoPreview === 'mobile'"
+                  [class.text-gray-900]="dispositivoPreview === 'mobile'"
+                  [class.text-gray-300]="dispositivoPreview !== 'mobile'">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+            <span class="hidden sm:inline">Mobile</span>
+          </button>
+        </div>
+
+        <button (click)="abrirEnPestanaNueva()"
+                class="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+          <span class="hidden sm:inline">Abrir en pestaña</span>
+        </button>
+
+        <button (click)="cerrarPreviewPagina()"
+                class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Área de preview -->
+    <div class="flex-1 bg-gray-100 overflow-auto p-6 flex items-start justify-center">
+      <div class="bg-white shadow-2xl rounded-xl overflow-hidden transition-all duration-300 mx-auto"
+           [style.width]="anchoPreview"
+           [style.height]="'100%'"
+           [style.min-height]="'600px'">
+        <iframe *ngIf="urlPreviewSegura"
+                [src]="urlPreviewSegura"
+                class="w-full h-full border-0 block"
+                title="Vista previa de la página"></iframe>
       </div>
     </div>
   </div>

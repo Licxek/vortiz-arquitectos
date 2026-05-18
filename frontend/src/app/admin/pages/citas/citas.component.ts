@@ -24,6 +24,13 @@ interface DiaCalendario {
   citas: Cita[];
 }
 
+interface ServicioOpcion {
+  id: number;
+  titulo: string;
+  categoria: string;
+  icono: string;
+}
+
 @Component({
   selector: 'app-citas',
   standalone: true,
@@ -81,6 +88,7 @@ export class CitasComponent implements OnInit {
     hora: '',
     duracion: 60,
     tipo: 'consulta' as 'consulta' | 'proyecto',
+    servicioId: null as number | null,
     servicio: '',
     notas: ''
   };
@@ -91,6 +99,28 @@ export class CitasComponent implements OnInit {
 
   // Historial
   mostrarHistorial = false;
+
+  // Servicios disponibles para asignar a citas tipo proyecto
+  serviciosDisponibles: ServicioOpcion[] = [
+    { id: 1, titulo: 'Trámite relacionados a desarrollo urbano', categoria: 'Trámites', icono: 'document' },
+    { id: 2, titulo: 'Gerencia de Construcción y DRO', categoria: 'Trámites', icono: 'badge' },
+    { id: 3, titulo: 'Gerencia de proyectos', categoria: 'Gerencia', icono: 'users' },
+    { id: 4, titulo: 'Supervisión de Proyectos de construcción', categoria: 'Gerencia', icono: 'eye' },
+    { id: 5, titulo: 'Diseño y Modelado BIM', categoria: 'Diseño', icono: 'cube' },
+    { id: 6, titulo: 'Dictámenes de uso de suelo', categoria: 'Trámites', icono: 'map' },
+    { id: 7, titulo: 'Dictamen Estructural', categoria: 'Diseño', icono: 'structure' },
+    { id: 8, titulo: 'Proyectos de áreas verdes', categoria: 'Especiales', icono: 'leaf' },
+    { id: 9, titulo: 'Sistemas de riego automatizado', categoria: 'Especiales', icono: 'water' },
+    { id: 10, titulo: 'Proyectos de alumbrado público', categoria: 'Especiales', icono: 'bulb' },
+    { id: 11, titulo: 'Construcción Residencial', categoria: 'Construcción', icono: 'home' },
+    { id: 12, titulo: 'Construcción Industrial', categoria: 'Construcción', icono: 'factory' },
+    { id: 13, titulo: 'Consultoría para tu proyecto de construcción', categoria: 'Diseño', icono: 'chat' },
+    { id: 14, titulo: 'Asesoría en Licitaciones y Costos', categoria: 'Gerencia', icono: 'calculator' }
+  ];
+
+  horasDisponibles = ['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00', '18:00'];
+
+  mostrarSelectorServicioNueva = false;
 
 
   ngOnInit() {}
@@ -392,6 +422,7 @@ export class CitasComponent implements OnInit {
     this.menuAbiertoId = null;
     this.filtroEstadoAbierto = false;
     this.selectorMesAbierto = false;
+    this.mostrarSelectorServicioNueva = false;
   }
   opcionesEstado = [
     { value: 'todas' as const, label: 'Todos los estados', color: 'gray' },
@@ -437,6 +468,7 @@ export class CitasComponent implements OnInit {
       hora: '',
       duracion: 60,
       tipo: 'consulta',
+      servicioId: null,
       servicio: '',
       notas: ''
     };
@@ -447,7 +479,7 @@ export class CitasComponent implements OnInit {
   }
 
   guardarNuevaCita() {
-    if (!this.nuevaCita.cliente.trim() || !this.nuevaCita.fecha || !this.nuevaCita.hora) return;
+    if (!this.nuevaCitaValida) return;
 
     const nueva: Cita = {
       id: Date.now(),
@@ -458,7 +490,7 @@ export class CitasComponent implements OnInit {
       hora: this.nuevaCita.hora,
       duracion: this.nuevaCita.duracion,
       tipo: this.nuevaCita.tipo,
-      servicio: this.nuevaCita.servicio || 'Consulta general',
+      servicio: this.nuevaCita.servicio || (this.nuevaCita.tipo === 'consulta' ? 'Consulta general' : 'Proyecto'),
       estado: 'pendiente',
       notas: this.nuevaCita.notas
     };
@@ -505,5 +537,39 @@ export class CitasComponent implements OnInit {
 
   get citasPasadas() {
     return this.citas.filter(c => this.esCitaPasada(c));
+  }
+
+  // Validación del form Nueva cita
+  get nuevaCitaValida(): boolean {
+    if (!this.nuevaCita.cliente.trim()) return false;
+    if (!this.nuevaCita.fecha) return false;
+    if (!this.nuevaCita.hora) return false;
+    if (this.nuevaCita.tipo === 'proyecto' && !this.nuevaCita.servicioId) return false;
+    return true;
+  }
+
+  get servicioNuevaCitaSeleccionado(): ServicioOpcion | null {
+    return this.nuevaCita.servicioId
+      ? this.serviciosDisponibles.find(s => s.id === this.nuevaCita.servicioId) || null
+      : null;
+  }
+
+  seleccionarTipoNuevaCita(tipo: 'consulta' | 'proyecto') {
+    this.nuevaCita.tipo = tipo;
+    if (tipo === 'consulta') {
+      this.nuevaCita.servicioId = null;
+      this.nuevaCita.servicio = '';
+    }
+  }
+
+  toggleSelectorServicioNueva(event: Event) {
+    event.stopPropagation();
+    this.mostrarSelectorServicioNueva = !this.mostrarSelectorServicioNueva;
+  }
+
+  seleccionarServicioNueva(s: ServicioOpcion) {
+    this.nuevaCita.servicioId = s.id;
+    this.nuevaCita.servicio = s.titulo;
+    this.mostrarSelectorServicioNueva = false;
   }
 }

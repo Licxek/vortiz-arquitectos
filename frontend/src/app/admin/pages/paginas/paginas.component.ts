@@ -1,7 +1,8 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 interface Pagina {
   id: number;
@@ -34,6 +35,21 @@ interface Plantilla {
   nombre: string;
   descripcion: string;
   bloquesIniciales: string[];
+}
+
+interface CampoEdicion {
+  key: string;
+  label: string;
+  tipo: 'texto' | 'textarea' | 'imagen' | 'url';
+  placeholder?: string;
+  maxLength?: number;
+}
+
+interface SeccionEditable {
+  id: string;
+  nombre: string;
+  icono: string;
+  campos: CampoEdicion[];
 }
 
 @Component({
@@ -139,6 +155,255 @@ export class PaginasComponent implements OnInit {
     { value: 'landing', label: 'Landing', descripcion: 'Página de captación' },
     { value: 'legal', label: 'Legal', descripcion: 'Términos, privacidad, etc.' }
   ];
+
+  // ============ EDITOR DE PÁGINAS FIJAS ============
+  mostrarEditarPaginaFija = false;
+  paginaEditando: Pagina | null = null;
+  seccionEditandoActiva = '';
+  mensajeGuardado = '';
+
+  // Schemas: qué se puede editar en cada página
+  schemasPaginas: Record<string, SeccionEditable[]> = {
+    'inicio': [
+      {
+        id: 'hero',
+        nombre: 'Hero principal',
+        icono: '✨',
+        campos: [
+          { key: 'badge', label: 'Texto del badge', tipo: 'texto', placeholder: 'Arquitectura · Construcción · Diseño' },
+          { key: 'titulo', label: 'Título principal', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+          { key: 'imagenFondo', label: 'Imagen de fondo (URL)', tipo: 'imagen' },
+          { key: 'cta1', label: 'Texto botón principal', tipo: 'texto' },
+          { key: 'cta2', label: 'Texto botón secundario', tipo: 'texto' }
+        ]
+      },
+      {
+        id: 'filosofia',
+        nombre: 'Filosofía',
+        icono: '🏛️',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'parrafo1', label: 'Párrafo 1', tipo: 'textarea' },
+          { key: 'parrafo2', label: 'Párrafo 2', tipo: 'textarea' },
+          { key: 'imagen', label: 'Imagen lateral (URL)', tipo: 'imagen' }
+        ]
+      },
+      {
+        id: 'stats',
+        nombre: 'Estadísticas grandes',
+        icono: '📊',
+        campos: [
+          { key: 'stat1Valor', label: 'Stat 1 - Número', tipo: 'texto', placeholder: '20+' },
+          { key: 'stat1Label', label: 'Stat 1 - Etiqueta', tipo: 'texto' },
+          { key: 'stat2Valor', label: 'Stat 2 - Número', tipo: 'texto' },
+          { key: 'stat2Label', label: 'Stat 2 - Etiqueta', tipo: 'texto' },
+          { key: 'stat3Valor', label: 'Stat 3 - Número', tipo: 'texto' },
+          { key: 'stat3Label', label: 'Stat 3 - Etiqueta', tipo: 'texto' },
+          { key: 'stat4Valor', label: 'Stat 4 - Número', tipo: 'texto' },
+          { key: 'stat4Label', label: 'Stat 4 - Etiqueta', tipo: 'texto' }
+        ]
+      },
+      {
+        id: 'servicios',
+        nombre: 'Sección Servicios',
+        icono: '🛠️',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      },
+      {
+        id: 'proceso',
+        nombre: 'Proceso de trabajo',
+        icono: '📋',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'paso1Titulo', label: 'Paso 1 - Título', tipo: 'texto' },
+          { key: 'paso1Desc', label: 'Paso 1 - Descripción', tipo: 'textarea' },
+          { key: 'paso2Titulo', label: 'Paso 2 - Título', tipo: 'texto' },
+          { key: 'paso2Desc', label: 'Paso 2 - Descripción', tipo: 'textarea' },
+          { key: 'paso3Titulo', label: 'Paso 3 - Título', tipo: 'texto' },
+          { key: 'paso3Desc', label: 'Paso 3 - Descripción', tipo: 'textarea' },
+          { key: 'paso4Titulo', label: 'Paso 4 - Título', tipo: 'texto' },
+          { key: 'paso4Desc', label: 'Paso 4 - Descripción', tipo: 'textarea' }
+        ]
+      },
+      {
+        id: 'cta',
+        nombre: 'CTA Final',
+        icono: '🚀',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+          { key: 'cta1', label: 'Botón 1', tipo: 'texto' },
+          { key: 'cta2', label: 'Botón 2', tipo: 'texto' },
+          { key: 'imagenFondo', label: 'Imagen de fondo (URL)', tipo: 'imagen' }
+        ]
+      }
+    ],
+    'nosotros': [
+      {
+        id: 'hero', nombre: 'Hero', icono: '✨',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+          { key: 'imagenFondo', label: 'Imagen de fondo', tipo: 'imagen' }
+        ]
+      },
+      {
+        id: 'intro', nombre: 'Introducción', icono: '📖',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      },
+      {
+        id: 'mision', nombre: 'Misión', icono: '🎯',
+        campos: [
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      },
+      {
+        id: 'vision', nombre: 'Visión', icono: '👁️',
+        campos: [
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      },
+      {
+        id: 'arquitecto', nombre: 'El Arquitecto', icono: '👤',
+        campos: [
+          { key: 'nombre', label: 'Nombre completo', tipo: 'texto' },
+          { key: 'titulo', label: 'Cargo / Título', tipo: 'texto' },
+          { key: 'foto', label: 'Foto (URL)', tipo: 'imagen' },
+          { key: 'biografia', label: 'Biografía (párrafo 1)', tipo: 'textarea' },
+          { key: 'biografia2', label: 'Biografía (párrafo 2)', tipo: 'textarea' },
+          { key: 'email', label: 'Email de contacto', tipo: 'texto' },
+          { key: 'linkedin', label: 'LinkedIn (URL)', tipo: 'url' }
+        ]
+      },
+      {
+        id: 'valores', nombre: 'Sección Valores', icono: '⭐',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      },
+      {
+        id: 'cta', nombre: 'CTA Final', icono: '🚀',
+        campos: [
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      }
+    ],
+    'proyectos': [
+      {
+        id: 'hero', nombre: 'Hero', icono: '✨',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      },
+      {
+        id: 'intro', nombre: 'Introducción + Stats', icono: '📖',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      },
+      {
+        id: 'cta', nombre: 'CTA Final', icono: '🚀',
+        campos: [
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      }
+    ],
+    'servicios': [
+      {
+        id: 'hero', nombre: 'Hero', icono: '✨',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      },
+      {
+        id: 'intro', nombre: 'Introducción', icono: '📖',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      },
+      {
+        id: 'cta', nombre: 'CTA Final', icono: '🚀',
+        campos: [
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      }
+    ],
+    'citas': [
+      {
+        id: 'hero', nombre: 'Hero', icono: '✨',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
+        ]
+      },
+      {
+        id: 'beneficios', nombre: 'Beneficios (sidebar)', icono: '✅',
+        campos: [
+          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          { key: 'beneficio1', label: 'Beneficio 1', tipo: 'texto' },
+          { key: 'beneficio2', label: 'Beneficio 2', tipo: 'texto' },
+          { key: 'beneficio3', label: 'Beneficio 3', tipo: 'texto' },
+          { key: 'beneficio4', label: 'Beneficio 4', tipo: 'texto' }
+        ]
+      },
+      {
+        id: 'horarios', nombre: 'Horarios', icono: '🕐',
+        campos: [
+          { key: 'lunVie', label: 'Lunes a viernes', tipo: 'texto', placeholder: '9:00 – 18:00' },
+          { key: 'sabado', label: 'Sábado', tipo: 'texto' },
+          { key: 'domingo', label: 'Domingo', tipo: 'texto' }
+        ]
+      }
+    ]
+  };
+
+  // Almacén del contenido (en producción esto vendría del backend)
+  contenidoPaginas: Record<string, Record<string, Record<string, string>>> = {};
+
+  // ============ PREVIEW EMBEBIDA ============
+  mostrarPreviewPagina = false;
+  paginaPrevisualizando: Pagina | null = null;
+  urlPreviewSegura: SafeResourceUrl | null = null;
+  dispositivoPreview: 'desktop' | 'tablet' | 'mobile' = 'desktop';
+
+  private sanitizer = inject(DomSanitizer);
+
+  private rutasPublicas: Record<string, string> = {
+    '/': '/home',
+    '/nosotros': '/nosotros',
+    '/proyectos': '/proyectos',
+    '/servicios': '/servicios',
+    '/citas': '/citas'
+  };
 
   get categoriaLabel() {
     return this.categoriasOpciones.find(c => c.value === this.formNuevaPagina.categoria)?.label || '';
@@ -349,5 +614,119 @@ export class PaginasComponent implements OnInit {
 
   eliminarCampoFormulario(bloque: BloqueContenido, index: number) {
     if (bloque.campos) bloque.campos.splice(index, 1);
+  }
+
+  // Map slug → schema key
+  private slugASchema: Record<string, string> = {
+    '/': 'inicio',
+    '/nosotros': 'nosotros',
+    '/proyectos': 'proyectos',
+    '/servicios': 'servicios',
+    '/citas': 'citas'
+  };
+
+  // ============ EDITAR / PREVISUALIZAR ============
+  previsualizarPagina(pagina: Pagina) {
+    this.menuAbiertoId = null;
+    const ruta = this.rutasPublicas[pagina.slug] || pagina.slug;
+    this.paginaPrevisualizando = pagina;
+    this.urlPreviewSegura = this.sanitizer.bypassSecurityTrustResourceUrl(ruta);
+    this.dispositivoPreview = 'desktop';
+    this.mostrarPreviewPagina = true;
+  }
+
+  cerrarPreviewPagina() {
+    this.mostrarPreviewPagina = false;
+    this.urlPreviewSegura = null;
+    this.paginaPrevisualizando = null;
+  }
+
+  abrirEnPestanaNueva() {
+    if (!this.paginaPrevisualizando) return;
+    const ruta = this.rutasPublicas[this.paginaPrevisualizando.slug] || this.paginaPrevisualizando.slug;
+    window.open(ruta, '_blank');
+  }
+
+  get anchoPreview(): string {
+    if (this.dispositivoPreview === 'mobile') return '390px';
+    if (this.dispositivoPreview === 'tablet') return '820px';
+    return '100%';
+  }
+
+  editarPagina(pagina: Pagina) {
+    this.menuAbiertoId = null;
+
+    // Si es personalizada, abrimos el editor de Nueva Página (lo agregamos después)
+    if (pagina.tipo === 'personalizada') {
+      // TODO: cargar pagina en formNuevaPagina y abrir modal
+      this.abrirNuevaPagina();
+      return;
+    }
+
+    // Fija → abrir editor de página fija
+    this.paginaEditando = pagina;
+
+    const schemaKey = this.slugASchema[pagina.slug];
+    if (!schemaKey) return;
+
+    // Inicializar contenido si no existe
+    if (!this.contenidoPaginas[schemaKey]) {
+      this.contenidoPaginas[schemaKey] = {};
+      this.schemasPaginas[schemaKey].forEach(seccion => {
+        this.contenidoPaginas[schemaKey][seccion.id] = {};
+        seccion.campos.forEach(campo => {
+          this.contenidoPaginas[schemaKey][seccion.id][campo.key] = '';
+        });
+      });
+    }
+
+    this.seccionEditandoActiva = this.schemasPaginas[schemaKey][0]?.id || '';
+    this.mostrarEditarPaginaFija = true;
+  }
+
+  cerrarEditarPagina() {
+    this.mostrarEditarPaginaFija = false;
+    this.paginaEditando = null;
+    this.seccionEditandoActiva = '';
+    this.mensajeGuardado = '';
+  }
+
+  get seccionesPaginaActual(): SeccionEditable[] {
+    if (!this.paginaEditando) return [];
+    const key = this.slugASchema[this.paginaEditando.slug];
+    return this.schemasPaginas[key] || [];
+  }
+
+  get seccionActualSchema(): SeccionEditable | undefined {
+    return this.seccionesPaginaActual.find(s => s.id === this.seccionEditandoActiva);
+  }
+
+  get contenidoSeccionActual(): Record<string, string> {
+    if (!this.paginaEditando) return {};
+    const key = this.slugASchema[this.paginaEditando.slug];
+    return this.contenidoPaginas[key]?.[this.seccionEditandoActiva] || {};
+  }
+
+  actualizarCampo(campoKey: string, valor: string) {
+    if (!this.paginaEditando) return;
+    const key = this.slugASchema[this.paginaEditando.slug];
+    if (!this.contenidoPaginas[key][this.seccionEditandoActiva]) {
+      this.contenidoPaginas[key][this.seccionEditandoActiva] = {};
+    }
+    this.contenidoPaginas[key][this.seccionEditandoActiva][campoKey] = valor;
+  }
+
+  seleccionarSeccionEdicion(id: string) {
+    this.seccionEditandoActiva = id;
+  }
+
+  guardarEdicionPagina() {
+    if (!this.paginaEditando) return;
+    this.paginaEditando.ultimaEdicion = 'Hace unos segundos';
+    this.mensajeGuardado = 'Cambios guardados correctamente';
+    setTimeout(() => this.mensajeGuardado = '', 3000);
+
+    // TODO: aquí conectas al backend
+    console.log('Guardando:', this.contenidoPaginas);
   }
 }
