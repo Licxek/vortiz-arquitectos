@@ -61,10 +61,15 @@ export const routes: Routes = [
       ]
   },
 
+  // Públicas
   { path: 'home', loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent) },
-
   { path: 'nosotros', loadComponent: () => import('./pages/nosotros/nosotros.component').then(m => m.NosotrosComponent) },
-
+  { path: 'proyectos', loadComponent: () => import('./pages/proyectos/proyectos.component').then(m => m.ProyectosComponent) },
   { path: 'servicios', loadComponent: () => import('./pages/servicios/servicios.component').then(m => m.ServiciosComponent) },
+  { path: 'citas', loadComponent: () => import('./pages/citas/citas.component').then(m => m.CitasComponent) },
+
+  // Default y wildcard ← AQUÍ ESTABA EL PROBLEMA
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: '**', redirectTo: 'home' }
 
 ];

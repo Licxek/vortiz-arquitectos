@@ -1,0 +1,430 @@
+<div class="bg-white">
+
+  <!-- ============ HERO ============ -->
+  <section class="relative h-[40vh] min-h-[300px] overflow-hidden">
+    <div class="absolute inset-0 bg-cover bg-center"
+         style="background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920')">
+    </div>
+    <div class="absolute inset-0 bg-gradient-to-br from-black/85 via-black/60 to-[#0a1f3d]/60"></div>
+
+    <div class="relative h-full flex flex-col items-center justify-center text-center px-4">
+      <span class="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold uppercase tracking-widest text-white mb-6">
+        Agenda tu cita
+      </span>
+      <h1 class="text-4xl md:text-6xl font-bold text-white max-w-3xl leading-tight">
+        Conversemos sobre <span class="italic font-light">tu proyecto</span>
+      </h1>
+      <p class="text-base text-gray-200 mt-4 max-w-2xl">
+        Llena el formulario y nos pondremos en contacto contigo en menos de 24 horas.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ FORM ============ -->
+  <section class="py-16 md:py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4">
+
+      <!-- ESTADO: ÉXITO -->
+      <div *ngIf="enviado()" class="max-w-2xl mx-auto text-center bg-white rounded-3xl shadow-xl p-10 md:p-14 animate-[fadeIn_0.4s_ease-out]">
+        <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <h2 class="text-3xl font-bold text-gray-900">¡Cita solicitada!</h2>
+        <p class="text-gray-600 mt-4 max-w-md mx-auto">
+          Recibimos tu solicitud. Te contactaremos a <strong>{{ form().correo }}</strong>
+          en las próximas 24 horas para confirmar tu cita del <strong>{{ form().fecha }}</strong> a las <strong>{{ form().hora }}</strong>.
+        </p>
+        <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mt-6 text-left">
+          <p class="text-xs font-bold uppercase tracking-widest text-[#0a4d7a] mb-2">Mientras esperas</p>
+          <p class="text-sm text-gray-600">
+            Si necesitas algo urgente, puedes escribirnos por WhatsApp al
+            <a href="https://wa.me/526180000000" class="text-[#0a4d7a] font-semibold hover:underline">+52 618 000 0000</a>.
+          </p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 mt-8 justify-center">
+          <button (click)="agendarOtra()"
+                  class="px-6 py-3 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-semibold shadow-md transition-all">
+            Agendar otra cita
+          </button>
+          <a routerLink="/"
+             class="px-6 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-semibold transition-all">
+            Volver al inicio
+          </a>
+        </div>
+      </div>
+
+      <!-- ESTADO: FORMULARIO -->
+      <div *ngIf="!enviado()" class="grid lg:grid-cols-3 gap-8">
+
+        <!-- FORM (2 cols) -->
+        <div class="lg:col-span-2">
+          <form (submit)="$event.preventDefault(); enviarFormulario()"
+                class="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-10 space-y-8">
+
+            <!-- SECCIÓN 1: Datos personales -->
+            <div>
+              <div class="flex items-center gap-3 mb-5">
+                <div class="w-8 h-8 bg-[#0a4d7a] text-white rounded-lg flex items-center justify-center text-sm font-bold">1</div>
+                <h2 class="text-lg font-bold text-gray-900">Datos personales</h2>
+              </div>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Nombre y apellidos</label>
+                  <input type="text"
+                         [ngModel]="form().nombreCompleto"
+                         (ngModelChange)="actualizarForm('nombreCompleto', $event)"
+                         name="nombre"
+                         placeholder="Ej. Juan Pérez García"
+                         class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Correo electrónico</label>
+                    <input type="email"
+                           [ngModel]="form().correo"
+                           (ngModelChange)="actualizarForm('correo', $event)"
+                           name="correo"
+                           placeholder="tu@correo.com"
+                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Teléfono</label>
+                    <input type="tel"
+                           [ngModel]="form().telefono"
+                           (ngModelChange)="actualizarForm('telefono', $event)"
+                           name="telefono"
+                           placeholder="618 000 0000"
+                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECCIÓN 2: Tipo de cita -->
+            <div>
+              <div class="flex items-center gap-3 mb-5">
+                <div class="w-8 h-8 bg-[#0a4d7a] text-white rounded-lg flex items-center justify-center text-sm font-bold">2</div>
+                <h2 class="text-lg font-bold text-gray-900">¿Qué tipo de cita necesitas?</h2>
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-3">
+                <!-- Consulta -->
+                <button type="button"
+                        (click)="seleccionarTipo('consulta')"
+                        class="text-left p-5 rounded-2xl border-2 transition-all"
+                        [class.border-[#0a4d7a]]="form().tipo === 'consulta'"
+                        [class.bg-blue-50]="form().tipo === 'consulta'"
+                        [class.border-gray-200]="form().tipo !== 'consulta'"
+                        [class.hover:border-gray-400]="form().tipo !== 'consulta'">
+                  <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors"
+                         [class.bg-[#0a4d7a]]="form().tipo === 'consulta'"
+                         [class.text-white]="form().tipo === 'consulta'"
+                         [class.bg-gray-100]="form().tipo !== 'consulta'"
+                         [class.text-gray-500]="form().tipo !== 'consulta'">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <p class="text-sm font-bold text-gray-900">Consulta inicial</p>
+                      <p class="text-xs text-gray-500 mt-1">Tienes dudas, quieres orientación o explorar opciones.</p>
+                    </div>
+                  </div>
+                </button>
+
+                <!-- Proyecto -->
+                <button type="button"
+                        (click)="seleccionarTipo('proyecto')"
+                        class="text-left p-5 rounded-2xl border-2 transition-all"
+                        [class.border-[#0a4d7a]]="form().tipo === 'proyecto'"
+                        [class.bg-blue-50]="form().tipo === 'proyecto'"
+                        [class.border-gray-200]="form().tipo !== 'proyecto'"
+                        [class.hover:border-gray-400]="form().tipo !== 'proyecto'">
+                  <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors"
+                         [class.bg-[#0a4d7a]]="form().tipo === 'proyecto'"
+                         [class.text-white]="form().tipo === 'proyecto'"
+                         [class.bg-gray-100]="form().tipo !== 'proyecto'"
+                         [class.text-gray-500]="form().tipo !== 'proyecto'">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <p class="text-sm font-bold text-gray-900">Proyecto específico</p>
+                      <p class="text-xs text-gray-500 mt-1">Sabes lo que necesitas y quieres cotizar un servicio.</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- SECCIÓN 3: Servicio (solo si tipo = proyecto) -->
+            <div *ngIf="form().tipo === 'proyecto'" class="animate-[fadeIn_0.3s_ease-out]">
+              <div class="flex items-center gap-3 mb-5">
+                <div class="w-8 h-8 bg-[#0a4d7a] text-white rounded-lg flex items-center justify-center text-sm font-bold">3</div>
+                <h2 class="text-lg font-bold text-gray-900">Servicio de interés</h2>
+              </div>
+
+              <!-- Dropdown custom -->
+              <div class="relative" (click)="$event.stopPropagation()">
+                <button type="button"
+                        (click)="toggleSelectorServicio()"
+                        class="w-full px-4 py-3 bg-gray-50 hover:bg-white border border-gray-200 hover:border-[#0a4d7a] rounded-xl text-left flex items-center justify-between gap-3 transition-all">
+                  <div *ngIf="servicioSeleccionado() as s" class="flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 bg-[#0a4d7a]/10 rounded-lg flex items-center justify-center shrink-0">
+                      <svg class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                      </svg>
+                    </div>
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold text-gray-900 truncate">{{ s.titulo }}</p>
+                      <p class="text-xs text-gray-500">{{ s.categoria }}</p>
+                    </div>
+                  </div>
+                  <span *ngIf="!servicioSeleccionado()" class="text-sm text-gray-400">Selecciona un servicio</span>
+                  <svg class="w-5 h-5 text-gray-400 shrink-0 transition-transform"
+                       [class.rotate-180]="mostrarSelectorServicio()"
+                       fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+
+                <!-- Lista -->
+                <div *ngIf="mostrarSelectorServicio()"
+                     class="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 max-h-[420px] overflow-y-auto animate-[fadeIn_0.15s_ease-out]">
+                  <button *ngFor="let s of servicios"
+                          type="button"
+                          (click)="seleccionarServicio(s.id)"
+                          class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors border-b border-gray-100 last:border-b-0"
+                          [class.bg-blue-50]="form().servicioId === s.id">
+                    <div class="w-9 h-9 bg-[#0a4d7a]/10 rounded-lg flex items-center justify-center shrink-0">
+                      <ng-container [ngSwitch]="s.icono">
+                        <svg *ngSwitchCase="'document'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <svg *ngSwitchCase="'badge'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        <svg *ngSwitchCase="'users'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <svg *ngSwitchCase="'eye'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <svg *ngSwitchCase="'cube'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        <svg *ngSwitchCase="'map'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m-6 3l6-3"/></svg>
+                        <svg *ngSwitchCase="'structure'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        <svg *ngSwitchCase="'leaf'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21c0-7 3.5-11 9-11 5.5 0 9-4 9-4-1 7-4 14-9 14-2.5 0-4-1-5-2-1 1-2 2-4 3z"/></svg>
+                        <svg *ngSwitchCase="'water'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3.05c0 0-6 6.5-6 11.45a6 6 0 0012 0c0-4.95-6-11.45-6-11.45z"/></svg>
+                        <svg *ngSwitchCase="'bulb'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        <svg *ngSwitchCase="'home'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        <svg *ngSwitchCase="'factory'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V9l5 3V9l5 3V5l4 2v14M9 17h2m4 0h2"/></svg>
+                        <svg *ngSwitchCase="'chat'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                        <svg *ngSwitchCase="'calculator'" class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                      </ng-container>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-gray-900 truncate">{{ s.titulo }}</p>
+                      <p class="text-xs text-gray-500">{{ s.categoria }}</p>
+                    </div>
+                    <svg *ngIf="form().servicioId === s.id" class="w-4 h-4 text-[#0a4d7a] shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECCIÓN 4: Motivo -->
+            <div *ngIf="form().tipo !== null">
+              <div class="flex items-center gap-3 mb-5">
+                <div class="w-8 h-8 bg-[#0a4d7a] text-white rounded-lg flex items-center justify-center text-sm font-bold">
+                  {{ form().tipo === 'proyecto' ? '4' : '3' }}
+                </div>
+                <h2 class="text-lg font-bold text-gray-900">
+                  {{ form().tipo === 'proyecto' ? 'Cuéntanos más sobre tu proyecto' : 'Motivo de la consulta' }}
+                </h2>
+                <span class="text-xs text-gray-400 ml-auto">Opcional</span>
+              </div>
+              <textarea [ngModel]="form().motivo"
+                        (ngModelChange)="actualizarForm('motivo', $event)"
+                        name="motivo"
+                        rows="4"
+                        [placeholder]="form().tipo === 'proyecto' ? 'Por ejemplo: superficie del terreno, ubicación, fecha estimada, presupuesto...' : 'Por ejemplo: tengo dudas sobre los trámites necesarios para construir...'"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"></textarea>
+            </div>
+
+            <!-- SECCIÓN 5: Fecha y hora -->
+            <div *ngIf="form().tipo !== null">
+              <div class="flex items-center gap-3 mb-5">
+                <div class="w-8 h-8 bg-[#0a4d7a] text-white rounded-lg flex items-center justify-center text-sm font-bold">
+                  {{ form().tipo === 'proyecto' ? '5' : '4' }}
+                </div>
+                <h2 class="text-lg font-bold text-gray-900">¿Cuándo te gustaría?</h2>
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Fecha</label>
+                  <input type="date"
+                         [ngModel]="form().fecha"
+                         (ngModelChange)="actualizarForm('fecha', $event)"
+                         name="fecha"
+                         [min]="fechaMinima"
+                         class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Hora</label>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button *ngFor="let h of horasDisponibles"
+                            type="button"
+                            (click)="actualizarForm('hora', h)"
+                            class="px-2 py-2 rounded-lg text-xs font-semibold border transition-all"
+                            [class.bg-[#0a4d7a]]="form().hora === h"
+                            [class.text-white]="form().hora === h"
+                            [class.border-[#0a4d7a]]="form().hora === h"
+                            [class.bg-gray-50]="form().hora !== h"
+                            [class.text-gray-700]="form().hora !== h"
+                            [class.border-gray-200]="form().hora !== h"
+                            [class.hover:border-gray-400]="form().hora !== h">
+                      {{ h }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SUBMIT -->
+            <div class="pt-4 border-t border-gray-100">
+              <button type="submit"
+                      [disabled]="!formValido() || enviando()"
+                      class="w-full px-6 py-4 bg-gradient-to-r from-[#0a4d7a] to-[#0a5d8f] hover:shadow-2xl text-white rounded-xl text-base font-bold shadow-md transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-md flex items-center justify-center gap-2">
+                <span *ngIf="!enviando()">Agendar mi cita</span>
+                <span *ngIf="enviando()" class="flex items-center gap-2">
+                  <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Enviando...
+                </span>
+                <svg *ngIf="!enviando()" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+              </button>
+
+              <p class="text-xs text-center text-gray-500 mt-3">
+                Al enviar este formulario aceptas nuestra
+                <a href="#" class="text-[#0a4d7a] hover:underline">política de privacidad</a>.
+              </p>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- SIDEBAR -->
+        <aside class="lg:col-span-1">
+          <div class="lg:sticky lg:top-24 space-y-6">
+
+            <!-- Por qué nosotros -->
+            <div class="relative bg-gradient-to-br from-[#0a1f3d] to-[#0a4d7a] text-white p-6 rounded-2xl overflow-hidden shadow-xl">
+              <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
+              <div class="relative">
+                <h3 class="text-lg font-bold mb-4">¿Por qué agendar con nosotros?</h3>
+                <ul class="space-y-3">
+                  <li class="flex items-start gap-2 text-sm">
+                    <svg class="w-5 h-5 shrink-0 text-green-300 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Respuesta en menos de 24h
+                  </li>
+                  <li class="flex items-start gap-2 text-sm">
+                    <svg class="w-5 h-5 shrink-0 text-green-300 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Consulta inicial sin compromiso
+                  </li>
+                  <li class="flex items-start gap-2 text-sm">
+                    <svg class="w-5 h-5 shrink-0 text-green-300 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Asesoría de un profesional certificado
+                  </li>
+                  <li class="flex items-start gap-2 text-sm">
+                    <svg class="w-5 h-5 shrink-0 text-green-300 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Cotización rápida y transparente
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Contacto directo -->
+            <div class="bg-white border border-gray-100 rounded-2xl p-6">
+              <h3 class="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">¿Prefieres contacto directo?</h3>
+
+              <a href="https://wa.me/526180000000"
+                 class="flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition-colors group">
+                <div class="w-10 h-10 bg-green-100 group-hover:bg-green-500 rounded-xl flex items-center justify-center transition-colors">
+                  <svg class="w-5 h-5 text-green-600 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">WhatsApp</p>
+                  <p class="text-sm font-bold text-gray-900">+52 618 000 0000</p>
+                </div>
+              </a>
+
+              <a href="mailto:info@vortizarquitectos.com"
+                 class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition-colors group">
+                <div class="w-10 h-10 bg-blue-100 group-hover:bg-[#0a4d7a] rounded-xl flex items-center justify-center transition-colors">
+                  <svg class="w-5 h-5 text-[#0a4d7a] group-hover:text-white transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Correo</p>
+                  <p class="text-sm font-bold text-gray-900 truncate">info&#64;vortizarquitectos.com</p>
+                </div>
+              </a>
+
+              <div class="flex items-start gap-3 p-3 mt-2 pt-4 border-t border-gray-100">
+                <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center shrink-0">
+                  <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Oficina</p>
+                  <p class="text-sm text-gray-700 leading-relaxed">Milpillas 101<br>La Forestal, Durango</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Horarios -->
+            <div class="bg-white border border-gray-100 rounded-2xl p-6">
+              <h3 class="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">Horario de atención</h3>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-700">Lunes a viernes</span>
+                  <span class="font-semibold text-gray-900">9:00 – 18:00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-700">Sábado</span>
+                  <span class="font-semibold text-gray-900">9:00 – 13:00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-700">Domingo</span>
+                  <span class="font-semibold text-red-500">Cerrado</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </section>
+
+</div>

@@ -15,7 +15,7 @@ export class FooterComponent implements OnInit {
   anio = new Date().getFullYear();
 
   navLinks = [
-    { label: 'Inicio', path: '/' },
+    { label: 'Inicio', path: '/home' },
     { label: 'Servicios', path: '/servicios' },
     { label: 'Proyectos', path: '/proyectos' },
     { label: 'Nosotros', path: '/nosotros' },

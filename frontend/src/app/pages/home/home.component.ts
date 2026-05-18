@@ -8,11 +8,14 @@ interface Servicio {
   descripcion: string;
 }
 
-interface Proyecto {
-  imagen: string;
-  titulo: string;
+interface ProyectoDestacado {
+  nombre: string;
+  iniciales: string;
+  logoUrl?: string;
   categoria: string;
   ubicacion: string;
+  anio: number;
+  colorMarca: string;
 }
 
 interface Paso {
@@ -50,13 +53,15 @@ export class HomeComponent implements OnInit {
     { icono: 'legal', titulo: 'Gestión técnica y legal', descripcion: 'Trámites, permisos y dictámenes técnicos para tu proyecto.' }
   ];
 
-  proyectosDestacados: Proyecto[] = [
-    { imagen: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800', titulo: 'Residencia Las Flores', categoria: 'Residencial', ubicacion: 'La Forestal, Durango' },
-    { imagen: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800', titulo: 'Corporativo Centro', categoria: 'Comercial', ubicacion: 'Centro, Durango' },
-    { imagen: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800', titulo: 'Casa Loma del Parque', categoria: 'Residencial', ubicacion: 'Loma Dorada' },
-    { imagen: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800', titulo: 'Oficinas Tecnológica', categoria: 'Corporativo', ubicacion: 'Zona Industrial' },
-    { imagen: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800', titulo: 'Plaza Comercial', categoria: 'Comercial', ubicacion: 'Av. 20 de Noviembre' },
-    { imagen: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800', titulo: 'Villa Costanera', categoria: 'Residencial', ubicacion: 'Mazatlán, Sinaloa' }
+  proyectosDestacados: ProyectoDestacado[] = [
+    { nombre: 'Toyota', iniciales: 'TY', categoria: 'Corporativo', ubicacion: 'Guanajuato', anio: 2018, colorMarca: '#EB0A1E' },
+    { nombre: 'Bancomer', iniciales: 'BX', categoria: 'Corporativo', ubicacion: 'Durango', anio: 2015, colorMarca: '#004481' },
+    { nombre: 'Aeropuerto de Cancún', iniciales: 'AC', categoria: 'Infraestructura', ubicacion: 'Quintana Roo', anio: 2019, colorMarca: '#00A859' },
+    { nombre: 'Puente Baluarte', iniciales: 'PB', categoria: 'Infraestructura', ubicacion: 'Durango–Sinaloa', anio: 2012, colorMarca: '#6B7280' },
+    { nombre: 'Casas Geo', iniciales: 'CG', categoria: 'Residencial', ubicacion: 'Varios estados', anio: 2017, colorMarca: '#7DC242' },
+    { nombre: 'COFICAB', iniciales: 'CF', categoria: 'Industrial', ubicacion: 'Aguascalientes', anio: 2020, colorMarca: '#0066B3' },
+    { nombre: 'Paseo Durango', iniciales: 'PD', categoria: 'Comercial', ubicacion: 'Durango', anio: 2016, colorMarca: '#F59E0B' },
+    { nombre: 'Fanosa', iniciales: 'FN', categoria: 'Industrial', ubicacion: 'Durango', anio: 2022, colorMarca: '#DC2626' }
   ];
 
   pasos: Paso[] = [
