@@ -8,7 +8,7 @@
 
   <!-- Mensaje de éxito flotante -->
   <div *ngIf="mensajeExito"
-      class="fixed top-6 right-6 z-50 bg-white border border-green-200 rounded-xl shadow-2xl p-4 flex items-center gap-3 animate-[fadeIn_0.3s_ease-out]">
+        class="fixed top-20 right-4 left-4 sm:top-6 sm:right-6 sm:left-auto z-50 bg-white border border-green-200 rounded-xl shadow-2xl p-4 flex items-center gap-3 animate-[fadeIn_0.3s_ease-out]">
     <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
       <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
@@ -104,7 +104,7 @@
   <div *ngIf="tabActiva === 'negocio'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
 
     <!-- Información general -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Información general</h3>
       <p class="text-xs text-gray-500 mb-5">Datos públicos de tu negocio</p>
 
@@ -124,7 +124,7 @@
     </div>
 
     <!-- Dirección -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Dirección</h3>
       <p class="text-xs text-gray-500 mb-5">Ubicación física de la oficina</p>
 
@@ -155,7 +155,7 @@
     </div>
 
     <!-- Datos fiscales -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Datos fiscales</h3>
       <p class="text-xs text-gray-500 mb-5">Información para facturación</p>
 
@@ -166,7 +166,7 @@
       </div>
     </div>
 
-    <div class="flex justify-end">
+    <div class="flex justify-end sticky bottom-4 z-10">
       <button (click)="guardarCambios('Negocio')" [disabled]="guardando"
               class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60">
         <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -181,7 +181,7 @@
   <!-- ============ TAB: CONTACTO ============ -->
   <div *ngIf="tabActiva === 'contacto'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Información de contacto</h3>
       <p class="text-xs text-gray-500 mb-5">Datos que verán tus clientes</p>
 
@@ -235,7 +235,7 @@
     </div>
 
     <!-- Redes sociales -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <div class="flex items-center justify-between mb-1">
         <h3 class="text-base font-semibold text-gray-900">Redes sociales</h3>
       </div>
@@ -243,20 +243,22 @@
 
       <div class="space-y-3">
         <div *ngFor="let red of redes"
-             class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
-             [class.opacity-50]="!red.activa">
+            class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+            [class.opacity-50]="!red.activa">
 
-          <!-- Toggle -->
-          <button (click)="toggleRed(red)"
-                  class="relative w-11 h-6 rounded-full transition-colors shrink-0"
-                  [class.bg-green-500]="red.activa"
-                  [class.bg-gray-300]="!red.activa">
-            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
-                  [class.translate-x-5]="red.activa"></span>
-          </button>
+          <!-- Toggle + Nombre (grupo) -->
+          <div class="flex items-center gap-3">
+            <!-- Toggle -->
+            <button (click)="toggleRed(red)"
+                    class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+                    [class.bg-green-500]="red.activa"
+                    [class.bg-gray-300]="!red.activa">
+              <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                    [class.translate-x-5]="red.activa"></span>
+            </button>
 
-          <!-- Nombre + icono -->
-          <div class="flex items-center gap-2 w-32 shrink-0">
+            <!-- Nombre + icono -->
+            <div class="flex items-center gap-2 w-32 shrink-0">
             <ng-container [ngSwitch]="red.icono">
               <svg *ngSwitchCase="'instagram'" class="w-5 h-5" [class.text-pink-500]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
@@ -275,17 +277,18 @@
               </svg>
             </ng-container>
             <span class="text-sm font-medium text-gray-700">{{ red.nombre }}</span>
+            </div>
           </div>
 
           <!-- URL -->
           <input type="url" [(ngModel)]="red.url" [disabled]="!red.activa"
-                 placeholder="https://..."
-                 class="flex-1 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] transition-all disabled:bg-gray-100 disabled:cursor-not-allowed" />
+                placeholder="https://..."
+                class="w-full sm:flex-1 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] transition-all disabled:bg-gray-100 disabled:cursor-not-allowed" />
         </div>
       </div>
     </div>
 
-    <div class="flex justify-end">
+    <div class="flex justify-end sticky bottom-4 z-10">
       <button (click)="guardarCambios('Contacto')" [disabled]="guardando"
               class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60">
         <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -302,7 +305,7 @@
   <div *ngIf="tabActiva === 'agenda'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
 
     <!-- Días y horarios -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Días y horarios de atención</h3>
       <p class="text-xs text-gray-500 mb-5">Cuándo aceptas citas</p>
 
@@ -401,7 +404,7 @@
     </div>
 
     <!-- Duración y limites -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Configuración de citas</h3>
       <p class="text-xs text-gray-500 mb-5">Define cómo se programan las citas</p>
 
@@ -452,7 +455,7 @@
       </button>
 
       <div *ngIf="selectorTiempoEntreAbierto"
-    }class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-[fadeIn_0.15s_ease-out]">
+    class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-[fadeIn_0.15s_ease-out]">
         <button *ngFor="let opcion of opcionesTiempoEntre"
                 (click)="seleccionarTiempoEntre(opcion.value)"
                 class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
@@ -481,15 +484,15 @@
     </div>
 
     <!-- Días feriados -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Días feriados y vacaciones</h3>
       <p class="text-xs text-gray-500 mb-5">Días en que no se pueden agendar citas</p>
 
       <div class="flex flex-col sm:flex-row gap-2 mb-4">
         <input type="date" [(ngModel)]="nuevoFeriado.fecha"
-              class="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+              class="w-full sm:w-auto px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
         <input type="text" [(ngModel)]="nuevoFeriado.motivo" placeholder="Motivo (ej: Navidad, Vacaciones)"
-              class="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+              class="w-full sm:flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
         <button (click)="agregarFeriado()"
                 class="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium transition-all">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -525,7 +528,7 @@
       </div>
     </div>
 
-    <div class="flex justify-end">
+    <div class="flex justify-end sticky bottom-4 z-10">
       <button (click)="guardarCambios('Agenda')" [disabled]="guardando"
               class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60">
         <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -541,7 +544,7 @@
   <div *ngIf="tabActiva === 'apariencia'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
 
     <!-- Logos -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Logos e iconos</h3>
       <p class="text-xs text-gray-500 mb-5">Imágenes que representan tu marca</p>
 
@@ -579,7 +582,7 @@
     </div>
 
     <!-- Colores -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Colores corporativos</h3>
       <p class="text-xs text-gray-500 mb-5">Define los colores principales del sitio</p>
 
@@ -640,22 +643,22 @@
     </div>
 
     <!-- Vista previa -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Vista previa</h3>
       <p class="text-xs text-gray-500 mb-5">Así se verán los elementos con tus colores</p>
 
       <div class="rounded-xl overflow-hidden border border-gray-200">
-  <div class="p-6 text-white"
-       [style.background]="'linear-gradient(to bottom, ' + apariencia.degradadoInicio + ', ' + apariencia.degradadoFin + ')'">
-    <div class="flex items-center gap-3">
-      <img [src]="apariencia.logoUrl" class="h-10 w-auto" />
-      <div>
-        <p class="font-bold">Vortiz Arquitectos</p>
-        <p class="text-xs text-gray-300">Vista previa del header</p>
-      </div>
-    </div>
-  </div>
-  <div class="p-6 bg-white">
+        <div class="p-4 md:p-6 text-white"
+            [style.background]="'linear-gradient(to bottom, ' + apariencia.degradadoInicio + ', ' + apariencia.degradadoFin + ')'">
+          <div class="flex items-center gap-3">
+            <img [src]="apariencia.logoUrl" class="h-10 w-auto" />
+            <div>
+              <p class="font-bold">Vortiz Arquitectos</p>
+              <p class="text-xs text-gray-300">Vista previa del header</p>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 md:p-6 bg-white">
     <button class="px-4 py-2 rounded-lg text-white text-sm font-medium" [style.background]="apariencia.colorPrimario">
       Botón primario
     </button>
@@ -670,7 +673,7 @@
 </div>
     </div>
 
-    <div class="flex justify-end">
+    <div class="flex justify-end sticky bottom-4 z-10">
       <button (click)="guardarCambios('Apariencia')" [disabled]="guardando"
               class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60">
         <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -685,7 +688,7 @@
   <!-- ============ TAB: NOTIFICACIONES ============ -->
   <div *ngIf="tabActiva === 'notificaciones'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Notificaciones para ti</h3>
       <p class="text-xs text-gray-500 mb-5">Recibirás avisos en tu correo de notificaciones</p>
 
@@ -744,7 +747,7 @@
       </div>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Recordatorios para tus clientes</h3>
       <p class="text-xs text-gray-500 mb-5">Tus clientes recibirán recordatorios automáticos antes de su cita</p>
 
@@ -816,7 +819,7 @@
       </div>
     </div>
 
-    <div class="flex justify-end">
+    <div class="flex justify-end sticky bottom-4 z-10">
       <button (click)="guardarCambios('Notificaciones')" [disabled]="guardando"
               class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60">
         <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -831,7 +834,7 @@
   <!-- ============ TAB: SEO ============ -->
   <div *ngIf="tabActiva === 'seo'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Optimización para buscadores</h3>
       <p class="text-xs text-gray-500 mb-5">Mejora cómo aparece tu sitio en Google y redes sociales</p>
 
@@ -867,7 +870,7 @@
     </div>
 
     <!-- Vista previa Google -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Vista previa en Google</h3>
       <p class="text-xs text-gray-500 mb-5">Así se verá tu sitio en los resultados de búsqueda</p>
 
@@ -879,7 +882,7 @@
     </div>
 
     <!-- Imagen para redes -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Imagen para compartir</h3>
       <p class="text-xs text-gray-500 mb-5">Esta imagen aparece cuando alguien comparte tu sitio en redes sociales</p>
 
@@ -895,7 +898,7 @@
       </div>
     </div>
 
-    <div class="flex justify-end">
+    <div class="flex justify-end sticky bottom-4 z-10">
       <button (click)="guardarCambios('SEO')" [disabled]="guardando"
               class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60">
         <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">

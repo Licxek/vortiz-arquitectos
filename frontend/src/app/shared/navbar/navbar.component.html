@@ -3,31 +3,27 @@
 
   <!-- Barra principal escritorio -->
   <div class="navbar-container w-full hidden md:flex items-center justify-between transition-all duration-300"
-      [class.px-16]="!scrolled"
-      [class.py-6]="!scrolled"
-      [class.px-8]="scrolled"
-      [class.py-3]="scrolled">
+      [ngClass]="scrolled
+        ? 'px-6 lg:px-8 py-3'
+        : 'px-6 lg:px-16 py-4 lg:py-6'">
 
-    <a routerLink="/" class="flex items-center gap-4">
+    <a routerLink="/" class="flex items-center gap-3 lg:gap-4 min-w-0">
       <img [src]="configuracion?.logo_url || '/assets/img/logo.png'" alt="Logo"
-          class="w-auto transition-all duration-300"
-          [class.h-28]="!scrolled"
-          [class.h-14]="scrolled" />
-      <div class="transition-all duration-300">
-        <span class="font-bold block transition-all duration-300"
-              [class.text-3xl]="!scrolled"
-              [class.text-xl]="scrolled">
+          class="w-auto transition-all duration-300 shrink-0"
+          [ngClass]="scrolled ? 'h-12 lg:h-14' : 'h-16 md:h-20 lg:h-28'" />
+      <div class="transition-all duration-300 min-w-0">
+        <span class="font-bold block transition-all duration-300 truncate"
+              [ngClass]="scrolled ? 'text-base lg:text-xl' : 'text-lg md:text-xl lg:text-3xl'">
           Vortiz Arquitectos
         </span>
-        <p class="text-gray-400 transition-all duration-300"
-          [class.text-base]="!scrolled"
-          [class.text-xs]="scrolled">
+        <p class="text-gray-400 transition-all duration-300 truncate"
+          [ngClass]="scrolled ? 'text-[10px] lg:text-xs' : 'text-xs md:text-sm lg:text-base'">
           Diseñamos espacios, construimos confianza.
         </p>
       </div>
     </a>
 
-    <ul class="flex items-center gap-10 text-base font-medium">
+    <ul class="flex items-center gap-4 lg:gap-10 text-sm lg:text-base font-medium shrink-0">
       <li *ngFor="let link of fixedLinks">
         <a [routerLink]="link.path" routerLinkActive="text-blue-400"
           class="relative inline-block transition-all duration-300 hover:text-blue-400 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(96,165,250,0.5)] after:content-[''] after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-blue-400 after:transition-all after:duration-300 hover:after:w-full">
@@ -96,7 +92,7 @@
 
 
   <!-- Buscador escritorio -->
-<div class="hidden md:block w-full px-16 py-4">
+<div class="hidden md:block w-full px-6 lg:px-16 py-4">
   <div class="max-w-2xl mx-auto buscador-escritorio relative">
 
     <!-- Input -->

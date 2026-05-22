@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService, Usuario } from '../../core/services/auth.service';
 import { ConfiguracionService, Configuracion } from '../../core/services/configuracion.service';
+import { HostListener } from '@angular/core';
 
 interface MenuItem {
   label: string;
@@ -30,6 +31,16 @@ export class AdminLayoutComponent implements OnInit {
     { label: 'Perfil', icon: 'user', path: '/admin/perfil' },
     { label: 'Citas', icon: 'calendar', path: '/admin/citas' },
   ];
+
+  // Estado del buscador
+  buscadorAdminAbierto = false;
+
+  toggleBuscadorAdmin(event: Event) {
+    event.stopPropagation();
+    this.buscadorAdminAbierto = !this.buscadorAdminAbierto;
+    // Cierra otros menús abiertos para no traslaparlos
+    this.menuUsuarioAbierto = false;
+  }
 
   constructor(
     private authService: AuthService,
@@ -63,5 +74,11 @@ export class AdminLayoutComponent implements OnInit {
   toggleSidebar() {
     this.sidebarColapsado = !this.sidebarColapsado;
     localStorage.setItem('sidebar_colapsado', String(this.sidebarColapsado));
+  }
+
+  @HostListener('document:click')
+  onDocumentClick() {
+    this.menuUsuarioAbierto = false;
+    this.buscadorAdminAbierto = false;
   }
 }

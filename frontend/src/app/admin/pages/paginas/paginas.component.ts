@@ -729,4 +729,33 @@ export class PaginasComponent implements OnInit {
     // TODO: aquí conectas al backend
     console.log('Guardando:', this.contenidoPaginas);
   }
+
+  onIframeCargado(event: Event) {
+    const iframe = event.target as HTMLIFrameElement;
+    try {
+      const doc = iframe.contentDocument;
+      if (!doc) return;
+
+      // Eliminar styles previos si ya existían (al cambiar de dispositivo)
+      const previo = doc.getElementById('preview-bloqueo');
+      if (previo) previo.remove();
+
+      const style = doc.createElement('style');
+      style.id = 'preview-bloqueo';
+      style.textContent = `
+        nav, header, footer,
+        app-navbar, app-footer, app-header {
+          pointer-events: none !important;
+        }
+        nav *, header *, footer *,
+        app-navbar *, app-footer *, app-header * {
+          pointer-events: none !important;
+          cursor: default !important;
+        }
+      `;
+      doc.head.appendChild(style);
+    } catch (e) {
+      console.warn('No se pudo bloquear navegación en el preview:', e);
+    }
+  }
 }

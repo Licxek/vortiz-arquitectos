@@ -547,4 +547,35 @@ export class InicioComponent implements OnInit {
       this.cerrarCita();
     }
   }
+
+  // Helpers para clasificar tipos de notificación
+  esTipoCita(tipo: string): boolean {
+    return ['cita', 'confirmacion', 'cancelacion'].includes(tipo);
+  }
+
+  esTipoConsulta(tipo: string): boolean {
+    return ['consulta', 'mensaje'].includes(tipo);
+  }
+
+  tipoNotifLabel(tipo: string): string {
+    const map: Record<string, string> = {
+      cita: 'Cita agendada',
+      confirmacion: 'Cita confirmada',
+      cancelacion: 'Cita cancelada',
+      consulta: 'Nueva consulta',
+      mensaje: 'Nuevo mensaje'
+    };
+    return map[tipo] || tipo;
+  }
+
+  // Navegación desde el modal
+  irACitasDesdeNotif() {
+    this.notificacionSeleccionada = null;
+    this.irACitas();
+  }
+
+  verConsultasDesdeNotif() {
+    this.notificacionSeleccionada = null;
+    this.abrirTodasConsultas();
+  }
 }

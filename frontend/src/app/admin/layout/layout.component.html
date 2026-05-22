@@ -37,22 +37,126 @@
       </button>
 
       <div class="flex items-center gap-3">
-        <span class="text-lg md:text-2xl font-bold">
+        <span class="text-lg md:text-xl lg:text-2xl font-bold">
           Bienvenido,
           <span class="text-blue-400">{{ usuario?.nombre || 'Admin' }}</span>
         </span>
       </div>
 
-      <div class="flex-1 max-w-md mx-4 hidden md:block">
-        <div class="flex items-center bg-white/10 border border-white/20 rounded-full px-4 py-2 hover:bg-white/15 transition-colors">
-          <input type="text"
-                placeholder="Buscar en Administrador"
-                class="flex-1 bg-transparent text-sm text-white placeholder-gray-400 outline-none" />
-          <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-          </svg>
-        </div>
-      </div>
+      <div class="flex-1 max-w-md mx-4 hidden md:block relative" (click)="$event.stopPropagation()">
+  <!-- Trigger -->
+  <div class="flex items-center bg-white/10 border border-white/20 rounded-full px-4 py-2 hover:bg-white/15 transition-colors cursor-text"
+       (click)="toggleBuscadorAdmin($event)">
+    <input type="text"
+          placeholder="Buscar en Administrador"
+          class="flex-1 bg-transparent text-sm text-white placeholder-gray-400 outline-none"
+          (focus)="buscadorAdminAbierto = true"
+          (click)="$event.stopPropagation()" />
+    <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+    </svg>
+  </div>
+
+  <!-- Panel desplegable -->
+  <div class="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top z-50 text-gray-800"
+      [class.opacity-0]="!buscadorAdminAbierto"
+      [class.scale-95]="!buscadorAdminAbierto"
+      [class.-translate-y-2]="!buscadorAdminAbierto"
+      [class.opacity-100]="buscadorAdminAbierto"
+      [class.scale-100]="buscadorAdminAbierto"
+      [class.translate-y-0]="buscadorAdminAbierto"
+      [class.pointer-events-none]="!buscadorAdminAbierto">
+
+    <!-- Atajos rápidos -->
+    <div class="px-5 py-4 border-b border-gray-100">
+      <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Atajos rápidos</p>
+      <ul class="flex flex-col">
+        <li>
+          <a routerLink="/admin/inicio" (click)="buscadorAdminAbierto = false"
+            class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3"/>
+            </svg>
+            <span class="text-sm text-gray-700">Inicio</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/paginas" (click)="buscadorAdminAbierto = false"
+            class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span class="text-sm text-gray-700">Páginas</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/citas" (click)="buscadorAdminAbierto = false"
+            class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span class="text-sm text-gray-700">Citas</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/perfil" (click)="buscadorAdminAbierto = false"
+            class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span class="text-sm text-gray-700">Mi perfil</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/configuracion" (click)="buscadorAdminAbierto = false"
+            class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span class="text-sm text-gray-700">Configuración</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Acciones rápidas -->
+    <div class="px-5 py-4 border-b border-gray-100">
+      <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Acciones rápidas</p>
+      <ul class="flex flex-col">
+        <li>
+          <a routerLink="/admin/paginas" (click)="buscadorAdminAbierto = false"
+            class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-blue-50 transition-colors group">
+            <div class="w-7 h-7 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors">
+              <svg class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Crear nueva página</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/citas" (click)="buscadorAdminAbierto = false"
+            class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-blue-50 transition-colors group">
+            <div class="w-7 h-7 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors">
+              <svg class="w-4 h-4 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Agendar nueva cita</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Tip -->
+    <div class="px-5 py-3 bg-gray-50">
+      <p class="text-[11px] text-gray-500 text-center">
+        La búsqueda completa estará disponible al conectar con backend
+      </p>
+    </div>
+  </div>
+</div>
 
       <div class="relative">
         <button (click)="toggleMenuUsuario()"
@@ -113,16 +217,88 @@
       </div>
     </div>
 
-    <div class="md:hidden mt-3">
-      <div class="flex items-center bg-white/10 border border-white/20 rounded-full px-4 py-2">
-        <input type="text"
-              placeholder="Buscar en Administrador"
-              class="flex-1 bg-transparent text-sm text-white placeholder-gray-400 outline-none" />
-        <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-        </svg>
-      </div>
+    <div class="md:hidden mt-3 relative" (click)="$event.stopPropagation()">
+  <div class="flex items-center bg-white/10 border border-white/20 rounded-full px-4 py-2 cursor-text"
+       (click)="toggleBuscadorAdmin($event)">
+    <input type="text"
+          placeholder="Buscar en Administrador"
+          class="flex-1 bg-transparent text-sm text-white placeholder-gray-400 outline-none"
+          (focus)="buscadorAdminAbierto = true"
+          (click)="$event.stopPropagation()" />
+    <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+    </svg>
+  </div>
+
+  <!-- Panel desplegable móvil (mismo contenido) -->
+  <div class="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top z-50 text-gray-800"
+      [class.opacity-0]="!buscadorAdminAbierto"
+      [class.scale-95]="!buscadorAdminAbierto"
+      [class.-translate-y-2]="!buscadorAdminAbierto"
+      [class.opacity-100]="buscadorAdminAbierto"
+      [class.scale-100]="buscadorAdminAbierto"
+      [class.translate-y-0]="buscadorAdminAbierto"
+      [class.pointer-events-none]="!buscadorAdminAbierto">
+
+    <div class="px-4 py-3 border-b border-gray-100">
+      <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Atajos rápidos</p>
+      <ul class="flex flex-col">
+        <li>
+          <a routerLink="/admin/inicio" (click)="buscadorAdminAbierto = false"
+            class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3"/>
+            </svg>
+            <span class="text-sm text-gray-700">Inicio</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/paginas" (click)="buscadorAdminAbierto = false"
+            class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span class="text-sm text-gray-700">Páginas</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/citas" (click)="buscadorAdminAbierto = false"
+            class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span class="text-sm text-gray-700">Citas</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/perfil" (click)="buscadorAdminAbierto = false"
+            class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span class="text-sm text-gray-700">Mi perfil</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/configuracion" (click)="buscadorAdminAbierto = false"
+            class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span class="text-sm text-gray-700">Configuración</span>
+          </a>
+        </li>
+      </ul>
     </div>
+
+    <div class="px-4 py-3 bg-gray-50">
+      <p class="text-[11px] text-gray-500 text-center">
+        Búsqueda completa pendiente del backend
+      </p>
+    </div>
+  </div>
+</div>
   </div>
 
   <!-- Contenedor principal -->
@@ -272,7 +448,7 @@
 
     <!-- Área de contenido -->
     <main class="flex-1 overflow-auto">
-      <div class="p-6 md:p-8">
+      <div class="p-4 md:p-6 lg:p-8">
         <router-outlet></router-outlet>
       </div>
     </main>
