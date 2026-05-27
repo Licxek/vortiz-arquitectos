@@ -1,5 +1,4 @@
 <div class="space-y-6">
-
   <!-- Encabezado -->
   <div>
     <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Configuración</h1>
@@ -7,93 +6,219 @@
   </div>
 
   <!-- Mensaje de éxito flotante -->
-  <div *ngIf="mensajeExito"
-        class="fixed top-20 right-4 left-4 sm:top-6 sm:right-6 sm:left-auto z-50 bg-white border border-green-200 rounded-xl shadow-2xl p-4 flex items-center gap-3 animate-[fadeIn_0.3s_ease-out]">
+  <div
+    *ngIf="mensajeExito"
+    class="fixed top-20 right-4 left-4 sm:top-6 sm:right-6 sm:left-auto z-50 bg-white border border-green-200 rounded-xl shadow-2xl p-4 flex items-center gap-3 animate-[fadeIn_0.3s_ease-out]"
+  >
     <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-      <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      <svg
+        class="w-5 h-5 text-green-600"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
       </svg>
     </div>
     <span class="text-sm font-medium text-gray-700">{{ mensajeExito }}</span>
   </div>
 
+  <!-- Modal de confirmación de restauración -->
+  <div
+    *ngIf="confirmacionAbierta"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-[fadeIn_0.2s_ease-out]"
+    (click)="cancelarRestauracion()"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6" (click)="$event.stopPropagation()">
+      <div class="flex items-start gap-4">
+        <div class="w-11 h-11 bg-amber-100 rounded-full flex items-center justify-center shrink-0">
+          <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-base font-semibold text-gray-900 mb-1">Restaurar valores originales</h3>
+          <p class="text-sm text-gray-500">
+            Se sobrescribirá lo que tengas guardado en
+            <span class="font-semibold text-gray-700">{{ seccionARestaurar }}</span>. Esta acción no se puede deshacer.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-6">
+        <button
+          (click)="cancelarRestauracion()"
+          type="button"
+          class="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="confirmarRestauracion()"
+          type="button"
+          class="px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all"
+        >
+          Sí, restaurar
+        </button>
+      </div>
+    </div>
+  </div>
+
+    <!-- Modal de confirmación de guardado -->
+  <div
+    *ngIf="confirmacionGuardarAbierta"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-[fadeIn_0.2s_ease-out]"
+    (click)="cancelarGuardado()"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6" (click)="$event.stopPropagation()">
+      <div class="flex items-start gap-4">
+        <div class="w-11 h-11 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+          <svg class="w-6 h-6 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-base font-semibold text-gray-900 mb-1">Guardar cambios</h3>
+          <p class="text-sm text-gray-500">
+            ¿Guardar los cambios de
+            <span class="font-semibold text-gray-700">{{ seccionAGuardar }}</span>? Se actualizarán en el sitio.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-6">
+        <button
+          (click)="cancelarGuardado()"
+          type="button"
+          class="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="confirmarGuardado()"
+          type="button"
+          class="px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all"
+        >
+          Sí, guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Tabs -->
   <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-1.5 overflow-x-auto">
     <div class="flex gap-1 min-w-max">
-      <button (click)="cambiarTab('negocio')"
-              class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
-              [class.bg-[#0a4d7a]]="tabActiva === 'negocio'"
-              [class.text-white]="tabActiva === 'negocio'"
-              [class.shadow-md]="tabActiva === 'negocio'"
-              [class.text-gray-600]="tabActiva !== 'negocio'"
-              [class.hover:bg-gray-50]="tabActiva !== 'negocio'">
+      <button
+        (click)="cambiarTab('negocio')"
+        class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+        [class.bg-[#0a4d7a]]="tabActiva === 'negocio'"
+        [class.text-white]="tabActiva === 'negocio'"
+        [class.shadow-md]="tabActiva === 'negocio'"
+        [class.text-gray-600]="tabActiva !== 'negocio'"
+        [class.hover:bg-gray-50]="tabActiva !== 'negocio'"
+      >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5"/>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5"
+          />
         </svg>
         Negocio
       </button>
 
-      <button (click)="cambiarTab('contacto')"
-              class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
-              [class.bg-[#0a4d7a]]="tabActiva === 'contacto'"
-              [class.text-white]="tabActiva === 'contacto'"
-              [class.shadow-md]="tabActiva === 'contacto'"
-              [class.text-gray-600]="tabActiva !== 'contacto'"
-              [class.hover:bg-gray-50]="tabActiva !== 'contacto'">
+      <button
+        (click)="cambiarTab('contacto')"
+        class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+        [class.bg-[#0a4d7a]]="tabActiva === 'contacto'"
+        [class.text-white]="tabActiva === 'contacto'"
+        [class.shadow-md]="tabActiva === 'contacto'"
+        [class.text-gray-600]="tabActiva !== 'contacto'"
+        [class.hover:bg-gray-50]="tabActiva !== 'contacto'"
+      >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+          />
         </svg>
         Contacto
       </button>
 
-      <button (click)="cambiarTab('agenda')"
-              class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
-              [class.bg-[#0a4d7a]]="tabActiva === 'agenda'"
-              [class.text-white]="tabActiva === 'agenda'"
-              [class.shadow-md]="tabActiva === 'agenda'"
-              [class.text-gray-600]="tabActiva !== 'agenda'"
-              [class.hover:bg-gray-50]="tabActiva !== 'agenda'">
+      <button
+        (click)="cambiarTab('agenda')"
+        class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+        [class.bg-[#0a4d7a]]="tabActiva === 'agenda'"
+        [class.text-white]="tabActiva === 'agenda'"
+        [class.shadow-md]="tabActiva === 'agenda'"
+        [class.text-gray-600]="tabActiva !== 'agenda'"
+        [class.hover:bg-gray-50]="tabActiva !== 'agenda'"
+      >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
         </svg>
         Agenda
       </button>
 
-      <button (click)="cambiarTab('apariencia')"
-              class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
-              [class.bg-[#0a4d7a]]="tabActiva === 'apariencia'"
-              [class.text-white]="tabActiva === 'apariencia'"
-              [class.shadow-md]="tabActiva === 'apariencia'"
-              [class.text-gray-600]="tabActiva !== 'apariencia'"
-              [class.hover:bg-gray-50]="tabActiva !== 'apariencia'">
+      <button
+        (click)="cambiarTab('apariencia')"
+        class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+        [class.bg-[#0a4d7a]]="tabActiva === 'apariencia'"
+        [class.text-white]="tabActiva === 'apariencia'"
+        [class.shadow-md]="tabActiva === 'apariencia'"
+        [class.text-gray-600]="tabActiva !== 'apariencia'"
+        [class.hover:bg-gray-50]="tabActiva !== 'apariencia'"
+      >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+          />
         </svg>
         Apariencia
       </button>
 
-      <button (click)="cambiarTab('notificaciones')"
-              class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
-              [class.bg-[#0a4d7a]]="tabActiva === 'notificaciones'"
-              [class.text-white]="tabActiva === 'notificaciones'"
-              [class.shadow-md]="tabActiva === 'notificaciones'"
-              [class.text-gray-600]="tabActiva !== 'notificaciones'"
-              [class.hover:bg-gray-50]="tabActiva !== 'notificaciones'">
+      <button
+        (click)="cambiarTab('notificaciones')"
+        class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+        [class.bg-[#0a4d7a]]="tabActiva === 'notificaciones'"
+        [class.text-white]="tabActiva === 'notificaciones'"
+        [class.shadow-md]="tabActiva === 'notificaciones'"
+        [class.text-gray-600]="tabActiva !== 'notificaciones'"
+        [class.hover:bg-gray-50]="tabActiva !== 'notificaciones'"
+      >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          />
         </svg>
         Notificaciones
       </button>
 
-      <button (click)="cambiarTab('seo')"
-              class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
-              [class.bg-[#0a4d7a]]="tabActiva === 'seo'"
-              [class.text-white]="tabActiva === 'seo'"
-              [class.shadow-md]="tabActiva === 'seo'"
-              [class.text-gray-600]="tabActiva !== 'seo'"
-              [class.hover:bg-gray-50]="tabActiva !== 'seo'">
+      <button
+        (click)="cambiarTab('seo')"
+        class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+        [class.bg-[#0a4d7a]]="tabActiva === 'seo'"
+        [class.text-white]="tabActiva === 'seo'"
+        [class.shadow-md]="tabActiva === 'seo'"
+        [class.text-gray-600]="tabActiva !== 'seo'"
+        [class.hover:bg-gray-50]="tabActiva !== 'seo'"
+      >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+          />
         </svg>
         SEO
       </button>
@@ -102,7 +227,6 @@
 
   <!-- ============ TAB: NEGOCIO ============ -->
   <div *ngIf="tabActiva === 'negocio'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
-
     <!-- Información general -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Información general</h3>
@@ -110,15 +234,25 @@
 
       <div class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Nombre de la empresa</label>
-          <input type="text" [(ngModel)]="negocio.nombre"
-                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+            >Nombre de la empresa</label
+          >
+          <input
+            type="text"
+            [(ngModel)]="negocio.nombre"
+            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+          />
         </div>
 
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Eslogan</label>
-          <input type="text" [(ngModel)]="negocio.eslogan"
-                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+            >Eslogan</label
+          >
+          <input
+            type="text"
+            [(ngModel)]="negocio.eslogan"
+            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+          />
         </div>
       </div>
     </div>
@@ -130,25 +264,45 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="md:col-span-2">
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Dirección principal</label>
-          <input type="text" [(ngModel)]="negocio.direccion"
-                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+            >Dirección principal</label
+          >
+          <input
+            type="text"
+            [(ngModel)]="negocio.direccion"
+            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+          />
         </div>
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Ciudad</label>
-          <input type="text" [(ngModel)]="negocio.ciudad"
-                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+            >Ciudad</label
+          >
+          <input
+            type="text"
+            [(ngModel)]="negocio.ciudad"
+            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+          />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Estado</label>
-            <input type="text" [(ngModel)]="negocio.estado"
-                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+              >Estado</label
+            >
+            <input
+              type="text"
+              [(ngModel)]="negocio.estado"
+              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+            />
           </div>
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">CP</label>
-            <input type="text" [(ngModel)]="negocio.codigoPostal"
-                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+              >CP</label
+            >
+            <input
+              type="text"
+              [(ngModel)]="negocio.codigoPostal"
+              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+            />
           </div>
         </div>
       </div>
@@ -160,18 +314,44 @@
       <p class="text-xs text-gray-500 mb-5">Información para facturación</p>
 
       <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">RFC</label>
-        <input type="text" [(ngModel)]="negocio.rfc"
-               class="w-full md:w-64 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all font-mono" />
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >RFC</label
+        >
+        <input
+          type="text"
+          [(ngModel)]="negocio.rfc"
+          class="w-full md:w-64 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all font-mono"
+        />
       </div>
     </div>
 
-    <div class="flex justify-end sticky bottom-4 z-10">
-      <button (click)="guardarCambios('Negocio')" [disabled]="guardando"
-              class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60">
+    <div class="flex justify-end gap-3 sticky bottom-4 z-10">
+      <button
+        (click)="restaurar('Negocio')"
+        type="button"
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+      >
+        Restaurar original
+      </button>
+      <button
+        (click)="pedirGuardar('Negocio')"
+        [disabled]="guardando"
+        class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
+      >
         <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle>
-          <path fill="currentColor" class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+            class="opacity-25"
+          ></circle>
+          <path
+            fill="currentColor"
+            class="opacity-75"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          ></path>
         </svg>
         {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
       </button>
@@ -180,54 +360,109 @@
 
   <!-- ============ TAB: CONTACTO ============ -->
   <div *ngIf="tabActiva === 'contacto'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
-
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Información de contacto</h3>
       <p class="text-xs text-gray-500 mb-5">Datos que verán tus clientes</p>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Teléfono de oficina</label>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+            >Teléfono de oficina</label
+          >
           <div class="relative">
-            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+            <svg
+              class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+              />
             </svg>
-            <input type="tel" [(ngModel)]="contacto.telefono"
-                   class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+            <input
+              type="tel"
+              [(ngModel)]="contacto.telefono"
+              class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+            />
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">WhatsApp</label>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+            >WhatsApp</label
+          >
           <div class="relative">
-            <svg class="w-5 h-5 text-green-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+            <svg
+              class="w-5 h-5 text-green-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"
+              />
             </svg>
-            <input type="tel" [(ngModel)]="contacto.whatsapp"
-                   class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+            <input
+              type="tel"
+              [(ngModel)]="contacto.whatsapp"
+              class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+            />
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Correo público</label>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+            >Correo público</label
+          >
           <div class="relative">
-            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            <svg
+              class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
             </svg>
-            <input type="email" [(ngModel)]="contacto.correoPublico"
-                   class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+            <input
+              type="email"
+              [(ngModel)]="contacto.correoPublico"
+              class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+            />
           </div>
           <p class="text-xs text-gray-500 mt-1.5">Este correo aparecerá en tu sitio web</p>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Correo de notificaciones</label>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+            >Correo de notificaciones</label
+          >
           <div class="relative">
-            <svg class="w-5 h-5 text-orange-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            <svg
+              class="w-5 h-5 text-orange-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
             </svg>
-            <input type="email" [(ngModel)]="contacto.correoNotificaciones"
-                   class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
+            <input
+              type="email"
+              [(ngModel)]="contacto.correoNotificaciones"
+              class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+            />
           </div>
           <p class="text-xs text-gray-500 mt-1.5">Donde recibirás alertas de citas y consultas</p>
         </div>
@@ -238,674 +473,1147 @@
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <div class="flex items-center justify-between mb-1">
         <h3 class="text-base font-semibold text-gray-900">Redes sociales</h3>
+        <span class="text-xs font-medium" [class.text-gray-400]="redesActivas <= 4" [class.text-amber-600]="redesActivas > 4">
+          {{ redesActivas }} activas
+        </span>
       </div>
-      <p class="text-xs text-gray-500 mb-5">Activa las redes que aparecerán en el footer del sitio</p>
+      <p class="text-xs text-gray-500 mb-5">
+        Activa las redes que aparecerán en el footer. Solo se muestran las primeras <span class="font-semibold">4 activas</span>.
+      </p>
 
       <div class="space-y-3">
-        <div *ngFor="let red of redes"
-            class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
-            [class.opacity-50]="!red.activa">
-
-          <!-- Toggle + Nombre (grupo) -->
+        <div
+          *ngFor="let red of redes"
+          class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+          [class.opacity-50]="!red.activa"
+        >
           <div class="flex items-center gap-3">
-            <!-- Toggle -->
-            <button (click)="toggleRed(red)"
-                    class="relative w-11 h-6 rounded-full transition-colors shrink-0"
-                    [class.bg-green-500]="red.activa"
-                    [class.bg-gray-300]="!red.activa">
-              <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
-                    [class.translate-x-5]="red.activa"></span>
+            <button
+              (click)="toggleRed(red)"
+              type="button"
+              class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+              [class.bg-green-500]="red.activa"
+              [class.bg-gray-300]="!red.activa"
+            >
+              <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" [class.translate-x-5]="red.activa"></span>
             </button>
 
-            <!-- Nombre + icono -->
-            <div class="flex items-center gap-2 w-32 shrink-0">
-            <ng-container [ngSwitch]="red.icono">
-              <svg *ngSwitchCase="'instagram'" class="w-5 h-5" [class.text-pink-500]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-              </svg>
-              <svg *ngSwitchCase="'facebook'" class="w-5 h-5" [class.text-blue-600]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
-              <svg *ngSwitchCase="'linkedin'" class="w-5 h-5" [class.text-sky-600]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-              </svg>
-              <svg *ngSwitchCase="'twitter'" class="w-5 h-5" [class.text-gray-900]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
-              <svg *ngSwitchCase="'youtube'" class="w-5 h-5" [class.text-red-600]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-              </svg>
-            </ng-container>
-            <span class="text-sm font-medium text-gray-700">{{ red.nombre }}</span>
+            <div class="flex items-center gap-2 w-40 shrink-0">
+              <ng-container [ngSwitch]="red.icono">
+                <svg *ngSwitchCase="'instagram'" class="w-5 h-5" [class.text-pink-500]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                <svg *ngSwitchCase="'facebook'" class="w-5 h-5" [class.text-blue-600]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                <svg *ngSwitchCase="'linkedin'" class="w-5 h-5" [class.text-sky-600]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                <svg *ngSwitchCase="'twitter'" class="w-5 h-5" [class.text-gray-900]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                <svg *ngSwitchCase="'youtube'" class="w-5 h-5" [class.text-red-600]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                <svg *ngSwitchCase="'whatsapp'" class="w-5 h-5" [class.text-green-500]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z"/></svg>
+                <svg *ngSwitchCase="'tiktok'" class="w-5 h-5" [class.text-gray-900]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+                <svg *ngSwitchCase="'pinterest'" class="w-5 h-5" [class.text-red-600]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592.026 11.985.026L12.017 0z"/></svg>
+                <svg *ngSwitchCase="'telegram'" class="w-5 h-5" [class.text-sky-500]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                <!-- Genérico para redes personalizadas -->
+                <svg *ngSwitchDefault class="w-5 h-5" [class.text-gray-600]="red.activa" [class.text-gray-400]="!red.activa" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0zM3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18 15 15 0 010-18z"/></svg>
+              </ng-container>
+
+              <span *ngIf="!red.personalizada" class="text-sm font-medium text-gray-700">{{ red.nombre }}</span>
+              <input
+                *ngIf="red.personalizada"
+                type="text"
+                [ngModel]="red.nombre"
+                (ngModelChange)="red.nombre = $event; actualizarIcono(red)"
+                placeholder="Nombre"
+                class="w-full px-2 py-1 bg-white border border-gray-200 rounded-md text-sm text-gray-800 outline-none focus:border-[#0a4d7a]"
+              />
             </div>
           </div>
 
-          <!-- URL -->
-          <input type="url" [(ngModel)]="red.url" [disabled]="!red.activa"
-                placeholder="https://..."
-                class="w-full sm:flex-1 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] transition-all disabled:bg-gray-100 disabled:cursor-not-allowed" />
+          <input
+            type="url"
+            [(ngModel)]="red.url"
+            [disabled]="!red.activa"
+            placeholder="https://..."
+            class="w-full sm:flex-1 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+
+          <button
+            *ngIf="red.personalizada"
+            (click)="eliminarRed(red)"
+            type="button"
+            aria-label="Eliminar red"
+            class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
         </div>
       </div>
+
+      <button
+        (click)="agregarRed()"
+        type="button"
+        class="mt-3 flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#0a4d7a] hover:bg-blue-50 rounded-lg transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Agregar red social
+      </button>
     </div>
 
-    <div class="flex justify-end sticky bottom-4 z-10">
-      <button (click)="guardarCambios('Contacto')" [disabled]="guardando"
-              class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60">
+    <div class="flex justify-end gap-3 sticky bottom-4 z-10">
+      <button
+        (click)="restaurar('Contacto')"
+        type="button"
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+      >
+        Restaurar original
+      </button>
+      <button
+        (click)="pedirGuardar('Contacto')"
+        [disabled]="guardando"
+        class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
+      >
         <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle>
-          <path fill="currentColor" class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+            class="opacity-25"
+          ></circle>
+          <path
+            fill="currentColor"
+            class="opacity-75"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          ></path>
         </svg>
         {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
       </button>
     </div>
   </div>
-
 </div>
 <!-- ============ TAB: AGENDA ============ -->
-  <div *ngIf="tabActiva === 'agenda'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+<div *ngIf="tabActiva === 'agenda'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+  <!-- Días y horarios -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <h3 class="text-base font-semibold text-gray-900 mb-1">Días y horarios de atención</h3>
+    <p class="text-xs text-gray-500 mb-5">Cuándo aceptas citas</p>
 
-    <!-- Días y horarios -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">Días y horarios de atención</h3>
-      <p class="text-xs text-gray-500 mb-5">Cuándo aceptas citas</p>
-
-      <!-- Días -->
-      <div class="mb-6">
-        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Días laborales</label>
-        <div class="flex flex-wrap gap-2">
-          <button *ngFor="let dia of diasSemana"
-                  (click)="toggleDia(dia)"
-                  class="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-                  [class.bg-[#0a4d7a]]="dia.activo"
-                  [class.text-white]="dia.activo"
-                  [class.shadow-md]="dia.activo"
-                  [class.bg-gray-100]="!dia.activo"
-                  [class.text-gray-600]="!dia.activo"
-                  [class.hover:bg-gray-200]="!dia.activo">
-            {{ dia.nombre }}
-          </button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-  <!-- Hora de inicio -->
-  <div>
-    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Hora de inicio</label>
-    <div class="relative" (click)="$event.stopPropagation()">
-      <button (click)="toggleSelectorHora('inicio', $event)"
-              class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all">
-        <span class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          {{ agenda.horaInicio }}
-        </span>
-        <svg class="w-4 h-4 text-gray-500 transition-transform" [class.rotate-180]="selectorHoraInicioAbierto"
-             fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-        </svg>
-      </button>
-
-      <div *ngIf="selectorHoraInicioAbierto"
-           class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 z-30 max-h-64 overflow-y-auto animate-[fadeIn_0.15s_ease-out]">
-        <button *ngFor="let hora of horasDisponibles"
-                (click)="seleccionarHora('inicio', hora)"
-                class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
-                [class.bg-blue-50]="agenda.horaInicio === hora"
-                [class.text-blue-700]="agenda.horaInicio === hora"
-                [class.font-semibold]="agenda.horaInicio === hora"
-                [class.text-gray-700]="agenda.horaInicio !== hora">
-          <span>{{ hora }}</span>
-          <svg *ngIf="agenda.horaInicio === hora" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-          </svg>
+    <!-- Días -->
+    <div class="mb-6">
+      <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3"
+        >Días laborales</label
+      >
+      <div class="flex flex-wrap gap-2">
+        <button
+          *ngFor="let dia of diasSemana"
+          (click)="toggleDia(dia)"
+          class="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          [class.bg-[#0a4d7a]]="dia.activo"
+          [class.text-white]="dia.activo"
+          [class.shadow-md]="dia.activo"
+          [class.bg-gray-100]="!dia.activo"
+          [class.text-gray-600]="!dia.activo"
+          [class.hover:bg-gray-200]="!dia.activo"
+        >
+          {{ dia.nombre }}
         </button>
       </div>
     </div>
-  </div>
 
-  <!-- Hora de cierre -->
-  <div>
-    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Hora de cierre</label>
-    <div class="relative" (click)="$event.stopPropagation()">
-      <button (click)="toggleSelectorHora('fin', $event)"
-              class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all">
-        <span class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          {{ agenda.horaFin }}
-        </span>
-        <svg class="w-4 h-4 text-gray-500 transition-transform" [class.rotate-180]="selectorHoraFinAbierto"
-             fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-        </svg>
-      </button>
-
-      <div *ngIf="selectorHoraFinAbierto"
-           class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 z-30 max-h-64 overflow-y-auto animate-[fadeIn_0.15s_ease-out]">
-        <button *ngFor="let hora of horasDisponibles"
-                (click)="seleccionarHora('fin', hora)"
-                class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
-                [class.bg-blue-50]="agenda.horaFin === hora"
-                [class.text-blue-700]="agenda.horaFin === hora"
-                [class.font-semibold]="agenda.horaFin === hora"
-                [class.text-gray-700]="agenda.horaFin !== hora">
-          <span>{{ hora }}</span>
-          <svg *ngIf="agenda.horaFin === hora" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-    </div>
-
-    <!-- Duración y limites -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">Configuración de citas</h3>
-      <p class="text-xs text-gray-500 mb-5">Define cómo se programan las citas</p>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-  <!-- Duración por cita -->
-  <div>
-    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Duración por cita</label>
-    <div class="relative" (click)="$event.stopPropagation()">
-      <button (click)="toggleSelectorDuracion($event)"
-              class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all">
-        <span>{{ duracionLabel }}</span>
-        <svg class="w-4 h-4 text-gray-500 transition-transform" [class.rotate-180]="selectorDuracionAbierto"
-             fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-        </svg>
-      </button>
-
-      <div *ngIf="selectorDuracionAbierto"
-           class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-[fadeIn_0.15s_ease-out]">
-        <button *ngFor="let opcion of opcionesDuracion"
-                (click)="seleccionarDuracion(opcion.value)"
-                class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
-                [class.bg-blue-50]="agenda.duracionCita === opcion.value"
-                [class.text-blue-700]="agenda.duracionCita === opcion.value"
-                [class.font-semibold]="agenda.duracionCita === opcion.value"
-                [class.text-gray-700]="agenda.duracionCita !== opcion.value">
-          <span>{{ opcion.label }}</span>
-          <svg *ngIf="agenda.duracionCita === opcion.value" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tiempo entre citas -->
-  <div>
-    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Tiempo entre citas</label>
-    <div class="relative" (click)="$event.stopPropagation()">
-      <button (click)="toggleSelectorTiempoEntre($event)"
-              class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all">
-        <span>{{ tiempoEntreLabel }}</span>
-        <svg class="w-4 h-4 text-gray-500 transition-transform" [class.rotate-180]="selectorTiempoEntreAbierto"
-             fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-        </svg>
-      </button>
-
-      <div *ngIf="selectorTiempoEntreAbierto"
-    class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-[fadeIn_0.15s_ease-out]">
-        <button *ngFor="let opcion of opcionesTiempoEntre"
-                (click)="seleccionarTiempoEntre(opcion.value)"
-                class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
-                [class.bg-blue-50]="agenda.tiempoEntreCitas === opcion.value"
-                [class.text-blue-700]="agenda.tiempoEntreCitas === opcion.value"
-                [class.font-semibold]="agenda.tiempoEntreCitas === opcion.value"
-                [class.text-gray-700]="agenda.tiempoEntreCitas !== opcion.value">
-          <span>{{ opcion.label }}</span>
-          <svg *ngIf="agenda.tiempoEntreCitas === opcion.value" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-    <p class="text-xs text-gray-500 mt-1.5">Para preparación entre clientes</p>
-  </div>
-
-  <!-- Límite diario -->
-  <div>
-    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Límite diario</label>
-    <input type="number" [(ngModel)]="agenda.limiteDiario" min="1" max="20"
-          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
-    <p class="text-xs text-gray-500 mt-1.5">Máximo de citas por día</p>
-  </div>
-</div>
-    </div>
-
-    <!-- Días feriados -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">Días feriados y vacaciones</h3>
-      <p class="text-xs text-gray-500 mb-5">Días en que no se pueden agendar citas</p>
-
-      <div class="flex flex-col sm:flex-row gap-2 mb-4">
-        <input type="date" [(ngModel)]="nuevoFeriado.fecha"
-              class="w-full sm:w-auto px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
-        <input type="text" [(ngModel)]="nuevoFeriado.motivo" placeholder="Motivo (ej: Navidad, Vacaciones)"
-              class="w-full sm:flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
-        <button (click)="agregarFeriado()"
-                class="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium transition-all">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-          </svg>
-          Agregar
-        </button>
-      </div>
-
-      <div class="space-y-2">
-        <div *ngFor="let feriado of diasFeriados"
-            class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-          <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center shrink-0">
-            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-gray-900">{{ feriado.motivo }}</p>
-            <p class="text-xs text-gray-500">{{ feriado.fecha | date: 'EEEE d MMMM y' }}</p>
-          </div>
-          <button (click)="eliminarFeriado(feriado.id)"
-                  class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Hora de inicio -->
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Hora de inicio</label
+        >
+        <div class="relative" (click)="$event.stopPropagation()">
+          <button
+            (click)="toggleSelectorHora('inicio', $event)"
+            class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all"
+          >
+            <span class="flex items-center gap-2">
+              <svg
+                class="w-4 h-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              {{ agenda.horaInicio }}
+            </span>
+            <svg
+              class="w-4 h-4 text-gray-500 transition-transform"
+              [class.rotate-180]="selectorHoraInicioAbierto"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-        </div>
 
-        <p *ngIf="diasFeriados.length === 0" class="text-center text-sm text-gray-500 py-6">
-          No has agregado días feriados todavía
-        </p>
+          <div
+            *ngIf="selectorHoraInicioAbierto"
+            class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 z-30 max-h-64 overflow-y-auto animate-[fadeIn_0.15s_ease-out]"
+          >
+            <button
+              *ngFor="let hora of horasDisponibles"
+              (click)="seleccionarHora('inicio', hora)"
+              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
+              [class.bg-blue-50]="agenda.horaInicio === hora"
+              [class.text-blue-700]="agenda.horaInicio === hora"
+              [class.font-semibold]="agenda.horaInicio === hora"
+              [class.text-gray-700]="agenda.horaInicio !== hora"
+            >
+              <span>{{ hora }}</span>
+              <svg
+                *ngIf="agenda.horaInicio === hora"
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hora de cierre -->
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Hora de cierre</label
+        >
+        <div class="relative" (click)="$event.stopPropagation()">
+          <button
+            (click)="toggleSelectorHora('fin', $event)"
+            class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all"
+          >
+            <span class="flex items-center gap-2">
+              <svg
+                class="w-4 h-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              {{ agenda.horaFin }}
+            </span>
+            <svg
+              class="w-4 h-4 text-gray-500 transition-transform"
+              [class.rotate-180]="selectorHoraFinAbierto"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <div
+            *ngIf="selectorHoraFinAbierto"
+            class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 z-30 max-h-64 overflow-y-auto animate-[fadeIn_0.15s_ease-out]"
+          >
+            <button
+              *ngFor="let hora of horasDisponibles"
+              (click)="seleccionarHora('fin', hora)"
+              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
+              [class.bg-blue-50]="agenda.horaFin === hora"
+              [class.text-blue-700]="agenda.horaFin === hora"
+              [class.font-semibold]="agenda.horaFin === hora"
+              [class.text-gray-700]="agenda.horaFin !== hora"
+            >
+              <span>{{ hora }}</span>
+              <svg
+                *ngIf="agenda.horaFin === hora"
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="flex justify-end sticky bottom-4 z-10">
-      <button (click)="guardarCambios('Agenda')" [disabled]="guardando"
-              class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60">
-        <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle>
-          <path fill="currentColor" class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+  <!-- Duración y limites -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <h3 class="text-base font-semibold text-gray-900 mb-1">Configuración de citas</h3>
+    <p class="text-xs text-gray-500 mb-5">Define cómo se programan las citas</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Duración por cita -->
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Duración por cita</label
+        >
+        <div class="relative" (click)="$event.stopPropagation()">
+          <button
+            (click)="toggleSelectorDuracion($event)"
+            class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all"
+          >
+            <span>{{ duracionLabel }}</span>
+            <svg
+              class="w-4 h-4 text-gray-500 transition-transform"
+              [class.rotate-180]="selectorDuracionAbierto"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <div
+            *ngIf="selectorDuracionAbierto"
+            class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-[fadeIn_0.15s_ease-out]"
+          >
+            <button
+              *ngFor="let opcion of opcionesDuracion"
+              (click)="seleccionarDuracion(opcion.value)"
+              class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
+              [class.bg-blue-50]="agenda.duracionCita === opcion.value"
+              [class.text-blue-700]="agenda.duracionCita === opcion.value"
+              [class.font-semibold]="agenda.duracionCita === opcion.value"
+              [class.text-gray-700]="agenda.duracionCita !== opcion.value"
+            >
+              <span>{{ opcion.label }}</span>
+              <svg
+                *ngIf="agenda.duracionCita === opcion.value"
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tiempo entre citas -->
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Tiempo entre citas</label
+        >
+        <div class="relative" (click)="$event.stopPropagation()">
+          <button
+            (click)="toggleSelectorTiempoEntre($event)"
+            class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all"
+          >
+            <span>{{ tiempoEntreLabel }}</span>
+            <svg
+              class="w-4 h-4 text-gray-500 transition-transform"
+              [class.rotate-180]="selectorTiempoEntreAbierto"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <div
+            *ngIf="selectorTiempoEntreAbierto"
+            class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-[fadeIn_0.15s_ease-out]"
+          >
+            <button
+              *ngFor="let opcion of opcionesTiempoEntre"
+              (click)="seleccionarTiempoEntre(opcion.value)"
+              class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
+              [class.bg-blue-50]="agenda.tiempoEntreCitas === opcion.value"
+              [class.text-blue-700]="agenda.tiempoEntreCitas === opcion.value"
+              [class.font-semibold]="agenda.tiempoEntreCitas === opcion.value"
+              [class.text-gray-700]="agenda.tiempoEntreCitas !== opcion.value"
+            >
+              <span>{{ opcion.label }}</span>
+              <svg
+                *ngIf="agenda.tiempoEntreCitas === opcion.value"
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1.5">Para preparación entre clientes</p>
+      </div>
+
+      <!-- Límite diario -->
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Límite diario</label
+        >
+        <input
+          type="number"
+          [(ngModel)]="agenda.limiteDiario"
+          min="1"
+          max="20"
+          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+        />
+        <p class="text-xs text-gray-500 mt-1.5">Máximo de citas por día</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Días feriados -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <h3 class="text-base font-semibold text-gray-900 mb-1">Días feriados y vacaciones</h3>
+    <p class="text-xs text-gray-500 mb-5">Días en que no se pueden agendar citas</p>
+
+    <div class="flex flex-col sm:flex-row gap-2 mb-4">
+      <input
+        type="date"
+        [(ngModel)]="nuevoFeriado.fecha"
+        class="w-full sm:w-auto px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+      />
+      <input
+        type="text"
+        [(ngModel)]="nuevoFeriado.motivo"
+        placeholder="Motivo (ej: Navidad, Vacaciones)"
+        class="w-full sm:flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+      />
+      <button
+        (click)="agregarFeriado()"
+        class="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium transition-all"
+      >
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
         </svg>
-        {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+        Agregar
       </button>
     </div>
-  </div>
 
-  <!-- ============ TAB: APARIENCIA ============ -->
-  <div *ngIf="tabActiva === 'apariencia'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
-
-    <!-- Logos -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">Logos e iconos</h3>
-      <p class="text-xs text-gray-500 mb-5">Imágenes que representan tu marca</p>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Logo principal -->
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Logo del sitio</label>
-          <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 hover:border-[#0a4d7a] transition-colors cursor-pointer">
-            <img [src]="apariencia.logoUrl" class="h-20 w-auto" />
-            <button class="text-xs text-[#0a4d7a] font-semibold hover:underline">Cambiar imagen</button>
-          </div>
-          <p class="text-xs text-gray-500 mt-1.5">Aparece en el header</p>
+    <div class="space-y-2">
+      <div
+        *ngFor="let feriado of diasFeriados"
+        class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+      >
+        <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center shrink-0">
+          <svg
+            class="w-5 h-5 text-orange-600"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
         </div>
-
-        <!-- Logo footer -->
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Logo del footer</label>
-          <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 bg-gray-900 hover:border-[#0a4d7a] transition-colors cursor-pointer">
-            <img [src]="apariencia.logoFooterUrl" class="h-20 w-auto" />
-            <button class="text-xs text-blue-400 font-semibold hover:underline">Cambiar imagen</button>
-          </div>
-          <p class="text-xs text-gray-500 mt-1.5">Versión para fondo oscuro</p>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-gray-900">{{ feriado.motivo }}</p>
+          <p class="text-xs text-gray-500">{{ feriado.fecha | date: 'EEEE d MMMM y' }}</p>
         </div>
-
-        <!-- Favicon -->
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Favicon</label>
-          <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 hover:border-[#0a4d7a] transition-colors cursor-pointer h-[120px]">
-            <img [src]="apariencia.faviconUrl" class="h-12 w-12" />
-            <button class="text-xs text-[#0a4d7a] font-semibold hover:underline">Cambiar imagen</button>
-          </div>
-          <p class="text-xs text-gray-500 mt-1.5">Icono en la pestaña del navegador</p>
-        </div>
+        <button
+          (click)="eliminarFeriado(feriado.id)"
+          class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
+          </svg>
+        </button>
       </div>
-    </div>
 
-    <!-- Colores -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">Colores corporativos</h3>
-      <p class="text-xs text-gray-500 mb-5">Define los colores principales del sitio</p>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-  <div>
-    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Color primario</label>
-    <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-      <input type="color" [(ngModel)]="apariencia.colorPrimario"
-             class="w-12 h-12 rounded-lg cursor-pointer border-0" />
-      <div class="flex-1">
-        <p class="text-sm font-medium text-gray-900">{{ apariencia.colorPrimario }}</p>
-        <p class="text-xs text-gray-500">Botones, links y acentos</p>
-      </div>
+      <p *ngIf="diasFeriados.length === 0" class="text-center text-sm text-gray-500 py-6">
+        No has agregado días feriados todavía
+      </p>
     </div>
   </div>
 
-  <div>
-    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Color secundario</label>
-    <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-      <input type="color" [(ngModel)]="apariencia.colorSecundario"
-             class="w-12 h-12 rounded-lg cursor-pointer border-0" />
-      <div class="flex-1">
-        <p class="text-sm font-medium text-gray-900">{{ apariencia.colorSecundario }}</p>
-        <p class="text-xs text-gray-500">Tonos generales del sitio</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Degradado -->
-<div class="mt-6">
-  <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Degradado del header y footer</label>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-    <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-      <input type="color" [(ngModel)]="apariencia.degradadoInicio"
-            class="w-12 h-12 rounded-lg cursor-pointer border-0" />
-      <div class="flex-1">
-        <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Inicio</p>
-        <p class="text-sm font-medium text-gray-900">{{ apariencia.degradadoInicio }}</p>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-      <input type="color" [(ngModel)]="apariencia.degradadoFin"
-            class="w-12 h-12 rounded-lg cursor-pointer border-0" />
-      <div class="flex-1">
-        <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Final</p>
-        <p class="text-sm font-medium text-gray-900">{{ apariencia.degradadoFin }}</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Muestra del degradado -->
-  <div class="rounded-xl h-24 border border-gray-200"
-       [style.background]="'linear-gradient(to bottom, ' + apariencia.degradadoInicio + ', ' + apariencia.degradadoFin + ')'">
-  </div>
-</div>
-    </div>
-
-    <!-- Vista previa -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">Vista previa</h3>
-      <p class="text-xs text-gray-500 mb-5">Así se verán los elementos con tus colores</p>
-
-      <div class="rounded-xl overflow-hidden border border-gray-200">
-        <div class="p-4 md:p-6 text-white"
-            [style.background]="'linear-gradient(to bottom, ' + apariencia.degradadoInicio + ', ' + apariencia.degradadoFin + ')'">
-          <div class="flex items-center gap-3">
-            <img [src]="apariencia.logoUrl" class="h-10 w-auto" />
-            <div>
-              <p class="font-bold">Vortiz Arquitectos</p>
-              <p class="text-xs text-gray-300">Vista previa del header</p>
-            </div>
-          </div>
-        </div>
-        <div class="p-4 md:p-6 bg-white">
-    <button class="px-4 py-2 rounded-lg text-white text-sm font-medium" [style.background]="apariencia.colorPrimario">
-      Botón primario
+  <div class="flex justify-end gap-3 sticky bottom-4 z-10">
+    <button
+        (click)="restaurar('Agenda')"
+        type="button"
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+      >
+        Restaurar original
+      </button>
+    <button
+      (click)="pedirGuardar('Agenda')"
+      [disabled]="guardando"
+      class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
+    >
+      <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+          class="opacity-25"
+        ></circle>
+        <path
+          fill="currentColor"
+          class="opacity-75"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+        ></path>
+      </svg>
+      {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
     </button>
-    <span class="ml-3 text-sm font-medium hover:underline cursor-pointer" [style.color]="apariencia.colorPrimario">
-      Link de ejemplo
-    </span>
-  </div>
-  <div class="p-4 text-white text-center"
-      [style.background]="'linear-gradient(to bottom, ' + apariencia.degradadoInicio + ', ' + apariencia.degradadoFin + ')'">
-    <p class="text-sm font-semibold">Footer con el mismo degradado</p>
   </div>
 </div>
-    </div>
 
-    <div class="flex justify-end sticky bottom-4 z-10">
-      <button (click)="guardarCambios('Apariencia')" [disabled]="guardando"
-              class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60">
-        <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle>
-          <path fill="currentColor" class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-        {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
-      </button>
+<!-- ============ TAB: APARIENCIA ============ -->
+<div *ngIf="tabActiva === 'apariencia'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+  <!-- Logos -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <h3 class="text-base font-semibold text-gray-900 mb-1">Logos e iconos</h3>
+    <p class="text-xs text-gray-500 mb-5">Imágenes que representan tu marca</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Logo principal -->
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Logo del sitio</label
+        >
+        <div
+          class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 hover:border-[#0a4d7a] transition-colors cursor-pointer"
+        >
+          <img [src]="apariencia.logoUrl" class="h-20 w-auto" />
+          <button class="text-xs text-[#0a4d7a] font-semibold hover:underline">
+            Cambiar imagen
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-1.5">Aparece en el header</p>
+      </div>
+
+      <!-- Logo footer -->
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Logo del footer</label
+        >
+        <div
+          class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 bg-gray-900 hover:border-[#0a4d7a] transition-colors cursor-pointer"
+        >
+          <img [src]="apariencia.logoFooterUrl" class="h-20 w-auto" />
+          <button class="text-xs text-blue-400 font-semibold hover:underline">
+            Cambiar imagen
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-1.5">Versión para fondo oscuro</p>
+      </div>
+
+      <!-- Favicon -->
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Favicon</label
+        >
+        <div
+          class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 hover:border-[#0a4d7a] transition-colors cursor-pointer h-[120px]"
+        >
+          <img [src]="apariencia.faviconUrl" class="h-12 w-12" />
+          <button class="text-xs text-[#0a4d7a] font-semibold hover:underline">
+            Cambiar imagen
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-1.5">Icono en la pestaña del navegador</p>
+      </div>
     </div>
   </div>
 
-  <!-- ============ TAB: NOTIFICACIONES ============ -->
-  <div *ngIf="tabActiva === 'notificaciones'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+  <!-- Colores -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <h3 class="text-base font-semibold text-gray-900 mb-1">Colores corporativos</h3>
+    <p class="text-xs text-gray-500 mb-5">Define los colores principales del sitio</p>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">Notificaciones para ti</h3>
-      <p class="text-xs text-gray-500 mb-5">Recibirás avisos en tu correo de notificaciones</p>
-
-      <div class="space-y-3">
-        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-          <button (click)="notificaciones.nuevaCita = !notificaciones.nuevaCita"
-                  class="relative w-11 h-6 rounded-full transition-colors shrink-0"
-                  [class.bg-green-500]="notificaciones.nuevaCita"
-                  [class.bg-gray-300]="!notificaciones.nuevaCita">
-            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" [class.translate-x-5]="notificaciones.nuevaCita"></span>
-          </button>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Color primario</label
+        >
+        <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <input
+            type="color"
+            [(ngModel)]="apariencia.colorPrimario"
+            class="w-12 h-12 rounded-lg cursor-pointer border-0"
+          />
           <div class="flex-1">
-            <p class="text-sm font-semibold text-gray-900">Nueva cita agendada</p>
-            <p class="text-xs text-gray-500">Te avisaremos cuando un cliente reserve una cita</p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-          <button (click)="notificaciones.nuevaConsulta = !notificaciones.nuevaConsulta"
-                  class="relative w-11 h-6 rounded-full transition-colors shrink-0"
-                  [class.bg-green-500]="notificaciones.nuevaConsulta"
-                  [class.bg-gray-300]="!notificaciones.nuevaConsulta">
-            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" [class.translate-x-5]="notificaciones.nuevaConsulta"></span>
-          </button>
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-gray-900">Nueva consulta</p>
-            <p class="text-xs text-gray-500">Cuando llegue una consulta a través del formulario</p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-          <button (click)="notificaciones.resumenDiario = !notificaciones.resumenDiario"
-                  class="relative w-11 h-6 rounded-full transition-colors shrink-0"
-                  [class.bg-green-500]="notificaciones.resumenDiario"
-                  [class.bg-gray-300]="!notificaciones.resumenDiario">
-            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" [class.translate-x-5]="notificaciones.resumenDiario"></span>
-          </button>
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-gray-900">Resumen diario</p>
-            <p class="text-xs text-gray-500">Recibe cada mañana las citas del día</p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-          <button (click)="notificaciones.resumenSemanal = !notificaciones.resumenSemanal"
-                  class="relative w-11 h-6 rounded-full transition-colors shrink-0"
-                  [class.bg-green-500]="notificaciones.resumenSemanal"
-                  [class.bg-gray-300]="!notificaciones.resumenSemanal">
-            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" [class.translate-x-5]="notificaciones.resumenSemanal"></span>
-          </button>
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-gray-900">Resumen semanal</p>
-            <p class="text-xs text-gray-500">Reporte cada lunes con estadísticas y agenda</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">Recordatorios para tus clientes</h3>
-      <p class="text-xs text-gray-500 mb-5">Tus clientes recibirán recordatorios automáticos antes de su cita</p>
-
-      <div class="space-y-3 mb-5">
-        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-          <button (click)="notificaciones.recordatorio24h = !notificaciones.recordatorio24h"
-                  class="relative w-11 h-6 rounded-full transition-colors shrink-0"
-                  [class.bg-green-500]="notificaciones.recordatorio24h"
-                  [class.bg-gray-300]="!notificaciones.recordatorio24h">
-            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" [class.translate-x-5]="notificaciones.recordatorio24h"></span>
-          </button>
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-gray-900">Recordatorio 24 horas antes</p>
-            <p class="text-xs text-gray-500">Aviso el día anterior a la cita</p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-          <button (click)="notificaciones.recordatorio1h = !notificaciones.recordatorio1h"
-                  class="relative w-11 h-6 rounded-full transition-colors shrink-0"
-                  [class.bg-green-500]="notificaciones.recordatorio1h"
-                  [class.bg-gray-300]="!notificaciones.recordatorio1h">
-            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" [class.translate-x-5]="notificaciones.recordatorio1h"></span>
-          </button>
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-gray-900">Recordatorio 1 hora antes</p>
-            <p class="text-xs text-gray-500">Aviso una hora antes de la cita</p>
+            <p class="text-sm font-medium text-gray-900">{{ apariencia.colorPrimario }}</p>
+            <p class="text-xs text-gray-500">Botones, links y acentos</p>
           </div>
         </div>
       </div>
 
       <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Canal de envío</label>
-        <div class="grid grid-cols-3 gap-2">
-          <button (click)="notificaciones.canalRecordatorio = 'email'"
-                  class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all"
-                  [class.border-[#0a4d7a]]="notificaciones.canalRecordatorio === 'email'"
-                  [class.bg-blue-50]="notificaciones.canalRecordatorio === 'email'"
-                  [class.border-gray-200]="notificaciones.canalRecordatorio !== 'email'"
-                  [class.hover:border-gray-300]="notificaciones.canalRecordatorio !== 'email'">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
-            <span class="text-xs font-semibold text-gray-700">Email</span>
-          </button>
-          <button (click)="notificaciones.canalRecordatorio = 'whatsapp'"
-                  class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all"
-                  [class.border-[#0a4d7a]]="notificaciones.canalRecordatorio === 'whatsapp'"
-                  [class.bg-blue-50]="notificaciones.canalRecordatorio === 'whatsapp'"
-                  [class.border-gray-200]="notificaciones.canalRecordatorio !== 'whatsapp'"
-                  [class.hover:border-gray-300]="notificaciones.canalRecordatorio !== 'whatsapp'">
-            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z"/>
-            </svg>
-            <span class="text-xs font-semibold text-gray-700">WhatsApp</span>
-          </button>
-          <button (click)="notificaciones.canalRecordatorio = 'ambos'"
-                  class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all"
-                  [class.border-[#0a4d7a]]="notificaciones.canalRecordatorio === 'ambos'"
-                  [class.bg-blue-50]="notificaciones.canalRecordatorio === 'ambos'"
-                  [class.border-gray-200]="notificaciones.canalRecordatorio !== 'ambos'"
-                  [class.hover:border-gray-300]="notificaciones.canalRecordatorio !== 'ambos'">
-            <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            <span class="text-xs font-semibold text-gray-700">Ambos</span>
-          </button>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Color secundario</label
+        >
+        <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <input
+            type="color"
+            [(ngModel)]="apariencia.colorSecundario"
+            class="w-12 h-12 rounded-lg cursor-pointer border-0"
+          />
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-900">{{ apariencia.colorSecundario }}</p>
+            <p class="text-xs text-gray-500">Tonos generales del sitio</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Color de texto del nav</label
+        >
+        <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <input
+            type="color"
+            [(ngModel)]="apariencia.colorTextoNav"
+            class="w-12 h-12 rounded-lg cursor-pointer border-0"
+          />
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-900">{{ apariencia.colorTextoNav }}</p>
+            <p class="text-xs text-gray-500">Palabras del menú superior</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Color de texto del footer</label
+        >
+        <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <input
+            type="color"
+            [(ngModel)]="apariencia.colorTextoFooter"
+            class="w-12 h-12 rounded-lg cursor-pointer border-0"
+          />
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-900">{{ apariencia.colorTextoFooter }}</p>
+            <p class="text-xs text-gray-500">Palabras del pie de página</p>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="flex justify-end sticky bottom-4 z-10">
-      <button (click)="guardarCambios('Notificaciones')" [disabled]="guardando"
-              class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60">
-        <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle>
-          <path fill="currentColor" class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-        {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
-      </button>
+    <!-- Degradado -->
+    <div class="mt-6">
+      <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+        >Degradado del header y footer</label
+      >
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <input
+            type="color"
+            [(ngModel)]="apariencia.degradadoInicio"
+            class="w-12 h-12 rounded-lg cursor-pointer border-0"
+          />
+          <div class="flex-1">
+            <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Inicio</p>
+            <p class="text-sm font-medium text-gray-900">{{ apariencia.degradadoInicio }}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <input
+            type="color"
+            [(ngModel)]="apariencia.degradadoFin"
+            class="w-12 h-12 rounded-lg cursor-pointer border-0"
+          />
+          <div class="flex-1">
+            <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Final</p>
+            <p class="text-sm font-medium text-gray-900">{{ apariencia.degradadoFin }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Muestra del degradado -->
+      <div
+        class="rounded-xl h-24 border border-gray-200"
+        [style.background]="
+          'linear-gradient(to bottom, ' +
+          apariencia.degradadoInicio +
+          ', ' +
+          apariencia.degradadoFin +
+          ')'
+        "
+      ></div>
     </div>
   </div>
 
-  <!-- ============ TAB: SEO ============ -->
-  <div *ngIf="tabActiva === 'seo'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+  <!-- Vista previa -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <h3 class="text-base font-semibold text-gray-900 mb-1">Vista previa</h3>
+    <p class="text-xs text-gray-500 mb-5">Así se verán los elementos con tus colores</p>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">Optimización para buscadores</h3>
-      <p class="text-xs text-gray-500 mb-5">Mejora cómo aparece tu sitio en Google y redes sociales</p>
-
-      <div class="space-y-4">
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-xs font-semibold uppercase tracking-wider text-gray-500">Título de página</label>
-            <span class="text-xs text-gray-400">{{ seo.metaTitle.length }} / 60</span>
-          </div>
-          <input type="text" [(ngModel)]="seo.metaTitle" maxlength="60"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
-          <p class="text-xs text-gray-500 mt-1.5">Aparece como título en los resultados de Google</p>
-        </div>
-
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-xs font-semibold uppercase tracking-wider text-gray-500">Descripción</label>
-            <span class="text-xs text-gray-400">{{ seo.metaDescription.length }} / 160</span>
-          </div>
-          <textarea [(ngModel)]="seo.metaDescription" rows="3" maxlength="160"
-                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"></textarea>
-          <p class="text-xs text-gray-500 mt-1.5">Texto que aparece debajo del título en Google</p>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Palabras clave</label>
-          <input type="text" [(ngModel)]="seo.keywords"
-                placeholder="Separadas por comas"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all" />
-          <p class="text-xs text-gray-500 mt-1.5">Ej: arquitectos durango, diseño residencial, construcción</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Vista previa Google -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">Vista previa en Google</h3>
-      <p class="text-xs text-gray-500 mb-5">Así se verá tu sitio en los resultados de búsqueda</p>
-
-      <div class="bg-white border border-gray-200 rounded-xl p-4 max-w-2xl">
-        <p class="text-xs text-gray-700 mb-1">vortizarquitectos.com</p>
-        <h4 class="text-lg text-blue-700 hover:underline cursor-pointer mb-1">{{ seo.metaTitle }}</h4>
-        <p class="text-sm text-gray-600">{{ seo.metaDescription }}</p>
-      </div>
-    </div>
-
-    <!-- Imagen para redes -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">Imagen para compartir</h3>
-      <p class="text-xs text-gray-500 mb-5">Esta imagen aparece cuando alguien comparte tu sitio en redes sociales</p>
-
-      <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center gap-2 hover:border-[#0a4d7a] transition-colors cursor-pointer">
-        <div class="w-full max-w-md aspect-video bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] rounded-lg flex items-center justify-center text-white">
-          <div class="text-center">
-            <p class="text-2xl font-bold">Vortiz Arquitectos</p>
-            <p class="text-sm text-gray-300 mt-1">{{ negocio.eslogan }}</p>
+    <div class="rounded-xl overflow-hidden border border-gray-200">
+      <div
+        class="p-4 md:p-6 text-white"
+        [style.background]="
+          'linear-gradient(to bottom, ' +
+          apariencia.degradadoInicio +
+          ', ' +
+          apariencia.degradadoFin +
+          ')'
+        "
+      >
+        <div class="flex items-center gap-3">
+          <img [src]="apariencia.logoUrl" class="h-10 w-auto" />
+          <div>
+            <p class="font-bold">Vortiz Arquitectos</p>
+            <p class="text-xs text-gray-300">Vista previa del header</p>
           </div>
         </div>
-        <button class="text-xs text-[#0a4d7a] font-semibold hover:underline mt-2">Cambiar imagen</button>
-        <p class="text-xs text-gray-500">Tamaño recomendado: 1200 x 630 px</p>
       </div>
-    </div>
-
-    <div class="flex justify-end sticky bottom-4 z-10">
-      <button (click)="guardarCambios('SEO')" [disabled]="guardando"
-              class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60">
-        <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle>
-          <path fill="currentColor" class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-        {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
-      </button>
+      <div class="p-4 md:p-6 bg-white">
+        <button
+          class="px-4 py-2 rounded-lg text-white text-sm font-medium"
+          [style.background]="apariencia.colorPrimario"
+        >
+          Botón primario
+        </button>
+        <span
+          class="ml-3 text-sm font-medium hover:underline cursor-pointer"
+          [style.color]="apariencia.colorPrimario"
+        >
+          Link de ejemplo
+        </span>
+      </div>
+      <div
+        class="p-4 text-white text-center"
+        [style.background]="
+          'linear-gradient(to bottom, ' +
+          apariencia.degradadoInicio +
+          ', ' +
+          apariencia.degradadoFin +
+          ')'
+        "
+      >
+        <p class="text-sm font-semibold">Footer con el mismo degradado</p>
+      </div>
     </div>
   </div>
+
+  <div class="flex justify-end gap-3 sticky bottom-4 z-10">
+    <button
+      (click)="restaurar('Apariencia')"
+      type="button"
+      class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+    >
+      Restaurar original
+    </button>
+    <button
+      (click)="pedirGuardar('Apariencia')"
+      [disabled]="guardando"
+      class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
+    >
+      <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+          class="opacity-25"
+        ></circle>
+        <path
+          fill="currentColor"
+          class="opacity-75"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+        ></path>
+      </svg>
+      {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+    </button>
+  </div>
+</div>
+
+<!-- ============ TAB: NOTIFICACIONES ============ -->
+<div *ngIf="tabActiva === 'notificaciones'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <h3 class="text-base font-semibold text-gray-900 mb-1">Notificaciones para ti</h3>
+    <p class="text-xs text-gray-500 mb-5">Recibirás avisos en tu correo de notificaciones</p>
+
+    <div class="space-y-3">
+      <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+        <button
+          (click)="notificaciones.nuevaCita = !notificaciones.nuevaCita"
+          class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+          [class.bg-green-500]="notificaciones.nuevaCita"
+          [class.bg-gray-300]="!notificaciones.nuevaCita"
+        >
+          <span
+            class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+            [class.translate-x-5]="notificaciones.nuevaCita"
+          ></span>
+        </button>
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-gray-900">Nueva cita agendada</p>
+          <p class="text-xs text-gray-500">Te avisaremos cuando un cliente reserve una cita</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+        <button
+          (click)="notificaciones.nuevaConsulta = !notificaciones.nuevaConsulta"
+          class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+          [class.bg-green-500]="notificaciones.nuevaConsulta"
+          [class.bg-gray-300]="!notificaciones.nuevaConsulta"
+        >
+          <span
+            class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+            [class.translate-x-5]="notificaciones.nuevaConsulta"
+          ></span>
+        </button>
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-gray-900">Nueva consulta</p>
+          <p class="text-xs text-gray-500">Cuando llegue una consulta a través del formulario</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+        <button
+          (click)="notificaciones.resumenDiario = !notificaciones.resumenDiario"
+          class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+          [class.bg-green-500]="notificaciones.resumenDiario"
+          [class.bg-gray-300]="!notificaciones.resumenDiario"
+        >
+          <span
+            class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+            [class.translate-x-5]="notificaciones.resumenDiario"
+          ></span>
+        </button>
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-gray-900">Resumen diario</p>
+          <p class="text-xs text-gray-500">Recibe cada mañana las citas del día</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+        <button
+          (click)="notificaciones.resumenSemanal = !notificaciones.resumenSemanal"
+          class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+          [class.bg-green-500]="notificaciones.resumenSemanal"
+          [class.bg-gray-300]="!notificaciones.resumenSemanal"
+        >
+          <span
+            class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+            [class.translate-x-5]="notificaciones.resumenSemanal"
+          ></span>
+        </button>
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-gray-900">Resumen semanal</p>
+          <p class="text-xs text-gray-500">Reporte cada lunes con estadísticas y agenda</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <h3 class="text-base font-semibold text-gray-900 mb-1">Recordatorios para tus clientes</h3>
+    <p class="text-xs text-gray-500 mb-5">
+      Tus clientes recibirán recordatorios automáticos antes de su cita
+    </p>
+
+    <div class="space-y-3 mb-5">
+      <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+        <button
+          (click)="notificaciones.recordatorio24h = !notificaciones.recordatorio24h"
+          class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+          [class.bg-green-500]="notificaciones.recordatorio24h"
+          [class.bg-gray-300]="!notificaciones.recordatorio24h"
+        >
+          <span
+            class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+            [class.translate-x-5]="notificaciones.recordatorio24h"
+          ></span>
+        </button>
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-gray-900">Recordatorio 24 horas antes</p>
+          <p class="text-xs text-gray-500">Aviso el día anterior a la cita</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+        <button
+          (click)="notificaciones.recordatorio1h = !notificaciones.recordatorio1h"
+          class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+          [class.bg-green-500]="notificaciones.recordatorio1h"
+          [class.bg-gray-300]="!notificaciones.recordatorio1h"
+        >
+          <span
+            class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+            [class.translate-x-5]="notificaciones.recordatorio1h"
+          ></span>
+        </button>
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-gray-900">Recordatorio 1 hora antes</p>
+          <p class="text-xs text-gray-500">Aviso una hora antes de la cita</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+        >Canal de envío</label
+      >
+      <div class="grid grid-cols-3 gap-2">
+        <button
+          (click)="notificaciones.canalRecordatorio = 'email'"
+          class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all"
+          [class.border-[#0a4d7a]]="notificaciones.canalRecordatorio === 'email'"
+          [class.bg-blue-50]="notificaciones.canalRecordatorio === 'email'"
+          [class.border-gray-200]="notificaciones.canalRecordatorio !== 'email'"
+          [class.hover:border-gray-300]="notificaciones.canalRecordatorio !== 'email'"
+        >
+          <svg
+            class="w-5 h-5 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+            />
+          </svg>
+          <span class="text-xs font-semibold text-gray-700">Email</span>
+        </button>
+        <button
+          (click)="notificaciones.canalRecordatorio = 'whatsapp'"
+          class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all"
+          [class.border-[#0a4d7a]]="notificaciones.canalRecordatorio === 'whatsapp'"
+          [class.bg-blue-50]="notificaciones.canalRecordatorio === 'whatsapp'"
+          [class.border-gray-200]="notificaciones.canalRecordatorio !== 'whatsapp'"
+          [class.hover:border-gray-300]="notificaciones.canalRecordatorio !== 'whatsapp'"
+        >
+          <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z"
+            />
+          </svg>
+          <span class="text-xs font-semibold text-gray-700">WhatsApp</span>
+        </button>
+        <button
+          (click)="notificaciones.canalRecordatorio = 'ambos'"
+          class="flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all"
+          [class.border-[#0a4d7a]]="notificaciones.canalRecordatorio === 'ambos'"
+          [class.bg-blue-50]="notificaciones.canalRecordatorio === 'ambos'"
+          [class.border-gray-200]="notificaciones.canalRecordatorio !== 'ambos'"
+          [class.hover:border-gray-300]="notificaciones.canalRecordatorio !== 'ambos'"
+        >
+          <svg
+            class="w-5 h-5 text-purple-500"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+          <span class="text-xs font-semibold text-gray-700">Ambos</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3 sticky bottom-4 z-10">
+    <button
+        (click)="restaurar('Notificaciones')"
+        type="button"
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+      >
+        Restaurar original
+      </button>
+    <button
+      (click)="pedirGuardar('Notificaciones')"
+      [disabled]="guardando"
+      class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
+    >
+      <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+          class="opacity-25"
+        ></circle>
+        <path
+          fill="currentColor"
+          class="opacity-75"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+        ></path>
+      </svg>
+      {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+    </button>
+  </div>
+</div>
+
+<!-- ============ TAB: SEO ============ -->
+<div *ngIf="tabActiva === 'seo'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <h3 class="text-base font-semibold text-gray-900 mb-1">Optimización para buscadores</h3>
+    <p class="text-xs text-gray-500 mb-5">
+      Mejora cómo aparece tu sitio en Google y redes sociales
+    </p>
+
+    <div class="space-y-4">
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-xs font-semibold uppercase tracking-wider text-gray-500"
+            >Título de página</label
+          >
+          <span class="text-xs text-gray-400">{{ seo.metaTitle.length }} / 60</span>
+        </div>
+        <input
+          type="text"
+          [(ngModel)]="seo.metaTitle"
+          maxlength="60"
+          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+        />
+        <p class="text-xs text-gray-500 mt-1.5">Aparece como título en los resultados de Google</p>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-xs font-semibold uppercase tracking-wider text-gray-500"
+            >Descripción</label
+          >
+          <span class="text-xs text-gray-400">{{ seo.metaDescription.length }} / 160</span>
+        </div>
+        <textarea
+          [(ngModel)]="seo.metaDescription"
+          rows="3"
+          maxlength="160"
+          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"
+        ></textarea>
+        <p class="text-xs text-gray-500 mt-1.5">Texto que aparece debajo del título en Google</p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+          >Palabras clave</label
+        >
+        <input
+          type="text"
+          [(ngModel)]="seo.keywords"
+          placeholder="Separadas por comas"
+          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+        />
+        <p class="text-xs text-gray-500 mt-1.5">
+          Ej: arquitectos durango, diseño residencial, construcción
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vista previa Google -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <h3 class="text-base font-semibold text-gray-900 mb-1">Vista previa en Google</h3>
+    <p class="text-xs text-gray-500 mb-5">Así se verá tu sitio en los resultados de búsqueda</p>
+
+    <div class="bg-white border border-gray-200 rounded-xl p-4 max-w-2xl">
+      <p class="text-xs text-gray-700 mb-1">vortizarquitectos.com</p>
+      <h4 class="text-lg text-blue-700 hover:underline cursor-pointer mb-1">{{ seo.metaTitle }}</h4>
+      <p class="text-sm text-gray-600">{{ seo.metaDescription }}</p>
+    </div>
+  </div>
+
+  <!-- Imagen para redes -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <h3 class="text-base font-semibold text-gray-900 mb-1">Imagen para compartir</h3>
+    <p class="text-xs text-gray-500 mb-5">
+      Esta imagen aparece cuando alguien comparte tu sitio en redes sociales
+    </p>
+
+    <div
+      class="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center gap-2 hover:border-[#0a4d7a] transition-colors cursor-pointer"
+    >
+      <div
+        class="w-full max-w-md aspect-video bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] rounded-lg flex items-center justify-center text-white"
+      >
+        <div class="text-center">
+          <p class="text-2xl font-bold">Vortiz Arquitectos</p>
+          <p class="text-sm text-gray-300 mt-1">{{ negocio.eslogan }}</p>
+        </div>
+      </div>
+      <button class="text-xs text-[#0a4d7a] font-semibold hover:underline mt-2">
+        Cambiar imagen
+      </button>
+      <p class="text-xs text-gray-500">Tamaño recomendado: 1200 x 630 px</p>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3 sticky bottom-4 z-10">
+    <button
+        (click)="restaurar('SEO')"
+        type="button"
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+      >
+        Restaurar original
+      </button>
+    <button
+      (click)="pedirGuardar('SEO')"
+      [disabled]="guardando"
+      class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
+    >
+      <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+          class="opacity-25"
+        ></circle>
+        <path
+          fill="currentColor"
+          class="opacity-75"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+        ></path>
+      </svg>
+      {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+    </button>
+  </div>
+</div>

@@ -1,8 +1,11 @@
-import { Component, OnInit, HostListener, inject } from '@angular/core';
+import { Component, OnInit, HostListener, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { ContenidoService } from '../../../core/services/contenido.service'; // ajusta la ruta
+import { CatalogoService, Servicio } from '../../../core/services/catalogo.service'; // ajusta la ruta
+import { FormatoTextoPipe } from '../../../shared/pipes/formato-texto.pipe'; // ajusta ruta
 
 interface Pagina {
   id: number;
@@ -17,14 +20,24 @@ interface Pagina {
 
 interface BloqueContenido {
   id: number;
-  tipo: 'hero' | 'texto' | 'imagen' | 'galeria' | 'cita' | 'cta' | 'estadisticas' | 'servicios' | 'contacto' | 'mapa';
+  tipo:
+    | 'hero'
+    | 'texto'
+    | 'imagen'
+    | 'galeria'
+    | 'cita'
+    | 'cta'
+    | 'estadisticas'
+    | 'servicios'
+    | 'contacto'
+    | 'mapa';
   titulo?: string;
   subtitulo?: string;
   contenido?: string;
   imagenUrl?: string;
   textoBoton?: string;
   expandido: boolean;
-  items?: { titulo: string; valor?: string; descripcion?: string; icono?: string; }[];
+  items?: { titulo: string; valor?: string; descripcion?: string; icono?: string }[];
   imagenes?: string[];
   direccion?: string;
   campos?: string[];
@@ -40,9 +53,14 @@ interface Plantilla {
 interface CampoEdicion {
   key: string;
   label: string;
-  tipo: 'texto' | 'textarea' | 'imagen' | 'url';
+  tipo: 'texto' | 'textarea' | 'imagen' | 'url' | 'seleccion'| 'catalogo';
   placeholder?: string;
   maxLength?: number;
+  opciones?: { value: string; label: string }[];
+  fuente?: 'servicios' | 'proyectos';
+  default?: string;
+  limite?: number;
+  ayuda?: string;
 }
 
 interface SeccionEditable {
@@ -55,7 +73,7 @@ interface SeccionEditable {
 @Component({
   selector: 'app-paginas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, FormatoTextoPipe],
   templateUrl: './paginas.component.html',
 })
 export class PaginasComponent implements OnInit {
@@ -64,13 +82,76 @@ export class PaginasComponent implements OnInit {
   menuAbiertoId: number | null = null;
 
   paginas: Pagina[] = [
-    { id: 1, titulo: 'Inicio', slug: '/', tipo: 'fija', visible: true, ultimaEdicion: 'Hace 2 días', icono: 'home', color: 'blue' },
-    { id: 2, titulo: 'Nosotros', slug: '/nosotros', tipo: 'fija', visible: true, ultimaEdicion: 'Hace 1 semana', icono: 'users', color: 'green' },
-    { id: 3, titulo: 'Proyectos', slug: '/proyectos', tipo: 'fija', visible: true, ultimaEdicion: 'Hace 3 días', icono: 'building', color: 'orange' },
-    { id: 4, titulo: 'Servicios', slug: '/servicios', tipo: 'fija', visible: true, ultimaEdicion: 'Ayer', icono: 'briefcase', color: 'purple' },
-    { id: 5, titulo: 'Citas', slug: '/citas', tipo: 'fija', visible: true, ultimaEdicion: 'Hace 5 días', icono: 'calendar', color: 'pink' },
-    { id: 6, titulo: 'Política de Privacidad', slug: '/p/privacidad', tipo: 'personalizada', visible: true, ultimaEdicion: 'Hace 2 semanas', icono: 'document', color: 'gray' },
-    { id: 7, titulo: 'Términos y Condiciones', slug: '/p/terminos', tipo: 'personalizada', visible: false, ultimaEdicion: 'Hace 1 mes', icono: 'document', color: 'gray' },
+    {
+      id: 1,
+      titulo: 'Inicio',
+      slug: '/',
+      tipo: 'fija',
+      visible: true,
+      ultimaEdicion: 'Hace 2 días',
+      icono: 'home',
+      color: 'blue',
+    },
+    {
+      id: 2,
+      titulo: 'Nosotros',
+      slug: '/nosotros',
+      tipo: 'fija',
+      visible: true,
+      ultimaEdicion: 'Hace 1 semana',
+      icono: 'users',
+      color: 'green',
+    },
+    {
+      id: 3,
+      titulo: 'Proyectos',
+      slug: '/proyectos',
+      tipo: 'fija',
+      visible: true,
+      ultimaEdicion: 'Hace 3 días',
+      icono: 'building',
+      color: 'orange',
+    },
+    {
+      id: 4,
+      titulo: 'Servicios',
+      slug: '/servicios',
+      tipo: 'fija',
+      visible: true,
+      ultimaEdicion: 'Ayer',
+      icono: 'briefcase',
+      color: 'purple',
+    },
+    {
+      id: 5,
+      titulo: 'Citas',
+      slug: '/citas',
+      tipo: 'fija',
+      visible: true,
+      ultimaEdicion: 'Hace 5 días',
+      icono: 'calendar',
+      color: 'pink',
+    },
+    {
+      id: 6,
+      titulo: 'Política de Privacidad',
+      slug: '/p/privacidad',
+      tipo: 'personalizada',
+      visible: true,
+      ultimaEdicion: 'Hace 2 semanas',
+      icono: 'document',
+      color: 'gray',
+    },
+    {
+      id: 7,
+      titulo: 'Términos y Condiciones',
+      slug: '/p/terminos',
+      tipo: 'personalizada',
+      visible: false,
+      ultimaEdicion: 'Hace 1 mes',
+      icono: 'document',
+      color: 'gray',
+    },
   ];
 
   // Modal nueva página
@@ -84,29 +165,84 @@ export class PaginasComponent implements OnInit {
     { id: 'info' as const, label: 'Información' },
     { id: 'contenido' as const, label: 'Contenido' },
     { id: 'seo' as const, label: 'SEO' },
-    { id: 'config' as const, label: 'Configuración' }
+    { id: 'config' as const, label: 'Configuración' },
   ];
 
   plantillas: Plantilla[] = [
-    { id: 'blanco', nombre: 'En blanco', descripcion: 'Empieza desde cero con total libertad', bloquesIniciales: [] },
-    { id: 'servicio', nombre: 'Página de Servicio', descripcion: 'Ideal para presentar un servicio específico', bloquesIniciales: ['hero', 'texto', 'estadisticas', 'cta'] },
-    { id: 'nosotros', nombre: 'Nosotros / About', descripcion: 'Cuenta la historia de tu empresa', bloquesIniciales: ['hero', 'texto', 'imagen', 'estadisticas'] },
-    { id: 'landing', nombre: 'Landing Page', descripcion: 'Página de aterrizaje con CTA fuerte', bloquesIniciales: ['hero', 'estadisticas', 'servicios', 'cta', 'contacto'] },
-    { id: 'blog', nombre: 'Artículo de Blog', descripcion: 'Para publicaciones y artículos', bloquesIniciales: ['hero', 'texto', 'imagen', 'texto', 'cita'] },
-    { id: 'portfolio', nombre: 'Portafolio', descripcion: 'Muestra tus proyectos destacados', bloquesIniciales: ['hero', 'galeria', 'cta'] }
+    {
+      id: 'blanco',
+      nombre: 'En blanco',
+      descripcion: 'Empieza desde cero con total libertad',
+      bloquesIniciales: [],
+    },
+    {
+      id: 'servicio',
+      nombre: 'Página de Servicio',
+      descripcion: 'Ideal para presentar un servicio específico',
+      bloquesIniciales: ['hero', 'texto', 'estadisticas', 'cta'],
+    },
+    {
+      id: 'nosotros',
+      nombre: 'Nosotros / About',
+      descripcion: 'Cuenta la historia de tu empresa',
+      bloquesIniciales: ['hero', 'texto', 'imagen', 'estadisticas'],
+    },
+    {
+      id: 'landing',
+      nombre: 'Landing Page',
+      descripcion: 'Página de aterrizaje con CTA fuerte',
+      bloquesIniciales: ['hero', 'estadisticas', 'servicios', 'cta', 'contacto'],
+    },
+    {
+      id: 'blog',
+      nombre: 'Artículo de Blog',
+      descripcion: 'Para publicaciones y artículos',
+      bloquesIniciales: ['hero', 'texto', 'imagen', 'texto', 'cita'],
+    },
+    {
+      id: 'portfolio',
+      nombre: 'Portafolio',
+      descripcion: 'Muestra tus proyectos destacados',
+      bloquesIniciales: ['hero', 'galeria', 'cta'],
+    },
   ];
 
   tiposBloques = [
-    { tipo: 'hero', label: 'Hero', descripcion: 'Sección destacada con imagen y título', color: 'blue' },
+    {
+      tipo: 'hero',
+      label: 'Hero',
+      descripcion: 'Sección destacada con imagen y título',
+      color: 'blue',
+    },
     { tipo: 'texto', label: 'Texto', descripcion: 'Párrafos de contenido', color: 'gray' },
     { tipo: 'imagen', label: 'Imagen', descripcion: 'Imagen individual destacada', color: 'green' },
     { tipo: 'galeria', label: 'Galería', descripcion: 'Grid de varias imágenes', color: 'purple' },
-    { tipo: 'cita', label: 'Cita / Testimonio', descripcion: 'Frase destacada con autor', color: 'orange' },
+    {
+      tipo: 'cita',
+      label: 'Cita / Testimonio',
+      descripcion: 'Frase destacada con autor',
+      color: 'orange',
+    },
     { tipo: 'cta', label: 'CTA', descripcion: 'Llamado a la acción con botón', color: 'red' },
-    { tipo: 'estadisticas', label: 'Estadísticas', descripcion: 'Números importantes destacados', color: 'blue' },
-    { tipo: 'servicios', label: 'Servicios', descripcion: 'Lista de servicios ofrecidos', color: 'green' },
-    { tipo: 'contacto', label: 'Formulario contacto', descripcion: 'Formulario de contacto', color: 'orange' },
-    { tipo: 'mapa', label: 'Mapa', descripcion: 'Mapa con ubicación', color: 'gray' }
+    {
+      tipo: 'estadisticas',
+      label: 'Estadísticas',
+      descripcion: 'Números importantes destacados',
+      color: 'blue',
+    },
+    {
+      tipo: 'servicios',
+      label: 'Servicios',
+      descripcion: 'Lista de servicios ofrecidos',
+      color: 'green',
+    },
+    {
+      tipo: 'contacto',
+      label: 'Formulario contacto',
+      descripcion: 'Formulario de contacto',
+      color: 'orange',
+    },
+    { tipo: 'mapa', label: 'Mapa', descripcion: 'Mapa con ubicación', color: 'gray' },
   ];
 
   formNuevaPagina = this.crearFormVacio();
@@ -124,13 +260,13 @@ export class PaginasComponent implements OnInit {
       seo: {
         metaTitle: '',
         metaDescription: '',
-        keywords: ''
+        keywords: '',
       },
       estado: 'borrador' as 'borrador' | 'publicada' | 'programada',
       fechaPublicacion: '',
       visibilidad: 'publica' as 'publica' | 'registrados' | 'contrasena',
       permitirComentarios: true,
-      plantillaLayout: 'default'
+      plantillaLayout: 'default',
     };
   }
 
@@ -153,7 +289,7 @@ export class PaginasComponent implements OnInit {
     { value: 'servicio', label: 'Servicio', descripcion: 'Para detallar un servicio' },
     { value: 'blog', label: 'Blog', descripcion: 'Artículo o noticia' },
     { value: 'landing', label: 'Landing', descripcion: 'Página de captación' },
-    { value: 'legal', label: 'Legal', descripcion: 'Términos, privacidad, etc.' }
+    { value: 'legal', label: 'Legal', descripcion: 'Términos, privacidad, etc.' },
   ];
 
   // ============ EDITOR DE PÁGINAS FIJAS ============
@@ -164,19 +300,35 @@ export class PaginasComponent implements OnInit {
 
   // Schemas: qué se puede editar en cada página
   schemasPaginas: Record<string, SeccionEditable[]> = {
-    'inicio': [
+    inicio: [
       {
         id: 'hero',
         nombre: 'Hero principal',
         icono: '✨',
         campos: [
-          { key: 'badge', label: 'Texto del badge', tipo: 'texto', placeholder: 'Arquitectura · Construcción · Diseño' },
-          { key: 'titulo', label: 'Título principal', tipo: 'texto' },
+          {
+            key: 'badge',
+            label: 'Texto del badge',
+            tipo: 'texto',
+            placeholder: 'Arquitectura · Construcción · Diseño',
+          },
+          {
+            key: 'titulo',
+            label: 'Título principal',
+            tipo: 'texto',
+            default: 'Diseñamos *espacios*, construimos *confianza*',
+            ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
+          },
           { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
-          { key: 'imagenFondo', label: 'Imagen de fondo (URL)', tipo: 'imagen' },
+          {
+            key: 'imagenFondo',
+            label: 'Imagen de fondo (URL)',
+            tipo: 'imagen',
+            default: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1920',
+          },
           { key: 'cta1', label: 'Texto botón principal', tipo: 'texto' },
-          { key: 'cta2', label: 'Texto botón secundario', tipo: 'texto' }
-        ]
+          { key: 'cta2', label: 'Texto botón secundario', tipo: 'texto' },
+        ],
       },
       {
         id: 'filosofia',
@@ -184,11 +336,22 @@ export class PaginasComponent implements OnInit {
         icono: '🏛️',
         campos: [
           { key: 'badge', label: 'Badge', tipo: 'texto' },
-          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Confianza y experiencia desde ~2005~',
+            ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
+          },
           { key: 'parrafo1', label: 'Párrafo 1', tipo: 'textarea' },
           { key: 'parrafo2', label: 'Párrafo 2', tipo: 'textarea' },
-          { key: 'imagen', label: 'Imagen lateral (URL)', tipo: 'imagen' }
-        ]
+          {
+            key: 'imagen',
+            label: 'Imagen lateral (URL)',
+            tipo: 'imagen',
+            default: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800',
+          },
+        ],
       },
       {
         id: 'stats',
@@ -202,8 +365,8 @@ export class PaginasComponent implements OnInit {
           { key: 'stat3Valor', label: 'Stat 3 - Número', tipo: 'texto' },
           { key: 'stat3Label', label: 'Stat 3 - Etiqueta', tipo: 'texto' },
           { key: 'stat4Valor', label: 'Stat 4 - Número', tipo: 'texto' },
-          { key: 'stat4Label', label: 'Stat 4 - Etiqueta', tipo: 'texto' }
-        ]
+          { key: 'stat4Label', label: 'Stat 4 - Etiqueta', tipo: 'texto' },
+        ],
       },
       {
         id: 'servicios',
@@ -212,8 +375,37 @@ export class PaginasComponent implements OnInit {
         campos: [
           { key: 'badge', label: 'Badge', tipo: 'texto' },
           { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+          {
+            key: 'visibles',
+            label: 'Servicios a mostrar en Inicio',
+            tipo: 'seleccion',
+            fuente: 'servicios',
+            limite: 6,
+          },
+        ],
+      },
+      {
+        id: 'proyectos',
+        nombre: 'Proyectos destacados',
+        icono: '🏢',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Marcas que confiaron en *nuestro trabajo*',
+            ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
+          },
+          {
+            key: 'visibles',
+            label: 'Proyectos a mostrar en Inicio',
+            tipo: 'seleccion',
+            fuente: 'proyectos',
+            limite: 8,
+          },
+        ],
       },
       {
         id: 'proceso',
@@ -229,8 +421,8 @@ export class PaginasComponent implements OnInit {
           { key: 'paso3Titulo', label: 'Paso 3 - Título', tipo: 'texto' },
           { key: 'paso3Desc', label: 'Paso 3 - Descripción', tipo: 'textarea' },
           { key: 'paso4Titulo', label: 'Paso 4 - Título', tipo: 'texto' },
-          { key: 'paso4Desc', label: 'Paso 4 - Descripción', tipo: 'textarea' }
-        ]
+          { key: 'paso4Desc', label: 'Paso 4 - Descripción', tipo: 'textarea' },
+        ],
       },
       {
         id: 'cta',
@@ -238,152 +430,247 @@ export class PaginasComponent implements OnInit {
         icono: '🚀',
         campos: [
           { key: 'badge', label: 'Badge', tipo: 'texto' },
-          { key: 'titulo', label: 'Título', tipo: 'texto' },
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: '¿Listo para construir tu próximo *gran proyecto?*',
+            ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
+          },
           { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
           { key: 'cta1', label: 'Botón 1', tipo: 'texto' },
           { key: 'cta2', label: 'Botón 2', tipo: 'texto' },
-          { key: 'imagenFondo', label: 'Imagen de fondo (URL)', tipo: 'imagen' }
-        ]
-      }
+          {
+            key: 'imagenFondo',
+            label: 'Imagen de fondo (URL)',
+            tipo: 'imagen',
+            default: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920',
+          },
+        ],
+      },
     ],
-    'nosotros': [
+    nosotros: [
       {
-        id: 'hero', nombre: 'Hero', icono: '✨',
+        id: 'hero',
+        nombre: 'Hero',
+        icono: '✨',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Diseñamos con *propósito*, construimos con *historia*',
+            ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
+          },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+          {
+            key: 'imagenFondo',
+            label: 'Imagen de fondo',
+            tipo: 'imagen',
+            default: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1920',
+          }, // en hero
+        ],
+      },
+      {
+        id: 'intro',
+        nombre: 'Introducción',
+        icono: '📖',
         campos: [
           { key: 'badge', label: 'Badge', tipo: 'texto' },
           { key: 'titulo', label: 'Título', tipo: 'texto' },
           { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
-          { key: 'imagenFondo', label: 'Imagen de fondo', tipo: 'imagen' }
-        ]
+        ],
       },
       {
-        id: 'intro', nombre: 'Introducción', icono: '📖',
-        campos: [
-          { key: 'badge', label: 'Badge', tipo: 'texto' },
-          { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
-      },
-      {
-        id: 'mision', nombre: 'Misión', icono: '🎯',
+        id: 'mision',
+        nombre: 'Misión',
+        icono: '🎯',
         campos: [
           { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+        ],
       },
       {
-        id: 'vision', nombre: 'Visión', icono: '👁️',
+        id: 'vision',
+        nombre: 'Visión',
+        icono: '👁️',
         campos: [
           { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+        ],
       },
       {
-        id: 'arquitecto', nombre: 'El Arquitecto', icono: '👤',
+        id: 'arquitecto',
+        nombre: 'El Arquitecto',
+        icono: '👤',
         campos: [
           { key: 'nombre', label: 'Nombre completo', tipo: 'texto' },
           { key: 'titulo', label: 'Cargo / Título', tipo: 'texto' },
-          { key: 'foto', label: 'Foto (URL)', tipo: 'imagen' },
+          {
+            key: 'foto',
+            label: 'Foto (URL)',
+            tipo: 'imagen',
+            default: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600',
+          }, // en arquitecto
           { key: 'biografia', label: 'Biografía (párrafo 1)', tipo: 'textarea' },
           { key: 'biografia2', label: 'Biografía (párrafo 2)', tipo: 'textarea' },
           { key: 'email', label: 'Email de contacto', tipo: 'texto' },
-          { key: 'linkedin', label: 'LinkedIn (URL)', tipo: 'url' }
-        ]
+          { key: 'linkedin', label: 'LinkedIn (URL)', tipo: 'url' },
+        ],
       },
       {
-        id: 'valores', nombre: 'Sección Valores', icono: '⭐',
+        id: 'valores',
+        nombre: 'Sección Valores',
+        icono: '⭐',
         campos: [
           { key: 'badge', label: 'Badge', tipo: 'texto' },
           { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+        ],
       },
       {
-        id: 'cta', nombre: 'CTA Final', icono: '🚀',
+        id: 'cta',
+        nombre: 'CTA Final',
+        icono: '🚀',
         campos: [
           { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
-      }
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+        ],
+      },
     ],
-    'proyectos': [
+    proyectos: [
       {
-        id: 'hero', nombre: 'Hero', icono: '✨',
+        id: 'hero',
+        nombre: 'Hero',
+        icono: '✨',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Clientes que confiaron en *nuestro trabajo*',
+            ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
+          },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+        ],
+      },
+      {
+        id: 'intro',
+        nombre: 'Introducción + Stats',
+        icono: '📖',
         campos: [
           { key: 'badge', label: 'Badge', tipo: 'texto' },
           { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+        ],
       },
       {
-        id: 'intro', nombre: 'Introducción + Stats', icono: '📖',
+        id: 'cta',
+        nombre: 'CTA Final',
+        icono: '🚀',
         campos: [
-          { key: 'badge', label: 'Badge', tipo: 'texto' },
-          { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: '¿Tu marca podría ser la *siguiente?*',
+            ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
+          },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+        ],
       },
-      {
-        id: 'cta', nombre: 'CTA Final', icono: '🚀',
-        campos: [
-          { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
-      }
     ],
-    'servicios': [
+    servicios: [
       {
-        id: 'hero', nombre: 'Hero', icono: '✨',
+        id: 'hero',
+        nombre: 'Hero',
+        icono: '✨',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto' },
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Lo que hacemos por *tu proyecto*',
+            ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
+          },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+        ],
+      },
+      {
+        id: 'intro',
+        nombre: 'Introducción',
+        icono: '📖',
         campos: [
           { key: 'badge', label: 'Badge', tipo: 'texto' },
           { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+        ],
       },
       {
-        id: 'intro', nombre: 'Introducción', icono: '📖',
-        campos: [
-          { key: 'badge', label: 'Badge', tipo: 'texto' },
-          { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
+        id: 'catalogo',
+        nombre: 'Servicios del catálogo',
+        icono: '📋',
+        campos: [{ key: 'items', label: 'Servicios', tipo: 'catalogo', fuente: 'servicios' }],
       },
       {
-        id: 'cta', nombre: 'CTA Final', icono: '🚀',
+        id: 'cta',
+        nombre: 'CTA Final',
+        icono: '🚀',
         campos: [
-          { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
-      }
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: '¿No estás seguro de cuál servicio *necesitas?*',
+            ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
+          },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+        ],
+      },
     ],
-    'citas': [
+    citas: [
       {
-        id: 'hero', nombre: 'Hero', icono: '✨',
+        id: 'hero',
+        nombre: 'Hero',
+        icono: '✨',
         campos: [
           { key: 'badge', label: 'Badge', tipo: 'texto' },
-          { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' }
-        ]
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Conversemos sobre *tu proyecto*',
+            ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
+          },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+        ],
       },
       {
-        id: 'beneficios', nombre: 'Beneficios (sidebar)', icono: '✅',
+        id: 'beneficios',
+        nombre: 'Beneficios (sidebar)',
+        icono: '✅',
         campos: [
           { key: 'titulo', label: 'Título', tipo: 'texto' },
           { key: 'beneficio1', label: 'Beneficio 1', tipo: 'texto' },
           { key: 'beneficio2', label: 'Beneficio 2', tipo: 'texto' },
           { key: 'beneficio3', label: 'Beneficio 3', tipo: 'texto' },
-          { key: 'beneficio4', label: 'Beneficio 4', tipo: 'texto' }
-        ]
+          { key: 'beneficio4', label: 'Beneficio 4', tipo: 'texto' },
+        ],
       },
       {
-        id: 'horarios', nombre: 'Horarios', icono: '🕐',
+        id: 'horarios',
+        nombre: 'Horarios',
+        icono: '🕐',
         campos: [
           { key: 'lunVie', label: 'Lunes a viernes', tipo: 'texto', placeholder: '9:00 – 18:00' },
           { key: 'sabado', label: 'Sábado', tipo: 'texto' },
-          { key: 'domingo', label: 'Domingo', tipo: 'texto' }
-        ]
-      }
-    ]
+          { key: 'domingo', label: 'Domingo', tipo: 'texto' },
+        ],
+      },
+    ],
   };
 
   // Almacén del contenido (en producción esto vendría del backend)
@@ -396,17 +683,21 @@ export class PaginasComponent implements OnInit {
   dispositivoPreview: 'desktop' | 'tablet' | 'mobile' = 'desktop';
 
   private sanitizer = inject(DomSanitizer);
+  private contenidoService = inject(ContenidoService);
+  private cdr = inject(ChangeDetectorRef);
 
   private rutasPublicas: Record<string, string> = {
     '/': '/home',
     '/nosotros': '/nosotros',
     '/proyectos': '/proyectos',
     '/servicios': '/servicios',
-    '/citas': '/citas'
+    '/citas': '/citas',
   };
 
   get categoriaLabel() {
-    return this.categoriasOpciones.find(c => c.value === this.formNuevaPagina.categoria)?.label || '';
+    return (
+      this.categoriasOpciones.find((c) => c.value === this.formNuevaPagina.categoria)?.label || ''
+    );
   }
 
   toggleSelectorCategoria(event: Event) {
@@ -432,24 +723,38 @@ export class PaginasComponent implements OnInit {
 
     if (this.busqueda.trim()) {
       const q = this.busqueda.toLowerCase();
-      resultado = resultado.filter(p =>
-        p.titulo.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q)
+      resultado = resultado.filter(
+        (p) => p.titulo.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q),
       );
     }
 
     switch (this.filtroActivo) {
-      case 'fijas': resultado = resultado.filter(p => p.tipo === 'fija'); break;
-      case 'personalizadas': resultado = resultado.filter(p => p.tipo === 'personalizada'); break;
-      case 'ocultas': resultado = resultado.filter(p => !p.visible); break;
+      case 'fijas':
+        resultado = resultado.filter((p) => p.tipo === 'fija');
+        break;
+      case 'personalizadas':
+        resultado = resultado.filter((p) => p.tipo === 'personalizada');
+        break;
+      case 'ocultas':
+        resultado = resultado.filter((p) => !p.visible);
+        break;
     }
 
     return resultado;
   }
 
-  get totalPaginas(): number { return this.paginas.length; }
-  get totalVisibles(): number { return this.paginas.filter(p => p.visible).length; }
-  get totalOcultas(): number { return this.paginas.filter(p => !p.visible).length; }
-  get totalPersonalizadas(): number { return this.paginas.filter(p => p.tipo === 'personalizada').length; }
+  get totalPaginas(): number {
+    return this.paginas.length;
+  }
+  get totalVisibles(): number {
+    return this.paginas.filter((p) => p.visible).length;
+  }
+  get totalOcultas(): number {
+    return this.paginas.filter((p) => !p.visible).length;
+  }
+  get totalPersonalizadas(): number {
+    return this.paginas.filter((p) => p.tipo === 'personalizada').length;
+  }
 
   toggleMenu(event: Event, id: number) {
     event.stopPropagation();
@@ -463,7 +768,7 @@ export class PaginasComponent implements OnInit {
 
   eliminarPagina(pagina: Pagina) {
     if (pagina.tipo === 'fija') return;
-    this.paginas = this.paginas.filter(p => p.id !== pagina.id);
+    this.paginas = this.paginas.filter((p) => p.id !== pagina.id);
     this.menuAbiertoId = null;
   }
 
@@ -486,12 +791,12 @@ export class PaginasComponent implements OnInit {
 
   seleccionarPlantilla(id: string) {
     this.plantillaSeleccionada = id;
-    const plantilla = this.plantillas.find(p => p.id === id);
+    const plantilla = this.plantillas.find((p) => p.id === id);
     if (plantilla) {
       this.formNuevaPagina.bloques = plantilla.bloquesIniciales.map((tipo, i) => ({
         id: Date.now() + i,
         tipo: tipo as any,
-        expandido: false
+        expandido: false,
       }));
     }
   }
@@ -500,7 +805,7 @@ export class PaginasComponent implements OnInit {
     this.formNuevaPagina.slug = this.formNuevaPagina.titulo
       .toLowerCase()
       .trim()
-      .replace(/[áéíóú]/g, m => ({ á: 'a', é: 'e', í: 'i', ó: 'o', ú: 'u' }[m] || ''))
+      .replace(/[áéíóú]/g, (m) => ({ á: 'a', é: 'e', í: 'i', ó: 'o', ú: 'u' })[m] || '')
       .replace(/ñ/g, 'n')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
@@ -510,7 +815,7 @@ export class PaginasComponent implements OnInit {
     const nuevoBloque: BloqueContenido = {
       id: Date.now(),
       tipo: tipo as any,
-      expandido: true
+      expandido: true,
     };
 
     // Inicializar campos según el tipo
@@ -518,14 +823,18 @@ export class PaginasComponent implements OnInit {
       nuevoBloque.items = [
         { titulo: 'Proyectos completados', valor: '50+' },
         { titulo: 'Clientes satisfechos', valor: '120+' },
-        { titulo: 'Años de experiencia', valor: '15' }
+        { titulo: 'Años de experiencia', valor: '15' },
       ];
     } else if (tipo === 'galeria') {
       nuevoBloque.imagenes = [];
     } else if (tipo === 'servicios') {
       nuevoBloque.items = [
-        { titulo: 'Diseño arquitectónico', descripcion: 'Planos y renders 3D profesionales', icono: '✏️' },
-        { titulo: 'Construcción', descripcion: 'Supervisión completa de obra', icono: '🏗️' }
+        {
+          titulo: 'Diseño arquitectónico',
+          descripcion: 'Planos y renders 3D profesionales',
+          icono: '✏️',
+        },
+        { titulo: 'Construcción', descripcion: 'Supervisión completa de obra', icono: '🏗️' },
       ];
     } else if (tipo === 'contacto') {
       nuevoBloque.campos = ['Nombre', 'Correo', 'Teléfono', 'Mensaje'];
@@ -538,22 +847,26 @@ export class PaginasComponent implements OnInit {
   }
 
   eliminarBloque(id: number) {
-    this.formNuevaPagina.bloques = this.formNuevaPagina.bloques.filter(b => b.id !== id);
+    this.formNuevaPagina.bloques = this.formNuevaPagina.bloques.filter((b) => b.id !== id);
   }
 
   moverBloque(id: number, dir: 'arriba' | 'abajo') {
-    const idx = this.formNuevaPagina.bloques.findIndex(b => b.id === id);
+    const idx = this.formNuevaPagina.bloques.findIndex((b) => b.id === id);
     if (dir === 'arriba' && idx > 0) {
-      [this.formNuevaPagina.bloques[idx], this.formNuevaPagina.bloques[idx - 1]] =
-      [this.formNuevaPagina.bloques[idx - 1], this.formNuevaPagina.bloques[idx]];
+      [this.formNuevaPagina.bloques[idx], this.formNuevaPagina.bloques[idx - 1]] = [
+        this.formNuevaPagina.bloques[idx - 1],
+        this.formNuevaPagina.bloques[idx],
+      ];
     } else if (dir === 'abajo' && idx < this.formNuevaPagina.bloques.length - 1) {
-      [this.formNuevaPagina.bloques[idx], this.formNuevaPagina.bloques[idx + 1]] =
-      [this.formNuevaPagina.bloques[idx + 1], this.formNuevaPagina.bloques[idx]];
+      [this.formNuevaPagina.bloques[idx], this.formNuevaPagina.bloques[idx + 1]] = [
+        this.formNuevaPagina.bloques[idx + 1],
+        this.formNuevaPagina.bloques[idx],
+      ];
     }
   }
 
   toggleBloque(id: number) {
-    const bloque = this.formNuevaPagina.bloques.find(b => b.id === id);
+    const bloque = this.formNuevaPagina.bloques.find((b) => b.id === id);
     if (bloque) bloque.expandido = !bloque.expandido;
   }
 
@@ -562,12 +875,12 @@ export class PaginasComponent implements OnInit {
   }
 
   irSiguiente() {
-    const idx = this.secciones.findIndex(s => s.id === this.seccionActiva);
+    const idx = this.secciones.findIndex((s) => s.id === this.seccionActiva);
     if (idx < this.secciones.length - 1) this.seccionActiva = this.secciones[idx + 1].id;
   }
 
   irAnterior() {
-    const idx = this.secciones.findIndex(s => s.id === this.seccionActiva);
+    const idx = this.secciones.findIndex((s) => s.id === this.seccionActiva);
     if (idx > 0) this.seccionActiva = this.secciones[idx - 1].id;
   }
 
@@ -578,11 +891,11 @@ export class PaginasComponent implements OnInit {
   }
 
   obtenerLabelBloque(tipo: string): string {
-    return this.tiposBloques.find(t => t.tipo === tipo)?.label || tipo;
+    return this.tiposBloques.find((t) => t.tipo === tipo)?.label || tipo;
   }
 
   agregarItemBloque(bloqueId: number) {
-    const b = this.formNuevaPagina.bloques.find(b => b.id === bloqueId);
+    const b = this.formNuevaPagina.bloques.find((b) => b.id === bloqueId);
     if (!b) return;
     if (!b.items) b.items = [];
 
@@ -594,7 +907,7 @@ export class PaginasComponent implements OnInit {
   }
 
   eliminarItemBloque(bloqueId: number, index: number) {
-    const b = this.formNuevaPagina.bloques.find(b => b.id === bloqueId);
+    const b = this.formNuevaPagina.bloques.find((b) => b.id === bloqueId);
     if (b?.items) b.items.splice(index, 1);
   }
 
@@ -622,7 +935,7 @@ export class PaginasComponent implements OnInit {
     '/nosotros': 'nosotros',
     '/proyectos': 'proyectos',
     '/servicios': 'servicios',
-    '/citas': 'citas'
+    '/citas': 'citas',
   };
 
   // ============ EDITAR / PREVISUALIZAR ============
@@ -630,7 +943,9 @@ export class PaginasComponent implements OnInit {
     this.menuAbiertoId = null;
     const ruta = this.rutasPublicas[pagina.slug] || pagina.slug;
     this.paginaPrevisualizando = pagina;
-    this.urlPreviewSegura = this.sanitizer.bypassSecurityTrustResourceUrl(ruta);
+    this.urlPreviewSegura = this.sanitizer.bypassSecurityTrustResourceUrl(
+      window.location.origin + ruta,
+    );
     this.dispositivoPreview = 'desktop';
     this.mostrarPreviewPagina = true;
   }
@@ -640,17 +955,24 @@ export class PaginasComponent implements OnInit {
     this.urlPreviewSegura = null;
     this.paginaPrevisualizando = null;
   }
-
   abrirEnPestanaNueva() {
     if (!this.paginaPrevisualizando) return;
-    const ruta = this.rutasPublicas[this.paginaPrevisualizando.slug] || this.paginaPrevisualizando.slug;
-    window.open(ruta, '_blank');
+    const ruta =
+      this.rutasPublicas[this.paginaPrevisualizando.slug] || this.paginaPrevisualizando.slug;
+    window.open(window.location.origin + ruta, '_blank');
   }
 
   get anchoPreview(): string {
     if (this.dispositivoPreview === 'mobile') return '390px';
     if (this.dispositivoPreview === 'tablet') return '820px';
     return '100%';
+  }
+
+  get urlPreviewAbsoluta(): string {
+    if (!this.paginaPrevisualizando) return '';
+    const ruta =
+      this.rutasPublicas[this.paginaPrevisualizando.slug] || this.paginaPrevisualizando.slug;
+    return window.location.origin + ruta;
   }
 
   editarPagina(pagina: Pagina) {
@@ -670,17 +992,31 @@ export class PaginasComponent implements OnInit {
     if (!schemaKey) return;
 
     // Inicializar contenido si no existe
-    if (!this.contenidoPaginas[schemaKey]) {
-      this.contenidoPaginas[schemaKey] = {};
-      this.schemasPaginas[schemaKey].forEach(seccion => {
-        this.contenidoPaginas[schemaKey][seccion.id] = {};
-        seccion.campos.forEach(campo => {
-          this.contenidoPaginas[schemaKey][seccion.id][campo.key] = '';
-        });
+    this.contenidoPaginas[schemaKey] = {};
+    this.schemasPaginas[schemaKey].forEach((seccion) => {
+      this.contenidoPaginas[schemaKey][seccion.id] = {};
+      seccion.campos.forEach((campo) => {
+        if (campo.tipo === 'catalogo') return;
+        const guardado = this.contenidoService.getCampo(schemaKey, seccion.id, campo.key, '');
+        if (campo.tipo === 'seleccion') {
+          let valores = this.opcionesDe(campo).map((o) => o.value);
+          if (campo.limite) valores = valores.slice(0, campo.limite);
+          this.contenidoPaginas[schemaKey][seccion.id][campo.key] = guardado.trim()
+            ? guardado
+            : valores.join(',');
+        } else {
+          this.contenidoPaginas[schemaKey][seccion.id][campo.key] = guardado.trim()
+            ? guardado
+            : campo.default || '';
+        }
       });
-    }
+    });
 
     this.seccionEditandoActiva = this.schemasPaginas[schemaKey][0]?.id || '';
+    // Copia de trabajo del catálogo (solo se aplica al Guardar cambios)
+    this.serviciosDraft = this.catalogo.servicios().map((s) => ({ ...s }));
+    this.servicioFormAbierto = false;
+    this.servicioEditandoId = null;
     this.mostrarEditarPaginaFija = true;
   }
 
@@ -698,7 +1034,7 @@ export class PaginasComponent implements OnInit {
   }
 
   get seccionActualSchema(): SeccionEditable | undefined {
-    return this.seccionesPaginaActual.find(s => s.id === this.seccionEditandoActiva);
+    return this.seccionesPaginaActual.find((s) => s.id === this.seccionEditandoActiva);
   }
 
   get contenidoSeccionActual(): Record<string, string> {
@@ -722,12 +1058,40 @@ export class PaginasComponent implements OnInit {
 
   guardarEdicionPagina() {
     if (!this.paginaEditando) return;
-    this.paginaEditando.ultimaEdicion = 'Hace unos segundos';
-    this.mensajeGuardado = 'Cambios guardados correctamente';
-    setTimeout(() => this.mensajeGuardado = '', 3000);
+    const key = this.slugASchema[this.paginaEditando.slug];
 
-    // TODO: aquí conectas al backend
-    console.log('Guardando:', this.contenidoPaginas);
+    if (key) this.contenidoService.guardarPagina(key, this.contenidoPaginas[key]);
+
+    // Página de Servicios: sincronizar el catálogo
+    if (key === 'servicios') {
+      const payload = this.serviciosDraft.map((s, i) => ({
+        id: s.id && s.id > 0 ? s.id : undefined,
+        titulo: s.titulo,
+        descripcion: s.descripcion,
+        categoria: s.categoria,
+        icono: s.icono,
+        imagen: s.imagen,
+        orden: i + 1,
+      }));
+      this.guardandoServicio = true;
+      this.cdr.markForCheck();
+      this.catalogo.sincronizarServicios(payload).subscribe({
+        next: () => {
+          this.catalogo.cargarServicios();
+          this.guardandoServicio = false;
+          this.paginaEditando!.ultimaEdicion = 'Hace unos segundos';
+          this.flashMensaje('Cambios guardados correctamente');
+        },
+        error: () => {
+          this.guardandoServicio = false;
+          this.flashMensaje('Error al guardar el catálogo');
+        },
+      });
+      return;
+    }
+
+    this.paginaEditando.ultimaEdicion = 'Hace unos segundos';
+    this.flashMensaje('Cambios guardados correctamente');
   }
 
   onIframeCargado(event: Event) {
@@ -757,5 +1121,139 @@ export class PaginasComponent implements OnInit {
     } catch (e) {
       console.warn('No se pudo bloquear navegación en el preview:', e);
     }
+  }
+
+  estaSeleccionado(campoKey: string, value: string): boolean {
+    const actual = this.contenidoSeccionActual[campoKey] || '';
+    return actual
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .includes(value);
+  }
+
+  contarSeleccionados(campoKey: string): number {
+    const actual = this.contenidoSeccionActual[campoKey] || '';
+    return actual
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean).length;
+  }
+
+  limiteAlcanzado(campo: CampoEdicion): boolean {
+    return !!campo.limite && this.contarSeleccionados(campo.key) >= campo.limite;
+  }
+
+  toggleSeleccion(campo: CampoEdicion, value: string) {
+    let seleccionados = (this.contenidoSeccionActual[campo.key] || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (seleccionados.includes(value)) {
+      seleccionados = seleccionados.filter((v) => v !== value); // quitar siempre se puede
+    } else {
+      if (this.limiteAlcanzado(campo)) return; // no dejar pasar el límite
+      seleccionados.push(value);
+    }
+    this.actualizarCampo(campo.key, seleccionados.join(','));
+  }
+
+  private catalogo = inject(CatalogoService);
+
+  opcionesDe(campo: CampoEdicion): { value: string; label: string }[] {
+    if (campo.fuente === 'servicios') {
+      return this.catalogo.getServicios().map((s, i) => ({ value: String(i), label: s.titulo }));
+    }
+    if (campo.fuente === 'proyectos') {
+      return this.catalogo.getProyectos().map((p, i) => ({ value: String(i), label: p.nombre }));
+    }
+    return campo.opciones || [];
+  }
+
+  // ===== CRUD de Servicios (dentro del editor de Páginas) =====
+  categoriasServicio = [
+    { value: 'tramites', label: 'Trámites' },
+    { value: 'gerencia', label: 'Gerencia' },
+    { value: 'diseno', label: 'Diseño' },
+    { value: 'construccion', label: 'Construcción' },
+    { value: 'especiales', label: 'Proyectos Especiales' },
+  ];
+  iconosServicio = ['document','badge','users','eye','cube','map','structure','leaf','water','bulb','home','factory','chat','calculator'];
+
+  servicioFormAbierto = false;
+  servicioEditandoId: number | null = null;
+  guardandoServicio = false;
+  servicioForm = this.servicioVacio();
+  servicioAEliminar: Servicio | null = null;
+  serviciosDraft: Servicio[] = [];
+  private tempIdSeq = -1;
+
+  private servicioVacio() {
+    return { titulo: '', descripcion: '', categoria: 'tramites', icono: 'document', imagen: '' };
+  }
+
+  etiquetaCategoriaServicio(cat: string): string {
+    return this.catalogo.etiquetaCategoriaServicio(cat);
+  }
+
+  nuevoServicio() {
+    this.servicioEditandoId = null;
+    this.servicioForm = this.servicioVacio();
+    this.servicioFormAbierto = true;
+  }
+
+  editarServicioCat(s: Servicio) {
+    this.servicioEditandoId = s.id;
+    this.servicioForm = {
+      titulo: s.titulo,
+      descripcion: s.descripcion,
+      categoria: s.categoria,
+      icono: s.icono,
+      imagen: s.imagen,
+    };
+    this.servicioFormAbierto = true;
+  }
+
+  cancelarServicioForm() {
+    this.servicioFormAbierto = false;
+    this.servicioEditandoId = null;
+    this.servicioForm = this.servicioVacio();
+  }
+
+  guardarServicioCat() {
+    if (!this.servicioForm.titulo.trim()) return;
+    if (this.servicioEditandoId != null) {
+      const idx = this.serviciosDraft.findIndex((s) => s.id === this.servicioEditandoId);
+      if (idx >= 0) this.serviciosDraft[idx] = { ...this.serviciosDraft[idx], ...this.servicioForm };
+    } else {
+      this.serviciosDraft.push({
+        id: this.tempIdSeq--, // id temporal (negativo) hasta guardar
+        orden: this.serviciosDraft.length + 1,
+        ...this.servicioForm,
+      } as Servicio);
+    }
+    this.cancelarServicioForm();
+  }
+
+  pedirEliminarServicio(s: Servicio) {
+    this.servicioAEliminar = s;
+  }
+
+  cancelarEliminarServicio() {
+    this.servicioAEliminar = null;
+  }
+
+  confirmarEliminarServicio() {
+    if (!this.servicioAEliminar) return;
+    const id = this.servicioAEliminar.id;
+    this.serviciosDraft = this.serviciosDraft.filter((s) => s.id !== id);
+    this.servicioAEliminar = null;
+  }
+
+  private flashMensaje(texto: string) {
+    this.mensajeGuardado = texto;
+    this.cdr.markForCheck();
+    setTimeout(() => { this.mensajeGuardado = ''; this.cdr.markForCheck(); }, 3000);
   }
 }

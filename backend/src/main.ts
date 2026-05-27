@@ -1,18 +1,27 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
 
 async function bootstrap() {
+
+  if (!process.env.JWT_SECRET) {
+    throw new Error('Falta JWT_SECRET en el .env');
+  }
+
   const app = await NestFactory.create(AppModule);
 
+  app.use(helmet());
+
   app.enableCors({
-    origin: 'http://localhost:4200',
+    origin: process.env.FRONTEND_URL || 'http://localhost:4200',
     methods: 'GET,POST,PUT,DELETE,PATCH',
     credentials: true,
   });
 
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
+    forbidNonWhitelisted: true,
     transform: true,
   }));
 

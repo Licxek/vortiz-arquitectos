@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --color-primario: #0a4d7a;
+  --color-secundario: #0a1f3d;
+  --color-texto-nav: #ffffff;
+  --color-texto-footer: #ffffff;
+  --degradado-inicio: #000000;
+  --degradado-fin: #0a1f3d;
+}

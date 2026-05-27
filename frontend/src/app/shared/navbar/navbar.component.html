@@ -1,4 +1,4 @@
-<nav class="sticky top-0 z-30 text-white shadow-lg transition-all duration-300"
+<nav class="sticky top-0 z-30 text-[var(--color-texto-nav)] shadow-lg transition-all duration-300"
     [style.background]="'linear-gradient(to bottom, ' + (configuracion?.color_degradado_inicio || '#000000') + ', ' + (configuracion?.color_degradado_fin || '#0a1f3d') + ')'">
 
   <!-- Barra principal escritorio -->
@@ -14,11 +14,11 @@
       <div class="transition-all duration-300 min-w-0">
         <span class="font-bold block transition-all duration-300 truncate"
               [ngClass]="scrolled ? 'text-base lg:text-xl' : 'text-lg md:text-xl lg:text-3xl'">
-          Vortiz Arquitectos
+          {{ configuracion?.nombre || 'Vortiz Arquitectos' }}
         </span>
         <p class="text-gray-400 transition-all duration-300 truncate"
           [ngClass]="scrolled ? 'text-[10px] lg:text-xs' : 'text-xs md:text-sm lg:text-base'">
-          Diseñamos espacios, construimos confianza.
+          {{ configuracion?.eslogan || 'Diseñamos espacios, construimos confianza.' }}
         </p>
       </div>
     </a>
@@ -78,8 +78,8 @@
   <a routerLink="/" class="flex items-center gap-2 min-w-0 flex-1 justify-center">
     <img [src]="configuracion?.logo_url || '/assets/img/logo.png'" alt="Logo" class="h-12 w-auto shrink-0" />
     <div class="min-w-0 flex flex-col leading-tight">
-      <span class="text-base font-bold truncate">Vortiz Arquitectos</span>
-      <span class="text-[11px] text-gray-400 leading-tight">Diseñamos espacios, construimos confianza.</span>
+      <span class="text-base font-bold truncate">{{ configuracion?.nombre || 'Vortiz Arquitectos' }}</span>
+      <span class="text-[11px] text-gray-400 leading-tight">{{ configuracion?.eslogan || 'Diseñamos espacios, construimos confianza.' }}</span>
     </div>
   </a>
 
@@ -381,7 +381,7 @@
 <div class="bg-gradient-to-b from-black via-[#071020] to-[#0a1f3d] px-4 py-[19px] flex items-center justify-between">
   <div class="flex items-center gap-3">
     <img [src]="configuracion?.logo_url || '/assets/img/logo.png'" alt="Logo" class="h-11 w-auto" />
-    <span class="text-white font-bold text-base">Vortiz Arquitectos</span>
+    <span class="text-white font-bold text-base">{{ configuracion?.nombre || 'Vortiz Arquitectos' }}</span>
   </div>
   <button (click)="menuAbierto = false">
     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

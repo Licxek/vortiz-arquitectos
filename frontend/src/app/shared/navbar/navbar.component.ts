@@ -64,9 +64,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
 };
 
   ngOnInit() {
-    this.configuracionService.getConfiguracion().subscribe({
-      next: (data) => this.configuracion = data,
-      error: () => this.configuracion = null
+    this.configuracionService.configPublica$.subscribe(c => {
+      this.configuracion = c;
+      this.cdr.markForCheck();
     });
 
     this.paginasService.getPaginasVisibles().subscribe({

@@ -1,17 +1,9 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, inject} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-
-interface Proyecto {
-  nombre: string;
-  iniciales: string;
-  logoUrl?: string;
-  categoria: 'corporativo' | 'industrial' | 'comercial' | 'residencial' | 'infraestructura' | 'institucional';
-  ubicacion: string;
-  anio: number;
-  colorMarca: string;
-  descripcion?: string;
-}
+import { CatalogoService, Proyecto } from '../../core/services/catalogo.service'; // ajusta ruta
+import { ContenidoService } from '../../core/services/contenido.service'; // ajusta ruta
+import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe'; // ajusta ruta
 
 interface CategoriaFiltro {
   id: string;
@@ -22,50 +14,61 @@ interface CategoriaFiltro {
 @Component({
   selector: 'app-proyectos',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormatoTextoPipe],
   templateUrl: './proyectos.component.html',
 })
 export class ProyectosComponent {
+  private catalogo = inject(CatalogoService);
+  private contenidoService = inject(ContenidoService);
 
   filtroActivo = signal<string>('todos');
   busqueda = signal<string>('');
 
-  proyectos: Proyecto[] = [
-    { nombre: 'Toyota', iniciales: 'TY',logoUrl: '/assets/img/icons/logoToyota.ico', categoria: 'corporativo', ubicacion: 'Guanajuato', anio: 2018, colorMarca: '#EB0A1E', descripcion: 'Planta automotriz y áreas corporativas.' },
-    { nombre: 'Bancomer', iniciales: 'BX',logoUrl: '/assets/img/icons/logoBBVA.ico', categoria: 'corporativo', ubicacion: 'Durango', anio: 2015, colorMarca: '#004481', descripcion: 'Remodelación de sucursales bancarias.' },
-    { nombre: 'Aeropuerto de Cancún', iniciales: 'AC', logoUrl: '/assets/img/icons/logoAirport.ico', categoria: 'infraestructura', ubicacion: 'Quintana Roo', anio: 2019, colorMarca: '#00A859', descripcion: 'Ampliación de terminal de pasajeros.' },
-    { nombre: 'Puente Baluarte', iniciales: 'PB', logoUrl: '/assets/img/icons/logoPuente.ico', categoria: 'infraestructura', ubicacion: 'Durango–Sinaloa', anio: 2012, colorMarca: '#6B7280', descripcion: 'Obra hidráulica complementaria.' },
-    { nombre: 'COFICAB', iniciales: 'CF', logoUrl: '/assets/img/icons/logoCoficab.svg', categoria: 'industrial', ubicacion: 'Aguascalientes', anio: 2020, colorMarca: '#0066B3', descripcion: 'Nave industrial y oficinas.' },
-    { nombre: 'CA Automotive', iniciales: 'CA', logoUrl: '/assets/img/icons/logoCA.ico', categoria: 'industrial', ubicacion: 'Durango', anio: 2021, colorMarca: '#1F2937', descripcion: 'Planta y centro de distribución.' },
-    { nombre: 'Casas Geo', iniciales: 'CG', logoUrl: '/assets/img/icons/logoCasas.ico', categoria: 'residencial', ubicacion: 'Varios estados', anio: 2017, colorMarca: '#7DC242', descripcion: 'Fraccionamientos residenciales.' },
-    { nombre: 'Paseo Durango', iniciales: 'PD', logoUrl: '/assets/img/icons/logoPaseo.ico', categoria: 'comercial', ubicacion: 'Durango', anio: 2016, colorMarca: '#F59E0B', descripcion: 'Plaza comercial y entretenimiento.' },
-    { nombre: 'Ecocab', iniciales: 'EC', logoUrl: '/assets/img/icons/logoEcocab.ico', categoria: 'industrial', ubicacion: 'Durango', anio: 2019, colorMarca: '#10B981', descripcion: 'Planta de manufactura eléctrica.' },
-    { nombre: 'Fanosa', iniciales: 'FN', logoUrl: '/assets/img/icons/logoFanosa.ico', categoria: 'industrial', ubicacion: 'Durango', anio: 2022, colorMarca: '#DC2626', descripcion: 'Almacenes y áreas operativas.' },
-    { nombre: 'Centro Penitenciario', iniciales: 'CP', logoUrl: '/assets/img/icons/logoPrision.ico', categoria: 'institucional', ubicacion: 'Durango', anio: 2014, colorMarca: '#374151', descripcion: 'Infraestructura institucional.' }
-  ];
+  proyectos: Proyecto[] = this.catalogo.getProyectos();
+
+  // HERO
+  proyHeroBadge = 'Portafolio';
+  proyHeroTitulo = 'Clientes que confiaron en *nuestro trabajo*';
+  proyHeroDescripcion =
+    'Cada marca representa una historia de colaboración, planeación y ejecución.';
+  // INTRO
+  proyIntroBadge = 'Nuestro portafolio';
+  proyIntroTitulo = '150+ proyectos completados para empresas líderes en México';
+  proyIntroDescripcion =
+    'Desde plantas industriales hasta infraestructura nacional, hemos colaborado con corporativos, gobiernos y desarrolladoras a lo largo de 20 años de trayectoria.';
+  // CTA
+  proyCtaTitulo = '¿Tu marca podría ser la *siguiente?*';
+  proyCtaDescripcion =
+    'Conversemos sobre tu proyecto. Te explicamos cómo podemos sumarnos a tu visión.';
 
   categorias = computed<CategoriaFiltro[]>(() => {
-    const cats = ['corporativo', 'industrial', 'comercial', 'residencial', 'infraestructura', 'institucional'];
+    const cats = [
+      'corporativo',
+      'industrial',
+      'comercial',
+      'residencial',
+      'infraestructura',
+      'institucional',
+    ];
     return [
       { id: 'todos', label: 'Todos', count: this.proyectos.length },
-      ...cats.map(c => ({
+      ...cats.map((c) => ({
         id: c,
         label: c.charAt(0).toUpperCase() + c.slice(1),
-        count: this.proyectos.filter(p => p.categoria === c).length
-      }))
+        count: this.proyectos.filter((p) => p.categoria === c).length,
+      })),
     ];
   });
 
   proyectosFiltrados = computed(() => {
     let lista = this.proyectos;
     if (this.filtroActivo() !== 'todos') {
-      lista = lista.filter(p => p.categoria === this.filtroActivo());
+      lista = lista.filter((p) => p.categoria === this.filtroActivo());
     }
     const q = this.busqueda().toLowerCase().trim();
     if (q) {
-      lista = lista.filter(p =>
-        p.nombre.toLowerCase().includes(q) ||
-        p.ubicacion.toLowerCase().includes(q)
+      lista = lista.filter(
+        (p) => p.nombre.toLowerCase().includes(q) || p.ubicacion.toLowerCase().includes(q),
       );
     }
     return lista;
@@ -77,5 +80,58 @@ export class ProyectosComponent {
 
   actualizarBusqueda(event: Event) {
     this.busqueda.set((event.target as HTMLInputElement).value);
+  }
+
+  ngOnInit() {
+    this.proyHeroBadge = this.contenidoService.getCampo(
+      'proyectos',
+      'hero',
+      'badge',
+      this.proyHeroBadge,
+    );
+    this.proyHeroTitulo = this.contenidoService.getCampo(
+      'proyectos',
+      'hero',
+      'titulo',
+      this.proyHeroTitulo,
+    );
+    this.proyHeroDescripcion = this.contenidoService.getCampo(
+      'proyectos',
+      'hero',
+      'descripcion',
+      this.proyHeroDescripcion,
+    );
+
+    this.proyIntroBadge = this.contenidoService.getCampo(
+      'proyectos',
+      'intro',
+      'badge',
+      this.proyIntroBadge,
+    );
+    this.proyIntroTitulo = this.contenidoService.getCampo(
+      'proyectos',
+      'intro',
+      'titulo',
+      this.proyIntroTitulo,
+    );
+    this.proyIntroDescripcion = this.contenidoService.getCampo(
+      'proyectos',
+      'intro',
+      'descripcion',
+      this.proyIntroDescripcion,
+    );
+
+    this.proyCtaTitulo = this.contenidoService.getCampo(
+      'proyectos',
+      'cta',
+      'titulo',
+      this.proyCtaTitulo,
+    );
+    this.proyCtaDescripcion = this.contenidoService.getCampo(
+      'proyectos',
+      'cta',
+      'descripcion',
+      this.proyCtaDescripcion,
+    );
   }
 }

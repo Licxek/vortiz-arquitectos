@@ -1,24 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { ContenidoService } from '../../core/services/contenido.service';
+import { CatalogoService, Servicio, Proyecto } from '../../core/services/catalogo.service';
+import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe'; // ajusta ruta
 
-interface Servicio {
-  icono: string;
-  titulo: string;
-  descripcion: string;
-  categoria: string;
-  imagen: string;
-}
-
-interface ProyectoDestacado {
-  nombre: string;
-  iniciales: string;
-  logoUrl?: string;
-  categoria: string;
-  ubicacion: string;
-  anio: number;
-  colorMarca: string;
-}
 
 interface Paso {
   numero: string;
@@ -34,7 +20,7 @@ interface Stat {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule , FormatoTextoPipe],
   templateUrl: './home.component.html',
 })
 export class HomeComponent implements OnInit {
@@ -46,61 +32,9 @@ export class HomeComponent implements OnInit {
     { valor: '12', label: 'Especialistas en el equipo' }
   ];
 
-  servicios: Servicio[] = [
-    {
-      titulo: 'Diseño y Modelado de proyecto Arquitectónico BIM',
-      descripcion: 'Servicio que integra el modelado BIM para desarrollar un proyecto digital preciso y coordinado, junto con la metodología PMI para una gestión eficiente. Permite optimizar tiempos, costos y recursos, reducir errores y asegurar un mejor control durante todo el desarrollo del proyecto.',
-      imagen: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80',
-      categoria: 'Diseño',
-      icono: 'cube'
-    },
-    {
-      titulo: 'Construcción Residencial',
-      descripcion: 'Construcción de casa habitación, remodelación de casa habitación, casa habitación en serie y Residencial.',
-      imagen: 'https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=600&q=80',
-      categoria: 'Construcción',
-      icono: 'home'
-    },
-    {
-      titulo: 'Construcción Industrial',
-      descripcion: 'Ejecución de obra civil, bodegas, naves industriales, centros comerciales, urbanismo y edificios verticales.',
-      imagen: 'https://images.unsplash.com/photo-1513828583688-c52646db42da?w=600&q=80',
-      categoria: 'Construcción',
-      icono: 'factory'
-    },
-    {
-      titulo: 'Supervisión de Proyectos de construcción en general',
-      descripcion: 'Control total de construcción para lograr una correcta ejecución de los proyectos, en cuanto tiempo, costo, seguridad y calidad.',
-      imagen: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80',
-      categoria: 'Gerencia',
-      icono: 'eye'
-    },
-    {
-      titulo: 'Gerencia de proyectos',
-      descripcion: 'Coordinación en la selección de especialistas y asesores específicos, recomendación para la contratación de empresas contratistas y de servicios, licitación y presentación de propuestas, concursos de obra, revisión de números generadores de obra, estimaciones de obra, escalatorias, reclamos de obra y ajuste de costos.',
-      imagen: 'https://images.unsplash.com/photo-1542621334-a254cf47733d?w=600&q=80',
-      categoria: 'Gerencia',
-      icono: 'users'
-    },
-    {
-      titulo: 'Consultoría para tu proyecto de construcción',
-      descripcion: 'Recabamos la información preliminar disponible de terrenos (normativa, mecánica de suelos, topografía y factibilidades).',
-      imagen: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&q=80',
-      categoria: 'Diseño',
-      icono: 'chat'
-    }
-  ];
+  servicios: Servicio[] = [];
+  proyectosDestacados: Proyecto[] = [];
 
-  proyectosDestacados: ProyectoDestacado[] = [
-    { nombre: 'Toyota', iniciales: 'TY', logoUrl: '/assets/img/icons/logoToyota.ico', categoria: 'Corporativo', ubicacion: 'Guanajuato', anio: 2018, colorMarca: '#EB0A1E' },
-    { nombre: 'Bancomer', iniciales: 'BX', logoUrl: '/assets/img/icons/logoBBVA.ico', categoria: 'Corporativo', ubicacion: 'Durango', anio: 2015, colorMarca: '#004481' },
-    { nombre: 'Aeropuerto de Cancún', iniciales: 'AC', logoUrl: '/assets/img/icons/logoAirport.ico', categoria: 'Infraestructura', ubicacion: 'Quintana Roo', anio: 2019, colorMarca: '#00A859' },
-    { nombre: 'Puente Baluarte', iniciales: 'PB', logoUrl: '/assets/img/icons/logoPuente.ico', categoria: 'Infraestructura', ubicacion: 'Durango–Sinaloa', anio: 2012, colorMarca: '#6B7280' },
-    { nombre: 'Casas Geo', iniciales: 'CG', logoUrl: '/assets/img/icons/logoCasas.ico', categoria: 'Residencial', ubicacion: 'Varios estados', anio: 2017, colorMarca: '#7DC242' },
-    { nombre: 'COFICAB', iniciales: 'CF', logoUrl: '/assets/img/icons/logoCoficab.svg', categoria: 'Industrial', ubicacion: 'Aguascalientes', anio: 2020, colorMarca: '#0066B3' },
-    { nombre: 'Paseo Durango', iniciales: 'PD', logoUrl: '/assets/img/icons/logoPaseo.ico', categoria: 'Comercial', ubicacion: 'Durango', anio: 2016, colorMarca: '#F59E0B' },
-    { nombre: 'Fanosa', iniciales: 'FN', logoUrl: '/assets/img/icons/logoFanosa.ico', categoria: 'Industrial', ubicacion: 'Durango', anio: 2022, colorMarca: '#DC2626' }
-  ];
 
   pasos: Paso[] = [
     { numero: '01', titulo: 'Conversación inicial', descripcion: 'Escuchamos tu visión, necesidades y presupuesto para entender el proyecto.' },
@@ -109,5 +43,122 @@ export class HomeComponent implements OnInit {
     { numero: '04', titulo: 'Entrega y acompañamiento', descripcion: 'Te entregamos el proyecto terminado con soporte post-construcción.' }
   ];
 
-  ngOnInit() {}
+  // en el componente de la página pública (ej: home.component.ts)
+  private contenidoService = inject(ContenidoService);
+
+  // ---- Contenido editable del HERO (con sus valores por defecto) ----
+  heroBadge = 'Arquitectura · Construcción · Diseño';
+   heroTitulo = 'Diseñamos *espacios*, construimos *confianza*';
+  heroDescripcion = 'Más de 20 años transformando ideas en proyectos arquitectónicos que perduran en el tiempo, en Durango y todo México.';
+  heroImagenFondo = 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1920';
+  heroCta1 = 'Ver nuestros proyectos';
+  heroCta2 = 'Agendar consulta';
+
+  // ---- FILOSOFÍA ----
+  filoBadge = 'Sobre Vortiz Arquitectos';
+  filoTitulo = 'Confianza y experiencia desde ~2005~';
+  filoParrafo1 = 'Somos una firma de arquitectura con sede en Durango que combina diseño contemporáneo, tecnología BIM y metodología PMI para entregar proyectos residenciales, comerciales e industriales que superan las expectativas.';
+  filoParrafo2 = 'Cada proyecto que tomamos lo tratamos como único: escuchamos, planeamos a detalle, ejecutamos con precisión y acompañamos hasta mucho después de la entrega.';
+  filoImagen = 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800';
+
+  // ---- SERVICIOS (encabezado de la sección) ----
+  servBadge = 'Servicios';
+  servTitulo = 'Soluciones arquitectónicas a tu medida';
+  servDescripcion = 'Desde el primer trazo hasta la entrega de llaves, te acompañamos con un equipo multidisciplinario.';
+
+  // ---- PROCESO (encabezado) ----
+  procBadge = 'Proceso';
+  procTitulo = 'Así trabajamos contigo';
+
+  // ---- CTA FINAL ----
+  ctaBadge = 'Empieza tu proyecto';
+  ctaTitulo  = '¿Listo para construir tu próximo *gran proyecto?*';
+  ctaDescripcion = 'Agenda una conversación inicial sin compromiso. Te escuchamos, evaluamos tu idea y te decimos cómo podemos ayudarte a hacerla realidad.';
+  ctaBoton1 = 'Agenda tu consulta inicial';
+  ctaBoton2 = 'Escríbenos por WhatsApp';
+  ctaImagenFondo = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920';
+
+   // ---- PROYECTOS DESTACADOS (encabezado) ----
+  proyBadge = 'Portafolio';
+  proyTitulo = 'Marcas que confiaron en *nuestro trabajo*';
+
+  // ---- Listas que realmente se muestran (filtradas por la selección del admin) ----
+  serviciosVisibles: Servicio[] = [];
+  proyectosVisibles: Proyecto[] = [];
+  private catalogo = inject(CatalogoService);
+
+  ngOnInit() {
+    // Cargar catálogo (fuente única)
+    this.servicios = this.catalogo.getServicios();
+    this.proyectosDestacados = this.catalogo.getProyectos();
+    // HERO
+    this.heroBadge       = this.contenidoService.getCampo('inicio', 'hero', 'badge', this.heroBadge);
+    this.heroTitulo      = this.contenidoService.getCampo('inicio', 'hero', 'titulo', this.heroTitulo);
+    this.heroDescripcion = this.contenidoService.getCampo('inicio', 'hero', 'descripcion', this.heroDescripcion);
+    this.heroImagenFondo = this.contenidoService.getCampo('inicio', 'hero', 'imagenFondo', this.heroImagenFondo);
+    this.heroCta1        = this.contenidoService.getCampo('inicio', 'hero', 'cta1', this.heroCta1);
+    this.heroCta2        = this.contenidoService.getCampo('inicio', 'hero', 'cta2', this.heroCta2);
+
+    // FILOSOFÍA
+    this.filoBadge    = this.contenidoService.getCampo('inicio', 'filosofia', 'badge', this.filoBadge);
+    this.filoTitulo   = this.contenidoService.getCampo('inicio', 'filosofia', 'titulo', this.filoTitulo);
+    this.filoParrafo1 = this.contenidoService.getCampo('inicio', 'filosofia', 'parrafo1', this.filoParrafo1);
+    this.filoParrafo2 = this.contenidoService.getCampo('inicio', 'filosofia', 'parrafo2', this.filoParrafo2);
+    this.filoImagen   = this.contenidoService.getCampo('inicio', 'filosofia', 'imagen', this.filoImagen);
+
+    // STATS (sobre el array)
+    this.stats[0].valor = this.contenidoService.getCampo('inicio', 'stats', 'stat1Valor', this.stats[0].valor);
+    this.stats[0].label = this.contenidoService.getCampo('inicio', 'stats', 'stat1Label', this.stats[0].label);
+    this.stats[1].valor = this.contenidoService.getCampo('inicio', 'stats', 'stat2Valor', this.stats[1].valor);
+    this.stats[1].label = this.contenidoService.getCampo('inicio', 'stats', 'stat2Label', this.stats[1].label);
+    this.stats[2].valor = this.contenidoService.getCampo('inicio', 'stats', 'stat3Valor', this.stats[2].valor);
+    this.stats[2].label = this.contenidoService.getCampo('inicio', 'stats', 'stat3Label', this.stats[2].label);
+    this.stats[3].valor = this.contenidoService.getCampo('inicio', 'stats', 'stat4Valor', this.stats[3].valor);
+    this.stats[3].label = this.contenidoService.getCampo('inicio', 'stats', 'stat4Label', this.stats[3].label);
+
+    // SERVICIOS (encabezado)
+    this.servBadge       = this.contenidoService.getCampo('inicio', 'servicios', 'badge', this.servBadge);
+    this.servTitulo      = this.contenidoService.getCampo('inicio', 'servicios', 'titulo', this.servTitulo);
+    this.servDescripcion = this.contenidoService.getCampo('inicio', 'servicios', 'descripcion', this.servDescripcion);
+
+    // PROCESO
+    this.procBadge  = this.contenidoService.getCampo('inicio', 'proceso', 'badge', this.procBadge);
+    this.procTitulo = this.contenidoService.getCampo('inicio', 'proceso', 'titulo', this.procTitulo);
+    this.pasos[0].titulo      = this.contenidoService.getCampo('inicio', 'proceso', 'paso1Titulo', this.pasos[0].titulo);
+    this.pasos[0].descripcion = this.contenidoService.getCampo('inicio', 'proceso', 'paso1Desc', this.pasos[0].descripcion);
+    this.pasos[1].titulo      = this.contenidoService.getCampo('inicio', 'proceso', 'paso2Titulo', this.pasos[1].titulo);
+    this.pasos[1].descripcion = this.contenidoService.getCampo('inicio', 'proceso', 'paso2Desc', this.pasos[1].descripcion);
+    this.pasos[2].titulo      = this.contenidoService.getCampo('inicio', 'proceso', 'paso3Titulo', this.pasos[2].titulo);
+    this.pasos[2].descripcion = this.contenidoService.getCampo('inicio', 'proceso', 'paso3Desc', this.pasos[2].descripcion);
+    this.pasos[3].titulo      = this.contenidoService.getCampo('inicio', 'proceso', 'paso4Titulo', this.pasos[3].titulo);
+    this.pasos[3].descripcion = this.contenidoService.getCampo('inicio', 'proceso', 'paso4Desc', this.pasos[3].descripcion);
+
+    // CTA FINAL
+    this.ctaBadge       = this.contenidoService.getCampo('inicio', 'cta', 'badge', this.ctaBadge);
+    this.ctaTitulo      = this.contenidoService.getCampo('inicio', 'cta', 'titulo', this.ctaTitulo);
+    this.ctaDescripcion = this.contenidoService.getCampo('inicio', 'cta', 'descripcion', this.ctaDescripcion);
+    this.ctaBoton1      = this.contenidoService.getCampo('inicio', 'cta', 'cta1', this.ctaBoton1);
+    this.ctaBoton2      = this.contenidoService.getCampo('inicio', 'cta', 'cta2', this.ctaBoton2);
+    this.ctaImagenFondo = this.contenidoService.getCampo('inicio', 'cta', 'imagenFondo', this.ctaImagenFondo);
+
+    // SERVICIOS - cuáles mostrar
+    const servSel = this.contenidoService.getCampo('inicio', 'servicios', 'visibles', '');
+    this.serviciosVisibles = this.filtrarPorSeleccion(this.servicios, servSel).slice(0, 6);
+
+    // PROYECTOS - encabezado + cuáles mostrar
+    this.proyBadge  = this.contenidoService.getCampo('inicio', 'proyectos', 'badge', this.proyBadge);
+    this.proyTitulo = this.contenidoService.getCampo('inicio', 'proyectos', 'titulo', this.proyTitulo);
+    const proySel = this.contenidoService.getCampo('inicio', 'proyectos', 'visibles', '');
+    this.proyectosVisibles = this.filtrarPorSeleccion(this.proyectosDestacados, proySel);
+  }
+
+  private filtrarPorSeleccion<T>(lista: T[], seleccion: string): T[] {
+    if (!seleccion.trim()) return lista; // nada guardado = mostrar todos
+    const indices = seleccion.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+    return lista.filter((_, i) => indices.includes(i));
+  }
+
+  etiquetaServicio(cat: string): string {
+    return this.catalogo.etiquetaCategoriaServicio(cat);
+  }
 }

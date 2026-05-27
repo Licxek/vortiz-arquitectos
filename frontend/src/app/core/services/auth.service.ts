@@ -1,54 +1,47 @@
+// core/services/auth.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Usuario {
-  id: number;
-  nombre: string;
-  apellidos: string;
-  correo: string;
-  rol: string;
+  id: number; nombre: string; apellidos: string; correo: string; rol: string;
 }
-
-export interface LoginResponse {
-  access_token: string;
-  user: Usuario;
-}
+interface LoginResp { token: string; usuario: Usuario; }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = `${environment.apiUrl}/auth`;
-  private tokenKey = 'vortiz_token';
-  private userKey = 'vortiz_user';
-
-  private isAuthenticatedSubject = new BehaviorSubject<boolean>(!!this.getToken());
-  isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
-  login(correo: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, { correo, password }).pipe(
-      tap((res) => {
-        localStorage.setItem(this.tokenKey, res.access_token);
-        localStorage.setItem(this.userKey, JSON.stringify(res.user));
-        this.isAuthenticatedSubject.next(true);
+  login(correo: string, password: string): Observable<LoginResp> {
+    return this.http.post<LoginResp>(`${this.apiUrl}/login`, { correo, password }).pipe(
+      tap(resp => {
+        localStorage.setItem('vortiz_token', resp.token);
+        localStorage.setItem('vortiz_user', JSON.stringify(resp.usuario));
       })
     );
   }
 
-  logout(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.userKey);
-    this.isAuthenticatedSubject.next(false);
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
-  }
-
   getUser(): Usuario | null {
-    const user = localStorage.getItem(this.userKey);
-    return user ? JSON.parse(user) : null;
+    const raw = localStorage.getItem('vortiz_user');
+    return raw ? JSON.parse(raw) : null;
+  }
+  getToken(): string | null { return localStorage.getItem('vortiz_token'); }
+  isLoggedIn(): boolean { return !!this.getToken(); }
+  logout(): void {
+    localStorage.removeItem('vortiz_token');
+    localStorage.removeItem('vortiz_user');
+  }
+
+  solicitarRecuperacion(correo: string) {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot`, { correo });
+  }
+  verificarCodigo(correo: string, codigo: string) {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/verificar`, { correo, codigo });
+  }
+  restablecer(correo: string, codigo: string, password: string) {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/reset`, { correo, codigo, password });
   }
 }

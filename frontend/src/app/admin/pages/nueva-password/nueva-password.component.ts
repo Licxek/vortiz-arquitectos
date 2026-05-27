@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { ConfiguracionService, Configuracion } from '../../../core/services/configuracion.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-nueva-password',
@@ -24,6 +25,7 @@ export class NuevaPasswordComponent implements OnInit {
 
   constructor(
     private router: Router,
+    private authService: AuthService,
     private route: ActivatedRoute,
     private configuracionService: ConfiguracionService
   ) {}
@@ -65,21 +67,13 @@ export class NuevaPasswordComponent implements OnInit {
 
   cambiar() {
     this.errorMensaje = '';
-
-    if (!this.esSegura) {
-      this.errorMensaje = 'La contraseña no cumple los requisitos';
-      return;
-    }
-    if (!this.coincide) {
-      this.errorMensaje = 'Las contraseñas no coinciden';
-      return;
-    }
-
+    if (!this.esSegura) { this.errorMensaje = 'La contraseña no cumple los requisitos'; return; }
+    if (!this.coincide) { this.errorMensaje = 'Las contraseñas no coinciden'; return; }
     this.cargando = true;
-    setTimeout(() => {
-      this.cargando = false;
-      this.exitoso = true;
-    }, 1500);
+    this.authService.restablecer(this.correo, this.codigo, this.password).subscribe({
+      next: () => { this.cargando = false; this.exitoso = true; },
+      error: (e) => { this.cargando = false; this.errorMensaje = e.error?.message || 'No se pudo cambiar la contraseña.'; }
+    });
   }
 
   irLogin() {

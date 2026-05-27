@@ -16,7 +16,7 @@ interface MenuItem {
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './layout.component.html',
-  styleUrl: './layout.component.css'
+  styleUrl: './layout.component.css',
 })
 export class AdminLayoutComponent implements OnInit {
   configuracion: Configuracion | null = null;
@@ -45,13 +45,13 @@ export class AdminLayoutComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private configuracionService: ConfiguracionService
+    private configuracionService: ConfiguracionService,
   ) {}
 
   ngOnInit() {
     this.usuario = this.authService.getUser();
     this.configuracionService.getConfiguracion().subscribe({
-      next: (data) => this.configuracion = data
+      next: (data) => (this.configuracion = data),
     });
 
     const guardado = localStorage.getItem('sidebar_colapsado');
@@ -67,8 +67,10 @@ export class AdminLayoutComponent implements OnInit {
     this.menuMovilAbierto = !this.menuMovilAbierto;
   }
 
-  toggleMenuUsuario() {
+  toggleMenuUsuario(event: Event) {
+    event.stopPropagation();
     this.menuUsuarioAbierto = !this.menuUsuarioAbierto;
+    this.buscadorAdminAbierto = false; // cierra el buscador si estaba abierto
   }
 
   toggleSidebar() {
