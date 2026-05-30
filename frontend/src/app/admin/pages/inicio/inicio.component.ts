@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { InicioService, CitaBackend } from '../../../core/services/inicio.service'; // ⚠️ ajusta la ruta
 
 // ============ INTERFACES ============
 interface StatCard {
@@ -55,6 +56,19 @@ interface Cita {
   estado: 'confirmada' | 'pendiente';
 }
 
+interface ConsultaPendiente {
+  id: number;
+  nombre: string;
+  correo: string;
+  telefono: string; // 👈 NUEVO
+  asunto: string;
+  mensaje: string;
+  fecha: string; // tiempo relativo de creación
+  fechaCita: string; // 👈 NUEVO — fecha solicitada por el cliente, formateada
+  horaCita: string; // 👈 NUEVO
+  urgente: boolean;
+}
+
 @Component({
   selector: 'app-inicio',
   standalone: true,
@@ -62,7 +76,6 @@ interface Cita {
   templateUrl: './inicio.component.html',
 })
 export class InicioComponent implements OnInit {
-
   // ============ DATOS GENERALES ============
   fechaHoy = '';
 
@@ -75,57 +88,136 @@ export class InicioComponent implements OnInit {
   // Detalle de cita
   citaSeleccionada: Cita | null = null;
 
-  statsPorPeriodo: Record<'hoy' | 'semana' | 'mes' | 'año', StatCard[]> = {
-    hoy: [
-      { label: 'Citas hoy', value: 5, cambioValor: 2, cambioTipo: 'neutral', cambioEtiqueta: 'pendientes', icon: 'calendar', color: 'orange' },
-      { label: 'Consultas hoy', value: 3, cambioValor: 50, cambioTipo: 'positive', cambioEtiqueta: 'vs ayer', icon: 'chat', color: 'green' },
-      { label: 'Visitas hoy', value: 142, cambioValor: 12, cambioTipo: 'positive', cambioEtiqueta: 'vs ayer', icon: 'eye', color: 'purple' },
-      { label: 'Proyectos activos', value: 10, cambioValor: 0, cambioTipo: 'neutral', cambioEtiqueta: 'en curso', icon: 'projects', color: 'blue' },
-    ],
-    semana: [
-      { label: 'Citas semana', value: 28, cambioValor: 12, cambioTipo: 'positive', cambioEtiqueta: 'vs semana anterior', icon: 'calendar', color: 'orange' },
-      { label: 'Consultas semana', value: 12, cambioValor: 18, cambioTipo: 'positive', cambioEtiqueta: 'vs semana anterior', icon: 'chat', color: 'green' },
-      { label: 'Visitas semana', value: 432, cambioValor: 8, cambioTipo: 'positive', cambioEtiqueta: 'vs semana anterior', icon: 'eye', color: 'purple' },
-      { label: 'Proyectos activos', value: 10, cambioValor: 25, cambioTipo: 'positive', cambioEtiqueta: 'vs semana anterior', icon: 'projects', color: 'blue' },
-    ],
-    mes: [
-      { label: 'Citas mes', value: 87, cambioValor: 15, cambioTipo: 'positive', cambioEtiqueta: 'vs mes anterior', icon: 'calendar', color: 'orange' },
-      { label: 'Consultas mes', value: 28, cambioValor: 18, cambioTipo: 'positive', cambioEtiqueta: 'vs mes anterior', icon: 'chat', color: 'green' },
-      { label: 'Visitas mes', value: 1245, cambioValor: -8, cambioTipo: 'negative', cambioEtiqueta: 'vs mes anterior', icon: 'eye', color: 'purple' },
-      { label: 'Proyectos activos', value: 10, cambioValor: 25, cambioTipo: 'positive', cambioEtiqueta: 'vs mes anterior', icon: 'projects', color: 'blue' },
-    ],
-    año: [
-      { label: 'Citas año', value: 542, cambioValor: 28, cambioTipo: 'positive', cambioEtiqueta: 'vs año anterior', icon: 'calendar', color: 'orange' },
-      { label: 'Consultas año', value: 187, cambioValor: 42, cambioTipo: 'positive', cambioEtiqueta: 'vs año anterior', icon: 'chat', color: 'green' },
-      { label: 'Visitas año', value: 18400, cambioValor: 15, cambioTipo: 'positive', cambioEtiqueta: 'vs año anterior', icon: 'eye', color: 'purple' },
-      { label: 'Proyectos del año', value: 42, cambioValor: 35, cambioTipo: 'positive', cambioEtiqueta: 'vs año anterior', icon: 'projects', color: 'blue' },
-    ]
-  };
+  stats: StatCard[] = [];
 
   // ============ PROYECTOS: DATOS ============
   estadosProyecto = ['En diseño', 'En proceso', 'En revisión', 'Pausado', 'Finalizado'];
   categoriasProyecto = ['Residencial', 'Comercial', 'Industrial', 'Remodelación'];
 
   proyectosRecientes: Proyecto[] = [
-    { id: 1, nombre: 'Residencia Las Flores', estado: 'En proceso', fecha: '15 May 2026', imagen: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400', cliente: 'Juan Alfonso Méndez', ubicacion: 'La Forestal, Durango', superficie: '320 m²', descripcion: 'Residencia moderna de dos niveles con acabados premium, jardín interior y alberca.', fechaInicio: '01 Mar 2026', fechaEntrega: '15 Oct 2026', progreso: 45 },
-    { id: 2, nombre: 'Edificio Corporativo Centro', estado: 'En diseño', fecha: '20 May 2026', imagen: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400', cliente: 'Inmobiliaria del Norte', ubicacion: 'Centro Histórico, Durango', superficie: '1,500 m²', descripcion: 'Edificio de oficinas de 5 niveles con áreas comunes y estacionamiento subterráneo.', fechaInicio: '15 May 2026', fechaEntrega: '20 Dic 2026', progreso: 15 },
-    { id: 3, nombre: 'Villa Costanera', estado: 'En proceso', fecha: '25 May 2026', imagen: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400', cliente: 'Familia Rodríguez', ubicacion: 'Mazatlán, Sinaloa', superficie: '480 m²', descripcion: 'Casa de playa con vista al mar, terrazas amplias y diseño contemporáneo.', fechaInicio: '10 Feb 2026', fechaEntrega: '30 Sep 2026', progreso: 60 },
-    { id: 4, nombre: 'Centro Comercial Plaza', estado: 'En revisión', fecha: '01 Jun 2026', imagen: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400', cliente: 'Grupo Constructor RJV', ubicacion: 'Av. 20 de Noviembre, Durango', superficie: '4,200 m²', descripcion: 'Centro comercial de dos niveles con 32 locales, food court y cines.', fechaInicio: '20 Abr 2026', fechaEntrega: '15 Feb 2027', progreso: 5 },
+    {
+      id: 1,
+      nombre: 'Residencia Las Flores',
+      estado: 'En proceso',
+      fecha: '15 May 2026',
+      imagen: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400',
+      cliente: 'Juan Alfonso Méndez',
+      ubicacion: 'La Forestal, Durango',
+      superficie: '320 m²',
+      descripcion:
+        'Residencia moderna de dos niveles con acabados premium, jardín interior y alberca.',
+      fechaInicio: '01 Mar 2026',
+      fechaEntrega: '15 Oct 2026',
+      progreso: 45,
+    },
+    {
+      id: 2,
+      nombre: 'Edificio Corporativo Centro',
+      estado: 'En diseño',
+      fecha: '20 May 2026',
+      imagen: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400',
+      cliente: 'Inmobiliaria del Norte',
+      ubicacion: 'Centro Histórico, Durango',
+      superficie: '1,500 m²',
+      descripcion:
+        'Edificio de oficinas de 5 niveles con áreas comunes y estacionamiento subterráneo.',
+      fechaInicio: '15 May 2026',
+      fechaEntrega: '20 Dic 2026',
+      progreso: 15,
+    },
+    {
+      id: 3,
+      nombre: 'Villa Costanera',
+      estado: 'En proceso',
+      fecha: '25 May 2026',
+      imagen: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400',
+      cliente: 'Familia Rodríguez',
+      ubicacion: 'Mazatlán, Sinaloa',
+      superficie: '480 m²',
+      descripcion: 'Casa de playa con vista al mar, terrazas amplias y diseño contemporáneo.',
+      fechaInicio: '10 Feb 2026',
+      fechaEntrega: '30 Sep 2026',
+      progreso: 60,
+    },
+    {
+      id: 4,
+      nombre: 'Centro Comercial Plaza',
+      estado: 'En revisión',
+      fecha: '01 Jun 2026',
+      imagen: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400',
+      cliente: 'Grupo Constructor RJV',
+      ubicacion: 'Av. 20 de Noviembre, Durango',
+      superficie: '4,200 m²',
+      descripcion: 'Centro comercial de dos niveles con 32 locales, food court y cines.',
+      fechaInicio: '20 Abr 2026',
+      fechaEntrega: '15 Feb 2027',
+      progreso: 5,
+    },
   ];
 
   todosLosProyectos: Proyecto[] = [
     ...this.proyectosRecientes,
-    { id: 5, nombre: 'Casa Loma del Parque', estado: 'Finalizado', fecha: '10 Mar 2026', imagen: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400', cliente: 'María González', ubicacion: 'Loma Dorada', superficie: '280 m²', descripcion: 'Casa familiar con diseño minimalista.', progreso: 100 },
-    { id: 6, nombre: 'Oficinas Tecnológica', estado: 'Finalizado', fecha: '05 Feb 2026', imagen: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400', cliente: 'Tech Solutions SA', ubicacion: 'Zona Industrial', superficie: '850 m²', descripcion: 'Oficinas modernas con espacios colaborativos.', progreso: 100 },
-    { id: 7, nombre: 'Loft Industrial', estado: 'Pausado', fecha: '20 Ene 2026', imagen: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400', cliente: 'Carlos Vega', ubicacion: 'Centro Durango', superficie: '180 m²', descripcion: 'Remodelación tipo loft con vigas expuestas.', progreso: 30 },
-    { id: 8, nombre: 'Clínica Vida', estado: 'En proceso', fecha: '12 Abr 2026', imagen: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400', cliente: 'Dr. Ramírez', ubicacion: 'Col. Médicos', superficie: '600 m²', descripcion: 'Clínica de especialidades con 8 consultorios.', progreso: 75 },
+    {
+      id: 5,
+      nombre: 'Casa Loma del Parque',
+      estado: 'Finalizado',
+      fecha: '10 Mar 2026',
+      imagen: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400',
+      cliente: 'María González',
+      ubicacion: 'Loma Dorada',
+      superficie: '280 m²',
+      descripcion: 'Casa familiar con diseño minimalista.',
+      progreso: 100,
+    },
+    {
+      id: 6,
+      nombre: 'Oficinas Tecnológica',
+      estado: 'Finalizado',
+      fecha: '05 Feb 2026',
+      imagen: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400',
+      cliente: 'Tech Solutions SA',
+      ubicacion: 'Zona Industrial',
+      superficie: '850 m²',
+      descripcion: 'Oficinas modernas con espacios colaborativos.',
+      progreso: 100,
+    },
+    {
+      id: 7,
+      nombre: 'Loft Industrial',
+      estado: 'Pausado',
+      fecha: '20 Ene 2026',
+      imagen: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400',
+      cliente: 'Carlos Vega',
+      ubicacion: 'Centro Durango',
+      superficie: '180 m²',
+      descripcion: 'Remodelación tipo loft con vigas expuestas.',
+      progreso: 30,
+    },
+    {
+      id: 8,
+      nombre: 'Clínica Vida',
+      estado: 'En proceso',
+      fecha: '12 Abr 2026',
+      imagen: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400',
+      cliente: 'Dr. Ramírez',
+      ubicacion: 'Col. Médicos',
+      superficie: '600 m²',
+      descripcion: 'Clínica de especialidades con 8 consultorios.',
+      progreso: 75,
+    },
   ];
 
   proyectosPublicos: any[] = [];
 
   // ============ PROYECTOS: FILTROS Y ESTADOS ============
   busquedaProyectos = '';
-  filtroEstadoProyectos: 'todos' | 'En diseño' | 'En proceso' | 'En revisión' | 'Pausado' | 'Finalizado' = 'todos';
+  filtroEstadoProyectos:
+    | 'todos'
+    | 'En diseño'
+    | 'En proceso'
+    | 'En revisión'
+    | 'Pausado'
+    | 'Finalizado' = 'todos';
 
   proyectoSeleccionado: Proyecto | null = null;
   mostrarTodosProyectos = false;
@@ -140,7 +232,7 @@ export class InicioComponent implements OnInit {
     titulo: '',
     descripcion: '',
     imagenUrl: '',
-    categoria: 'Residencial'
+    categoria: 'Residencial',
   };
 
   // Navegación entre modales de proyectos
@@ -151,28 +243,53 @@ export class InicioComponent implements OnInit {
   proyectoDetalleAnterior: Proyecto | null = null;
 
   // ============ AGENDA: CITAS DE HOY ============
-  citasHoy: Cita[] = [
-    { hora: '10:00', cliente: 'Juan Alfonso', tipo: 'Consulta', estado: 'confirmada' },
-    { hora: '12:30', cliente: 'María González', tipo: 'Proyecto', estado: 'confirmada' },
-    { hora: '15:00', cliente: 'Carlos Méndez', tipo: 'Consulta', estado: 'pendiente' },
-    { hora: '17:30', cliente: 'Ana Martínez', tipo: 'Proyecto', estado: 'pendiente' },
-  ];
-
+  citasHoy: Cita[] = [];
+  consultasPendientes: ConsultaPendiente[] = [];
   // ============ NOTIFICACIONES ============
   notificaciones: Notificacion[] = [
-    { id: 1, tipo: 'cita', titulo: 'Nueva cita agendada', descripcion: 'Juan Alfonso reservó una consulta para mañana', tiempo: 'Hace 15 min', leida: false },
-    { id: 2, tipo: 'consulta', titulo: 'Nueva consulta recibida', descripcion: 'María González preguntó sobre remodelación', tiempo: 'Hace 1 hora', leida: false },
-    { id: 3, tipo: 'confirmacion', titulo: 'Cita confirmada', descripcion: 'Carlos Méndez confirmó su cita del jueves', tiempo: 'Hace 2 horas', leida: false },
-    { id: 4, tipo: 'mensaje', titulo: 'Comentario en proyecto', descripcion: 'Ana Martínez dejó comentarios en el proyecto Villa Costanera', tiempo: 'Hace 4 horas', leida: true },
-    { id: 5, tipo: 'cancelacion', titulo: 'Cita cancelada', descripcion: 'Roberto Silva canceló su cita del viernes', tiempo: 'Ayer', leida: true },
+    {
+      id: 1,
+      tipo: 'cita',
+      titulo: 'Nueva cita agendada',
+      descripcion: 'Juan Alfonso reservó una consulta para mañana',
+      tiempo: 'Hace 15 min',
+      leida: false,
+    },
+    {
+      id: 2,
+      tipo: 'consulta',
+      titulo: 'Nueva consulta recibida',
+      descripcion: 'María González preguntó sobre remodelación',
+      tiempo: 'Hace 1 hora',
+      leida: false,
+    },
+    {
+      id: 3,
+      tipo: 'confirmacion',
+      titulo: 'Cita confirmada',
+      descripcion: 'Carlos Méndez confirmó su cita del jueves',
+      tiempo: 'Hace 2 horas',
+      leida: false,
+    },
+    {
+      id: 4,
+      tipo: 'mensaje',
+      titulo: 'Comentario en proyecto',
+      descripcion: 'Ana Martínez dejó comentarios en el proyecto Villa Costanera',
+      tiempo: 'Hace 4 horas',
+      leida: true,
+    },
+    {
+      id: 5,
+      tipo: 'cancelacion',
+      titulo: 'Cita cancelada',
+      descripcion: 'Roberto Silva canceló su cita del viernes',
+      tiempo: 'Ayer',
+      leida: true,
+    },
   ];
 
   // ============ CONSULTAS: DATOS Y ESTADOS ============
-  consultasPendientes: ConsultaPendiente[] = [
-    { id: 1, nombre: 'Patricia Vargas', correo: 'patricia@example.com', asunto: 'Cotización para residencia', mensaje: 'Hola, me gustaría obtener una cotización para una residencia de 200m² en La Forestal. Estoy buscando un diseño moderno con tres habitaciones, dos baños y jardín. ¿Podrían darme una idea del costo y tiempos de entrega? Mi presupuesto aproximado es de 4 millones de pesos. Quedo atenta a sus comentarios.', fecha: 'Hace 2 horas', urgente: true },
-    { id: 2, nombre: 'Diego Hernández', correo: 'diego@example.com', asunto: 'Consulta sobre servicios', mensaje: 'Buen día, quisiera saber si manejan proyectos comerciales y cuál sería el costo aproximado para una tienda de 80m². También quisiera saber si incluyen la supervisión de obra. Gracias.', fecha: 'Hace 5 horas', urgente: false },
-    { id: 3, nombre: 'Lucía Ramírez', correo: 'lucia@example.com', asunto: 'Información sobre remodelación', mensaje: 'Estoy interesada en una remodelación completa de mi local comercial. ¿Podrían enviarme información sobre sus servicios?', fecha: 'Ayer', urgente: false },
-  ];
 
   consultaSeleccionada: ConsultaPendiente | null = null;
   mostrarRespuesta = false;
@@ -186,26 +303,46 @@ export class InicioComponent implements OnInit {
   volverATodasDespuesDeRespuesta = false;
 
   // ============ GRÁFICAS ============
-  graficaSeleccionada: 'proyectos-mes' | 'tipos-proyectos' | 'actividad-citas' | 'clientes-nuevos' | null = null;
+  graficaSeleccionada:
+    | 'proyectos-mes'
+    | 'tipos-proyectos'
+    | 'actividad-citas'
+    | 'clientes-nuevos'
+    | null = null;
 
   // ============ CONSTRUCTOR Y LIFECYCLE ============
   constructor(private router: Router) {}
+  private inicioService = inject(InicioService);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     const hoy = new Date();
-    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-                   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const meses = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
     const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
     this.fechaHoy = `${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+
+    this.cargarStats(); // 👈 agregar esta línea
+    this.cargarAgenda();
+    this.cargarConsultas();
   }
 
   // ============ GETTERS ============
-  get stats(): StatCard[] {
-    return this.statsPorPeriodo[this.periodoActivo];
-  }
 
   get notificacionesNoLeidas(): number {
-    return this.notificaciones.filter(n => !n.leida).length;
+    return this.notificaciones.filter((n) => !n.leida).length;
   }
 
   get totalConsultasPendientes(): number {
@@ -215,14 +352,15 @@ export class InicioComponent implements OnInit {
   get proyectosFiltrados() {
     let resultado = this.todosLosProyectos;
     if (this.filtroEstadoProyectos !== 'todos') {
-      resultado = resultado.filter(p => p.estado === this.filtroEstadoProyectos);
+      resultado = resultado.filter((p) => p.estado === this.filtroEstadoProyectos);
     }
     if (this.busquedaProyectos.trim()) {
       const q = this.busquedaProyectos.toLowerCase();
-      resultado = resultado.filter(p =>
-        p.nombre.toLowerCase().includes(q) ||
-        p.cliente?.toLowerCase().includes(q) ||
-        p.ubicacion?.toLowerCase().includes(q)
+      resultado = resultado.filter(
+        (p) =>
+          p.nombre.toLowerCase().includes(q) ||
+          p.cliente?.toLowerCase().includes(q) ||
+          p.ubicacion?.toLowerCase().includes(q),
       );
     }
     return resultado;
@@ -244,15 +382,85 @@ export class InicioComponent implements OnInit {
   // ============ FILTRO TEMPORAL ============
   cambiarPeriodo(periodo: 'hoy' | 'semana' | 'mes' | 'año') {
     this.periodoActivo = periodo;
+    this.cargarStats();
+  }
+
+  private cargarStats() {
+    this.inicioService.obtenerStats(this.periodoActivo).subscribe({
+      next: (data) => {
+        this.stats = this.construirStats(data, this.periodoActivo);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.stats = [];
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private construirStats(data: any, periodo: 'hoy' | 'semana' | 'mes' | 'año'): StatCard[] {
+    const etiquetaCambio = {
+      hoy: 'vs ayer',
+      semana: 'vs semana anterior',
+      mes: 'vs mes anterior',
+      año: 'vs año anterior',
+    }[periodo];
+
+    const tipoDe = (cambio: number): 'positive' | 'negative' | 'neutral' => {
+      if (cambio > 0) return 'positive';
+      if (cambio < 0) return 'negative';
+      return 'neutral';
+    };
+
+    return [
+      {
+        label: `Citas ${periodo}`,
+        value: data.citas?.valor ?? 0,
+        cambioValor: data.citas?.cambio ?? 0,
+        cambioTipo: tipoDe(data.citas?.cambio ?? 0),
+        cambioEtiqueta: etiquetaCambio,
+        icon: 'calendar',
+        color: 'orange',
+      },
+      {
+        label: `Consultas ${periodo}`,
+        value: data.consultas?.valor ?? 0,
+        cambioValor: data.consultas?.cambio ?? 0,
+        cambioTipo: tipoDe(data.consultas?.cambio ?? 0),
+        cambioEtiqueta: etiquetaCambio,
+        icon: 'chat',
+        color: 'green',
+      },
+      {
+        label: `Visitas ${periodo}`,
+        value: data.visitas?.valor ?? 0,
+        cambioValor: 0,
+        cambioTipo: 'neutral',
+        cambioEtiqueta: 'próximamente',
+        icon: 'eye',
+        color: 'purple',
+      },
+      {
+        label: 'Proyectos',
+        value: data.proyectos?.valor ?? 0,
+        cambioValor: 0,
+        cambioTipo: 'neutral',
+        cambioEtiqueta: 'en total',
+        icon: 'projects',
+        color: 'blue',
+      },
+    ];
   }
 
   // ============ NOTIFICACIONES ============
   marcarTodasLeidas() {
-    this.notificaciones.forEach(n => n.leida = true);
+    this.notificaciones.forEach((n) => (n.leida = true));
   }
 
   // ============ GRÁFICAS ============
-  abrirGrafica(grafica: 'proyectos-mes' | 'tipos-proyectos' | 'actividad-citas' | 'clientes-nuevos') {
+  abrirGrafica(
+    grafica: 'proyectos-mes' | 'tipos-proyectos' | 'actividad-citas' | 'clientes-nuevos',
+  ) {
     this.graficaSeleccionada = grafica;
   }
 
@@ -300,7 +508,7 @@ export class InicioComponent implements OnInit {
       ubicacion: '',
       superficie: '',
       descripcion: '',
-      progreso: 0
+      progreso: 0,
     };
     this.estadoOriginal = '';
     this.esNuevoProyecto = true;
@@ -361,10 +569,10 @@ export class InicioComponent implements OnInit {
       this.proyectosRecientes.unshift({ ...this.proyectoEditando });
       if (this.proyectosRecientes.length > 4) this.proyectosRecientes.pop();
     } else {
-      const idx1 = this.todosLosProyectos.findIndex(p => p.id === this.proyectoEditando!.id);
+      const idx1 = this.todosLosProyectos.findIndex((p) => p.id === this.proyectoEditando!.id);
       if (idx1 >= 0) this.todosLosProyectos[idx1] = { ...this.proyectoEditando };
 
-      const idx2 = this.proyectosRecientes.findIndex(p => p.id === this.proyectoEditando!.id);
+      const idx2 = this.proyectosRecientes.findIndex((p) => p.id === this.proyectoEditando!.id);
       if (idx2 >= 0) this.proyectosRecientes[idx2] = { ...this.proyectoEditando };
     }
 
@@ -383,10 +591,10 @@ export class InicioComponent implements OnInit {
     proyecto.estado = 'Finalizado';
     proyecto.progreso = 100;
 
-    const idx1 = this.todosLosProyectos.findIndex(p => p.id === proyecto.id);
+    const idx1 = this.todosLosProyectos.findIndex((p) => p.id === proyecto.id);
     if (idx1 >= 0) this.todosLosProyectos[idx1] = { ...proyecto };
 
-    const idx2 = this.proyectosRecientes.findIndex(p => p.id === proyecto.id);
+    const idx2 = this.proyectosRecientes.findIndex((p) => p.id === proyecto.id);
     if (idx2 >= 0) this.proyectosRecientes[idx2] = { ...proyecto };
 
     this.proyectoEditando = { ...proyecto };
@@ -402,7 +610,7 @@ export class InicioComponent implements OnInit {
         titulo: this.proyectoEditando.nombre,
         descripcion: this.proyectoEditando.descripcion || '',
         imagenUrl: this.proyectoEditando.imagen,
-        categoria: 'Residencial'
+        categoria: 'Residencial',
       };
       this.mostrarAgregarPublico = true;
     } else {
@@ -419,7 +627,7 @@ export class InicioComponent implements OnInit {
       descripcion: this.formPublico.descripcion,
       imagenUrl: this.formPublico.imagenUrl,
       categoria: this.formPublico.categoria,
-      proyectoOriginalId: this.proyectoEditando?.id
+      proyectoOriginalId: this.proyectoEditando?.id,
     });
 
     this.cerrarAgregarPublico();
@@ -491,7 +699,9 @@ export class InicioComponent implements OnInit {
   enviarRespuesta() {
     if (!this.respuestaTexto.trim()) return;
 
-    this.consultasPendientes = this.consultasPendientes.filter(c => c.id !== this.consultaSeleccionada?.id);
+    this.consultasPendientes = this.consultasPendientes.filter(
+      (c) => c.id !== this.consultaSeleccionada?.id,
+    );
 
     const reabrirTodas = this.volverATodasDesdeRespuesta || this.volverATodasDespuesDeRespuesta;
 
@@ -563,7 +773,7 @@ export class InicioComponent implements OnInit {
       confirmacion: 'Cita confirmada',
       cancelacion: 'Cita cancelada',
       consulta: 'Nueva consulta',
-      mensaje: 'Nuevo mensaje'
+      mensaje: 'Nuevo mensaje',
     };
     return map[tipo] || tipo;
   }
@@ -577,5 +787,105 @@ export class InicioComponent implements OnInit {
   verConsultasDesdeNotif() {
     this.notificacionSeleccionada = null;
     this.abrirTodasConsultas();
+  }
+
+  private cargarAgenda() {
+    this.inicioService.obtenerAgenda().subscribe({
+      next: (lista) => {
+        this.citasHoy = lista
+          .filter((c) => c.estado === 'confirmada' || c.estado === 'pendiente')
+          .map((c) => this.mapearCita(c));
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.citasHoy = [];
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarConsultas() {
+    this.inicioService.obtenerConsultas().subscribe({
+      next: (lista) => {
+        this.consultasPendientes = lista.map((c) => this.mapearConsulta(c));
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.consultasPendientes = [];
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private mapearCita(c: CitaBackend): Cita {
+    return {
+      hora: c.hora,
+      cliente: c.nombre,
+      tipo: c.tipo === 'consulta' ? 'Consulta' : 'Proyecto',
+      estado: (c.estado === 'confirmada' ? 'confirmada' : 'pendiente') as
+        | 'confirmada'
+        | 'pendiente',
+    };
+  }
+
+  private mapearConsulta(c: CitaBackend): ConsultaPendiente {
+    return {
+      id: c.id,
+      nombre: c.nombre,
+      correo: c.correo,
+      telefono: c.telefono,
+      asunto: c.servicio?.titulo || (c.tipo === 'consulta' ? 'Consulta general' : 'Proyecto'),
+      mensaje: c.motivo || '(Sin mensaje)',
+      fecha: this.tiempoRelativo(c.createdAt),
+      fechaCita: this.formatearFechaCita(c.fecha),
+      horaCita: c.hora,
+      urgente: this.esCitaUrgente(c.fecha),
+    };
+  }
+
+  private formatearFechaCita(iso: string): string {
+    if (!iso) return '—';
+    const d = new Date(iso + 'T00:00:00');
+    const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const meses = [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
+    ];
+    return `${dias[d.getDay()]} ${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+  }
+
+  private tiempoRelativo(iso: string): string {
+    const ahora = Date.now();
+    const fecha = new Date(iso).getTime();
+    const diffMs = ahora - fecha;
+    const minutos = Math.floor(diffMs / 60000);
+    const horas = Math.floor(diffMs / 3600000);
+    const dias = Math.floor(diffMs / 86400000);
+
+    if (minutos < 1) return 'Hace un momento';
+    if (minutos < 60) return `Hace ${minutos} min`;
+    if (horas < 24) return `Hace ${horas} ${horas === 1 ? 'hora' : 'horas'}`;
+    if (dias === 1) return 'Ayer';
+    if (dias < 7) return `Hace ${dias} días`;
+    return new Date(iso).toLocaleDateString('es-MX');
+  }
+
+  private esCitaUrgente(fechaCita: string): boolean {
+    if (!fechaCita) return false;
+    const cita = new Date(fechaCita + 'T00:00:00');
+    const ahora = new Date();
+    ahora.setHours(0, 0, 0, 0);
+    const diffDias = (cita.getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDias <= 1; // hoy, mañana o ya pasada
   }
 }

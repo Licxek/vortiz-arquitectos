@@ -1,64 +1,43 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom} from 'rxjs';
+import { environment } from '../../../environments/environment';
 
-// Estructura del almacén: pagina -> seccion -> campo -> valor
-// Ej: contenido['inicio']['hero']['titulo'] = 'Mi título'
+// pagina -> seccion -> campo -> valor
 export type ContenidoPaginas = Record<string, Record<string, Record<string, string>>>;
 
 @Injectable({ providedIn: 'root' })
 export class ContenidoService {
-  private readonly STORAGE_KEY = 'vortiz_contenido_paginas';
+  private http = inject(HttpClient);
+  private base = `${environment.apiUrl}/contenido`;
   private contenido: ContenidoPaginas = {};
 
-  constructor() {
-    this.cargarDesdeStorage();
-  }
-
-  private cargarDesdeStorage(): void {
+  // Precarga TODO el contenido (se llama al arrancar la app)
+  async cargarTodo(): Promise<void> {
     try {
-      const raw = localStorage.getItem(this.STORAGE_KEY);
-      this.contenido = raw ? JSON.parse(raw) : {};
+      this.contenido = await firstValueFrom(this.http.get<ContenidoPaginas>(this.base));
     } catch {
       this.contenido = {};
     }
   }
 
-  private persistir(): void {
-    try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.contenido));
-    } catch (e) {
-      console.warn('No se pudo guardar el contenido:', e);
-    }
-  }
-
-  // ---- LECTURA (la usan las páginas públicas) ----
-
-  // Lee un campo individual. Si no hay nada guardado, devuelve el valor por defecto.
+  // ---- LECTURA (páginas públicas): síncrona, lee de la caché en memoria ----
   getCampo(pagina: string, seccion: string, campo: string, porDefecto = ''): string {
     const valor = this.contenido[pagina]?.[seccion]?.[campo];
     return valor && valor.trim() ? valor : porDefecto;
   }
 
-  // Lee una sección completa (objeto de campos) o {} si no existe.
   getSeccion(pagina: string, seccion: string): Record<string, string> {
     return this.contenido[pagina]?.[seccion] || {};
   }
 
-  // ---- ESCRITURA (la usa el admin) ----
-
-  // Lee toda la página (para precargar el editor del admin).
   getPagina(pagina: string): Record<string, Record<string, string>> {
     return this.contenido[pagina] || {};
   }
 
-  // Guarda toda la página de una vez y persiste.
-  guardarPagina(pagina: string, contenido: Record<string, Record<string, string>>): void {
-    this.contenido[pagina] = contenido;
-    this.persistir();
-  }
-
-  // Útil para pruebas: borrar todo lo guardado.
-  resetear(): void {
-    this.contenido = {};
-    localStorage.removeItem(this.STORAGE_KEY);
+  // ---- ESCRITURA (admin): guarda en backend y actualiza la caché ----
+  guardarPagina(pagina: string, contenido: Record<string, Record<string, string>>) {
+    this.contenido[pagina] = contenido; // optimista (caché local)
+    return this.http.put(`${this.base}/${pagina}`, contenido);
   }
 }

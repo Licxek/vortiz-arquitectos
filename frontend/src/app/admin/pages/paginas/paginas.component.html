@@ -1736,9 +1736,12 @@
         <div class="flex items-center gap-2">
           <span
             *ngIf="mensajeGuardado"
-            class="hidden sm:inline-block text-xs px-3 py-1.5 bg-green-500 text-white rounded-full font-medium animate-[fadeIn_0.2s_ease-out]"
+            class="hidden sm:inline-block text-xs px-3 py-1.5 text-white rounded-full font-medium animate-[fadeIn_0.2s_ease-out]"
+            [class.bg-green-500]="tipoMensaje === 'exito'"
+            [class.bg-amber-500]="tipoMensaje === 'info'"
           >
-            ✓ {{ mensajeGuardado }}
+            <ng-container *ngIf="tipoMensaje === 'exito'">✓ </ng-container>
+            {{ mensajeGuardado }}
           </span>
           <button
             (click)="previsualizarPagina(paginaEditando)"
@@ -1765,7 +1768,7 @@
             <span class="hidden sm:inline">Previsualizar</span>
           </button>
           <button
-            (click)="cerrarEditarPagina()"
+            (click)="pedirCerrarEditarPagina()"
             class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center"
           >
             <svg
@@ -1908,7 +1911,7 @@
                   </div>
                 </div>
                 <!-- CRUD del catálogo de servicios -->
-                <div *ngIf="campo.tipo === 'catalogo'" class="space-y-3">
+                <div *ngIf="campo.tipo === 'catalogo' && campo.fuente === 'servicios'" class="space-y-3">
                   <div class="flex items-center justify-between">
                     <div>
                       <p class="text-sm text-gray-500">{{ serviciosDraft.length }} servicios en el catálogo</p>
@@ -2010,12 +2013,37 @@
                   </div>
 
                   <!-- Lista -->
-                  <div class="space-y-2">
+                  <!-- Lista -->
+                  <div
+                    class="space-y-2"
+                    cdkDropList
+                    (cdkDropListDropped)="reordenarServicio($event)"
+                  >
                     <div
-                      *ngFor="let s of serviciosDraft"
+                      *ngFor="let s of serviciosDraft; trackBy: trackServicio"
+                      cdkDrag
                       class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
                     >
-                      <div class="w-10 h-10 rounded-lg bg-[#0a4d7a]/10 flex items-center justify-center shrink-0 overflow-hidden">
+                      <!-- Handle de arrastre -->
+                      <button
+                        type="button"
+                        cdkDragHandle
+                        class="text-gray-400 hover:text-gray-700 cursor-grab active:cursor-grabbing p-1 -ml-1 shrink-0"
+                        title="Arrastrar para reordenar"
+                      >
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <circle cx="9" cy="6" r="1.5" />
+                          <circle cx="15" cy="6" r="1.5" />
+                          <circle cx="9" cy="12" r="1.5" />
+                          <circle cx="15" cy="12" r="1.5" />
+                          <circle cx="9" cy="18" r="1.5" />
+                          <circle cx="15" cy="18" r="1.5" />
+                        </svg>
+                      </button>
+
+                      <div
+                        class="w-10 h-10 rounded-lg bg-[#0a4d7a]/10 flex items-center justify-center shrink-0 overflow-hidden"
+                      >
                         <img
                           *ngIf="s.imagen"
                           [src]="s.imagen"
@@ -2035,13 +2063,259 @@
                         class="p-2 text-[#0a4d7a] hover:bg-blue-50 rounded-lg transition-colors"
                         title="Editar"
                       >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="pedirEliminarServicio(s)"
+                        class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Eliminar"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <!-- CRUD del catálogo de proyectos -->
+                <div
+                  *ngIf="campo.tipo === 'catalogo' && campo.fuente === 'proyectos'"
+                  class="space-y-3"
+                >
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-sm text-gray-500">
+                        {{ proyectosDraft.length }} proyectos en el catálogo
+                      </p>
+                      <p class="text-xs text-amber-600">
+                        Los cambios se aplican al sitio al presionar «Guardar cambios».
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      (click)="nuevoProyecto()"
+                      class="flex items-center gap-1.5 px-3 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-xs font-medium transition-colors shrink-0"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
+                      Nuevo proyecto
+                    </button>
+                  </div>
+
+                  <!-- Formulario alta/edición -->
+                  <div
+                    *ngIf="proyectoFormAbierto"
+                    class="border border-[#0a4d7a]/30 bg-blue-50/40 rounded-xl p-4 space-y-3"
+                  >
+                    <p class="text-sm font-bold text-gray-800">
+                      {{ proyectoEditandoId ? 'Editar proyecto' : 'Nuevo proyecto' }}
+                    </p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Nombre</label>
+                        <input
+                          type="text"
+                          [(ngModel)]="proyectoForm.nombre"
+                          placeholder="Ej: Toyota"
+                          class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Iniciales (sigla)</label>
+                        <input
+                          type="text"
+                          [(ngModel)]="proyectoForm.iniciales"
+                          maxlength="3"
+                          placeholder="TY"
+                          class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-bold uppercase outline-none focus:border-[#0a4d7a]"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Categoría</label>
+                        <select
+                          [(ngModel)]="proyectoForm.categoria"
+                          class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
+                        >
+                          <option *ngFor="let c of categoriasProyecto" [value]="c.value">{{ c.label }}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Año</label>
+                        <input
+                          type="number"
+                          [(ngModel)]="proyectoForm.anio"
+                          class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-500 mb-1">Ubicación</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="proyectoForm.ubicacion"
+                        placeholder="Ej: Durango"
+                        class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-500 mb-1">Color de marca</label>
+                      <div class="flex items-center gap-2">
+                        <input
+                          type="color"
+                          [(ngModel)]="proyectoForm.colorMarca"
+                          class="h-10 w-12 border border-gray-200 rounded-lg cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          [(ngModel)]="proyectoForm.colorMarca"
+                          placeholder="#0a4d7a"
+                          class="flex-1 px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-mono outline-none focus:border-[#0a4d7a]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-500 mb-1">Logo (URL)</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="proyectoForm.logoUrl"
+                        placeholder="/assets/img/icons/logo.ico"
+                        class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-mono outline-none focus:border-[#0a4d7a]"
+                      />
+                      <div
+                        *ngIf="proyectoForm.logoUrl"
+                        class="aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200 mt-2 max-w-xs flex items-center justify-center p-4"
+                      >
+                        <img
+                          [src]="proyectoForm.logoUrl"
+                          class="max-w-full max-h-full object-contain"
+                          (error)="$any($event.target).style.display = 'none'"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-500 mb-1">Descripción</label>
+                      <textarea
+                        [(ngModel)]="proyectoForm.descripcion"
+                        rows="2"
+                        placeholder="Breve descripción del proyecto"
+                        class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] resize-none"
+                      ></textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-1">
+                      <button
+                        type="button"
+                        (click)="cancelarProyectoForm()"
+                        class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        (click)="guardarProyectoCat()"
+                        [disabled]="!proyectoForm.nombre.trim()"
+                        class="px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        Guardar
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Lista con drag -->
+                  <div
+                    class="space-y-2"
+                    cdkDropList
+                    (cdkDropListDropped)="reordenarProyecto($event)"
+                  >
+                    <div
+                      *ngFor="let p of proyectosDraft; trackBy: trackProyecto"
+                      cdkDrag
+                      class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
+                    >
+                      <button
+                        type="button"
+                        cdkDragHandle
+                        class="text-gray-400 hover:text-gray-700 cursor-grab active:cursor-grabbing p-1 -ml-1 shrink-0"
+                        title="Arrastrar para reordenar"
+                      >
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <circle cx="9" cy="6" r="1.5" />
+                          <circle cx="15" cy="6" r="1.5" />
+                          <circle cx="9" cy="12" r="1.5" />
+                          <circle cx="15" cy="12" r="1.5" />
+                          <circle cx="9" cy="18" r="1.5" />
+                          <circle cx="15" cy="18" r="1.5" />
+                        </svg>
+                      </button>
+
+                      <div
+                        class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 overflow-hidden p-1"
+                        [style.background-color]="p.logoUrl ? '#f3f4f6' : p.colorMarca"
+                      >
+                        <img
+                          *ngIf="p.logoUrl"
+                          [src]="p.logoUrl"
+                          class="max-w-full max-h-full object-contain"
+                          (error)="$any($event.target).style.display = 'none'"
+                        />
+                        <span
+                          *ngIf="!p.logoUrl"
+                          class="text-white font-bold text-xs"
+                        >{{ p.iniciales }}</span>
+                      </div>
+
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-gray-900 truncate">{{ p.nombre }}</p>
+                        <p class="text-xs text-gray-500 truncate">
+                          {{ etiquetaCategoriaProyecto(p.categoria) }} · {{ p.ubicacion }} · {{ p.anio }}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        (click)="editarProyectoCat(p)"
+                        class="p-2 text-[#0a4d7a] hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Editar"
+                      >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
                       <button
                         type="button"
-                        (click)="pedirEliminarServicio(s)"
+                        (click)="pedirEliminarProyecto(p)"
                         class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                         title="Eliminar"
                       >
@@ -2078,14 +2352,14 @@
         class="border-t border-gray-200 bg-white p-3 md:p-4 flex justify-between items-center shrink-0"
       >
         <button
-          (click)="cerrarEditarPagina()"
+          (click)="pedirCerrarEditarPagina()"
           class="px-5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
         >
           Cancelar
         </button>
         <div class="flex gap-2">
           <button
-            (click)="guardarEdicionPagina()"
+            (click)="pedirGuardarEdicionPagina()"
             [disabled]="guardandoServicio"
             class="flex items-center gap-2 px-5 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all"
           >
@@ -2306,6 +2580,120 @@
         </button>
         <button
           (click)="confirmarEliminarServicio()"
+          class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
+        >
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Confirmar salir sin guardar -->
+  <div
+    *ngIf="mostrarConfirmarSalir"
+    class="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
+    (click)="cancelarSalirEditarPagina()"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" (click)="$event.stopPropagation()">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-11 h-11 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">¿Salir sin guardar?</h3>
+          <p class="text-sm text-gray-500">Tienes cambios sin guardar.</p>
+        </div>
+      </div>
+      <p class="text-sm text-gray-700 mb-5">
+        Si sales ahora, los cambios que hiciste en esta página se perderán.
+      </p>
+      <div class="flex justify-end gap-2">
+        <button
+          (click)="cancelarSalirEditarPagina()"
+          class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+        >
+          Seguir editando
+        </button>
+        <button
+          (click)="confirmarSalirSinGuardar()"
+          class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium"
+        >
+          Salir sin guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Confirmar guardar cambios -->
+  <div
+    *ngIf="mostrarConfirmarGuardar"
+    class="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
+    (click)="cancelarGuardarEdicionPagina()"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" (click)="$event.stopPropagation()">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">¿Guardar cambios?</h3>
+          <p class="text-sm text-gray-500">Se aplicarán al sitio público.</p>
+        </div>
+      </div>
+      <p class="text-sm text-gray-700 mb-5">
+        Los cambios que hiciste en esta página estarán visibles para todos los visitantes.
+      </p>
+      <div class="flex justify-end gap-2">
+        <button
+          (click)="cancelarGuardarEdicionPagina()"
+          class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="confirmarGuardarEdicionPagina()"
+          class="px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium"
+        >
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- MODAL: Confirmar borrado de proyecto -->
+  <div
+    *ngIf="proyectoAEliminar"
+    class="fixed inset-0 z-[110] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
+    (click)="cancelarEliminarProyecto()"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" (click)="$event.stopPropagation()">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">Eliminar proyecto</h3>
+          <p class="text-sm text-gray-500">Esta acción no se puede deshacer.</p>
+        </div>
+      </div>
+      <p class="text-sm text-gray-700 mb-5">
+        ¿Seguro que quieres eliminar
+        <span class="font-semibold">"{{ proyectoAEliminar.nombre }}"</span>? Desaparecerá del sitio público.
+      </p>
+      <div class="flex justify-end gap-2">
+        <button
+          (click)="cancelarEliminarProyecto()"
+          class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="confirmarEliminarProyecto()"
           class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
         >
           Eliminar

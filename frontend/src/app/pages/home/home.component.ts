@@ -149,7 +149,7 @@ export class HomeComponent implements OnInit {
     this.proyBadge  = this.contenidoService.getCampo('inicio', 'proyectos', 'badge', this.proyBadge);
     this.proyTitulo = this.contenidoService.getCampo('inicio', 'proyectos', 'titulo', this.proyTitulo);
     const proySel = this.contenidoService.getCampo('inicio', 'proyectos', 'visibles', '');
-    this.proyectosVisibles = this.filtrarPorSeleccion(this.proyectosDestacados, proySel);
+    this.proyectosVisibles = this.filtrarPorSeleccion(this.proyectosDestacados, proySel).slice(0, 8);;
   }
 
   private filtrarPorSeleccion<T>(lista: T[], seleccion: string): T[] {

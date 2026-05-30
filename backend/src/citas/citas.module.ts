@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
-import { CitasController } from './citas.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Cita } from './cita.entity';
 import { CitasService } from './citas.service';
+import { CitasController } from './citas.controller';
 
 @Module({
+  imports: [TypeOrmModule.forFeature([Cita])],
   controllers: [CitasController],
-  providers: [CitasService]
+  providers: [CitasService],
 })
 export class CitasModule {}

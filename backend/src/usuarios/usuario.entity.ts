@@ -15,4 +15,6 @@ export class Usuario {
   resetToken: string | null;
   @Column({ name: 'reset_token_expira', type: 'timestamp', nullable: true })
   resetTokenExpira: Date | null;
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  telefono: string | null;
 }

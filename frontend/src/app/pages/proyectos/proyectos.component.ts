@@ -24,7 +24,7 @@ export class ProyectosComponent {
   filtroActivo = signal<string>('todos');
   busqueda = signal<string>('');
 
-  proyectos: Proyecto[] = this.catalogo.getProyectos();
+  proyectos = this.catalogo.proyectos;
 
   // HERO
   proyHeroBadge = 'Portafolio';
@@ -51,17 +51,17 @@ export class ProyectosComponent {
       'institucional',
     ];
     return [
-      { id: 'todos', label: 'Todos', count: this.proyectos.length },
+      { id: 'todos', label: 'Todos', count: this.proyectos().length },
       ...cats.map((c) => ({
         id: c,
         label: c.charAt(0).toUpperCase() + c.slice(1),
-        count: this.proyectos.filter((p) => p.categoria === c).length,
+        count: this.proyectos().filter((p) => p.categoria === c).length,
       })),
     ];
   });
 
   proyectosFiltrados = computed(() => {
-    let lista = this.proyectos;
+    let lista = this.proyectos();
     if (this.filtroActivo() !== 'todos') {
       lista = lista.filter((p) => p.categoria === this.filtroActivo());
     }

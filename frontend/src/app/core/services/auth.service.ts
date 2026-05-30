@@ -5,7 +5,7 @@ import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Usuario {
-  id: number; nombre: string; apellidos: string; correo: string; rol: string;
+  id: number; nombre: string; apellidos: string; correo: string; rol: string; telefono?: string | null;
 }
 interface LoginResp { token: string; usuario: Usuario; }
 
@@ -28,6 +28,11 @@ export class AuthService {
     const raw = localStorage.getItem('vortiz_user');
     return raw ? JSON.parse(raw) : null;
   }
+
+  setUser(usuario: Usuario): void {
+    localStorage.setItem('vortiz_user', JSON.stringify(usuario));
+  }
+
   getToken(): string | null { return localStorage.getItem('vortiz_token'); }
   isLoggedIn(): boolean { return !!this.getToken(); }
   logout(): void {

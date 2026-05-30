@@ -1,6 +1,8 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CitasService, Cita as CitaBackend } from '../../../core/services/citas.service'; // ⚠️ ajusta la ruta
+import { CatalogoService, Servicio } from '../../../core/services/catalogo.service'; // ⚠️ ajusta la ruta
 
 interface Cita {
   id: number;
@@ -9,7 +11,7 @@ interface Cita {
   hora: string;
   duracion: number;
   tipo: 'consulta' | 'proyecto';
-  estado: 'confirmada' | 'pendiente' | 'cancelada';
+  estado: 'confirmada' | 'pendiente' | 'cancelada' | 'completada';
   servicio?: string;
   notas?: string;
   telefono?: string;
@@ -24,13 +26,6 @@ interface DiaCalendario {
   citas: Cita[];
 }
 
-interface ServicioOpcion {
-  id: number;
-  titulo: string;
-  categoria: string;
-  icono: string;
-}
-
 @Component({
   selector: 'app-citas',
   standalone: true,
@@ -38,44 +33,54 @@ interface ServicioOpcion {
   templateUrl: './citas.component.html',
 })
 export class CitasComponent implements OnInit {
+  private citasService = inject(CitasService);
+  private catalogo = inject(CatalogoService);
+
   vista: 'lista' | 'calendario' = 'lista';
   filtroEstado: 'todas' | 'confirmada' | 'pendiente' | 'cancelada' = 'todas';
   busqueda = '';
   menuAbiertoId: number | null = null;
   citaSeleccionada: Cita | null = null;
-  filtroEstadoAbierto = false
+  filtroEstadoAbierto = false;
+  cargando = false;
 
   mesActual = new Date();
-  meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  meses = [
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
+  ];
   diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-  citas: Cita[] = [
-    { id: 1, cliente: 'Juan Alfonso Méndez', fecha: this.fechaHoy(), hora: '10:00', duracion: 60, tipo: 'consulta', estado: 'confirmada', servicio: 'Diseño residencial', telefono: '618-123-4567', correo: 'juan@example.com' },
-    { id: 2, cliente: 'María González', fecha: this.fechaHoy(), hora: '12:30', duracion: 90, tipo: 'proyecto', estado: 'confirmada', servicio: 'Remodelación de oficinas', telefono: '618-234-5678', correo: 'maria@example.com' },
-    { id: 3, cliente: 'Carlos Hernández', fecha: this.fechaHoy(), hora: '15:00', duracion: 45, tipo: 'consulta', estado: 'pendiente', servicio: 'Consulta general', telefono: '618-345-6789', correo: 'carlos@example.com' },
-    { id: 4, cliente: 'Ana Martínez', fecha: this.fechaMañana(), hora: '09:00', duracion: 60, tipo: 'proyecto', estado: 'confirmada', servicio: 'Diseño comercial', telefono: '618-456-7890', correo: 'ana@example.com' },
-    { id: 5, cliente: 'Sebastián López', fecha: this.fechaMañana(), hora: '11:30', duracion: 60, tipo: 'consulta', estado: 'pendiente', servicio: 'Asesoría', telefono: '618-567-8901', correo: 'sebastian@example.com' },
-    { id: 6, cliente: 'Daniela Ramos', fecha: this.fechaEnDias(3), hora: '14:00', duracion: 90, tipo: 'proyecto', estado: 'confirmada', servicio: 'Supervisión de obra', telefono: '618-678-9012', correo: 'daniela@example.com' },
-    { id: 7, cliente: 'Roberto Silva', fecha: this.fechaEnDias(5), hora: '16:30', duracion: 60, tipo: 'consulta', estado: 'cancelada', servicio: 'Consulta cancelada', telefono: '618-789-0123', correo: 'roberto@example.com' },
-    { id: 8, cliente: 'Patricia Vargas', fecha: this.fechaEnDias(7), hora: '10:30', duracion: 60, tipo: 'proyecto', estado: 'confirmada', servicio: 'Proyecto residencial', telefono: '618-890-1234', correo: 'patricia@example.com' },
-    // Agregar al array citas
-    { id: 100, cliente: 'Roberto Silva', correo: 'roberto@example.com', telefono: '6181234567', fecha: new Date(2026, 4, 10), hora: '10:00', duracion: 60, tipo: 'consulta', servicio: 'Consulta inicial', estado: 'confirmada' },
-    { id: 101, cliente: 'Andrea Torres', correo: 'andrea@example.com', telefono: '6182345678', fecha: new Date(2026, 4, 8), hora: '15:30', duracion: 90, tipo: 'proyecto', servicio: 'Revisión de planos', estado: 'confirmada' },
-    { id: 102, cliente: 'Miguel Castro', correo: 'miguel@example.com', telefono: '6183456789', fecha: new Date(2026, 4, 5), hora: '11:00', duracion: 60, tipo: 'consulta', servicio: 'Cotización', estado: 'cancelada' }
-  ];
+  // Empieza vacío; se carga desde el backend en ngOnInit
+  citas = signal<Cita[]>([]);
 
-  // Nueva propiedad para el modo del calendario
   modoCalendario: 'mes' | 'semana' | 'dia' = 'mes';
-
-  // Para el selector rápido de mes/año
   selectorMesAbierto = false;
   anioSeleccionado = new Date().getFullYear();
 
-  // Horas para vistas semana y día
   horasDia: string[] = [
-    '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-    '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
+    '08:00',
+    '09:00',
+    '10:00',
+    '11:00',
+    '12:00',
+    '13:00',
+    '14:00',
+    '15:00',
+    '16:00',
+    '17:00',
+    '18:00',
+    '19:00',
   ];
 
   // Nueva cita
@@ -90,41 +95,69 @@ export class CitasComponent implements OnInit {
     tipo: 'consulta' as 'consulta' | 'proyecto',
     servicioId: null as number | null,
     servicio: '',
-    notas: ''
+    notas: '',
   };
 
   // Confirmación de cancelación
   mostrarConfirmarCancelar = false;
-  citaACancelar: any = null;
+  citaACancelar: Cita | null = null;
 
-  // Historial
   mostrarHistorial = false;
 
-  // Servicios disponibles para asignar a citas tipo proyecto
-  serviciosDisponibles: ServicioOpcion[] = [
-    { id: 1, titulo: 'Trámite relacionados a desarrollo urbano', categoria: 'Trámites', icono: 'document' },
-    { id: 2, titulo: 'Gerencia de Construcción y DRO', categoria: 'Trámites', icono: 'badge' },
-    { id: 3, titulo: 'Gerencia de proyectos', categoria: 'Gerencia', icono: 'users' },
-    { id: 4, titulo: 'Supervisión de Proyectos de construcción', categoria: 'Gerencia', icono: 'eye' },
-    { id: 5, titulo: 'Diseño y Modelado BIM', categoria: 'Diseño', icono: 'cube' },
-    { id: 6, titulo: 'Dictámenes de uso de suelo', categoria: 'Trámites', icono: 'map' },
-    { id: 7, titulo: 'Dictamen Estructural', categoria: 'Diseño', icono: 'structure' },
-    { id: 8, titulo: 'Proyectos de áreas verdes', categoria: 'Especiales', icono: 'leaf' },
-    { id: 9, titulo: 'Sistemas de riego automatizado', categoria: 'Especiales', icono: 'water' },
-    { id: 10, titulo: 'Proyectos de alumbrado público', categoria: 'Especiales', icono: 'bulb' },
-    { id: 11, titulo: 'Construcción Residencial', categoria: 'Construcción', icono: 'home' },
-    { id: 12, titulo: 'Construcción Industrial', categoria: 'Construcción', icono: 'factory' },
-    { id: 13, titulo: 'Consultoría para tu proyecto de construcción', categoria: 'Diseño', icono: 'chat' },
-    { id: 14, titulo: 'Asesoría en Licitaciones y Costos', categoria: 'Gerencia', icono: 'calculator' }
-  ];
+  // Catálogo real (señal del CatalogoService — antes era una lista hardcodeada)
+  serviciosDisponibles = this.catalogo.servicios;
 
-  horasDisponibles = ['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00', '18:00'];
+  horasDisponibles = [
+    '09:00',
+    '10:00',
+    '11:00',
+    '12:00',
+    '13:00',
+    '15:00',
+    '16:00',
+    '17:00',
+    '18:00',
+  ];
 
   mostrarSelectorServicioNueva = false;
 
+  ngOnInit() {
+    this.cargarCitas();
+  }
 
-  ngOnInit() {}
+  // ====== Carga y mapeo desde backend ======
+  private cargarCitas() {
+    this.cargando = true;
+    this.citasService.listar().subscribe({
+      next: (lista) => {
+        this.citas.set(lista.map((c) => this.mapearCita(c))); // 👈 .set
+        this.cargando = false;
+      },
+      error: () => {
+        this.cargando = false;
+      },
+    });
+  }
 
+  private mapearCita(c: CitaBackend): Cita {
+    return {
+      id: c.id,
+      cliente: c.nombre,
+      correo: c.correo,
+      telefono: c.telefono,
+      fecha: new Date(c.fecha + 'T00:00:00'), // local, sin offset UTC
+      hora: c.hora,
+      duracion: c.duracion,
+      tipo: c.tipo,
+      estado: c.estado,
+      servicio:
+        c.servicio?.titulo ||
+        (c.tipo === 'consulta' ? 'Consulta general' : 'Proyecto sin servicio'),
+      notas: c.motivo,
+    };
+  }
+
+  // ====== Helpers de fecha ======
   fechaHoy(): Date {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -143,34 +176,30 @@ export class CitasComponent implements OnInit {
     return d;
   }
 
+  // ====== Lista (sin cambios) ======
   get citasFiltradas(): Cita[] {
-    let resultado = this.citas;
-
+    let resultado = this.citas();
     if (this.busqueda.trim()) {
       const q = this.busqueda.toLowerCase();
-      resultado = resultado.filter(c =>
-        c.cliente.toLowerCase().includes(q) ||
-        c.servicio?.toLowerCase().includes(q)
+      resultado = resultado.filter(
+        (c) => c.cliente.toLowerCase().includes(q) || c.servicio?.toLowerCase().includes(q),
       );
     }
-
     if (this.filtroEstado !== 'todas') {
-      resultado = resultado.filter(c => c.estado === this.filtroEstado);
+      resultado = resultado.filter((c) => c.estado === this.filtroEstado);
     }
-
-    return resultado.sort((a, b) => a.fecha.getTime() - b.fecha.getTime() || a.hora.localeCompare(b.hora));
+    return resultado.sort(
+      (a, b) => a.fecha.getTime() - b.fecha.getTime() || a.hora.localeCompare(b.hora),
+    );
   }
 
-  // Agrupar citas por fecha para vista lista
   get citasAgrupadas() {
     const grupos: { [key: string]: Cita[] } = {};
-
-    this.citasFiltradas.forEach(cita => {
+    this.citasFiltradas.forEach((cita) => {
       const key = this.formatearFechaGrupo(cita.fecha);
       if (!grupos[key]) grupos[key] = [];
       grupos[key].push(cita);
     });
-
     return Object.entries(grupos).map(([titulo, citas]) => ({ titulo, citas }));
   }
 
@@ -179,48 +208,51 @@ export class CitasComponent implements OnInit {
     const mañana = this.fechaMañana();
     const f = new Date(fecha);
     f.setHours(0, 0, 0, 0);
-
     if (f.getTime() === hoy.getTime()) return 'Hoy';
     if (f.getTime() === mañana.getTime()) return 'Mañana';
-
     const diff = Math.floor((f.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-    if (diff > 0 && diff < 7) return `Esta semana`;
-
-    return f.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+    if (diff > 0 && diff < 7) return 'Esta semana';
+    return f.toLocaleDateString('es-MX', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
   }
 
-  // Stats
+  // ====== Stats ======
   get citasHoy(): number {
     const hoy = this.fechaHoy();
-    return this.citas.filter(c => c.fecha.getTime() === hoy.getTime() && c.estado !== 'cancelada').length;
+    return this.citas().filter(
+      (c) => c.fecha.getTime() === hoy.getTime() && c.estado !== 'cancelada',
+    ).length;
   }
 
   get citasSemana(): number {
     const hoy = this.fechaHoy();
     const finSemana = new Date(hoy);
     finSemana.setDate(hoy.getDate() + 7);
-    return this.citas.filter(c => c.fecha >= hoy && c.fecha <= finSemana && c.estado !== 'cancelada').length;
+    return this.citas().filter(
+      (c) => c.fecha >= hoy && c.fecha <= finSemana && c.estado !== 'cancelada',
+    ).length;
   }
 
   get citasPendientes(): number {
-    return this.citas.filter(c => c.estado === 'pendiente').length;
+    return this.citas().filter((c) => c.estado === 'pendiente').length;
   }
 
   get citasConfirmadas(): number {
-    return this.citas.filter(c => c.estado === 'confirmada').length;
+    return this.citas().filter((c) => c.estado === 'confirmada').length;
   }
 
-  // Calendario
+  // ====== Calendario (sin cambios) ======
   get diasMes(): DiaCalendario[] {
     const año = this.mesActual.getFullYear();
     const mes = this.mesActual.getMonth();
     const primerDia = new Date(año, mes, 1);
     const ultimoDia = new Date(año, mes + 1, 0);
     const hoy = this.fechaHoy();
-
     const dias: DiaCalendario[] = [];
 
-    // Días del mes anterior
     const diaSemanaInicio = primerDia.getDay();
     for (let i = diaSemanaInicio - 1; i >= 0; i--) {
       const fecha = new Date(año, mes, -i);
@@ -230,11 +262,9 @@ export class CitasComponent implements OnInit {
         diaMes: fecha.getDate(),
         esMesActual: false,
         esHoy: fecha.getTime() === hoy.getTime(),
-        citas: this.citas.filter(c => c.fecha.getTime() === fecha.getTime())
+        citas: this.citas().filter((c) => c.fecha.getTime() === fecha.getTime()),
       });
     }
-
-    // Días del mes actual
     for (let i = 1; i <= ultimoDia.getDate(); i++) {
       const fecha = new Date(año, mes, i);
       fecha.setHours(0, 0, 0, 0);
@@ -243,11 +273,9 @@ export class CitasComponent implements OnInit {
         diaMes: i,
         esMesActual: true,
         esHoy: fecha.getTime() === hoy.getTime(),
-        citas: this.citas.filter(c => c.fecha.getTime() === fecha.getTime())
+        citas: this.citas().filter((c) => c.fecha.getTime() === fecha.getTime()),
       });
     }
-
-    // Completar con días del mes siguiente hasta llenar 6 semanas
     let diaSiguiente = 1;
     while (dias.length < 42) {
       const fecha = new Date(año, mes + 1, diaSiguiente);
@@ -257,11 +285,10 @@ export class CitasComponent implements OnInit {
         diaMes: diaSiguiente,
         esMesActual: false,
         esHoy: fecha.getTime() === hoy.getTime(),
-        citas: this.citas.filter(c => c.fecha.getTime() === fecha.getTime())
+        citas: this.citas().filter((c) => c.fecha.getTime() === fecha.getTime()),
       });
       diaSiguiente++;
     }
-
     return dias;
   }
 
@@ -290,14 +317,27 @@ export class CitasComponent implements OnInit {
     this.citaSeleccionada = null;
   }
 
+  // ====== Acciones que llegan al backend ======
   confirmarCita(cita: Cita) {
-    cita.estado = 'confirmada';
-    this.menuAbiertoId = null;
+    this.citasService.cambiarEstado(cita.id, 'confirmada').subscribe({
+      next: () => {
+        cita.estado = 'confirmada';
+        this.citas.update((arr) => [...arr]); // 👈 dispara la detección
+        this.menuAbiertoId = null;
+      },
+      error: () => alert('No se pudo confirmar la cita. Intenta de nuevo.'),
+    });
   }
 
   cancelarCita(cita: Cita) {
-    cita.estado = 'cancelada';
-    this.menuAbiertoId = null;
+    this.citasService.cambiarEstado(cita.id, 'cancelada').subscribe({
+      next: () => {
+        cita.estado = 'cancelada';
+        this.citas.update((arr) => [...arr]); // 👈 dispara la detección
+        this.menuAbiertoId = null;
+      },
+      error: () => alert('No se pudo cancelar la cita. Intenta de nuevo.'),
+    });
   }
 
   // Selector rápido
@@ -345,13 +385,11 @@ export class CitasComponent implements OnInit {
     }
   }
 
-  // Para vista semana
   get diasSemanaActual(): DiaCalendario[] {
     const inicio = new Date(this.mesActual);
     inicio.setDate(inicio.getDate() - inicio.getDay());
     inicio.setHours(0, 0, 0, 0);
     const hoy = this.fechaHoy();
-
     const dias: DiaCalendario[] = [];
     for (let i = 0; i < 7; i++) {
       const fecha = new Date(inicio);
@@ -362,13 +400,12 @@ export class CitasComponent implements OnInit {
         diaMes: fecha.getDate(),
         esMesActual: fecha.getMonth() === this.mesActual.getMonth(),
         esHoy: fecha.getTime() === hoy.getTime(),
-        citas: this.citas.filter(c => c.fecha.getTime() === fecha.getTime())
+        citas: this.citas().filter((c) => c.fecha.getTime() === fecha.getTime()),
       });
     }
     return dias;
   }
 
-  // Para vista día
   get diaActual(): DiaCalendario {
     const fecha = new Date(this.mesActual);
     fecha.setHours(0, 0, 0, 0);
@@ -378,39 +415,35 @@ export class CitasComponent implements OnInit {
       diaMes: fecha.getDate(),
       esMesActual: true,
       esHoy: fecha.getTime() === hoy.getTime(),
-      citas: this.citas.filter(c => c.fecha.getTime() === fecha.getTime())
+      citas: this.citas().filter((c) => c.fecha.getTime() === fecha.getTime()),
     };
   }
 
-  // Calcular posición vertical de una cita según la hora
   calcularTop(hora: string): number {
     const [h, m] = hora.split(':').map(Number);
-    const horaBase = 8;
-    return ((h - horaBase) * 60 + m) * (60 / 60); // 60px por hora
+    return (h - 8) * 60 + m;
   }
 
   calcularAltura(duracion: number): number {
-    return duracion * (60 / 60);
+    return duracion;
   }
 
   calcularTopDia(hora: string): number {
     const [h, m] = hora.split(':').map(Number);
-    const horaBase = 8;
-    // 80px por hora en vista día
-    return (h - horaBase) * 80 + (m / 60) * 80;
+    return (h - 8) * 80 + (m / 60) * 80;
   }
 
   calcularAlturaDia(duracion: number): number {
     return duracion * (80 / 60);
   }
-  // Título del encabezado según modo
+
   get tituloEncabezado(): string {
     if (this.modoCalendario === 'mes') {
       return `${this.meses[this.mesActual.getMonth()]} ${this.mesActual.getFullYear()}`;
     } else if (this.modoCalendario === 'semana') {
       const inicio = this.diasSemanaActual[0].fecha;
       const fin = this.diasSemanaActual[6].fecha;
-      return `${inicio.getDate()} ${this.meses[inicio.getMonth()].slice(0,3)} - ${fin.getDate()} ${this.meses[fin.getMonth()].slice(0,3)} ${fin.getFullYear()}`;
+      return `${inicio.getDate()} ${this.meses[inicio.getMonth()].slice(0, 3)} - ${fin.getDate()} ${this.meses[fin.getMonth()].slice(0, 3)} ${fin.getFullYear()}`;
     } else {
       const f = this.mesActual;
       return `${this.diasSemana[f.getDay()]}, ${f.getDate()} ${this.meses[f.getMonth()]} ${f.getFullYear()}`;
@@ -424,15 +457,16 @@ export class CitasComponent implements OnInit {
     this.selectorMesAbierto = false;
     this.mostrarSelectorServicioNueva = false;
   }
+
   opcionesEstado = [
     { value: 'todas' as const, label: 'Todos los estados', color: 'gray' },
     { value: 'confirmada' as const, label: 'Confirmadas', color: 'green' },
     { value: 'pendiente' as const, label: 'Pendientes', color: 'orange' },
-    { value: 'cancelada' as const, label: 'Canceladas', color: 'red' }
+    { value: 'cancelada' as const, label: 'Canceladas', color: 'red' },
   ];
 
   get filtroEstadoActual() {
-    return this.opcionesEstado.find(o => o.value === this.filtroEstado);
+    return this.opcionesEstado.find((o) => o.value === this.filtroEstado);
   }
 
   toggleFiltroEstado(event: Event) {
@@ -448,16 +482,14 @@ export class CitasComponent implements OnInit {
   diaSeleccionado: DiaCalendario | null = null;
 
   abrirDia(dia: DiaCalendario) {
-    if (dia.citas.length > 0) {
-      this.diaSeleccionado = dia;
-    }
+    if (dia.citas.length > 0) this.diaSeleccionado = dia;
   }
 
   cerrarDia() {
     this.diaSeleccionado = null;
   }
 
-  // Nueva cita
+  // ====== Nueva cita (admin) ======
   abrirNuevaCita() {
     this.mostrarNuevaCita = true;
     this.nuevaCita = {
@@ -470,7 +502,7 @@ export class CitasComponent implements OnInit {
       tipo: 'consulta',
       servicioId: null,
       servicio: '',
-      notas: ''
+      notas: '',
     };
   }
 
@@ -480,36 +512,38 @@ export class CitasComponent implements OnInit {
 
   guardarNuevaCita() {
     if (!this.nuevaCitaValida) return;
-
-    const nueva: Cita = {
-      id: Date.now(),
-      cliente: this.nuevaCita.cliente,
-      correo: this.nuevaCita.correo,
-      telefono: this.nuevaCita.telefono,
-      fecha: new Date(this.nuevaCita.fecha),
-      hora: this.nuevaCita.hora,
-      duracion: this.nuevaCita.duracion,
+    const payload = {
+      nombre: this.nuevaCita.cliente.trim(),
+      correo: this.nuevaCita.correo.trim(),
+      telefono: this.nuevaCita.telefono.trim(),
       tipo: this.nuevaCita.tipo,
-      servicio: this.nuevaCita.servicio || (this.nuevaCita.tipo === 'consulta' ? 'Consulta general' : 'Proyecto'),
-      estado: 'pendiente',
-      notas: this.nuevaCita.notas
+      servicioId: this.nuevaCita.tipo === 'consulta' ? null : this.nuevaCita.servicioId,
+      motivo: this.nuevaCita.notas?.trim() || '',
+      fecha: this.nuevaCita.fecha,
+      hora: this.nuevaCita.hora,
     };
-
-    this.citas.unshift(nueva);
-    this.cerrarNuevaCita();
+    this.citasService.crear(payload).subscribe({
+      next: (creada) => {
+        this.citas.update((arr) => [this.mapearCita(creada), ...arr]); // 👈
+        this.cerrarNuevaCita();
+      },
+      error: (err) =>
+        alert(
+          err?.error?.message ||
+            'No se pudo guardar la cita. Revisa los campos e intenta de nuevo.',
+        ),
+    });
   }
 
-  // Confirmar cancelación
-  solicitarCancelarCita(cita: any, event?: Event) {
+  // ====== Confirmar cancelación ======
+  solicitarCancelarCita(cita: Cita, event?: Event) {
     if (event) event.stopPropagation();
     this.citaACancelar = cita;
     this.mostrarConfirmarCancelar = true;
   }
 
   confirmarCancelacion() {
-    if (this.citaACancelar) {
-      this.citaACancelar.estado = 'cancelada';
-    }
+    if (this.citaACancelar) this.cancelarCita(this.citaACancelar);
     this.cerrarConfirmarCancelar();
   }
 
@@ -518,12 +552,32 @@ export class CitasComponent implements OnInit {
     this.citaACancelar = null;
   }
 
-  // Historial
+  // Confirmación al aprobar cita
+  mostrarDialogoConfirmar = false;
+  citaAConfirmar: Cita | null = null;
+
+  solicitarConfirmarCita(cita: Cita, event?: Event) {
+    if (event) event.stopPropagation();
+    this.citaAConfirmar = cita;
+    this.mostrarDialogoConfirmar = true;
+  }
+
+  aceptarConfirmar() {
+    if (this.citaAConfirmar) this.confirmarCita(this.citaAConfirmar);
+    this.cerrarDialogoConfirmar();
+  }
+
+  cerrarDialogoConfirmar() {
+    this.mostrarDialogoConfirmar = false;
+    this.citaAConfirmar = null;
+  }
+
+  // ====== Historial ======
   toggleHistorial() {
     this.mostrarHistorial = !this.mostrarHistorial;
   }
 
-  esCitaPasada(cita: any): boolean {
+  esCitaPasada(cita: Cita): boolean {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
     const fechaCita = new Date(cita.fecha);
@@ -532,25 +586,27 @@ export class CitasComponent implements OnInit {
   }
 
   get citasFuturas() {
-    return this.citas.filter(c => !this.esCitaPasada(c));
+    return this.citas().filter((c) => !this.esCitaPasada(c));
   }
 
   get citasPasadas() {
-    return this.citas.filter(c => this.esCitaPasada(c));
+    return this.citas().filter((c) => this.esCitaPasada(c));
   }
 
-  // Validación del form Nueva cita
+  // ====== Validación nueva cita ======
   get nuevaCitaValida(): boolean {
     if (!this.nuevaCita.cliente.trim()) return false;
+    if (!this.nuevaCita.correo.trim()) return false;
+    if (!this.nuevaCita.telefono.trim()) return false;
     if (!this.nuevaCita.fecha) return false;
     if (!this.nuevaCita.hora) return false;
     if (this.nuevaCita.tipo === 'proyecto' && !this.nuevaCita.servicioId) return false;
     return true;
   }
 
-  get servicioNuevaCitaSeleccionado(): ServicioOpcion | null {
+  get servicioNuevaCitaSeleccionado(): Servicio | null {
     return this.nuevaCita.servicioId
-      ? this.serviciosDisponibles.find(s => s.id === this.nuevaCita.servicioId) || null
+      ? this.serviciosDisponibles().find((s) => s.id === this.nuevaCita.servicioId) || null
       : null;
   }
 
@@ -567,7 +623,7 @@ export class CitasComponent implements OnInit {
     this.mostrarSelectorServicioNueva = !this.mostrarSelectorServicioNueva;
   }
 
-  seleccionarServicioNueva(s: ServicioOpcion) {
+  seleccionarServicioNueva(s: Servicio) {
     this.nuevaCita.servicioId = s.id;
     this.nuevaCita.servicio = s.titulo;
     this.mostrarSelectorServicioNueva = false;

@@ -4,8 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ContenidoService } from '../../../core/services/contenido.service'; // ajusta la ruta
-import { CatalogoService, Servicio } from '../../../core/services/catalogo.service'; // ajusta la ruta
+import { CatalogoService, Servicio, Proyecto } from '../../../core/services/catalogo.service'; // ajusta la ruta
 import { FormatoTextoPipe } from '../../../shared/pipes/formato-texto.pipe'; // ajusta ruta
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { forkJoin, Observable } from 'rxjs';
 
 interface Pagina {
   id: number;
@@ -53,7 +55,7 @@ interface Plantilla {
 interface CampoEdicion {
   key: string;
   label: string;
-  tipo: 'texto' | 'textarea' | 'imagen' | 'url' | 'seleccion'| 'catalogo';
+  tipo: 'texto' | 'textarea' | 'imagen' | 'url' | 'seleccion' | 'catalogo';
   placeholder?: string;
   maxLength?: number;
   opciones?: { value: string; label: string }[];
@@ -73,13 +75,17 @@ interface SeccionEditable {
 @Component({
   selector: 'app-paginas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, FormatoTextoPipe],
+  imports: [CommonModule, FormsModule, RouterModule, FormatoTextoPipe, DragDropModule],
   templateUrl: './paginas.component.html',
 })
 export class PaginasComponent implements OnInit {
   busqueda = '';
   filtroActivo: 'todas' | 'fijas' | 'personalizadas' | 'ocultas' = 'todas';
   menuAbiertoId: number | null = null;
+  mostrarConfirmarSalir = false;
+  mostrarConfirmarGuardar = false;
+  private snapshotContenido = '';
+  private snapshotServicios = '';
 
   paginas: Pagina[] = [
     {
@@ -297,6 +303,7 @@ export class PaginasComponent implements OnInit {
   paginaEditando: Pagina | null = null;
   seccionEditandoActiva = '';
   mensajeGuardado = '';
+  tipoMensaje: 'exito' | 'info' = 'exito';
 
   // Schemas: qué se puede editar en cada página
   schemasPaginas: Record<string, SeccionEditable[]> = {
@@ -565,6 +572,12 @@ export class PaginasComponent implements OnInit {
           { key: 'titulo', label: 'Título', tipo: 'texto' },
           { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
         ],
+      },
+      {
+        id: 'catalogo',
+        nombre: 'Proyectos del catálogo',
+        icono: '🏢',
+        campos: [{ key: 'items', label: 'Proyectos', tipo: 'catalogo', fuente: 'proyectos' }],
       },
       {
         id: 'cta',
@@ -1017,6 +1030,10 @@ export class PaginasComponent implements OnInit {
     this.serviciosDraft = this.catalogo.servicios().map((s) => ({ ...s }));
     this.servicioFormAbierto = false;
     this.servicioEditandoId = null;
+    this.proyectosDraft = this.catalogo.proyectos().map((p) => ({ ...p }));
+    this.proyectoFormAbierto = false;
+    this.proyectoEditandoId = null;
+    this.capturarSnapshot();
     this.mostrarEditarPaginaFija = true;
   }
 
@@ -1025,6 +1042,40 @@ export class PaginasComponent implements OnInit {
     this.paginaEditando = null;
     this.seccionEditandoActiva = '';
     this.mensajeGuardado = '';
+  }
+
+  pedirCerrarEditarPagina() {
+    if (this.hayCambiosSinGuardar) {
+      this.mostrarConfirmarSalir = true;
+    } else {
+      this.cerrarEditarPagina();
+    }
+  }
+
+  pedirGuardarEdicionPagina() {
+    if (!this.hayCambiosSinGuardar) {
+      this.flashMensaje('No hay cambios que guardar', 'info');
+      return;
+    }
+    this.mostrarConfirmarGuardar = true;
+  }
+
+  cancelarGuardarEdicionPagina() {
+    this.mostrarConfirmarGuardar = false;
+  }
+
+  confirmarGuardarEdicionPagina() {
+    this.mostrarConfirmarGuardar = false;
+    this.guardarEdicionPagina();
+  }
+
+  cancelarSalirEditarPagina() {
+    this.mostrarConfirmarSalir = false;
+  }
+
+  confirmarSalirSinGuardar() {
+    this.mostrarConfirmarSalir = false;
+    this.cerrarEditarPagina();
   }
 
   get seccionesPaginaActual(): SeccionEditable[] {
@@ -1056,13 +1107,17 @@ export class PaginasComponent implements OnInit {
     this.seccionEditandoActiva = id;
   }
 
-  guardarEdicionPagina() {
+   guardarEdicionPagina() {
     if (!this.paginaEditando) return;
     const key = this.slugASchema[this.paginaEditando.slug];
+    if (!key) return;
 
-    if (key) this.contenidoService.guardarPagina(key, this.contenidoPaginas[key]);
+    // 1) Contenido de la página (siempre)
+    const guardados: Observable<any>[] = [
+      this.contenidoService.guardarPagina(key, this.contenidoPaginas[key]),
+    ];
 
-    // Página de Servicios: sincronizar el catálogo
+    // 2) Si es página de catálogo, agregar su sincronización
     if (key === 'servicios') {
       const payload = this.serviciosDraft.map((s, i) => ({
         id: s.id && s.id > 0 ? s.id : undefined,
@@ -1073,25 +1128,40 @@ export class PaginasComponent implements OnInit {
         imagen: s.imagen,
         orden: i + 1,
       }));
-      this.guardandoServicio = true;
-      this.cdr.markForCheck();
-      this.catalogo.sincronizarServicios(payload).subscribe({
-        next: () => {
-          this.catalogo.cargarServicios();
-          this.guardandoServicio = false;
-          this.paginaEditando!.ultimaEdicion = 'Hace unos segundos';
-          this.flashMensaje('Cambios guardados correctamente');
-        },
-        error: () => {
-          this.guardandoServicio = false;
-          this.flashMensaje('Error al guardar el catálogo');
-        },
-      });
-      return;
+      guardados.push(this.catalogo.sincronizarServicios(payload));
+    } else if (key === 'proyectos') {
+      const payload = this.proyectosDraft.map((p, i) => ({
+        id: p.id && p.id > 0 ? p.id : undefined,
+        nombre: p.nombre,
+        iniciales: p.iniciales,
+        logoUrl: p.logoUrl,
+        categoria: p.categoria,
+        ubicacion: p.ubicacion,
+        anio: p.anio,
+        colorMarca: p.colorMarca,
+        descripcion: p.descripcion,
+        orden: i + 1,
+      }));
+      guardados.push(this.catalogo.sincronizarProyectos(payload));
     }
 
-    this.paginaEditando.ultimaEdicion = 'Hace unos segundos';
-    this.flashMensaje('Cambios guardados correctamente');
+    this.guardandoServicio = true;
+    this.cdr.markForCheck();
+
+    forkJoin(guardados).subscribe({
+      next: () => {
+        if (key === 'servicios') this.catalogo.cargarServicios();
+        if (key === 'proyectos') this.catalogo.cargarProyectos();
+        this.guardandoServicio = false;
+        this.capturarSnapshot();
+        this.paginaEditando!.ultimaEdicion = 'Hace unos segundos';
+        this.flashMensaje('Cambios guardados correctamente');
+      },
+      error: () => {
+        this.guardandoServicio = false;
+        this.flashMensaje('Error al guardar los cambios');
+      },
+    });
   }
 
   onIframeCargado(event: Event) {
@@ -1179,7 +1249,22 @@ export class PaginasComponent implements OnInit {
     { value: 'construccion', label: 'Construcción' },
     { value: 'especiales', label: 'Proyectos Especiales' },
   ];
-  iconosServicio = ['document','badge','users','eye','cube','map','structure','leaf','water','bulb','home','factory','chat','calculator'];
+  iconosServicio = [
+    'document',
+    'badge',
+    'users',
+    'eye',
+    'cube',
+    'map',
+    'structure',
+    'leaf',
+    'water',
+    'bulb',
+    'home',
+    'factory',
+    'chat',
+    'calculator',
+  ];
 
   servicioFormAbierto = false;
   servicioEditandoId: number | null = null;
@@ -1225,7 +1310,8 @@ export class PaginasComponent implements OnInit {
     if (!this.servicioForm.titulo.trim()) return;
     if (this.servicioEditandoId != null) {
       const idx = this.serviciosDraft.findIndex((s) => s.id === this.servicioEditandoId);
-      if (idx >= 0) this.serviciosDraft[idx] = { ...this.serviciosDraft[idx], ...this.servicioForm };
+      if (idx >= 0)
+        this.serviciosDraft[idx] = { ...this.serviciosDraft[idx], ...this.servicioForm };
     } else {
       this.serviciosDraft.push({
         id: this.tempIdSeq--, // id temporal (negativo) hasta guardar
@@ -1251,9 +1337,184 @@ export class PaginasComponent implements OnInit {
     this.servicioAEliminar = null;
   }
 
-  private flashMensaje(texto: string) {
+  private flashMensaje(texto: string, tipo: 'exito' | 'info' = 'exito') {
     this.mensajeGuardado = texto;
+    this.tipoMensaje = tipo;
     this.cdr.markForCheck();
-    setTimeout(() => { this.mensajeGuardado = ''; this.cdr.markForCheck(); }, 3000);
+    setTimeout(() => {
+      this.mensajeGuardado = '';
+      this.cdr.markForCheck();
+    }, 3000);
   }
+
+  reordenarServicio(event: CdkDragDrop<Servicio[]>) {
+    moveItemInArray(this.serviciosDraft, event.previousIndex, event.currentIndex);
+  }
+
+  trackServicio = (_: number, s: Servicio) => s.id;
+
+  private normalizarServicio(s: Servicio) {
+    return {
+      id: s.id,
+      titulo: s.titulo,
+      descripcion: s.descripcion,
+      categoria: s.categoria,
+      icono: s.icono,
+      imagen: s.imagen,
+    };
+  }
+
+  private capturarSnapshot() {
+    if (!this.paginaEditando) {
+      this.snapshotContenido = '';
+      this.snapshotServicios = '';
+      this.snapshotProyectos = '';
+      return;
+    }
+    const key = this.slugASchema[this.paginaEditando.slug];
+    this.snapshotContenido = JSON.stringify(this.contenidoPaginas[key] || {});
+    this.snapshotServicios =
+      key === 'servicios'
+        ? JSON.stringify(this.serviciosDraft.map((s) => this.normalizarServicio(s)))
+        : '';
+    this.snapshotProyectos =
+      key === 'proyectos'
+        ? JSON.stringify(this.proyectosDraft.map((p) => this.normalizarProyecto(p)))
+        : '';
+  }
+
+  get hayCambiosSinGuardar(): boolean {
+    if (!this.paginaEditando) return false;
+    const key = this.slugASchema[this.paginaEditando.slug];
+    if (!key) return false;
+
+    const contenidoActual = JSON.stringify(this.contenidoPaginas[key] || {});
+    if (contenidoActual !== this.snapshotContenido) return true;
+
+    if (key === 'servicios') {
+      const serviciosActual = JSON.stringify(
+        this.serviciosDraft.map((s) => this.normalizarServicio(s)),
+      );
+      if (serviciosActual !== this.snapshotServicios) return true;
+    }
+
+    if (key === 'proyectos') {
+      const proyectosActual = JSON.stringify(
+        this.proyectosDraft.map((p) => this.normalizarProyecto(p)),
+      );
+      if (proyectosActual !== this.snapshotProyectos) return true;
+    }
+
+    return false;
+  }
+  // ===== CRUD de Proyectos =====
+  categoriasProyecto = [
+    { value: 'corporativo', label: 'Corporativo' },
+    { value: 'industrial', label: 'Industrial' },
+    { value: 'comercial', label: 'Comercial' },
+    { value: 'residencial', label: 'Residencial' },
+    { value: 'infraestructura', label: 'Infraestructura' },
+    { value: 'institucional', label: 'Institucional' },
+  ];
+
+  proyectoFormAbierto = false;
+  proyectoEditandoId: number | null = null;
+  proyectoForm = this.proyectoVacio();
+  proyectoAEliminar: Proyecto | null = null;
+  proyectosDraft: Proyecto[] = [];
+  private tempIdSeqProyecto = -1;
+  private snapshotProyectos = '';
+
+  private proyectoVacio() {
+    return {
+      nombre: '',
+      iniciales: '',
+      logoUrl: '',
+      categoria: 'corporativo',
+      ubicacion: '',
+      anio: new Date().getFullYear(),
+      colorMarca: '#0a4d7a',
+      descripcion: '',
+    };
+  }
+
+  private normalizarProyecto(p: Proyecto) {
+    return {
+      id: p.id,
+      nombre: p.nombre,
+      iniciales: p.iniciales,
+      logoUrl: p.logoUrl,
+      categoria: p.categoria,
+      ubicacion: p.ubicacion,
+      anio: p.anio,
+      colorMarca: p.colorMarca,
+      descripcion: p.descripcion,
+    };
+  }
+  etiquetaCategoriaProyecto(cat: string): string {
+    return this.catalogo.etiquetaCategoriaProyecto(cat);
+  }
+
+  nuevoProyecto() {
+    this.proyectoEditandoId = null;
+    this.proyectoForm = this.proyectoVacio();
+    this.proyectoFormAbierto = true;
+  }
+
+  editarProyectoCat(p: Proyecto) {
+    this.proyectoEditandoId = p.id;
+    this.proyectoForm = {
+      nombre: p.nombre,
+      iniciales: p.iniciales,
+      logoUrl: p.logoUrl || '',
+      categoria: p.categoria,
+      ubicacion: p.ubicacion,
+      anio: p.anio,
+      colorMarca: p.colorMarca,
+      descripcion: p.descripcion || '',
+    };
+    this.proyectoFormAbierto = true;
+  }
+
+  cancelarProyectoForm() {
+    this.proyectoFormAbierto = false;
+    this.proyectoEditandoId = null;
+    this.proyectoForm = this.proyectoVacio();
+  }
+
+  guardarProyectoCat() {
+    if (!this.proyectoForm.nombre.trim()) return;
+    if (this.proyectoEditandoId != null) {
+      const idx = this.proyectosDraft.findIndex((p) => p.id === this.proyectoEditandoId);
+      if (idx >= 0) this.proyectosDraft[idx] = { ...this.proyectosDraft[idx], ...this.proyectoForm };
+    } else {
+      this.proyectosDraft.push({
+        id: this.tempIdSeqProyecto--,
+        orden: this.proyectosDraft.length + 1,
+        ...this.proyectoForm,
+      } as Proyecto);
+    }
+    this.cancelarProyectoForm();
+  }
+
+  pedirEliminarProyecto(p: Proyecto) {
+    this.proyectoAEliminar = p;
+  }
+
+  cancelarEliminarProyecto() {
+    this.proyectoAEliminar = null;
+  }
+
+  confirmarEliminarProyecto() {
+    if (!this.proyectoAEliminar) return;
+    const id = this.proyectoAEliminar.id;
+    this.proyectosDraft = this.proyectosDraft.filter((p) => p.id !== id);
+    this.proyectoAEliminar = null;
+  }
+
+  reordenarProyecto(event: CdkDragDrop<Proyecto[]>) {
+    moveItemInArray(this.proyectosDraft, event.previousIndex, event.currentIndex);
+  }
+
+  trackProyecto = (_: number, p: Proyecto) => p.id;
 }
