@@ -66,6 +66,13 @@ export const routes: Routes = [
             (m) => m.ConfiguracionComponent,
           ),
       },
+      {
+        path: 'reportes/:tipo',
+        loadComponent: () =>
+          import('./admin/pages/reportes-detalle/reportes-detalle.component').then(
+            (m) => m.ReportesDetalleComponent,
+          ),
+      },
     ],
   },
 

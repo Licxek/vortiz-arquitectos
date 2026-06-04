@@ -239,193 +239,118 @@
     </div>
   </div>
 
-  <!-- Visión General (las gráficas tal como estaban) -->
+  <!-- Visión General — Gráficas reales con ApexCharts -->
   <div>
     <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
       Visión General
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h3 class="text-sm font-semibold text-gray-900">Proyectos por Mes</h3>
-            <p class="text-xs text-gray-500">Últimos 6 meses</p>
-          </div>
-          <button
-            (click)="abrirGrafica('proyectos-mes')"
-            class="text-xs text-[#0a4d7a] hover:underline"
-          >
-            Ver detalle
-          </button>
-        </div>
-        <div class="flex items-end justify-between gap-2 h-32 px-2">
-          <div class="flex flex-col items-center flex-1 gap-2">
-            <div class="w-full bg-blue-100 rounded-t-lg" style="height: 40%"></div>
-            <span class="text-xs text-gray-500">Dic</span>
-          </div>
-          <div class="flex flex-col items-center flex-1 gap-2">
-            <div class="w-full bg-blue-200 rounded-t-lg" style="height: 60%"></div>
-            <span class="text-xs text-gray-500">Ene</span>
-          </div>
-          <div class="flex flex-col items-center flex-1 gap-2">
-            <div class="w-full bg-blue-300 rounded-t-lg" style="height: 50%"></div>
-            <span class="text-xs text-gray-500">Feb</span>
-          </div>
-          <div class="flex flex-col items-center flex-1 gap-2">
-            <div class="w-full bg-blue-400 rounded-t-lg" style="height: 75%"></div>
-            <span class="text-xs text-gray-500">Mar</span>
-          </div>
-          <div class="flex flex-col items-center flex-1 gap-2">
-            <div class="w-full bg-blue-500 rounded-t-lg" style="height: 85%"></div>
-            <span class="text-xs text-gray-500">Abr</span>
-          </div>
-          <div class="flex flex-col items-center flex-1 gap-2">
-            <div class="w-full bg-[#0a4d7a] rounded-t-lg" style="height: 100%"></div>
-            <span class="text-xs text-gray-900 font-semibold">May</span>
-          </div>
-        </div>
-      </div>
+      <!-- Citas por mes (área) -->
+      <app-grafica-dashboard
+        titulo="Citas por Mes"
+        subtitulo="Últimos 12 meses"
+        tipo="area"
+        [data]="citasPorMes"
+        [cargando]="cargandoCitasPorMes"
+        color="#0a4d7a"
+        linkDetalle="/admin/reportes/citas-por-mes"
+        unidad="citas"
+      ></app-grafica-dashboard>
 
-      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h3 class="text-sm font-semibold text-gray-900">Tipos de Proyectos</h3>
-            <p class="text-xs text-gray-500">Distribución actual</p>
-          </div>
-          <button
-            (click)="abrirGrafica('tipos-proyectos')"
-            class="text-xs text-[#0a4d7a] hover:underline"
-          >
-            Ver detalle
-          </button>
-        </div>
-        <div class="space-y-4">
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="font-medium text-gray-700">Residencial</span>
-              <span class="text-gray-500">45%</span>
-            </div>
-            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full bg-blue-500 rounded-full" style="width: 45%"></div>
-            </div>
-          </div>
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="font-medium text-gray-700">Comercial</span>
-              <span class="text-gray-500">30%</span>
-            </div>
-            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full bg-orange-500 rounded-full" style="width: 30%"></div>
-            </div>
-          </div>
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="font-medium text-gray-700">Industrial</span>
-              <span class="text-gray-500">15%</span>
-            </div>
-            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full bg-green-500 rounded-full" style="width: 15%"></div>
-            </div>
-          </div>
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="font-medium text-gray-700">Remodelación</span>
-              <span class="text-gray-500">10%</span>
-            </div>
-            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full bg-purple-500 rounded-full" style="width: 10%"></div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Categorías de servicios (donut) -->
+      <app-grafica-dashboard
+        titulo="Categorías de Servicios"
+        subtitulo="Distribución de citas"
+        tipo="donut"
+        [data]="categoriasServicios"
+        [cargando]="cargandoCategorias"
+        linkDetalle="/admin/reportes/categorias-servicios"
+        unidad="citas"
+      ></app-grafica-dashboard>
 
-      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h3 class="text-sm font-semibold text-gray-900">Actividad de Citas</h3>
-            <p class="text-xs text-gray-500">Últimos 7 días</p>
-          </div>
-          <button
-            (click)="abrirGrafica('actividad-citas')"
-            class="text-xs text-[#0a4d7a] hover:underline"
-          >
-            Ver detalle
-          </button>
-        </div>
-        <svg viewBox="0 0 300 120" class="w-full">
-          <defs>
-            <linearGradient id="gradLine" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#0a4d7a" stop-opacity="0.3" />
-              <stop offset="100%" stop-color="#0a4d7a" stop-opacity="0" />
-            </linearGradient>
-          </defs>
-          <polygon
-            points="0,80 50,60 100,70 150,40 200,55 250,30 300,45 300,120 0,120"
-            fill="url(#gradLine)"
-          />
-          <polyline
-            points="0,80 50,60 100,70 150,40 200,55 250,30 300,45"
-            fill="none"
-            stroke="#0a4d7a"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <circle cx="0" cy="80" r="4" fill="#0a4d7a" />
-          <circle cx="50" cy="60" r="4" fill="#0a4d7a" />
-          <circle cx="100" cy="70" r="4" fill="#0a4d7a" />
-          <circle cx="150" cy="40" r="4" fill="#0a4d7a" />
-          <circle cx="200" cy="55" r="4" fill="#0a4d7a" />
-          <circle cx="250" cy="30" r="4" fill="#0a4d7a" />
-          <circle cx="300" cy="45" r="4" fill="#0a4d7a" />
-        </svg>
-        <div class="flex justify-between text-xs text-gray-500 mt-2">
-          <span>Lun</span>
-          <span>Mar</span>
-          <span>Mié</span>
-          <span>Jue</span>
-          <span>Vie</span>
-          <span>Sáb</span>
-          <span>Dom</span>
-        </div>
-      </div>
+      <!-- Actividad semanal (línea) -->
+      <app-grafica-dashboard
+        titulo="Actividad de Citas"
+        subtitulo="Últimos 7 días"
+        tipo="line"
+        [data]="actividadSemanal"
+        [cargando]="cargandoActividad"
+        color="#10b981"
+        linkDetalle="/admin/reportes/actividad-semanal"
+        unidad="citas"
+      ></app-grafica-dashboard>
 
-      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h3 class="text-sm font-semibold text-gray-900">Clientes Nuevos</h3>
-            <p class="text-xs text-gray-500">Crecimiento mensual</p>
-          </div>
-          <button
-            (click)="abrirGrafica('clientes-nuevos')"
-            class="text-xs text-[#0a4d7a] hover:underline"
-          >
-            Ver detalle
-          </button>
+      <!-- Clientes nuevos (barras) -->
+      <app-grafica-dashboard
+        titulo="Clientes Nuevos"
+        subtitulo="Por mes (últimos 12 meses)"
+        tipo="bar"
+        [data]="clientesNuevos"
+        [cargando]="cargandoClientes"
+        color="#f97316"
+        linkDetalle="/admin/reportes/clientes-nuevos"
+        unidad="clientes"
+      ></app-grafica-dashboard>
+    </div>
+    <!-- Heatmap de horarios populares (Fase 4) -->
+    <div>
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+        Cuándo prefieren agendar
+      </h2>
+      <app-heatmap-horarios
+        titulo="Horarios populares"
+        subtitulo="Distribución de citas por día y hora (últimos 30 días)"
+        [data]="heatmapHorarios"
+        [cargando]="cargandoHeatmap"
+      ></app-heatmap-horarios>
+
+      <!-- Insights del heatmap -->
+      <div
+        *ngIf="!cargandoHeatmap && heatmapInsights && heatmapInsights.totalCitas > 0"
+        class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4"
+      >
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
+            🗓️ Día más popular
+          </p>
+          <p class="text-2xl font-bold text-gray-900">{{ heatmapInsights.mejorDia.dia }}</p>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ heatmapInsights.mejorDia.valor }} citas en total
+          </p>
         </div>
-        <div class="flex items-end justify-between gap-2 h-32 px-2">
-          <div class="flex flex-col items-center flex-1 gap-2">
-            <div class="w-full bg-green-100 rounded-t-lg" style="height: 30%"></div>
-            <span class="text-xs text-gray-500">Ene</span>
-          </div>
-          <div class="flex flex-col items-center flex-1 gap-2">
-            <div class="w-full bg-green-200 rounded-t-lg" style="height: 50%"></div>
-            <span class="text-xs text-gray-500">Feb</span>
-          </div>
-          <div class="flex flex-col items-center flex-1 gap-2">
-            <div class="w-full bg-green-300 rounded-t-lg" style="height: 45%"></div>
-            <span class="text-xs text-gray-500">Mar</span>
-          </div>
-          <div class="flex flex-col items-center flex-1 gap-2">
-            <div class="w-full bg-green-400 rounded-t-lg" style="height: 70%"></div>
-            <span class="text-xs text-gray-500">Abr</span>
-          </div>
-          <div class="flex flex-col items-center flex-1 gap-2">
-            <div class="w-full bg-green-600 rounded-t-lg" style="height: 95%"></div>
-            <span class="text-xs text-gray-900 font-semibold">May</span>
-          </div>
+
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
+            ⏰ Hora más solicitada
+          </p>
+          <p class="text-2xl font-bold text-gray-900">{{ heatmapInsights.mejorHora.hora }}</p>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ heatmapInsights.mejorHora.valor }} citas en este horario
+          </p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
+            🎯 Combo top
+          </p>
+          <p class="text-2xl font-bold text-gray-900">
+            {{ heatmapInsights.mejorCombo.dia }} {{ heatmapInsights.mejorCombo.hora }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">{{ heatmapInsights.mejorCombo.valor }} citas</p>
         </div>
       </div>
+    </div>
+    <!-- Funnel de Conversión (Fase 4) -->
+    <div>
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+        Conversión de citas
+      </h2>
+      <app-funnel-conversion
+        titulo="Funnel de conversión"
+        subtitulo="De citas agendadas a citas completadas (últimos 30 días)"
+        [data]="funnelData"
+        [cargando]="cargandoFunnel"
+      ></app-funnel-conversion>
     </div>
   </div>
 
@@ -1759,266 +1684,6 @@
               Ver completo
             </button>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MODAL: Detalle de gráfica ============ -->
-  <div
-    *ngIf="graficaSeleccionada"
-    (click)="cerrarGrafica()"
-    class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
-  >
-    <div
-      (click)="$event.stopPropagation()"
-      class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-    >
-      <div
-        class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative"
-      >
-        <button
-          (click)="cerrarGrafica()"
-          class="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <h2 class="text-2xl font-bold">
-          <ng-container [ngSwitch]="graficaSeleccionada">
-            <span *ngSwitchCase="'proyectos-mes'">Proyectos por Mes</span>
-            <span *ngSwitchCase="'tipos-proyectos'">Tipos de Proyectos</span>
-            <span *ngSwitchCase="'actividad-citas'">Actividad de Citas</span>
-            <span *ngSwitchCase="'clientes-nuevos'">Clientes Nuevos</span>
-          </ng-container>
-        </h2>
-        <p class="text-sm text-gray-300 mt-1">Análisis detallado</p>
-      </div>
-      <div class="p-6 space-y-5">
-        <!-- Proyectos por Mes -->
-        <ng-container *ngIf="graficaSeleccionada === 'proyectos-mes'">
-          <div class="grid grid-cols-3 gap-3">
-            <div class="bg-blue-50 rounded-xl p-4">
-              <p class="text-xs text-blue-700 font-semibold uppercase">Total año</p>
-              <p class="text-2xl font-bold text-blue-900 mt-1">42</p>
-            </div>
-            <div class="bg-green-50 rounded-xl p-4">
-              <p class="text-xs text-green-700 font-semibold uppercase">Promedio</p>
-              <p class="text-2xl font-bold text-green-900 mt-1">7/mes</p>
-            </div>
-            <div class="bg-orange-50 rounded-xl p-4">
-              <p class="text-xs text-orange-700 font-semibold uppercase">Mejor mes</p>
-              <p class="text-2xl font-bold text-orange-900 mt-1">Mayo</p>
-            </div>
-          </div>
-          <div class="bg-gray-50 rounded-xl p-4">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="text-xs text-gray-500 uppercase tracking-wider">
-                  <th class="text-left py-2">Mes</th>
-                  <th class="text-right">Proyectos</th>
-                  <th class="text-right">vs Anterior</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                <tr>
-                  <td class="py-2">Diciembre</td>
-                  <td class="text-right">4</td>
-                  <td class="text-right text-gray-500">-</td>
-                </tr>
-                <tr>
-                  <td class="py-2">Enero</td>
-                  <td class="text-right">6</td>
-                  <td class="text-right text-green-600">+50%</td>
-                </tr>
-                <tr>
-                  <td class="py-2">Febrero</td>
-                  <td class="text-right">5</td>
-                  <td class="text-right text-red-600">-17%</td>
-                </tr>
-                <tr>
-                  <td class="py-2">Marzo</td>
-                  <td class="text-right">7</td>
-                  <td class="text-right text-green-600">+40%</td>
-                </tr>
-                <tr>
-                  <td class="py-2">Abril</td>
-                  <td class="text-right">8</td>
-                  <td class="text-right text-green-600">+14%</td>
-                </tr>
-                <tr class="font-bold">
-                  <td class="py-2">Mayo</td>
-                  <td class="text-right">10</td>
-                  <td class="text-right text-green-600">+25%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </ng-container>
-
-        <!-- Tipos de Proyectos -->
-        <ng-container *ngIf="graficaSeleccionada === 'tipos-proyectos'">
-          <div class="space-y-3">
-            <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-3 h-3 rounded-full bg-blue-500"></div>
-                <div>
-                  <p class="text-sm font-semibold text-gray-900">Residencial</p>
-                  <p class="text-xs text-gray-500">19 proyectos</p>
-                </div>
-              </div>
-              <p class="text-2xl font-bold text-blue-700">45%</p>
-            </div>
-            <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-3 h-3 rounded-full bg-orange-500"></div>
-                <div>
-                  <p class="text-sm font-semibold text-gray-900">Comercial</p>
-                  <p class="text-xs text-gray-500">13 proyectos</p>
-                </div>
-              </div>
-              <p class="text-2xl font-bold text-orange-700">30%</p>
-            </div>
-            <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                <div>
-                  <p class="text-sm font-semibold text-gray-900">Industrial</p>
-                  <p class="text-xs text-gray-500">6 proyectos</p>
-                </div>
-              </div>
-              <p class="text-2xl font-bold text-green-700">15%</p>
-            </div>
-            <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-3 h-3 rounded-full bg-purple-500"></div>
-                <div>
-                  <p class="text-sm font-semibold text-gray-900">Remodelación</p>
-                  <p class="text-xs text-gray-500">4 proyectos</p>
-                </div>
-              </div>
-              <p class="text-2xl font-bold text-purple-700">10%</p>
-            </div>
-          </div>
-        </ng-container>
-
-        <!-- Actividad de Citas -->
-        <ng-container *ngIf="graficaSeleccionada === 'actividad-citas'">
-          <div class="grid grid-cols-3 gap-3">
-            <div class="bg-blue-50 rounded-xl p-4">
-              <p class="text-xs text-blue-700 font-semibold uppercase">Total semana</p>
-              <p class="text-2xl font-bold text-blue-900 mt-1">38</p>
-            </div>
-            <div class="bg-green-50 rounded-xl p-4">
-              <p class="text-xs text-green-700 font-semibold uppercase">Confirmadas</p>
-              <p class="text-2xl font-bold text-green-900 mt-1">32</p>
-            </div>
-            <div class="bg-red-50 rounded-xl p-4">
-              <p class="text-xs text-red-700 font-semibold uppercase">Canceladas</p>
-              <p class="text-2xl font-bold text-red-900 mt-1">6</p>
-            </div>
-          </div>
-          <div class="bg-gray-50 rounded-xl p-4">
-            <p class="text-sm font-semibold text-gray-900 mb-3">Citas por día</p>
-            <div class="space-y-2">
-              <div
-                *ngFor="
-                  let dia of [
-                    { nombre: 'Lunes', valor: 5 },
-                    { nombre: 'Martes', valor: 7 },
-                    { nombre: 'Miércoles', valor: 6 },
-                    { nombre: 'Jueves', valor: 8 },
-                    { nombre: 'Viernes', valor: 9 },
-                    { nombre: 'Sábado', valor: 3 },
-                    { nombre: 'Domingo', valor: 0 },
-                  ]
-                "
-                class="flex items-center gap-3"
-              >
-                <span class="text-xs text-gray-600 w-20">{{ dia.nombre }}</span>
-                <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    class="h-full bg-[#0a4d7a] rounded-full"
-                    [style.width.%]="(dia.valor * 100) / 10"
-                  ></div>
-                </div>
-                <span class="text-sm font-bold text-gray-900 w-8 text-right">{{ dia.valor }}</span>
-              </div>
-            </div>
-          </div>
-        </ng-container>
-
-        <!-- Clientes Nuevos -->
-        <ng-container *ngIf="graficaSeleccionada === 'clientes-nuevos'">
-          <div class="grid grid-cols-3 gap-3">
-            <div class="bg-green-50 rounded-xl p-4">
-              <p class="text-xs text-green-700 font-semibold uppercase">Total año</p>
-              <p class="text-2xl font-bold text-green-900 mt-1">124</p>
-            </div>
-            <div class="bg-blue-50 rounded-xl p-4">
-              <p class="text-xs text-blue-700 font-semibold uppercase">Este mes</p>
-              <p class="text-2xl font-bold text-blue-900 mt-1">28</p>
-            </div>
-            <div class="bg-purple-50 rounded-xl p-4">
-              <p class="text-xs text-purple-700 font-semibold uppercase">Tasa conversión</p>
-              <p class="text-2xl font-bold text-purple-900 mt-1">68%</p>
-            </div>
-          </div>
-          <div class="bg-gray-50 rounded-xl p-4">
-            <p class="text-sm font-semibold text-gray-900 mb-3">Crecimiento mensual</p>
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="text-xs text-gray-500 uppercase tracking-wider">
-                  <th class="text-left py-2">Mes</th>
-                  <th class="text-right">Nuevos</th>
-                  <th class="text-right">Total acumulado</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                <tr>
-                  <td class="py-2">Enero</td>
-                  <td class="text-right">12</td>
-                  <td class="text-right text-gray-500">12</td>
-                </tr>
-                <tr>
-                  <td class="py-2">Febrero</td>
-                  <td class="text-right">18</td>
-                  <td class="text-right text-gray-500">30</td>
-                </tr>
-                <tr>
-                  <td class="py-2">Marzo</td>
-                  <td class="text-right">22</td>
-                  <td class="text-right text-gray-500">52</td>
-                </tr>
-                <tr>
-                  <td class="py-2">Abril</td>
-                  <td class="text-right">26</td>
-                  <td class="text-right text-gray-500">78</td>
-                </tr>
-                <tr class="font-bold">
-                  <td class="py-2">Mayo</td>
-                  <td class="text-right">28</td>
-                  <td class="text-right">106</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </ng-container>
-
-        <div class="flex justify-end pt-2">
-          <button
-            (click)="cerrarGrafica()"
-            class="px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
-          >
-            Cerrar
-          </button>
         </div>
       </div>
     </div>

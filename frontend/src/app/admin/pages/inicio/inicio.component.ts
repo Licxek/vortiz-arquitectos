@@ -5,6 +5,22 @@ import { Router } from '@angular/router';
 import { InicioService, CitaBackend, ProyectoBackend } from '../../../core/services/inicio.service'; // ⚠️ ajusta la ruta
 import { ImageUploadComponent } from '../../../shared/image-upload/image-upload.component';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
+import {
+  ReportesService,
+  CitasPorMes,
+  CategoriaServicio,
+  ActividadDia,
+  ClienteNuevo,
+  HeatmapData,
+  HeatmapSerie,
+  FunnelData,
+} from '../../../core/services/reportes.service';
+import {
+  GraficaDashboardComponent,
+  PuntoGrafica,
+} from '../../../shared/grafica-dashboard/grafica-dashboard.component';
+import { HeatmapHorariosComponent } from '../../../shared/heatmap-horarios/heatmap-horarios.component';
+import { FunnelConversionComponent } from '../../../shared/funnel-conversion/funnel-conversion.component';
 
 // ============ INTERFACES ============
 interface StatCard {
@@ -74,7 +90,15 @@ interface ConsultaPendiente {
 @Component({
   selector: 'app-inicio',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ImageUploadComponent,
+    SkeletonComponent,
+    GraficaDashboardComponent,
+    HeatmapHorariosComponent,
+    FunnelConversionComponent,
+  ],
   templateUrl: './inicio.component.html',
 })
 export class InicioComponent implements OnInit {
@@ -230,10 +254,26 @@ export class InicioComponent implements OnInit {
     | 'clientes-nuevos'
     | null = null;
 
+  citasPorMes: PuntoGrafica[] = [];
+  categoriasServicios: PuntoGrafica[] = [];
+  actividadSemanal: PuntoGrafica[] = [];
+  clientesNuevos: PuntoGrafica[] = [];
+  heatmapHorarios: HeatmapSerie[] = [];
+  heatmapInsights: HeatmapData['insights'] | null = null;
+  cargandoHeatmap = true;
+  funnelData: FunnelData | null = null;
+  cargandoFunnel = true;
+
+  cargandoCitasPorMes = true;
+  cargandoCategorias = true;
+  cargandoActividad = true;
+  cargandoClientes = true;
+
   // ============ CONSTRUCTOR Y LIFECYCLE ============
   constructor(private router: Router) {}
   private inicioService = inject(InicioService);
   private cdr = inject(ChangeDetectorRef);
+  private reportesService = inject(ReportesService);
 
   ngOnInit() {
     const hoy = new Date();
@@ -258,6 +298,7 @@ export class InicioComponent implements OnInit {
     this.cargarAgenda();
     this.cargarConsultas();
     this.cargarProyectosRecientes(); // 👈 nuevo
+    this.cargarGraficas();
   }
 
   // ============ GETTERS ============
@@ -382,14 +423,95 @@ export class InicioComponent implements OnInit {
   }
 
   // ============ GRÁFICAS ============
-  abrirGrafica(
-    grafica: 'proyectos-mes' | 'tipos-proyectos' | 'actividad-citas' | 'clientes-nuevos',
-  ) {
-    this.graficaSeleccionada = grafica;
+  private cargarGraficas() {
+    this.cargarCitasPorMes();
+    this.cargarCategoriasServicios();
+    this.cargarActividadSemanal();
+    this.cargarClientesNuevos();
+    this.cargarHeatmapHorarios();
+    this.cargarFunnelConversion();
   }
 
-  cerrarGrafica() {
-    this.graficaSeleccionada = null;
+  private cargarHeatmapHorarios() {
+    this.cargandoHeatmap = true;
+    this.reportesService.obtenerHeatmapHorarios().subscribe({
+      next: (data) => {
+        this.heatmapHorarios = data.series;
+        this.heatmapInsights = data.insights;
+        this.cargandoHeatmap = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.heatmapHorarios = [];
+        this.heatmapInsights = null;
+        this.cargandoHeatmap = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarCitasPorMes() {
+    this.cargandoCitasPorMes = true;
+    this.reportesService.obtenerCitasPorMes().subscribe({
+      next: (data) => {
+        this.citasPorMes = data.map((d) => ({ label: d.label, valor: d.valor }));
+        this.cargandoCitasPorMes = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.citasPorMes = [];
+        this.cargandoCitasPorMes = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarCategoriasServicios() {
+    this.cargandoCategorias = true;
+    this.reportesService.obtenerCategoriasServicios().subscribe({
+      next: (data) => {
+        this.categoriasServicios = data.map((d) => ({ label: d.label, valor: d.valor }));
+        this.cargandoCategorias = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.categoriasServicios = [];
+        this.cargandoCategorias = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarActividadSemanal() {
+    this.cargandoActividad = true;
+    this.reportesService.obtenerActividadSemanal().subscribe({
+      next: (data) => {
+        this.actividadSemanal = data.map((d) => ({ label: d.label, valor: d.valor }));
+        this.cargandoActividad = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.actividadSemanal = [];
+        this.cargandoActividad = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarClientesNuevos() {
+    this.cargandoClientes = true;
+    this.reportesService.obtenerClientesNuevos().subscribe({
+      next: (data) => {
+        this.clientesNuevos = data.map((d) => ({ label: d.label, valor: d.valor }));
+        this.cargandoClientes = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.clientesNuevos = [];
+        this.cargandoClientes = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   // ============ PROYECTOS: DETALLE ============
@@ -989,5 +1111,20 @@ export class InicioComponent implements OnInit {
 
   imagenDeProyecto(p: Proyecto): string {
     return p.imagen || this.placeholderImagen;
+  }
+  private cargarFunnelConversion() {
+    this.cargandoFunnel = true;
+    this.reportesService.obtenerFunnelConversion().subscribe({
+      next: (data) => {
+        this.funnelData = data;
+        this.cargandoFunnel = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.funnelData = null;
+        this.cargandoFunnel = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 }

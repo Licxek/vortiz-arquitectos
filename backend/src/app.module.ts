@@ -20,6 +20,7 @@ import { PerfilModule } from './perfil/perfil.module';
 import { InicioModule } from './inicio/inicio.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { HealthModule } from './health/health.module';
+import { ReportesModule } from './reportes/reportes.module';
 
 @Module({
   imports: [
@@ -100,6 +101,7 @@ import { HealthModule } from './health/health.module';
     InicioModule,
     UploadsModule,
     HealthModule,
+    ReportesModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
