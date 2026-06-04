@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CitasService, Cita as CitaBackend } from '../../../core/services/citas.service'; // ⚠️ ajusta la ruta
 import { CatalogoService, Servicio } from '../../../core/services/catalogo.service'; // ⚠️ ajusta la ruta
+import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 
 interface Cita {
   id: number;
@@ -29,7 +30,7 @@ interface DiaCalendario {
 @Component({
   selector: 'app-citas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,SkeletonComponent],
   templateUrl: './citas.component.html',
 })
 export class CitasComponent implements OnInit {
@@ -42,7 +43,7 @@ export class CitasComponent implements OnInit {
   menuAbiertoId: number | null = null;
   citaSeleccionada: Cita | null = null;
   filtroEstadoAbierto = false;
-  cargando = false;
+  cargando = signal(true);
 
   mesActual = new Date();
   meses = [
@@ -127,14 +128,14 @@ export class CitasComponent implements OnInit {
 
   // ====== Carga y mapeo desde backend ======
   private cargarCitas() {
-    this.cargando = true;
+    this.cargando.set(true);
     this.citasService.listar().subscribe({
       next: (lista) => {
         this.citas.set(lista.map((c) => this.mapearCita(c))); // 👈 .set
-        this.cargando = false;
+        this.cargando.set(false);
       },
       error: () => {
-        this.cargando = false;
+        this.cargando.set(false);
       },
     });
   }

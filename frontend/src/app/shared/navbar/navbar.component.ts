@@ -1,8 +1,16 @@
-import { Component, OnInit, OnDestroy, HostListener, NgZone, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  HostListener,
+  NgZone,
+  ChangeDetectorRef,signal
+} from '@angular/core';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ConfiguracionService, Configuracion } from '../../core/services/configuracion.service';
 import { PaginasService, Pagina } from '../../core/services/paginas.service';
+import { SkeletonComponent } from '../skeleton/skeleton.component';
 
 interface NavItem {
   label: string;
@@ -12,7 +20,7 @@ interface NavItem {
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NgOptimizedImage, SkeletonComponent],
   templateUrl: './navbar.component.html',
 })
 export class NavbarComponent implements OnInit, OnDestroy {
@@ -24,6 +32,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   masAbierto = false;
   scrolled = false;
   buscadorEscritorioAbierto = false;
+  cargando = signal(true);
 
   fixedLinks: NavItem[] = [
     { label: 'Inicio', path: '/home' },
@@ -33,45 +42,45 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ];
 
   // Cuántas páginas dinámicas mostrar inline en escritorio antes del "Más"
-  maxInlineDynamic = 1;
 
   constructor(
     private configuracionService: ConfiguracionService,
     private paginasService: PaginasService,
     private ngZone: NgZone,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   private scrollHandler = () => {
-  const y = window.scrollY;
-  let newScrolled = this.scrolled;
+    const y = window.scrollY;
+    let newScrolled = this.scrolled;
 
-  // Para activar necesita pasar de 100px
-  if (!this.scrolled && y > 100) {
-    newScrolled = true;
-  }
-  // Para desactivar necesita bajar de 30px
-  else if (this.scrolled && y < 30) {
-    newScrolled = false;
-  }
+    // Para activar necesita pasar de 100px
+    if (!this.scrolled && y > 100) {
+      newScrolled = true;
+    }
+    // Para desactivar necesita bajar de 30px
+    else if (this.scrolled && y < 30) {
+      newScrolled = false;
+    }
 
-  if (newScrolled !== this.scrolled) {
-    this.ngZone.run(() => {
-      this.scrolled = newScrolled;
-      this.cdr.markForCheck();
-    });
-  }
-};
+    if (newScrolled !== this.scrolled) {
+      this.ngZone.run(() => {
+        this.scrolled = newScrolled;
+        this.cdr.markForCheck();
+      });
+    }
+  };
 
   ngOnInit() {
-    this.configuracionService.configPublica$.subscribe(c => {
+    this.configuracionService.configPublica$.subscribe((c) => {
       this.configuracion = c;
+      this.cargando.set(false);
       this.cdr.markForCheck();
     });
 
     this.paginasService.getPaginasVisibles().subscribe({
-      next: (data) => this.paginasDinamicas = data,
-      error: () => this.paginasDinamicas = []
+      next: (data) => (this.paginasDinamicas = data),
+      error: () => (this.paginasDinamicas = []),
     });
 
     this.ngZone.runOutsideAngular(() => {
@@ -84,11 +93,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   get inlineDynamic(): Pagina[] {
-    return this.paginasDinamicas.slice(0, this.maxInlineDynamic);
+    // Solo 1 página → se muestra inline. 2+ → todas van al "Más".
+    return this.paginasDinamicas.length === 1 ? this.paginasDinamicas : [];
   }
 
   get overflowPages(): Pagina[] {
-    return this.paginasDinamicas.slice(this.maxInlineDynamic);
+    // Si hay 2 o más, todas viven en el dropdown "Más".
+    return this.paginasDinamicas.length >= 2 ? this.paginasDinamicas : [];
   }
 
   get hasOverflow(): boolean {

@@ -1,19 +1,31 @@
-<div class="min-h-screen bg-[#f5f7fa] flex flex-col">
+<div class="h-screen bg-[#f5f7fa] flex flex-col overflow-hidden">
   <!-- Header superior -->
-  <header class="bg-gradient-to-b from-black via-[#071020] to-[#0a1f3d] text-white">
+  <header
+    class="bg-gradient-to-b from-black via-[#071020] to-[#0a1f3d] text-white shrink-0 z-30 shadow-lg"
+  >
     <div class="px-4 md:px-8 py-3 flex items-center justify-between">
       <a routerLink="/admin/inicio" class="flex items-center gap-3">
-        <img
-          [src]="configuracion?.logo_url || '/assets/img/logo.png'"
-          alt="Vortiz"
-          class="h-12 md:h-14 w-auto"
-        />
-        <div>
-          <h1 class="text-base md:text-xl font-bold leading-tight">Vortiz Arquitectos</h1>
-          <p class="text-xs text-gray-400 hidden md:block leading-tight">
-            Diseñamos espacios, construimos confianza.
-          </p>
-        </div>
+        <!-- Skeleton del logo -->
+        <ng-container *ngIf="cargando()">
+          <app-skeleton variant="rect" width="56px" height="56px" />
+          <div class="space-y-1.5">
+            <app-skeleton variant="text" width="180px" height="1.125rem" />
+            <app-skeleton variant="text" width="220px" height="0.75rem" class="hidden md:block" />
+          </div>
+        </ng-container>
+        <ng-container *ngIf="!cargando()">
+          <img
+            [src]="configuracion?.logo_url || '/assets/img/logo.png'"
+            alt="Vortiz"
+            class="h-12 md:h-14 w-auto"
+          />
+          <div>
+            <h1 class="text-base md:text-xl font-bold leading-tight">Vortiz Arquitectos</h1>
+            <p class="text-xs text-gray-400 hidden md:block leading-tight">
+              Diseñamos espacios, construimos confianza.
+            </p>
+          </div>
+        </ng-container>
       </a>
 
       <a
@@ -53,7 +65,12 @@
       </button>
 
       <div class="flex items-center gap-3">
-        <span class="text-lg md:text-xl lg:text-2xl font-bold">
+        <!-- Skeleton del saludo -->
+        <ng-container *ngIf="cargando()">
+          <app-skeleton variant="text" width="180px" height="1.75rem" />
+        </ng-container>
+
+        <span *ngIf="!cargando()" class="text-lg md:text-xl lg:text-2xl font-bold">
           Bienvenido,
           <span class="text-blue-400">{{ usuario?.nombre || 'Admin' }}</span>
         </span>
@@ -572,10 +589,10 @@
   </div>
 
   <!-- Contenedor principal -->
-  <div class="flex flex-1 relative">
+  <div class="flex flex-1 relative overflow-hidden">
     <!-- Sidebar escritorio -->
     <aside
-      class="hidden md:flex flex-col bg-[#1a2332] text-gray-300 transition-all duration-300 ease-in-out shadow-xl shrink-0"
+      class="hidden md:flex flex-col bg-[#1a2332] text-gray-300 transition-all duration-300 ease-in-out shadow-xl shrink-0 h-full overflow-x-hidden"
       [class.w-64]="!sidebarColapsado"
       [class.w-20]="sidebarColapsado"
       [class.sidebar-collapsed]="sidebarColapsado"
@@ -597,7 +614,7 @@
         <span class="text-sm font-medium nav-text"> Menú </span>
       </button>
 
-      <nav class="flex-1 py-4">
+      <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4">
         <ul class="flex flex-col gap-1 px-3">
           <li *ngFor="let item of menuItems">
             <a
@@ -683,7 +700,7 @@
         </ul>
       </nav>
 
-      <div class="border-t border-white/5 py-3">
+      <div class="border-t border-white/5 py-3 shrink-0">
         <a
           routerLink="/admin/configuracion"
           routerLinkActive="active-menu-item"
@@ -877,7 +894,7 @@
     </div>
 
     <!-- Área de contenido -->
-    <main class="flex-1 overflow-auto">
+    <main class="flex-1 overflow-y-auto overflow-x-hidden">
       <div class="p-4 md:p-6 lg:p-8">
         <router-outlet></router-outlet>
       </div>

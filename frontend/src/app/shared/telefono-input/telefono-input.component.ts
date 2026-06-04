@@ -7,11 +7,13 @@ import {
   HostListener,
   Input,
   OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
   inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { GeolocalizacionService } from '../../core/services/geolocalizacion.service';
 
 interface Pais {
   codigo: string;
@@ -62,7 +64,10 @@ const PAISES: Pais[] = [
           [disabled]="disabled"
           class="flex items-center gap-1.5 px-3 py-2.5 bg-gray-50 border border-r-0 border-gray-200 rounded-l-lg text-sm hover:bg-gray-100 transition-colors disabled:cursor-not-allowed disabled:hover:bg-gray-50"
         >
-          <span class="fi fi-{{ ladaSeleccionada.iso }} rounded-sm shadow-sm" style="width: 1.4em; height: 1.05em;"></span>
+          <span
+            class="fi fi-{{ ladaSeleccionada.iso }} rounded-sm shadow-sm"
+            style="width: 1.4em; height: 1.05em;"
+          ></span>
           <span class="text-gray-700 font-medium">{{ ladaSeleccionada.codigo }}</span>
           <svg
             class="w-4 h-4 text-gray-500 transition-transform"
@@ -110,7 +115,10 @@ const PAISES: Pais[] = [
             (click)="seleccionarPais(p)"
             class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left text-sm"
           >
-            <span class="fi fi-{{ p.iso }} rounded-sm shadow-sm" style="width: 1.5em; height: 1.125em;"></span>
+            <span
+              class="fi fi-{{ p.iso }} rounded-sm shadow-sm"
+              style="width: 1.5em; height: 1.125em;"
+            ></span>
             <span class="flex-1 text-gray-700">{{ p.nombre }}</span>
             <span class="text-gray-500 text-xs">{{ p.codigo }}</span>
           </button>
@@ -125,20 +133,49 @@ const PAISES: Pais[] = [
     </div>
   `,
 })
-export class TelefonoInputComponent implements OnChanges {
+export class TelefonoInputComponent implements OnInit, OnChanges {
   @Input() valor: string = '';
   @Output() valorChange = new EventEmitter<string>();
   @Input() disabled: boolean = false;
   @Input() placeholder: string = '000-000-0000';
+  @Input() autoDetectar: boolean = false;
 
   private elementRef = inject(ElementRef);
   private cdr = inject(ChangeDetectorRef);
+  private geolocalizacion = inject(GeolocalizacionService);
 
   paises = PAISES;
   ladaSeleccionada: Pais = PAISES[0]; // México por defecto
   numeroLocal: string = '';
   dropdownAbierto: boolean = false;
   busqueda: string = '';
+
+  ngOnInit() {
+    if (this.autoDetectar && !(this.valor || '').trim()) {
+      this.detectarPaisAutomaticamente();
+    }
+  }
+
+  private async detectarPaisAutomaticamente() {
+    try {
+      const iso = await this.geolocalizacion.detectarPais();
+      if (!iso) return;
+
+      // Si el usuario ya empezó a escribir mientras llegaba la respuesta,
+      // respetamos su input y no sobreescribimos
+      if (this.numeroLocal.trim() || (this.valor || '').trim()) return;
+
+      const pais = PAISES.find((p) => p.iso === iso);
+      if (pais) {
+        this.ladaSeleccionada = pais;
+        this.cdr.detectChanges();
+      }
+      // Si el iso detectado no está en nuestra lista de 26 países,
+      // se queda México (default) — fallback silencioso
+    } catch {
+      // Cualquier error → México por default, sin ruido
+    }
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['valor']) {
@@ -155,9 +192,7 @@ export class TelefonoInputComponent implements OnChanges {
       return;
     }
     // Ordenamos por longitud descendente para que +593 gane sobre +5
-    const ordenados = [...PAISES].sort(
-      (a, b) => b.codigo.length - a.codigo.length,
-    );
+    const ordenados = [...PAISES].sort((a, b) => b.codigo.length - a.codigo.length);
     const pais = ordenados.find((p) => v.startsWith(p.codigo));
     if (pais) {
       this.ladaSeleccionada = pais;
@@ -172,10 +207,7 @@ export class TelefonoInputComponent implements OnChanges {
     const q = this.busqueda.trim().toLowerCase();
     if (!q) return this.paises;
     return this.paises.filter(
-      (p) =>
-        p.nombre.toLowerCase().includes(q) ||
-        p.codigo.includes(q) ||
-        p.iso.includes(q),
+      (p) => p.nombre.toLowerCase().includes(q) || p.codigo.includes(q) || p.iso.includes(q),
     );
   }
 
@@ -194,12 +226,8 @@ export class TelefonoInputComponent implements OnChanges {
   emitirCambio() {
     // Auto-detección: si el usuario escribió un + al inicio, detectamos lada
     if (this.numeroLocal.startsWith('+')) {
-      const ordenados = [...PAISES].sort(
-        (a, b) => b.codigo.length - a.codigo.length,
-      );
-      const pais = ordenados.find((p) =>
-        this.numeroLocal.startsWith(p.codigo),
-      );
+      const ordenados = [...PAISES].sort((a, b) => b.codigo.length - a.codigo.length);
+      const pais = ordenados.find((p) => this.numeroLocal.startsWith(p.codigo));
       if (pais) {
         this.ladaSeleccionada = pais;
         this.numeroLocal = this.numeroLocal.slice(pais.codigo.length).trim();

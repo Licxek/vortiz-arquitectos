@@ -1,9 +1,10 @@
-import { Component, computed, signal, inject} from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, computed, signal, inject, OnInit } from '@angular/core';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { CatalogoService, Proyecto } from '../../core/services/catalogo.service'; // ajusta ruta
-import { ContenidoService } from '../../core/services/contenido.service'; // ajusta ruta
-import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe'; // ajusta ruta
+import { CatalogoService, Proyecto } from '../../core/services/catalogo.service';
+import { ContenidoService } from '../../core/services/contenido.service';
+import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
 interface CategoriaFiltro {
   id: string;
@@ -14,10 +15,10 @@ interface CategoriaFiltro {
 @Component({
   selector: 'app-proyectos',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormatoTextoPipe],
+  imports: [CommonModule, RouterModule, FormatoTextoPipe, SkeletonComponent, NgOptimizedImage],
   templateUrl: './proyectos.component.html',
 })
-export class ProyectosComponent {
+export class ProyectosComponent implements OnInit {
   private catalogo = inject(CatalogoService);
   private contenidoService = inject(ContenidoService);
 
@@ -26,20 +27,20 @@ export class ProyectosComponent {
 
   proyectos = this.catalogo.proyectos;
 
-  // HERO
-  proyHeroBadge = 'Portafolio';
-  proyHeroTitulo = 'Clientes que confiaron en *nuestro trabajo*';
-  proyHeroDescripcion =
-    'Cada marca representa una historia de colaboración, planeación y ejecución.';
-  // INTRO
-  proyIntroBadge = 'Nuestro portafolio';
-  proyIntroTitulo = '150+ proyectos completados para empresas líderes en México';
-  proyIntroDescripcion =
-    'Desde plantas industriales hasta infraestructura nacional, hemos colaborado con corporativos, gobiernos y desarrolladoras a lo largo de 20 años de trayectoria.';
-  // CTA
-  proyCtaTitulo = '¿Tu marca podría ser la *siguiente?*';
-  proyCtaDescripcion =
-    'Conversemos sobre tu proyecto. Te explicamos cómo podemos sumarnos a tu visión.';
+  // ============ HERO ============
+  proyHeroBadge = '';
+  proyHeroTitulo = '';
+  proyHeroDescripcion = '';
+  proyHeroImagenFondo = '';
+
+  // ============ INTRO ============
+  proyIntroBadge = '';
+  proyIntroTitulo = '';
+  proyIntroDescripcion = '';
+
+  // ============ CTA ============
+  proyCtaTitulo = '';
+  proyCtaDescripcion = '';
 
   categorias = computed<CategoriaFiltro[]>(() => {
     const cats = [
@@ -83,55 +84,19 @@ export class ProyectosComponent {
   }
 
   ngOnInit() {
-    this.proyHeroBadge = this.contenidoService.getCampo(
-      'proyectos',
-      'hero',
-      'badge',
-      this.proyHeroBadge,
-    );
-    this.proyHeroTitulo = this.contenidoService.getCampo(
-      'proyectos',
-      'hero',
-      'titulo',
-      this.proyHeroTitulo,
-    );
-    this.proyHeroDescripcion = this.contenidoService.getCampo(
-      'proyectos',
-      'hero',
-      'descripcion',
-      this.proyHeroDescripcion,
-    );
+    // HERO
+    this.proyHeroBadge = this.contenidoService.getCampo('proyectos', 'hero', 'badge');
+    this.proyHeroTitulo = this.contenidoService.getCampo('proyectos', 'hero', 'titulo');
+    this.proyHeroDescripcion = this.contenidoService.getCampo('proyectos', 'hero', 'descripcion');
+    this.proyHeroImagenFondo = this.contenidoService.getCampo('proyectos', 'hero', 'imagenFondo');
 
-    this.proyIntroBadge = this.contenidoService.getCampo(
-      'proyectos',
-      'intro',
-      'badge',
-      this.proyIntroBadge,
-    );
-    this.proyIntroTitulo = this.contenidoService.getCampo(
-      'proyectos',
-      'intro',
-      'titulo',
-      this.proyIntroTitulo,
-    );
-    this.proyIntroDescripcion = this.contenidoService.getCampo(
-      'proyectos',
-      'intro',
-      'descripcion',
-      this.proyIntroDescripcion,
-    );
+    // INTRO
+    this.proyIntroBadge = this.contenidoService.getCampo('proyectos', 'intro', 'badge');
+    this.proyIntroTitulo = this.contenidoService.getCampo('proyectos', 'intro', 'titulo');
+    this.proyIntroDescripcion = this.contenidoService.getCampo('proyectos', 'intro', 'descripcion');
 
-    this.proyCtaTitulo = this.contenidoService.getCampo(
-      'proyectos',
-      'cta',
-      'titulo',
-      this.proyCtaTitulo,
-    );
-    this.proyCtaDescripcion = this.contenidoService.getCampo(
-      'proyectos',
-      'cta',
-      'descripcion',
-      this.proyCtaDescripcion,
-    );
+    // CTA
+    this.proyCtaTitulo = this.contenidoService.getCampo('proyectos', 'cta', 'titulo');
+    this.proyCtaDescripcion = this.contenidoService.getCampo('proyectos', 'cta', 'descripcion');
   }
 }

@@ -10,20 +10,24 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CitasService } from './citas.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard'; // ⚠️ ajusta a tu ruta real
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { EstadoCita } from './cita.entity';
+import { Throttle } from '@nestjs/throttler';
+import { CrearCitaDto } from './dto/crear-cita.dto';
 
 @Controller('citas')
 export class CitasController {
   constructor(private readonly servicio: CitasService) {}
 
-  // PÚBLICO — el formulario de la web crea la cita
+  // 🔒 PÚBLICO — 3 citas por hora por IP (anti-spam)
+  @Throttle({ default: { limit: 3, ttl: 3600000 } })
   @Post()
-  crear(@Body() data: any) {
+  crear(@Body() data: CrearCitaDto) {
+    // 👈 tipo seguro
     return this.servicio.crear(data);
   }
 
-  // PROTEGIDOS — admin
+  // PROTEGIDOS — admin (JWT + throttle global 60/min ya protegen)
   @UseGuards(JwtAuthGuard)
   @Get()
   listar() {

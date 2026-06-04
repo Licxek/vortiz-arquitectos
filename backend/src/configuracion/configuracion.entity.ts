@@ -1,4 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  UpdateDateColumn,
+} from 'typeorm';
+
+export interface MantenimientoConfig {
+  activo: boolean;
+  mensaje: string;
+  fechaEstimada?: string;
+}
 
 @Entity({ name: 'configuracion' })
 export class Configuracion {
@@ -11,4 +22,13 @@ export class Configuracion {
   @Column({ type: 'jsonb', default: {} }) notificaciones: any;
   @Column({ type: 'jsonb', default: {} }) seo: any;
   @UpdateDateColumn({ name: 'updated_at' }) updatedAt: Date;
+  @Column({
+    type: 'jsonb',
+    default: {
+      activo: false,
+      mensaje: 'Estamos haciendo mejoras en el sitio. Volveremos muy pronto.',
+      fechaEstimada: '',
+    },
+  })
+  mantenimiento!: MantenimientoConfig;
 }

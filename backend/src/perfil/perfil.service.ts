@@ -18,9 +18,7 @@ export class PerfilService {
   async obtener(userId: number) {
     const usuario = await this.usuariosRepo.findOne({ where: { id: userId } });
     if (!usuario) throw new NotFoundException('Usuario no encontrado');
-    // Nunca devolver password ni tokens
-    const { password, resetToken, resetTokenExpira, ...resto } = usuario as any;
-    return resto;
+    return usuario; // los @Exclude() filtran password/resetToken/resetTokenExpira automáticamente
   }
 
   async actualizar(
@@ -30,6 +28,7 @@ export class PerfilService {
       apellidos?: string;
       correo?: string;
       telefono?: string | null;
+      avatar?: string | null; // 👈 NUEVO
     },
   ) {
     const usuario = await this.usuariosRepo.findOne({ where: { id: userId } });
@@ -42,7 +41,9 @@ export class PerfilService {
         where: { correo: correoLimpio, id: Not(userId) },
       });
       if (existe) {
-        throw new BadRequestException('Ese correo ya está en uso por otro usuario');
+        throw new BadRequestException(
+          'Ese correo ya está en uso por otro usuario',
+        );
       }
       usuario.correo = correoLimpio;
     }
@@ -52,6 +53,10 @@ export class PerfilService {
     if (data.telefono !== undefined) {
       usuario.telefono = data.telefono?.trim() || null;
     }
+    if (data.avatar !== undefined) {
+      // 👈 NUEVO
+      usuario.avatar = data.avatar?.trim() || null;
+    }
 
     await this.usuariosRepo.save(usuario);
     return this.obtener(userId);
@@ -60,20 +65,27 @@ export class PerfilService {
   async cambiarPassword(userId: number, actual: string, nueva: string) {
     if (!actual || !nueva) throw new BadRequestException('Faltan datos');
     if (nueva.length < 8) {
-      throw new BadRequestException('La contraseña debe tener al menos 8 caracteres');
+      throw new BadRequestException(
+        'La contraseña debe tener al menos 8 caracteres',
+      );
     }
     if (!/[A-Z]/.test(nueva)) {
-      throw new BadRequestException('La contraseña debe tener al menos una mayúscula');
+      throw new BadRequestException(
+        'La contraseña debe tener al menos una mayúscula',
+      );
     }
     if (!/\d/.test(nueva)) {
-      throw new BadRequestException('La contraseña debe tener al menos un número');
+      throw new BadRequestException(
+        'La contraseña debe tener al menos un número',
+      );
     }
 
     const usuario = await this.usuariosRepo.findOne({ where: { id: userId } });
     if (!usuario) throw new NotFoundException('Usuario no encontrado');
 
     const ok = await bcrypt.compare(actual, usuario.password);
-    if (!ok) throw new UnauthorizedException('La contraseña actual no es correcta');
+    if (!ok)
+      throw new UnauthorizedException('La contraseña actual no es correcta');
 
     usuario.password = await bcrypt.hash(nueva, 12);
     await this.usuariosRepo.save(usuario);

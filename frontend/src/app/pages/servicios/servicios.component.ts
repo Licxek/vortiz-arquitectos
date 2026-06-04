@@ -1,9 +1,10 @@
-import { Component, computed, signal, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, computed, signal, inject, OnInit } from '@angular/core';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { CatalogoService, Servicio } from '../../core/services/catalogo.service'; // ajusta ruta
-import { ContenidoService } from '../../core/services/contenido.service'; // ajusta ruta
-import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe'; // ajusta ruta
+import { CatalogoService, Servicio } from '../../core/services/catalogo.service';
+import { ContenidoService } from '../../core/services/contenido.service';
+import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
 interface CategoriaFiltro {
   id: string;
@@ -14,29 +15,32 @@ interface CategoriaFiltro {
 @Component({
   selector: 'app-servicios',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormatoTextoPipe],
+  imports: [CommonModule, RouterModule, FormatoTextoPipe, SkeletonComponent, NgOptimizedImage],
   templateUrl: './servicios.component.html',
 })
-export class ServiciosComponent {
+export class ServiciosComponent implements OnInit {
   private catalogo = inject(CatalogoService);
   private contenidoService = inject(ContenidoService);
+
   servicioActivo = signal<Servicio | null>(null);
   filtroActivo = signal<string>('todos');
 
-  // HERO
-  servHeroBadge = 'Servicios';
-  servHeroTitulo = 'Lo que hacemos por *tu proyecto*';
-  servHeroDescripcion = 'Soluciones arquitectónicas integrales con metodología BIM y PMI.';
-  // INTRO
-  servIntroBadge = 'Catálogo completo';
-  servIntroTitulo = 'Tu proyecto en manos expertas, de principio a fin';
-  servIntroDescripcion = ''; // vacío = texto por defecto (conserva el conteo dinámico)
-  // CTA
-  servCtaTitulo = '¿No estás seguro de cuál servicio *necesitas?*';
-  servCtaDescripcion =
-    'Cuéntanos sobre tu proyecto y nuestro equipo te orientará en una conversación inicial sin compromiso.';
+  servicios = this.catalogo.servicios;
 
-  servicios = this.catalogo.servicios; // señal reactiva
+  // ============ HERO ============
+  servHeroBadge = '';
+  servHeroTitulo = '';
+  servHeroDescripcion = '';
+  servHeroImagenFondo = '';
+
+  // ============ INTRO ============
+  servIntroBadge = '';
+  servIntroTitulo = '';
+  servIntroDescripcion = '';
+
+  // ============ CTA ============
+  servCtaTitulo = '';
+  servCtaDescripcion = '';
 
   categorias = computed<CategoriaFiltro[]>(() => {
     const cats = [
@@ -93,55 +97,19 @@ export class ServiciosComponent {
   }
 
   ngOnInit() {
-    this.servHeroBadge = this.contenidoService.getCampo(
-      'servicios',
-      'hero',
-      'badge',
-      this.servHeroBadge,
-    );
-    this.servHeroTitulo = this.contenidoService.getCampo(
-      'servicios',
-      'hero',
-      'titulo',
-      this.servHeroTitulo,
-    );
-    this.servHeroDescripcion = this.contenidoService.getCampo(
-      'servicios',
-      'hero',
-      'descripcion',
-      this.servHeroDescripcion,
-    );
+    // HERO
+    this.servHeroBadge = this.contenidoService.getCampo('servicios', 'hero', 'badge');
+    this.servHeroTitulo = this.contenidoService.getCampo('servicios', 'hero', 'titulo');
+    this.servHeroDescripcion = this.contenidoService.getCampo('servicios', 'hero', 'descripcion');
+    this.servHeroImagenFondo = this.contenidoService.getCampo('servicios', 'hero', 'imagenFondo');
 
-    this.servIntroBadge = this.contenidoService.getCampo(
-      'servicios',
-      'intro',
-      'badge',
-      this.servIntroBadge,
-    );
-    this.servIntroTitulo = this.contenidoService.getCampo(
-      'servicios',
-      'intro',
-      'titulo',
-      this.servIntroTitulo,
-    );
-    this.servIntroDescripcion = this.contenidoService.getCampo(
-      'servicios',
-      'intro',
-      'descripcion',
-      this.servIntroDescripcion,
-    );
+    // INTRO
+    this.servIntroBadge = this.contenidoService.getCampo('servicios', 'intro', 'badge');
+    this.servIntroTitulo = this.contenidoService.getCampo('servicios', 'intro', 'titulo');
+    this.servIntroDescripcion = this.contenidoService.getCampo('servicios', 'intro', 'descripcion');
 
-    this.servCtaTitulo = this.contenidoService.getCampo(
-      'servicios',
-      'cta',
-      'titulo',
-      this.servCtaTitulo,
-    );
-    this.servCtaDescripcion = this.contenidoService.getCampo(
-      'servicios',
-      'cta',
-      'descripcion',
-      this.servCtaDescripcion,
-    );
+    // CTA
+    this.servCtaTitulo = this.contenidoService.getCampo('servicios', 'cta', 'titulo');
+    this.servCtaDescripcion = this.contenidoService.getCampo('servicios', 'cta', 'descripcion');
   }
 }

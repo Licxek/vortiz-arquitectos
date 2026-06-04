@@ -2,7 +2,9 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { InicioService, CitaBackend } from '../../../core/services/inicio.service'; // ⚠️ ajusta la ruta
+import { InicioService, CitaBackend, ProyectoBackend } from '../../../core/services/inicio.service'; // ⚠️ ajusta la ruta
+import { ImageUploadComponent } from '../../../shared/image-upload/image-upload.component';
+import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 
 // ============ INTERFACES ============
 interface StatCard {
@@ -72,7 +74,7 @@ interface ConsultaPendiente {
 @Component({
   selector: 'app-inicio',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent],
   templateUrl: './inicio.component.html',
 })
 export class InicioComponent implements OnInit {
@@ -90,122 +92,40 @@ export class InicioComponent implements OnInit {
 
   stats: StatCard[] = [];
 
+  // ============ ESTADOS DE LOADING ============
+  cargandoStats = true;
+  cargandoAgenda = true;
+  cargandoConsultas = true;
+  cargandoProyectosRecientes = true;
+  cargandoTodosProyectos = false; // arranca false; se activa al abrir el modal
+
+  private readonly placeholderImagen =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250">' +
+        '<rect width="400" height="250" fill="#f3f4f6"/>' +
+        '<g transform="translate(168, 60)" fill="#d1d5db">' +
+        '<g transform="scale(2.67)">' +
+        '<path d="M21 5v6.59l-3-3.01-4 4.01-4-4-4 4-3-3.01V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2zm-3 6.42l3 3.01V19c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2v-6.58l3 2.99 4-4 4 4 4-3.99z"/>' +
+        '</g>' +
+        '</g>' +
+        '<text x="200" y="195" text-anchor="middle" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="14" font-weight="500">Sin imagen</text>' +
+        '</svg>',
+    );
+
   // ============ PROYECTOS: DATOS ============
   estadosProyecto = ['En diseño', 'En proceso', 'En revisión', 'Pausado', 'Finalizado'];
-  categoriasProyecto = ['Residencial', 'Comercial', 'Industrial', 'Remodelación'];
-
-  proyectosRecientes: Proyecto[] = [
-    {
-      id: 1,
-      nombre: 'Residencia Las Flores',
-      estado: 'En proceso',
-      fecha: '15 May 2026',
-      imagen: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400',
-      cliente: 'Juan Alfonso Méndez',
-      ubicacion: 'La Forestal, Durango',
-      superficie: '320 m²',
-      descripcion:
-        'Residencia moderna de dos niveles con acabados premium, jardín interior y alberca.',
-      fechaInicio: '01 Mar 2026',
-      fechaEntrega: '15 Oct 2026',
-      progreso: 45,
-    },
-    {
-      id: 2,
-      nombre: 'Edificio Corporativo Centro',
-      estado: 'En diseño',
-      fecha: '20 May 2026',
-      imagen: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400',
-      cliente: 'Inmobiliaria del Norte',
-      ubicacion: 'Centro Histórico, Durango',
-      superficie: '1,500 m²',
-      descripcion:
-        'Edificio de oficinas de 5 niveles con áreas comunes y estacionamiento subterráneo.',
-      fechaInicio: '15 May 2026',
-      fechaEntrega: '20 Dic 2026',
-      progreso: 15,
-    },
-    {
-      id: 3,
-      nombre: 'Villa Costanera',
-      estado: 'En proceso',
-      fecha: '25 May 2026',
-      imagen: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400',
-      cliente: 'Familia Rodríguez',
-      ubicacion: 'Mazatlán, Sinaloa',
-      superficie: '480 m²',
-      descripcion: 'Casa de playa con vista al mar, terrazas amplias y diseño contemporáneo.',
-      fechaInicio: '10 Feb 2026',
-      fechaEntrega: '30 Sep 2026',
-      progreso: 60,
-    },
-    {
-      id: 4,
-      nombre: 'Centro Comercial Plaza',
-      estado: 'En revisión',
-      fecha: '01 Jun 2026',
-      imagen: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400',
-      cliente: 'Grupo Constructor RJV',
-      ubicacion: 'Av. 20 de Noviembre, Durango',
-      superficie: '4,200 m²',
-      descripcion: 'Centro comercial de dos niveles con 32 locales, food court y cines.',
-      fechaInicio: '20 Abr 2026',
-      fechaEntrega: '15 Feb 2027',
-      progreso: 5,
-    },
+  categoriasProyecto = [
+    'corporativo',
+    'industrial',
+    'comercial',
+    'residencial',
+    'infraestructura',
+    'institucional',
   ];
 
-  todosLosProyectos: Proyecto[] = [
-    ...this.proyectosRecientes,
-    {
-      id: 5,
-      nombre: 'Casa Loma del Parque',
-      estado: 'Finalizado',
-      fecha: '10 Mar 2026',
-      imagen: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400',
-      cliente: 'María González',
-      ubicacion: 'Loma Dorada',
-      superficie: '280 m²',
-      descripcion: 'Casa familiar con diseño minimalista.',
-      progreso: 100,
-    },
-    {
-      id: 6,
-      nombre: 'Oficinas Tecnológica',
-      estado: 'Finalizado',
-      fecha: '05 Feb 2026',
-      imagen: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400',
-      cliente: 'Tech Solutions SA',
-      ubicacion: 'Zona Industrial',
-      superficie: '850 m²',
-      descripcion: 'Oficinas modernas con espacios colaborativos.',
-      progreso: 100,
-    },
-    {
-      id: 7,
-      nombre: 'Loft Industrial',
-      estado: 'Pausado',
-      fecha: '20 Ene 2026',
-      imagen: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400',
-      cliente: 'Carlos Vega',
-      ubicacion: 'Centro Durango',
-      superficie: '180 m²',
-      descripcion: 'Remodelación tipo loft con vigas expuestas.',
-      progreso: 30,
-    },
-    {
-      id: 8,
-      nombre: 'Clínica Vida',
-      estado: 'En proceso',
-      fecha: '12 Abr 2026',
-      imagen: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400',
-      cliente: 'Dr. Ramírez',
-      ubicacion: 'Col. Médicos',
-      superficie: '600 m²',
-      descripcion: 'Clínica de especialidades con 8 consultorios.',
-      progreso: 75,
-    },
-  ];
+  proyectosRecientes: Proyecto[] = [];
+  todosLosProyectos: Proyecto[] = [];
 
   proyectosPublicos: any[] = [];
 
@@ -337,6 +257,7 @@ export class InicioComponent implements OnInit {
     this.cargarStats(); // 👈 agregar esta línea
     this.cargarAgenda();
     this.cargarConsultas();
+    this.cargarProyectosRecientes(); // 👈 nuevo
   }
 
   // ============ GETTERS ============
@@ -386,13 +307,16 @@ export class InicioComponent implements OnInit {
   }
 
   private cargarStats() {
+    this.cargandoStats = true;
     this.inicioService.obtenerStats(this.periodoActivo).subscribe({
       next: (data) => {
         this.stats = this.construirStats(data, this.periodoActivo);
+        this.cargandoStats = false;
         this.cdr.detectChanges();
       },
       error: () => {
         this.stats = [];
+        this.cargandoStats = false;
         this.cdr.detectChanges();
       },
     });
@@ -490,6 +414,7 @@ export class InicioComponent implements OnInit {
   // ============ PROYECTOS: VER TODOS ============
   abrirTodosProyectos() {
     this.mostrarTodosProyectos = true;
+    this.cargarTodosProyectos(); // 👈 nuevo
   }
 
   cerrarTodosProyectos() {
@@ -499,15 +424,16 @@ export class InicioComponent implements OnInit {
   // ============ PROYECTOS: NUEVO Y EDITAR ============
   nuevoProyecto() {
     this.proyectoEditando = {
-      id: Date.now(),
+      id: 0, // se asigna al crear
       nombre: '',
       estado: 'En diseño',
-      fecha: new Date().toLocaleDateString('es-MX'),
-      imagen: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400',
+      fecha: '',
+      imagen: '',
       cliente: '',
       ubicacion: '',
       superficie: '',
       descripcion: '',
+      fechaEntrega: '',
       progreso: 0,
     };
     this.estadoOriginal = '';
@@ -563,43 +489,72 @@ export class InicioComponent implements OnInit {
 
   guardarEdicion() {
     if (!this.proyectoEditando) return;
+    const payload = this.armarPayloadBackend(this.proyectoEditando);
 
     if (this.esNuevoProyecto) {
-      this.todosLosProyectos.unshift({ ...this.proyectoEditando });
-      this.proyectosRecientes.unshift({ ...this.proyectoEditando });
-      if (this.proyectosRecientes.length > 4) this.proyectosRecientes.pop();
+      this.inicioService.crearProyecto(payload).subscribe({
+        next: (creado) => {
+          const mapeado = this.mapearProyecto(creado);
+          this.todosLosProyectos.unshift(mapeado);
+          this.proyectosRecientes.unshift(mapeado);
+          if (this.proyectosRecientes.length > 4) this.proyectosRecientes.pop();
+          this.cerrarEditarProyecto();
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error al crear proyecto', err);
+          this.cdr.detectChanges();
+        },
+      });
     } else {
-      const idx1 = this.todosLosProyectos.findIndex((p) => p.id === this.proyectoEditando!.id);
-      if (idx1 >= 0) this.todosLosProyectos[idx1] = { ...this.proyectoEditando };
+      this.inicioService.actualizarProyecto(this.proyectoEditando.id, payload).subscribe({
+        next: (actualizado) => {
+          const mapeado = this.mapearProyecto(actualizado);
+          this.actualizarEnArreglos(mapeado);
 
-      const idx2 = this.proyectosRecientes.findIndex((p) => p.id === this.proyectoEditando!.id);
-      if (idx2 >= 0) this.proyectosRecientes[idx2] = { ...this.proyectoEditando };
-    }
+          if (this.volverADetalleDesdeEditar) {
+            this.proyectoDetalleAnterior = mapeado;
+          }
 
-    if (this.proyectoEditando.estado === 'Finalizado' && this.estadoOriginal !== 'Finalizado') {
-      this.mostrarConfirmarFinalizado = true;
-      this.volverATodosDesdeEditar = false;
-      this.volverADetalleDesdeEditar = false;
-      this.proyectoDetalleAnterior = null;
-    } else {
-      this.cerrarEditarProyecto();
+          // Si pasó a Finalizado, abrir modal de confirmación para publicar
+          if (mapeado.estado === 'Finalizado' && this.estadoOriginal !== 'Finalizado') {
+            this.proyectoEditando = mapeado;
+            this.mostrarConfirmarFinalizado = true;
+            this.volverATodosDesdeEditar = false;
+            this.volverADetalleDesdeEditar = false;
+            this.proyectoDetalleAnterior = null;
+          } else {
+            this.cerrarEditarProyecto();
+          }
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error al actualizar proyecto', err);
+          this.cdr.detectChanges();
+        },
+      });
     }
   }
 
   // ============ PROYECTOS: FINALIZAR Y PUBLICAR ============
   terminarProyecto(proyecto: Proyecto) {
-    proyecto.estado = 'Finalizado';
-    proyecto.progreso = 100;
+    this.inicioService
+      .actualizarProyecto(proyecto.id, { estado: 'finalizado', progreso: 100 })
+      .subscribe({
+        next: (actualizado) => {
+          const mapeado = this.mapearProyecto(actualizado);
+          this.actualizarEnArreglos(mapeado);
 
-    const idx1 = this.todosLosProyectos.findIndex((p) => p.id === proyecto.id);
-    if (idx1 >= 0) this.todosLosProyectos[idx1] = { ...proyecto };
-
-    const idx2 = this.proyectosRecientes.findIndex((p) => p.id === proyecto.id);
-    if (idx2 >= 0) this.proyectosRecientes[idx2] = { ...proyecto };
-
-    this.proyectoEditando = { ...proyecto };
-    this.estadoOriginal = 'En proceso';
-    this.mostrarConfirmarFinalizado = true;
+          this.proyectoEditando = mapeado;
+          this.estadoOriginal = 'En proceso';
+          this.mostrarConfirmarFinalizado = true;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error al finalizar proyecto', err);
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   confirmarFinalizado(agregarAPublico: boolean) {
@@ -609,8 +564,8 @@ export class InicioComponent implements OnInit {
       this.formPublico = {
         titulo: this.proyectoEditando.nombre,
         descripcion: this.proyectoEditando.descripcion || '',
-        imagenUrl: this.proyectoEditando.imagen,
-        categoria: 'Residencial',
+        imagenUrl: '', // 👈 vacío para que ponga el logo público (no la foto interna)
+        categoria: 'residencial',
       };
       this.mostrarAgregarPublico = true;
     } else {
@@ -619,18 +574,28 @@ export class InicioComponent implements OnInit {
   }
 
   guardarProyectoPublico() {
-    if (!this.formPublico.titulo.trim()) return;
+    if (!this.formPublico.titulo.trim() || !this.proyectoEditando) return;
 
-    this.proyectosPublicos.push({
-      id: Date.now(),
-      titulo: this.formPublico.titulo,
-      descripcion: this.formPublico.descripcion,
-      imagenUrl: this.formPublico.imagenUrl,
+    const payload: Partial<ProyectoBackend> = {
+      nombre: this.formPublico.titulo.trim(),
+      descripcion: this.formPublico.descripcion.trim(),
+      logoUrl: this.formPublico.imagenUrl.trim(), // 👈 el icono para el catálogo público
       categoria: this.formPublico.categoria,
-      proyectoOriginalId: this.proyectoEditando?.id,
-    });
+      publicado: true,
+    };
 
-    this.cerrarAgregarPublico();
+    this.inicioService.actualizarProyecto(this.proyectoEditando.id, payload).subscribe({
+      next: (actualizado) => {
+        const mapeado = this.mapearProyecto(actualizado);
+        this.actualizarEnArreglos(mapeado);
+        this.cerrarAgregarPublico();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al publicar proyecto', err);
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   cerrarAgregarPublico() {
@@ -790,28 +755,34 @@ export class InicioComponent implements OnInit {
   }
 
   private cargarAgenda() {
+    this.cargandoAgenda = true;
     this.inicioService.obtenerAgenda().subscribe({
       next: (lista) => {
         this.citasHoy = lista
           .filter((c) => c.estado === 'confirmada' || c.estado === 'pendiente')
           .map((c) => this.mapearCita(c));
+        this.cargandoAgenda = false;
         this.cdr.detectChanges();
       },
       error: () => {
         this.citasHoy = [];
+        this.cargandoAgenda = false;
         this.cdr.detectChanges();
       },
     });
   }
 
   private cargarConsultas() {
+    this.cargandoConsultas = true;
     this.inicioService.obtenerConsultas().subscribe({
       next: (lista) => {
         this.consultasPendientes = lista.map((c) => this.mapearConsulta(c));
+        this.cargandoConsultas = false;
         this.cdr.detectChanges();
       },
       error: () => {
         this.consultasPendientes = [];
+        this.cargandoConsultas = false;
         this.cdr.detectChanges();
       },
     });
@@ -887,5 +858,136 @@ export class InicioComponent implements OnInit {
     ahora.setHours(0, 0, 0, 0);
     const diffDias = (cita.getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24);
     return diffDias <= 1; // hoy, mañana o ya pasada
+  }
+
+  private cargarProyectosRecientes() {
+    this.cargandoProyectosRecientes = true;
+    this.inicioService.obtenerProyectosRecientes().subscribe({
+      next: (lista) => {
+        this.proyectosRecientes = lista.map((p) => this.mapearProyecto(p));
+        this.cargandoProyectosRecientes = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.proyectosRecientes = [];
+        this.cargandoProyectosRecientes = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private cargarTodosProyectos() {
+    this.cargandoTodosProyectos = true;
+    this.inicioService.obtenerProyectosAdmin().subscribe({
+      next: (lista) => {
+        this.todosLosProyectos = lista.map((p) => this.mapearProyecto(p));
+        this.cargandoTodosProyectos = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.todosLosProyectos = [];
+        this.cargandoTodosProyectos = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private mapearProyecto(p: ProyectoBackend): Proyecto {
+    return {
+      id: p.id,
+      nombre: p.nombre,
+      estado: this.estadoLabel(p.estado),
+      fecha: this.formatearFechaCorta(p.updatedAt),
+      imagen: p.imagen || '',
+      cliente: p.cliente,
+      ubicacion: p.ubicacion,
+      superficie: p.superficie,
+      descripcion: p.descripcion,
+      fechaInicio: p.fechaInicio || '', // raw YYYY-MM-DD
+      fechaEntrega: p.fechaEntrega || '', // raw YYYY-MM-DD
+      progreso: p.progreso,
+    };
+  }
+
+  private estadoLabel(estado: string): string {
+    const map: Record<string, string> = {
+      en_diseno: 'En diseño',
+      en_proceso: 'En proceso',
+      en_revision: 'En revisión',
+      pausado: 'Pausado',
+      finalizado: 'Finalizado',
+    };
+    return map[estado] || estado;
+  }
+
+  formatearFechaCorta(iso?: string | Date | null): string {
+    if (!iso) return '—';
+    const d = typeof iso === 'string' ? new Date(iso.includes('T') ? iso : iso + 'T00:00:00') : iso;
+    if (isNaN(d.getTime())) return '—';
+    const meses = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
+    return `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  etiquetaCategoria(cat: string): string {
+    const map: Record<string, string> = {
+      corporativo: 'Corporativo',
+      industrial: 'Industrial',
+      comercial: 'Comercial',
+      residencial: 'Residencial',
+      infraestructura: 'Infraestructura',
+      institucional: 'Institucional',
+    };
+    return map[cat] || cat;
+  }
+
+  private estadoBackend(label: string): string {
+    const map: Record<string, string> = {
+      'En diseño': 'en_diseno',
+      'En proceso': 'en_proceso',
+      'En revisión': 'en_revision',
+      Pausado: 'pausado',
+      Finalizado: 'finalizado',
+    };
+    return map[label] || 'en_diseno';
+  }
+
+  private armarPayloadBackend(p: Proyecto): Partial<ProyectoBackend> {
+    return {
+      nombre: (p.nombre || '').trim(),
+      estado: this.estadoBackend(p.estado),
+      cliente: (p.cliente || '').trim(),
+      ubicacion: (p.ubicacion || '').trim(),
+      superficie: (p.superficie || '').trim(),
+      descripcion: (p.descripcion || '').trim(),
+      progreso: Number(p.progreso) || 0,
+      fechaInicio: (p as any).fechaInicio || null,
+      fechaEntrega: (p as any).fechaEntrega || null,
+      imagen: (p.imagen || '').trim(),
+    };
+  }
+
+  private actualizarEnArreglos(mapeado: Proyecto) {
+    const idx1 = this.todosLosProyectos.findIndex((p) => p.id === mapeado.id);
+    if (idx1 >= 0) this.todosLosProyectos[idx1] = mapeado;
+
+    const idx2 = this.proyectosRecientes.findIndex((p) => p.id === mapeado.id);
+    if (idx2 >= 0) this.proyectosRecientes[idx2] = mapeado;
+  }
+
+  imagenDeProyecto(p: Proyecto): string {
+    return p.imagen || this.placeholderImagen;
   }
 }

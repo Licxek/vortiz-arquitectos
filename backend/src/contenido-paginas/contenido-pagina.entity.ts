@@ -12,7 +12,7 @@ export class ContenidoPagina {
   pagina: string;
 
   @Column('jsonb', { default: () => "'{}'" })
-  contenido: Record<string, Record<string, string>>;
+  contenido: Record<string, Record<string, any>>;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

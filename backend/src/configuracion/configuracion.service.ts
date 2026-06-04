@@ -1,7 +1,19 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
+import { validate, ValidationError } from 'class-validator';
 import { Configuracion } from './configuracion.entity';
+import {
+  NegocioDto,
+  ContactoDto,
+  AparienciaDto,
+  NotificacionesDto,
+  SeoDto,
+  MantenimientoDto,
+  AgendaDto,
+  RedSocialDto,
+} from './dto/secciones.dto';
 
 @Injectable()
 export class ConfiguracionService {
@@ -13,13 +25,25 @@ export class ConfiguracionService {
     'apariencia',
     'notificaciones',
     'seo',
+    'mantenimiento',
   ];
+
+  /** Mapea cada sección a su DTO para validación */
+  private readonly dtoMap: Record<string, any> = {
+    negocio: NegocioDto,
+    contacto: ContactoDto,
+    apariencia: AparienciaDto,
+    notificaciones: NotificacionesDto,
+    seo: SeoDto,
+    mantenimiento: MantenimientoDto,
+    agenda: AgendaDto,
+    // 'redes' se valida elemento por elemento (es array)
+  };
 
   constructor(
     @InjectRepository(Configuracion) private repo: Repository<Configuracion>,
   ) {}
 
-  // Siempre la fila id = 1
   async obtener(): Promise<Configuracion> {
     let config = await this.repo.findOne({ where: { id: 1 } });
     if (!config) {
@@ -29,23 +53,66 @@ export class ConfiguracionService {
     return config;
   }
 
-  // Guarda una sección concreta (valida que sea una permitida)
   async actualizarSeccion(seccion: string, datos: any) {
     if (!this.secciones.includes(seccion)) {
       throw new BadRequestException('Sección de configuración inválida');
     }
+
+    // Validar el shape contra el DTO
+    await this.validarShape(seccion, datos);
+
     const config = await this.obtener();
     (config as any)[seccion] = datos;
     await this.repo.save(config);
     return { message: 'Guardado', [seccion]: datos };
   }
 
-  // Subconjunto plano para el sitio público (no expone RFC, correo de alertas, etc.)
+  /** Valida el body con class-validator según la sección */
+  private async validarShape(seccion: string, datos: any) {
+    // 'redes' es array → valida cada item
+    if (seccion === 'redes') {
+      if (!Array.isArray(datos)) {
+        throw new BadRequestException('redes debe ser un array');
+      }
+      for (let i = 0; i < datos.length; i++) {
+        const instance = plainToInstance(RedSocialDto, datos[i]);
+        const errors = await validate(instance);
+        if (errors.length > 0) {
+          throw new BadRequestException({
+            message: `Red social #${i + 1} inválida`,
+            errors: this.formatearErrores(errors),
+          });
+        }
+      }
+      return;
+    }
+
+    const DtoClass = this.dtoMap[seccion];
+    if (!DtoClass) return; // sin DTO mapeado, sin validación
+
+    const instance = plainToInstance(DtoClass, datos);
+    const errors = await validate(instance);
+    if (errors.length > 0) {
+      throw new BadRequestException({
+        message: `Datos de "${seccion}" inválidos`,
+        errors: this.formatearErrores(errors),
+      });
+    }
+  }
+
+  /** Aplana los errores de class-validator para que sean legibles */
+  private formatearErrores(errors: ValidationError[]): any {
+    return errors.map((err) => ({
+      campo: err.property,
+      restricciones: err.constraints,
+      hijos: err.children?.length ? this.formatearErrores(err.children) : undefined,
+    }));
+  }
+
   async obtenerPublica() {
     const c = await this.obtener();
     const redes: any[] = c.redes || [];
 
-    // Solo activas con URL, máximo 4 (lo que se muestra en el footer)
     const redesPublicas = redes
       .filter((r) => r.activa && r.url)
       .slice(0, 4)
@@ -71,6 +138,7 @@ export class ConfiguracionService {
       meta_keywords: c.seo?.keywords || '',
       nombre: c.negocio?.nombre || 'Vortiz Arquitectos',
       eslogan: c.negocio?.eslogan || 'Diseñamos espacios, construimos confianza.',
+      mantenimiento: c.mantenimiento,
     };
   }
 }

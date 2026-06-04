@@ -16,8 +16,24 @@
     </button>
   </div>
 
+  <!-- Stats: skeleton -->
+  <div *ngIf="cargando()" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div
+      *ngFor="let _ of [1, 2, 3, 4]"
+      class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+    >
+      <div class="flex items-center gap-3">
+        <app-skeleton variant="rect" width="40px" height="40px" />
+        <div class="space-y-2 flex-1">
+          <app-skeleton variant="text" height="1.5rem" width="40%" />
+          <app-skeleton variant="text" width="70%" />
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Stats -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <div *ngIf="!cargando()" class="grid grid-cols-2 md:grid-cols-4 gap-4">
     <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -250,255 +266,283 @@
 
   <!-- VISTA LISTA -->
   <div *ngIf="vista === 'lista'" class="space-y-5">
-    <div *ngFor="let grupo of citasAgrupadas">
-      <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3 capitalize">
-        {{ grupo.titulo }}
-      </h2>
-      <div class="space-y-2">
+    <!-- Skeleton mientras carga -->
+    <ng-container *ngIf="cargando()">
+      <div *ngFor="let _ of [1, 2]" class="space-y-3">
+        <app-skeleton variant="text" width="120px" height="0.75rem" />
         <div
-          *ngFor="let cita of grupo.citas"
-          (click)="abrirDetalle(cita)"
-          class="relative bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 cursor-pointer flex items-stretch"
+          *ngFor="let __ of [1, 2, 3]"
+          class="bg-white rounded-xl shadow-sm border border-gray-100 flex items-stretch"
         >
-          <!-- Barra lateral de color por estado -->
-          <div
-            class="w-1.5 shrink-0 rounded-l-xl"
-            [class.bg-green-500]="cita.estado === 'confirmada'"
-            [class.bg-orange-500]="cita.estado === 'pendiente'"
-            [class.bg-red-500]="cita.estado === 'cancelada'"
-          ></div>
+          <div class="w-1.5 shrink-0 rounded-l-xl bg-gray-200"></div>
+          <div class="flex-1 p-3 md:p-4 flex items-center gap-3 md:gap-4">
+            <app-skeleton variant="rect" width="56px" height="56px" />
+            <div class="flex-1 space-y-2">
+              <app-skeleton variant="text" width="60%" />
+              <app-skeleton variant="text" width="80%" height="0.875rem" />
+            </div>
+            <app-skeleton variant="rect" width="90px" height="24px" />
+            <app-skeleton variant="rect" width="36px" height="36px" />
+          </div>
+        </div>
+      </div>
+    </ng-container>
 
-          <!-- Contenido principal -->
-          <div class="flex-1 p-3 md:p-4 flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4">
-            <!-- Hora -->
+    <ng-container *ngIf="!cargando()">
+      <div *ngFor="let grupo of citasAgrupadas">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3 capitalize">
+          {{ grupo.titulo }}
+        </h2>
+        <div class="space-y-2">
+          <div
+            *ngFor="let cita of grupo.citas"
+            (click)="abrirDetalle(cita)"
+            class="relative bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 cursor-pointer flex items-stretch"
+          >
+            <!-- Barra lateral de color por estado -->
             <div
-              class="flex flex-col items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-xl shrink-0"
-              [class.bg-green-50]="cita.estado === 'confirmada'"
-              [class.bg-orange-50]="cita.estado === 'pendiente'"
-              [class.bg-red-50]="cita.estado === 'cancelada'"
-            >
+              class="w-1.5 shrink-0 rounded-l-xl"
+              [class.bg-green-500]="cita.estado === 'confirmada'"
+              [class.bg-orange-500]="cita.estado === 'pendiente'"
+              [class.bg-red-500]="cita.estado === 'cancelada'"
+            ></div>
+
+            <!-- Contenido principal -->
+            <div class="flex-1 p-3 md:p-4 flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4">
+              <!-- Hora -->
+              <div
+                class="flex flex-col items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-xl shrink-0"
+                [class.bg-green-50]="cita.estado === 'confirmada'"
+                [class.bg-orange-50]="cita.estado === 'pendiente'"
+                [class.bg-red-50]="cita.estado === 'cancelada'"
+              >
+                <span
+                  class="text-base md:text-lg font-bold"
+                  [class.text-green-700]="cita.estado === 'confirmada'"
+                  [class.text-orange-700]="cita.estado === 'pendiente'"
+                  [class.text-red-700]="cita.estado === 'cancelada'"
+                >
+                  {{ cita.hora }}
+                </span>
+                <span class="text-[10px] text-gray-500 uppercase font-medium"
+                  >{{ cita.duracion }}min</span
+                >
+              </div>
+
+              <!-- Info principal -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="font-semibold text-gray-900 truncate">{{ cita.cliente }}</h3>
+                  <span
+                    class="text-xs px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider"
+                    [class.bg-blue-50]="cita.tipo === 'consulta'"
+                    [class.text-blue-700]="cita.tipo === 'consulta'"
+                    [class.bg-purple-50]="cita.tipo === 'proyecto'"
+                    [class.text-purple-700]="cita.tipo === 'proyecto'"
+                  >
+                    {{ cita.tipo === 'consulta' ? 'Consulta' : 'Proyecto' }}
+                  </span>
+                </div>
+                <p class="text-sm text-gray-500 mt-0.5 truncate">{{ cita.servicio }}</p>
+              </div>
+
+              <!-- Estado -->
               <span
-                class="text-base md:text-lg font-bold"
+                class="text-xs font-semibold px-3 py-1 rounded-full self-start sm:self-center"
+                [class.bg-green-50]="cita.estado === 'confirmada'"
                 [class.text-green-700]="cita.estado === 'confirmada'"
+                [class.bg-orange-50]="cita.estado === 'pendiente'"
                 [class.text-orange-700]="cita.estado === 'pendiente'"
+                [class.bg-red-50]="cita.estado === 'cancelada'"
                 [class.text-red-700]="cita.estado === 'cancelada'"
               >
-                {{ cita.hora }}
+                {{ cita.estado | titlecase }}
               </span>
-              <span class="text-[10px] text-gray-500 uppercase font-medium"
-                >{{ cita.duracion }}min</span
-              >
-            </div>
 
-            <!-- Info principal -->
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="font-semibold text-gray-900 truncate">{{ cita.cliente }}</h3>
-                <span
-                  class="text-xs px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider"
-                  [class.bg-blue-50]="cita.tipo === 'consulta'"
-                  [class.text-blue-700]="cita.tipo === 'consulta'"
-                  [class.bg-purple-50]="cita.tipo === 'proyecto'"
-                  [class.text-purple-700]="cita.tipo === 'proyecto'"
+              <!-- Menu acciones -->
+              <div class="relative">
+                <button
+                  (click)="toggleMenu($event, cita.id)"
+                  class="w-9 h-9 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors"
                 >
-                  {{ cita.tipo === 'consulta' ? 'Consulta' : 'Proyecto' }}
-                </span>
+                  <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                    <circle cx="5" cy="12" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="19" cy="12" r="2" />
+                  </svg>
+                </button>
+                <div
+                  *ngIf="menuAbiertoId === cita.id"
+                  (click)="$event.stopPropagation()"
+                  class="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-20"
+                >
+                  <button
+                    (click)="abrirDetalle(cita); menuAbiertoId = null"
+                    class="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                    Ver detalles
+                  </button>
+                  <button
+                    *ngIf="cita.estado === 'pendiente'"
+                    (click)="solicitarConfirmarCita(cita, $event); menuAbiertoId = null"
+                    class="w-full px-4 py-2.5 text-left text-sm text-green-700 hover:bg-green-50 flex items-center gap-2 border-t border-gray-100"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Confirmar
+                  </button>
+                  <button
+                    *ngIf="cita.estado === 'pendiente' || cita.estado === 'confirmada'"
+                    (click)="solicitarCancelarCita(cita, $event); menuAbiertoId = null"
+                    class="w-full px-4 py-2.5 text-left text-sm text-red-700 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    Cancelar
+                  </button>
+                </div>
               </div>
-              <p class="text-sm text-gray-500 mt-0.5 truncate">{{ cita.servicio }}</p>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <!-- Estado -->
+      <!-- Vacío -->
+      <div
+        *ngIf="citasAgrupadas.length === 0"
+        class="text-center py-12 bg-white rounded-2xl border border-gray-100"
+      >
+        <div
+          class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"
+        >
+          <svg
+            class="w-10 h-10 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+        </div>
+        <h3 class="text-base font-semibold text-gray-900">No hay citas</h3>
+        <p class="text-sm text-gray-500 mt-1">
+          Intenta cambiar los filtros o agrega una nueva cita
+        </p>
+      </div>
+      <!-- Toggle Historial -->
+      <div class="mt-6 pt-6 border-t-2 border-dashed border-gray-200">
+        <button
+          (click)="toggleHistorial()"
+          class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-gray-200 rounded-lg flex items-center justify-center">
+              <svg
+                class="w-4 h-4 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-semibold text-gray-900">Historial de citas pasadas</p>
+              <p class="text-xs text-gray-500">{{ citasPasadas.length }} citas registradas</p>
+            </div>
+          </div>
+          <svg
+            class="w-5 h-5 text-gray-500 transition-transform"
+            [class.rotate-180]="mostrarHistorial"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <div *ngIf="mostrarHistorial" class="mt-4 space-y-3 animate-[fadeIn_0.2s_ease-out]">
+          <div
+            *ngFor="let cita of citasPasadas"
+            class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 opacity-75 hover:opacity-100 transition-opacity flex items-center gap-4"
+          >
+            <div class="w-1 h-12 rounded-full bg-gray-300 shrink-0"></div>
+            <div
+              class="flex flex-col items-center justify-center w-14 h-14 bg-gray-50 rounded-xl shrink-0"
+            >
+              <span class="text-sm font-bold text-gray-700">{{ cita.hora }}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-gray-700 truncate">{{ cita.cliente }}</p>
+              <p class="text-xs text-gray-500 truncate">
+                {{ cita.servicio }} · {{ cita.fecha | date: 'd MMM' }}
+              </p>
+            </div>
             <span
-              class="text-xs font-semibold px-3 py-1 rounded-full self-start sm:self-center"
+              class="text-xs font-semibold px-3 py-1 rounded-full"
               [class.bg-green-50]="cita.estado === 'confirmada'"
               [class.text-green-700]="cita.estado === 'confirmada'"
-              [class.bg-orange-50]="cita.estado === 'pendiente'"
-              [class.text-orange-700]="cita.estado === 'pendiente'"
               [class.bg-red-50]="cita.estado === 'cancelada'"
               [class.text-red-700]="cita.estado === 'cancelada'"
             >
               {{ cita.estado | titlecase }}
             </span>
-
-            <!-- Menu acciones -->
-            <div class="relative">
-              <button
-                (click)="toggleMenu($event, cita.id)"
-                class="w-9 h-9 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors"
-              >
-                <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                  <circle cx="5" cy="12" r="2" />
-                  <circle cx="12" cy="12" r="2" />
-                  <circle cx="19" cy="12" r="2" />
-                </svg>
-              </button>
-              <div
-                *ngIf="menuAbiertoId === cita.id"
-                (click)="$event.stopPropagation()"
-                class="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-20"
-              >
-                <button
-                  (click)="abrirDetalle(cita); menuAbiertoId = null"
-                  class="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                >
-                  <svg
-                    class="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                  </svg>
-                  Ver detalles
-                </button>
-                <button
-                  *ngIf="cita.estado === 'pendiente'"
-                  (click)="solicitarConfirmarCita(cita, $event); menuAbiertoId = null"
-                  class="w-full px-4 py-2.5 text-left text-sm text-green-700 hover:bg-green-50 flex items-center gap-2 border-t border-gray-100"
-                >
-                  <svg
-                    class="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  Confirmar
-                </button>
-                <button
-                  *ngIf="cita.estado === 'pendiente' || cita.estado === 'confirmada'"
-                  (click)="solicitarCancelarCita(cita, $event); menuAbiertoId = null"
-                  class="w-full px-4 py-2.5 text-left text-sm text-red-700 hover:bg-red-50 flex items-center gap-2 border-t border-gray-100"
-                >
-                  <svg
-                    class="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                  Cancelar
-                </button>
-              </div>
-            </div>
           </div>
+
+          <p *ngIf="citasPasadas.length === 0" class="text-center text-sm text-gray-500 py-6">
+            No hay citas en el historial
+          </p>
         </div>
       </div>
-    </div>
-
-    <!-- Vacío -->
-    <div
-      *ngIf="citasAgrupadas.length === 0"
-      class="text-center py-12 bg-white rounded-2xl border border-gray-100"
-    >
-      <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <svg
-          class="w-10 h-10 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-      </div>
-      <h3 class="text-base font-semibold text-gray-900">No hay citas</h3>
-      <p class="text-sm text-gray-500 mt-1">Intenta cambiar los filtros o agrega una nueva cita</p>
-    </div>
-    <!-- Toggle Historial -->
-    <div class="mt-6 pt-6 border-t-2 border-dashed border-gray-200">
-      <button
-        (click)="toggleHistorial()"
-        class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
-      >
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-gray-200 rounded-lg flex items-center justify-center">
-            <svg
-              class="w-4 h-4 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <div class="text-left">
-            <p class="text-sm font-semibold text-gray-900">Historial de citas pasadas</p>
-            <p class="text-xs text-gray-500">{{ citasPasadas.length }} citas registradas</p>
-          </div>
-        </div>
-        <svg
-          class="w-5 h-5 text-gray-500 transition-transform"
-          [class.rotate-180]="mostrarHistorial"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      <div *ngIf="mostrarHistorial" class="mt-4 space-y-3 animate-[fadeIn_0.2s_ease-out]">
-        <div
-          *ngFor="let cita of citasPasadas"
-          class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 opacity-75 hover:opacity-100 transition-opacity flex items-center gap-4"
-        >
-          <div class="w-1 h-12 rounded-full bg-gray-300 shrink-0"></div>
-          <div
-            class="flex flex-col items-center justify-center w-14 h-14 bg-gray-50 rounded-xl shrink-0"
-          >
-            <span class="text-sm font-bold text-gray-700">{{ cita.hora }}</span>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-gray-700 truncate">{{ cita.cliente }}</p>
-            <p class="text-xs text-gray-500 truncate">
-              {{ cita.servicio }} · {{ cita.fecha | date: 'd MMM' }}
-            </p>
-          </div>
-          <span
-            class="text-xs font-semibold px-3 py-1 rounded-full"
-            [class.bg-green-50]="cita.estado === 'confirmada'"
-            [class.text-green-700]="cita.estado === 'confirmada'"
-            [class.bg-red-50]="cita.estado === 'cancelada'"
-            [class.text-red-700]="cita.estado === 'cancelada'"
-          >
-            {{ cita.estado | titlecase }}
-          </span>
-        </div>
-
-        <p *ngIf="citasPasadas.length === 0" class="text-center text-sm text-gray-500 py-6">
-          No hay citas en el historial
-        </p>
-      </div>
-    </div>
+    </ng-container>
   </div>
   <!-- VISTA CALENDARIO -->
   <div
@@ -679,7 +723,17 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-7 gap-1 md:gap-2">
+      <!-- Skeleton -->
+      <div *ngIf="cargando()" class="grid grid-cols-7 gap-1 md:gap-2">
+        <div
+          *ngFor="let _ of [].constructor(35)"
+          class="aspect-square md:aspect-auto md:min-h-[100px] p-1 md:p-2 rounded-lg border border-gray-100 bg-white"
+        >
+          <app-skeleton variant="text" width="20px" height="0.875rem" />
+        </div>
+      </div>
+
+      <div *ngIf="!cargando()" class="grid grid-cols-7 gap-1 md:gap-2">
         <div
           *ngFor="let dia of diasMes"
           (click)="abrirDia(dia)"
@@ -742,7 +796,30 @@
 
     <!-- VISTA SEMANA -->
     <div *ngIf="modoCalendario === 'semana'" class="overflow-x-auto">
-      <div class="min-w-[700px]">
+      <!-- Skeleton -->
+      <div *ngIf="cargando()" class="min-w-[700px] space-y-2">
+        <!-- Header con días -->
+        <div class="grid grid-cols-[60px_repeat(7,1fr)] gap-2 pb-3 border-b border-gray-200">
+          <div></div>
+          <div *ngFor="let _ of [1, 2, 3, 4, 5, 6, 7]" class="text-center py-3 space-y-2">
+            <app-skeleton variant="text" width="32px" height="0.75rem" class="block mx-auto" />
+            <app-skeleton variant="rect" width="32px" height="28px" class="block mx-auto" />
+          </div>
+        </div>
+        <!-- Grid de horas -->
+        <div
+          *ngFor="let _ of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
+          class="grid grid-cols-[60px_repeat(7,1fr)] gap-2 items-center"
+        >
+          <app-skeleton variant="text" width="36px" height="0.75rem" />
+          <div
+            *ngFor="let __ of [1, 2, 3, 4, 5, 6, 7]"
+            class="h-[60px] border border-gray-100 rounded bg-gray-50/30"
+          ></div>
+        </div>
+      </div>
+
+      <div *ngIf="!cargando()" class="min-w-[700px]">
         <!-- Encabezado con días -->
         <div class="grid grid-cols-[60px_repeat(7,1fr)] border-b border-gray-200">
           <div></div>
@@ -825,108 +902,126 @@
     </div>
 
     <!-- VISTA DÍA -->
-    <!-- VISTA DÍA -->
     <div *ngIf="modoCalendario === 'dia'">
-      <div
-        class="bg-gradient-to-r rounded-xl p-4 mb-4"
-        [class.from-blue-50]="diaActual.esHoy"
-        [class.to-blue-100]="diaActual.esHoy"
-        [class.from-gray-50]="!diaActual.esHoy"
-        [class.to-gray-100]="!diaActual.esHoy"
-      >
-        <p
-          class="text-xs uppercase tracking-wider font-semibold"
-          [class.text-blue-700]="diaActual.esHoy"
-          [class.text-gray-500]="!diaActual.esHoy"
+      <!-- Skeleton -->
+      <div *ngIf="cargando()" class="space-y-3">
+        <!-- Header del día -->
+        <div class="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
+          <app-skeleton variant="text" width="60px" height="0.75rem" />
+          <app-skeleton variant="text" width="40%" />
+        </div>
+        <!-- Grid de horas -->
+        <div
+          *ngFor="let _ of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
+          class="grid grid-cols-[80px_1fr] gap-3 items-center"
         >
-          {{ diaActual.esHoy ? 'Hoy' : 'Día' }}
-        </p>
-        <p class="text-sm text-gray-600 mt-1">
-          {{ diaActual.citas.length }}
-          {{ diaActual.citas.length === 1 ? 'cita programada' : 'citas programadas' }}
-        </p>
+          <app-skeleton variant="text" width="60px" height="0.75rem" />
+          <app-skeleton variant="rect" height="80px" />
+        </div>
       </div>
 
-      <div class="grid grid-cols-[80px_1fr]">
-        <!-- Columna de horas -->
-        <div>
-          <div *ngFor="let hora of horasDia" class="h-[80px] relative border-b border-gray-100">
-            <span class="text-sm text-gray-500 text-right pr-3 pt-1 block">{{ hora }}</span>
-            <span class="absolute right-3 top-[42px] text-[10px] text-gray-300"
-              >{{ hora.split(':')[0] }}:30</span
-            >
-          </div>
+      <ng-container *ngIf="!cargando()">
+        <div
+          class="bg-gradient-to-r rounded-xl p-4 mb-4"
+          [class.from-blue-50]="diaActual.esHoy"
+          [class.to-blue-100]="diaActual.esHoy"
+          [class.from-gray-50]="!diaActual.esHoy"
+          [class.to-gray-100]="!diaActual.esHoy"
+        >
+          <p
+            class="text-xs uppercase tracking-wider font-semibold"
+            [class.text-blue-700]="diaActual.esHoy"
+            [class.text-gray-500]="!diaActual.esHoy"
+          >
+            {{ diaActual.esHoy ? 'Hoy' : 'Día' }}
+          </p>
+          <p class="text-sm text-gray-600 mt-1">
+            {{ diaActual.citas.length }}
+            {{ diaActual.citas.length === 1 ? 'cita programada' : 'citas programadas' }}
+          </p>
         </div>
 
-        <!-- Columna de eventos con posicionamiento absoluto -->
-        <div class="relative border-l border-gray-100">
-          <!-- Grid de fondo con horas y media hora -->
-          <div
-            *ngFor="let hora of horasDia"
-            class="h-[80px] border-b border-gray-100 hover:bg-gray-50/40 transition-colors relative"
-          >
-            <!-- Línea de media hora -->
-            <div
-              class="absolute left-0 right-0 top-[40px] border-t border-dashed border-gray-100"
-            ></div>
-          </div>
-
-          <!-- Citas posicionadas absolutamente sobre el grid -->
-          <div
-            *ngFor="let cita of diaActual.citas"
-            (click)="abrirDetalle(cita)"
-            [class.opacity-50]="esCitaPasada(cita)"
-            [class.grayscale]="esCitaPasada(cita)"
-            class="absolute left-2 right-2 rounded-lg p-3 cursor-pointer hover:shadow-md transition-all border-l-4 z-10"
-            [style.top.px]="calcularTopDia(cita.hora)"
-            [style.height.px]="calcularAlturaDia(cita.duracion)"
-            [class.bg-green-50]="cita.estado === 'confirmada'"
-            [class.border-green-500]="cita.estado === 'confirmada'"
-            [class.bg-orange-50]="cita.estado === 'pendiente'"
-            [class.border-orange-500]="cita.estado === 'pendiente'"
-            [class.bg-red-50]="cita.estado === 'cancelada'"
-            [class.border-red-500]="cita.estado === 'cancelada'"
-          >
-            <div class="flex items-center justify-between gap-2">
-              <p
-                class="font-semibold text-sm truncate"
-                [class.text-green-700]="cita.estado === 'confirmada'"
-                [class.text-orange-700]="cita.estado === 'pendiente'"
-                [class.text-red-700]="cita.estado === 'cancelada'"
-              >
-                {{ cita.cliente }}
-              </p>
-              <span class="text-xs font-semibold text-gray-600 shrink-0"
-                >{{ cita.hora }} · {{ cita.duracion }}min</span
+        <div class="grid grid-cols-[80px_1fr]">
+          <!-- Columna de horas -->
+          <div>
+            <div *ngFor="let hora of horasDia" class="h-[80px] relative border-b border-gray-100">
+              <span class="text-sm text-gray-500 text-right pr-3 pt-1 block">{{ hora }}</span>
+              <span class="absolute right-3 top-[42px] text-[10px] text-gray-300"
+                >{{ hora.split(':')[0] }}:30</span
               >
             </div>
-            <p class="text-xs text-gray-600 mt-0.5 truncate" *ngIf="cita.duracion >= 45">
-              {{ cita.servicio }}
-            </p>
+          </div>
+
+          <!-- Columna de eventos con posicionamiento absoluto -->
+          <div class="relative border-l border-gray-100">
+            <!-- Grid de fondo con horas y media hora -->
+            <div
+              *ngFor="let hora of horasDia"
+              class="h-[80px] border-b border-gray-100 hover:bg-gray-50/40 transition-colors relative"
+            >
+              <!-- Línea de media hora -->
+              <div
+                class="absolute left-0 right-0 top-[40px] border-t border-dashed border-gray-100"
+              ></div>
+            </div>
+
+            <!-- Citas posicionadas absolutamente sobre el grid -->
+            <div
+              *ngFor="let cita of diaActual.citas"
+              (click)="abrirDetalle(cita)"
+              [class.opacity-50]="esCitaPasada(cita)"
+              [class.grayscale]="esCitaPasada(cita)"
+              class="absolute left-2 right-2 rounded-lg p-3 cursor-pointer hover:shadow-md transition-all border-l-4 z-10"
+              [style.top.px]="calcularTopDia(cita.hora)"
+              [style.height.px]="calcularAlturaDia(cita.duracion)"
+              [class.bg-green-50]="cita.estado === 'confirmada'"
+              [class.border-green-500]="cita.estado === 'confirmada'"
+              [class.bg-orange-50]="cita.estado === 'pendiente'"
+              [class.border-orange-500]="cita.estado === 'pendiente'"
+              [class.bg-red-50]="cita.estado === 'cancelada'"
+              [class.border-red-500]="cita.estado === 'cancelada'"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <p
+                  class="font-semibold text-sm truncate"
+                  [class.text-green-700]="cita.estado === 'confirmada'"
+                  [class.text-orange-700]="cita.estado === 'pendiente'"
+                  [class.text-red-700]="cita.estado === 'cancelada'"
+                >
+                  {{ cita.cliente }}
+                </p>
+                <span class="text-xs font-semibold text-gray-600 shrink-0"
+                  >{{ cita.hora }} · {{ cita.duracion }}min</span
+                >
+              </div>
+              <p class="text-xs text-gray-600 mt-0.5 truncate" *ngIf="cita.duracion >= 45">
+                {{ cita.servicio }}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div *ngIf="diaActual.citas.length === 0" class="text-center py-12">
-        <div
-          class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3"
-        >
-          <svg
-            class="w-8 h-8 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            viewBox="0 0 24 24"
+        <div *ngIf="diaActual.citas.length === 0" class="text-center py-12">
+          <div
+            class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
+            <svg
+              class="w-8 h-8 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <p class="text-sm text-gray-500">No hay citas programadas para este día</p>
         </div>
-        <p class="text-sm text-gray-500">No hay citas programadas para este día</p>
-      </div>
+      </ng-container>
     </div>
   </div>
 

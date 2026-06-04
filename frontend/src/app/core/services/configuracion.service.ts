@@ -3,6 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+export interface MantenimientoConfig {
+  activo: boolean;
+  mensaje: string;
+  fechaEstimada?: string;
+}
+
 export interface Configuracion {
   id: number;
   logo_url: string;
@@ -23,6 +29,7 @@ export interface Configuracion {
   meta_keywords: string;
   nombre: string;
   eslogan: string;
+  mantenimiento?: MantenimientoConfig;
 }
 
 export interface ConfiguracionCompleta {
@@ -34,6 +41,7 @@ export interface ConfiguracionCompleta {
   apariencia: any;
   notificaciones: any;
   seo: any;
+  mantenimiento?: MantenimientoConfig;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -67,6 +75,7 @@ export class ConfiguracionService {
         meta_keywords: '',
         nombre: 'Vortiz Arquitectos',
         eslogan: 'Diseñamos espacios, construimos confianza.',
+        mantenimiento: { activo: false, mensaje: '', fechaEstimada: '' },
       }))
     );
   }

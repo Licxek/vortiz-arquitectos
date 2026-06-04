@@ -1,17 +1,22 @@
 <div class="bg-white">
   <!-- ============ HERO ============ -->
   <section class="relative h-[50vh] min-h-[360px] overflow-hidden">
+    <!-- Imagen de fondo optimizada -->
+    <img
+      ngSrc="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1920"
+      fill
+      alt="Servicios Vortiz Arquitectos"
+      class="absolute inset-0 object-cover"
+      priority
+    />
+
+    <!-- Overlay (z-10 sobre la imagen) -->
     <div
-      class="absolute inset-0 bg-cover bg-center"
-      style="
-        background-image: url('https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1920');
-      "
-    ></div>
-    <div
-      class="absolute inset-0 bg-gradient-to-br from-black/85 via-black/60 to-[#0a1f3d]/60"
+      class="absolute inset-0 bg-gradient-to-br from-black/85 via-black/60 to-[#0a1f3d]/60 z-10"
     ></div>
 
-    <div class="relative h-full flex flex-col items-center justify-center text-center px-4">
+    <!-- Contenido (z-20 sobre todo) -->
+    <div class="relative z-20 h-full flex flex-col items-center justify-center text-center px-4">
       <span
         class="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold uppercase tracking-widest text-white mb-6"
       >
@@ -85,7 +90,28 @@
   <!-- ============ GRID DE SERVICIOS ============ -->
   <section class="py-16">
     <div class="max-w-7xl mx-auto px-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Skeleton: catálogo aún no cargado -->
+      <div
+        *ngIf="servicios().length === 0"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        <div
+          *ngFor="let _ of [1, 2, 3, 4, 5, 6]"
+          class="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col"
+        >
+          <app-skeleton variant="rect" height="192px" />
+          <div class="p-5 space-y-2">
+            <app-skeleton variant="text" height="1.25rem" width="80%" />
+            <app-skeleton variant="text" />
+            <app-skeleton variant="text" width="70%" />
+          </div>
+        </div>
+      </div>
+
+      <div
+        *ngIf="servicios().length > 0"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         <button
           *ngFor="let s of serviciosFiltrados()"
           (click)="abrirServicio(s)"
@@ -94,9 +120,10 @@
           <!-- Imagen -->
           <div class="relative h-48 overflow-hidden bg-[#0a1f3d]">
             <img
-              [src]="s.imagen"
+              [ngSrc]="s.imagen"
+              fill
               [alt]="s.titulo"
-              class="w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-110 transition-all duration-700"
+              class="object-cover opacity-70 group-hover:opacity-90 group-hover:scale-110 transition-all duration-700"
             />
 
             <div
@@ -395,9 +422,11 @@
       <!-- Header con imagen -->
       <div class="relative h-44 md:h-56 overflow-hidden">
         <img
-          [src]="servicioActivo()!.imagen"
-          [alt]="servicioActivo()!.titulo"
-          class="w-full h-full object-cover"
+          [ngSrc]="servHeroImagenFondo"
+          fill
+          alt="Servicios Vortiz Arquitectos"
+          class="absolute inset-0 object-cover"
+          priority
         />
         <div
           class="absolute inset-0 bg-gradient-to-t from-[#0a1f3d] via-[#0a1f3d]/60 to-[#0a1f3d]/20"

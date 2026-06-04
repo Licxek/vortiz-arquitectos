@@ -1,15 +1,100 @@
-<div class="bg-white">
+<div *ngIf="cargando()" class="space-y-0">
+  <!-- HERO skeleton -->
+  <section class="bg-gradient-to-b from-black via-[#071020] to-[#0a1f3d] text-white py-20 md:py-32">
+    <div class="container mx-auto px-4 text-center space-y-4">
+      <app-skeleton variant="rect" width="180px" height="32px" class="block mx-auto bg-white/10" />
+      <app-skeleton variant="text" width="70%" height="3rem" class="block mx-auto bg-white/10" />
+      <app-skeleton variant="text" width="50%" class="block mx-auto bg-white/10" />
+    </div>
+  </section>
+
+  <!-- INTRO skeleton -->
+  <section class="py-16 md:py-24 bg-white">
+    <div class="container mx-auto px-4 max-w-3xl space-y-4 text-center">
+      <app-skeleton variant="text" width="120px" height="0.75rem" class="block mx-auto" />
+      <app-skeleton variant="text" width="60%" height="2rem" class="block mx-auto" />
+      <app-skeleton variant="text" />
+      <app-skeleton variant="text" width="90%" />
+      <app-skeleton variant="text" width="80%" />
+    </div>
+  </section>
+
+  <!-- MISIÓN / VISIÓN skeleton -->
+  <section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4 grid md:grid-cols-2 gap-8">
+      <div *ngFor="let _ of [1, 2]" class="bg-white rounded-2xl p-8 shadow-sm space-y-3">
+        <app-skeleton variant="rect" width="56px" height="56px" />
+        <app-skeleton variant="text" width="40%" height="1.5rem" />
+        <app-skeleton variant="text" />
+        <app-skeleton variant="text" width="85%" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ARQUITECTO skeleton -->
+  <section class="py-16 md:py-24 bg-white">
+    <div class="container mx-auto px-4 max-w-5xl grid md:grid-cols-[300px_1fr] gap-8 items-center">
+      <app-skeleton variant="rect" height="380px" />
+      <div class="space-y-4">
+        <app-skeleton variant="text" width="200px" height="2rem" />
+        <app-skeleton variant="text" width="120px" />
+        <app-skeleton variant="text" />
+        <app-skeleton variant="text" />
+        <app-skeleton variant="text" width="90%" />
+      </div>
+    </div>
+  </section>
+
+  <!-- VALORES skeleton -->
+  <section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-12 space-y-3">
+        <app-skeleton variant="text" width="120px" height="0.75rem" class="block mx-auto" />
+        <app-skeleton variant="text" width="40%" height="2rem" class="block mx-auto" />
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div *ngFor="let _ of [1, 2, 3, 4, 5, 6]" class="bg-white rounded-2xl p-6 space-y-3">
+          <app-skeleton variant="rect" width="48px" height="48px" />
+          <app-skeleton variant="text" width="70%" height="1.25rem" />
+          <app-skeleton variant="text" />
+          <app-skeleton variant="text" width="80%" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA skeleton -->
+  <section class="py-16 bg-gradient-to-b from-black via-[#071020] to-[#0a1f3d] text-white">
+    <div class="container mx-auto px-4 text-center space-y-4 max-w-2xl">
+      <app-skeleton variant="text" width="60%" height="2rem" class="block mx-auto bg-white/10" />
+      <app-skeleton variant="text" width="80%" class="block mx-auto bg-white/10" />
+      <div class="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+        <app-skeleton variant="rect" width="160px" height="48px" class="bg-white/10" />
+        <app-skeleton variant="rect" width="160px" height="48px" class="bg-white/10" />
+      </div>
+    </div>
+  </section>
+</div>
+
+<div *ngIf="!cargando()" class="bg-white">
   <!-- ============ HERO ============ -->
   <section class="relative h-[60vh] min-h-[400px] overflow-hidden">
+    <!-- Imagen de fondo optimizada -->
+    <img
+      [ngSrc]="heroImagenFondo"
+      fill
+      alt="Nosotros - Vortiz Arquitectos"
+      class="absolute inset-0 object-cover"
+      priority
+    />
+
+    <!-- Overlay (z-10 sobre la imagen) -->
     <div
-      class="absolute inset-0 bg-cover bg-center"
-      [style.background-image]="'url(' + heroImagenFondo + ')'"
-    ></div>
-    <div
-      class="absolute inset-0 bg-gradient-to-br from-black/85 via-black/60 to-[#0a1f3d]/60"
+      class="absolute inset-0 bg-gradient-to-br from-black/85 via-black/60 to-[#0a1f3d]/60 z-10"
     ></div>
 
-    <div class="relative h-full flex flex-col items-center justify-center text-center px-4">
+    <!-- Contenido (z-20 sobre todo) -->
+    <div class="relative z-20 h-full flex flex-col items-center justify-center text-center px-4">
       <span
         class="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold uppercase tracking-widest text-white mb-6"
       >
@@ -128,7 +213,9 @@
   <section class="py-20 md:py-28 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4">
       <div class="text-center max-w-2xl mx-auto mb-16">
-        <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-primario)]">El fundador</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-primario)]"
+          >El fundador</span
+        >
         <h2
           class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mt-3 leading-tight px-2"
         >
@@ -139,12 +226,8 @@
       <div class="grid md:grid-cols-2 gap-10 md:gap-10 lg:gap-16 items-center mb-20">
         <!-- Foto -->
         <div class="relative">
-          <div class="aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl">
-            <img
-              [src]="arquitecto.foto"
-              [alt]="arquitecto.nombre"
-              class="w-full h-full object-cover"
-            />
+          <div class="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl">
+            <img [ngSrc]="arquitecto.foto" fill [alt]="arquitecto.nombre" class="object-cover" />
           </div>
 
           <!-- Tarjeta con firma -->
@@ -255,7 +338,9 @@
                   <p class="text-sm font-bold text-gray-900">{{ cred.titulo }}</p>
                   <p class="text-xs text-gray-500 mt-0.5">{{ cred.institucion }}</p>
                 </div>
-                <span class="text-xs font-bold text-[var(--color-primario)] shrink-0">{{ cred.anio }}</span>
+                <span class="text-xs font-bold text-[var(--color-primario)] shrink-0">{{
+                  cred.anio
+                }}</span>
               </div>
             </div>
           </div>

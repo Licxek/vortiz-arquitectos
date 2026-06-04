@@ -1,10 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom} from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 // pagina -> seccion -> campo -> valor
-export type ContenidoPaginas = Record<string, Record<string, Record<string, string>>>;
+export type ContenidoPaginas = Record<string, Record<string, Record<string, any>>>;
 
 @Injectable({ providedIn: 'root' })
 export class ContenidoService {
@@ -24,20 +24,25 @@ export class ContenidoService {
   // ---- LECTURA (páginas públicas): síncrona, lee de la caché en memoria ----
   getCampo(pagina: string, seccion: string, campo: string, porDefecto = ''): string {
     const valor = this.contenido[pagina]?.[seccion]?.[campo];
-    return valor && valor.trim() ? valor : porDefecto;
+    return typeof valor === 'string' && valor.trim() ? valor : porDefecto;
   }
 
-  getSeccion(pagina: string, seccion: string): Record<string, string> {
+  getLista<T>(pagina: string, seccion: string, porDefecto: T[], campo: string = 'lista'): T[] {
+    const valor = this.contenido[pagina]?.[seccion]?.[campo];
+    return Array.isArray(valor) && valor.length > 0 ? (valor as T[]) : porDefecto;
+  }
+
+  getSeccion(pagina: string, seccion: string): Record<string, any> {
     return this.contenido[pagina]?.[seccion] || {};
   }
 
-  getPagina(pagina: string): Record<string, Record<string, string>> {
+  getPagina(pagina: string): Record<string, Record<string, any>> {
     return this.contenido[pagina] || {};
   }
 
-  // ---- ESCRITURA (admin): guarda en backend y actualiza la caché ----
-  guardarPagina(pagina: string, contenido: Record<string, Record<string, string>>) {
-    this.contenido[pagina] = contenido; // optimista (caché local)
+  // ---- ESCRITURA (admin) ----
+  guardarPagina(pagina: string, contenido: Record<string, Record<string, any>>) {
+    this.contenido[pagina] = contenido;
     return this.http.put(`${this.base}/${pagina}`, contenido);
   }
 }

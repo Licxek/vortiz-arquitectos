@@ -1,0 +1,78 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: vortiz_nginx_prod
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro 
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      target: production   # 👈 usa el stage de producción
+    container_name: vortiz_frontend_prod
+    restart: unless-stopped
+    expose:
+      - "80"               # 👈 solo entre contenedores, no al host
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  backend:
+    build:
+      context: ./backend
+      target: production   # 👈 stage de producción
+    container_name: vortiz_backend_prod
+    restart: unless-stopped
+    expose:
+      - "3000"             # 👈 solo entre contenedores
+    volumes:
+      - vortiz_uploads:/app/uploads
+    env_file:
+      - .env.production    # 👈 usa el .env de prod
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  database:
+    image: postgres:16-alpine
+    container_name: vortiz_database_prod
+    restart: unless-stopped
+    expose:
+      - "5432"             # 👈 NO se expone al host en prod (security)
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data_prod:
+  vortiz_uploads:

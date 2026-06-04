@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService, Usuario } from '../../core/services/auth.service';
 import { ConfiguracionService, Configuracion } from '../../core/services/configuracion.service';
 import { HostListener } from '@angular/core';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
 interface MenuItem {
   label: string;
@@ -14,7 +15,7 @@ interface MenuItem {
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, SkeletonComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css',
 })
@@ -24,6 +25,7 @@ export class AdminLayoutComponent implements OnInit {
   menuMovilAbierto = false;
   menuUsuarioAbierto = false;
   sidebarColapsado = false;
+  cargando = signal(true);
 
   menuItems: MenuItem[] = [
     { label: 'Inicio', icon: 'home', path: '/admin/inicio' },
@@ -51,7 +53,13 @@ export class AdminLayoutComponent implements OnInit {
   ngOnInit() {
     this.usuario = this.authService.getUser();
     this.configuracionService.getConfiguracion().subscribe({
-      next: (data) => (this.configuracion = data),
+      next: (data) => {
+        this.configuracion = data;
+        this.cargando.set(false); // 👈 NUEVO
+      },
+      error: () => {
+        this.cargando.set(false); // 👈 NUEVO: aunque falle, sale del skeleton
+      },
     });
 
     const guardado = localStorage.getItem('sidebar_colapsado');

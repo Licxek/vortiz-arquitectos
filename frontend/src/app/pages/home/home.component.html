@@ -1,19 +1,22 @@
 <div class="bg-white">
   <!-- ============ 1. HERO ============ -->
   <section class="relative h-[90vh] min-h-[600px] overflow-hidden">
-    <!-- Imagen de fondo -->
-    <div
-      class="absolute inset-0 bg-cover bg-center"
-      [style.background-image]="'url(' + heroImagenFondo + ')'"
-    ></div>
+    <!-- Imagen de fondo optimizada -->
+    <img
+      [ngSrc]="heroImagenFondo"
+      fill
+      alt="Vortiz Arquitectos"
+      class="absolute inset-0 object-cover"
+      priority
+    />
 
     <!-- Overlay degradado -->
     <div
-      class="absolute inset-0 bg-gradient-to-br from-black/85 via-black/60 to-[#0a1f3d]/60"
+      class="absolute inset-0 bg-gradient-to-br from-black/85 via-black/60 to-[#0a1f3d]/60 z-10"
     ></div>
 
     <!-- Contenido del hero -->
-    <div class="relative h-full flex flex-col items-center justify-center text-center px-4">
+    <div class="relative z-20 h-full flex flex-col items-center justify-center text-center px-4">
       <span
         class="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold uppercase tracking-widest text-white mb-6 animate-[fadeIn_0.8s_ease-out]"
       >
@@ -65,10 +68,14 @@
       <div class="grid md:grid-cols-2 gap-10 md:gap-12 lg:gap-20 items-center">
         <!-- Imagen -->
         <div class="relative">
-          <div
-            class="aspect-[4/5] bg-cover bg-center rounded-2xl shadow-2xl"
-            [style.background-image]="'url(' + filoImagen + ')'"
-          ></div>
+          <div class="relative aspect-[4/5] rounded-2xl shadow-2xl overflow-hidden">
+            <img
+              [ngSrc]="filoImagen"
+              fill
+              alt="Filosofía Vortiz Arquitectos"
+              class="object-cover"
+            />
+          </div>
           <!-- Tarjeta flotante -->
           <div
             class="absolute -bottom-6 -right-4 lg:-bottom-8 lg:-right-8 bg-white p-4 lg:p-6 rounded-2xl shadow-2xl max-w-[200px] lg:max-w-[240px] hidden lg:block"
@@ -173,7 +180,29 @@
         <p class="text-gray-600 mt-4">{{ servDescripcion }}</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Skeleton si no hay servicios cargados aún -->
+      <div
+        *ngIf="serviciosVisibles.length === 0"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        <div
+          *ngFor="let _ of [1, 2, 3, 4, 5, 6]"
+          class="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col"
+        >
+          <app-skeleton variant="rect" height="192px" />
+          <div class="p-5 space-y-2">
+            <app-skeleton variant="text" height="1.25rem" width="80%" />
+            <app-skeleton variant="text" />
+            <app-skeleton variant="text" width="70%" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid real cuando hay servicios -->
+      <div
+        *ngIf="serviciosVisibles.length > 0"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         <a
           *ngFor="let s of serviciosVisibles"
           routerLink="/servicios"
@@ -182,9 +211,10 @@
           <!-- Imagen -->
           <div class="relative h-48 overflow-hidden bg-[#0a1f3d]">
             <img
-              [src]="s.imagen"
+              [ngSrc]="s.imagen"
+              fill
               [alt]="s.titulo"
-              class="w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-110 transition-all duration-700"
+              class="object-cover opacity-70 group-hover:opacity-90 group-hover:scale-110 transition-all duration-700"
             />
 
             <div
@@ -436,7 +466,28 @@
         </a>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+      <!-- Skeleton de proyectos -->
+      <div
+        *ngIf="proyectosVisibles.length === 0"
+        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+      >
+        <div
+          *ngFor="let _ of [1, 2, 3, 4, 5, 6, 7, 8]"
+          class="bg-white rounded-2xl border border-gray-200 p-4 md:p-6"
+        >
+          <div class="flex justify-center mb-5">
+            <app-skeleton variant="rect" width="80px" height="80px" />
+          </div>
+          <app-skeleton variant="text" width="80%" class="block mx-auto mb-2" />
+          <app-skeleton variant="text" width="50%" class="block mx-auto" />
+        </div>
+      </div>
+
+      <!-- Grid real -->
+      <div
+        *ngIf="proyectosVisibles.length > 0"
+        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+      >
         <a
           *ngFor="let p of proyectosVisibles; let i = index"
           routerLink="/proyectos"
@@ -494,7 +545,9 @@
             <div class="flex-1 flex items-center justify-center mb-5 min-h-[100px]">
               <img
                 *ngIf="p.logoUrl"
-                [src]="p.logoUrl"
+                [ngSrc]="p.logoUrl"
+                width="200"
+                height="80"
                 [alt]="p.nombre"
                 class="max-w-full max-h-20 object-contain grayscale group-hover:grayscale-0 opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
               />
@@ -615,15 +668,12 @@
 
   <!-- ============ 7. CTA FINAL ============ -->
   <section class="relative py-20 md:py-28 overflow-hidden">
+    <img [ngSrc]="ctaImagenFondo" fill alt="CTA Vortiz" class="absolute inset-0 object-cover" />
     <div
-      class="absolute inset-0 bg-cover bg-center"
-      [style.background-image]="'url(' + ctaImagenFondo + ')'"
-    ></div>
-    <div
-      class="absolute inset-0 bg-gradient-to-br from-[#0a1f3d]/95 via-[#0a4d7a]/90 to-[#0a1f3d]/95"
+      class="absolute inset-0 bg-gradient-to-br from-[#0a1f3d]/95 via-[#0a4d7a]/90 to-[#0a1f3d]/95 z-10"
     ></div>
 
-    <div class="relative max-w-4xl mx-auto px-4 text-center">
+    <div class="relative z-20 max-w-4xl mx-auto px-4 text-center">
       <span
         class="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold uppercase tracking-widest text-white mb-6"
       >

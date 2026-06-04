@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, HostListener, inject, ChangeDetectorRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -8,6 +8,9 @@ import { CatalogoService, Servicio, Proyecto } from '../../../core/services/cata
 import { FormatoTextoPipe } from '../../../shared/pipes/formato-texto.pipe'; // ajusta ruta
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { forkJoin, Observable } from 'rxjs';
+import { PaginasService, Pagina as PaginaBackend } from '../../../core/services/paginas.service';
+import { ImageUploadComponent } from '../../../shared/image-upload/image-upload.component';
+import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 
 interface Pagina {
   id: number;
@@ -15,6 +18,7 @@ interface Pagina {
   slug: string;
   tipo: 'fija' | 'personalizada';
   visible: boolean;
+  estado: 'borrador' | 'publicada' | 'programada'; // 👈 NUEVO
   ultimaEdicion: string;
   icono: string;
   color: string;
@@ -43,6 +47,7 @@ interface BloqueContenido {
   imagenes?: string[];
   direccion?: string;
   campos?: string[];
+  serviciosIds?: number[];
 }
 
 interface Plantilla {
@@ -52,10 +57,19 @@ interface Plantilla {
   bloquesIniciales: string[];
 }
 
+type ItemTemplate = {
+  [key: string]: {
+    label: string;
+    tipo: 'texto' | 'textarea';
+    placeholder?: string;
+    maxLength?: number;
+  };
+};
+
 interface CampoEdicion {
   key: string;
   label: string;
-  tipo: 'texto' | 'textarea' | 'imagen' | 'url' | 'seleccion' | 'catalogo';
+  tipo: 'texto' | 'textarea' | 'imagen' | 'url' | 'seleccion' | 'catalogo' | 'lista';
   placeholder?: string;
   maxLength?: number;
   opciones?: { value: string; label: string }[];
@@ -63,6 +77,11 @@ interface CampoEdicion {
   default?: string;
   limite?: number;
   ayuda?: string;
+
+  // 👇 Para tipo 'lista'
+  itemTemplate?: ItemTemplate;
+  itemLabelKey?: string;
+  maxItems?: number;
 }
 
 interface SeccionEditable {
@@ -75,90 +94,99 @@ interface SeccionEditable {
 @Component({
   selector: 'app-paginas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, FormatoTextoPipe, DragDropModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    FormatoTextoPipe,
+    DragDropModule,
+    ImageUploadComponent,
+    SkeletonComponent,
+  ],
   templateUrl: './paginas.component.html',
 })
 export class PaginasComponent implements OnInit {
   busqueda = '';
-  filtroActivo: 'todas' | 'fijas' | 'personalizadas' | 'ocultas' = 'todas';
+  filtroActivo: 'todas' | 'fijas' | 'personalizadas' | 'ocultas' | 'borradores' = 'todas';
   menuAbiertoId: number | null = null;
   mostrarConfirmarSalir = false;
   mostrarConfirmarGuardar = false;
+  cargando = signal(true);
   private snapshotContenido = '';
   private snapshotServicios = '';
+  private paginasService = inject(PaginasService);
 
-  paginas: Pagina[] = [
+  private paginasFijas: Pagina[] = [
     {
-      id: 1,
+      id: -1,
       titulo: 'Inicio',
       slug: '/',
       tipo: 'fija',
       visible: true,
-      ultimaEdicion: 'Hace 2 días',
+      estado: 'publicada',
+      ultimaEdicion: '—',
       icono: 'home',
       color: 'blue',
     },
     {
-      id: 2,
+      id: -2,
       titulo: 'Nosotros',
       slug: '/nosotros',
       tipo: 'fija',
       visible: true,
-      ultimaEdicion: 'Hace 1 semana',
+      estado: 'publicada',
+      ultimaEdicion: '—',
       icono: 'users',
       color: 'green',
     },
     {
-      id: 3,
+      id: -3,
       titulo: 'Proyectos',
       slug: '/proyectos',
       tipo: 'fija',
       visible: true,
-      ultimaEdicion: 'Hace 3 días',
+      estado: 'publicada',
+      ultimaEdicion: '—',
       icono: 'building',
       color: 'orange',
     },
     {
-      id: 4,
+      id: -4,
       titulo: 'Servicios',
       slug: '/servicios',
       tipo: 'fija',
       visible: true,
-      ultimaEdicion: 'Ayer',
+      estado: 'publicada',
+      ultimaEdicion: '—',
       icono: 'briefcase',
       color: 'purple',
     },
     {
-      id: 5,
+      id: -5,
       titulo: 'Citas',
       slug: '/citas',
       tipo: 'fija',
       visible: true,
-      ultimaEdicion: 'Hace 5 días',
+      estado: 'publicada',
+      ultimaEdicion: '—',
       icono: 'calendar',
       color: 'pink',
     },
-    {
-      id: 6,
-      titulo: 'Política de Privacidad',
-      slug: '/p/privacidad',
-      tipo: 'personalizada',
-      visible: true,
-      ultimaEdicion: 'Hace 2 semanas',
-      icono: 'document',
-      color: 'gray',
-    },
-    {
-      id: 7,
-      titulo: 'Términos y Condiciones',
-      slug: '/p/terminos',
-      tipo: 'personalizada',
-      visible: false,
-      ultimaEdicion: 'Hace 1 mes',
-      icono: 'document',
-      color: 'gray',
-    },
   ];
+
+  /** Páginas dinámicas — vienen del backend. */
+  paginasDinamicas: Pagina[] = [];
+
+  /** Combina fijas + dinámicas para mostrar en el grid. */
+  get paginas(): Pagina[] {
+    return [...this.paginasFijas, ...this.paginasDinamicas];
+  }
+
+  /** ID de la página dinámica que se está editando (null = creando nueva). */
+  paginaEditandoId: number | null = null;
+
+  /** Página candidata a eliminar (para mostrar modal de confirmación). */
+  paginaAEliminar: Pagina | null = null;
 
   // Modal nueva página
   mostrarNuevaPagina = false;
@@ -365,14 +393,18 @@ export class PaginasComponent implements OnInit {
         nombre: 'Estadísticas grandes',
         icono: '📊',
         campos: [
-          { key: 'stat1Valor', label: 'Stat 1 - Número', tipo: 'texto', placeholder: '20+' },
-          { key: 'stat1Label', label: 'Stat 1 - Etiqueta', tipo: 'texto' },
-          { key: 'stat2Valor', label: 'Stat 2 - Número', tipo: 'texto' },
-          { key: 'stat2Label', label: 'Stat 2 - Etiqueta', tipo: 'texto' },
-          { key: 'stat3Valor', label: 'Stat 3 - Número', tipo: 'texto' },
-          { key: 'stat3Label', label: 'Stat 3 - Etiqueta', tipo: 'texto' },
-          { key: 'stat4Valor', label: 'Stat 4 - Número', tipo: 'texto' },
-          { key: 'stat4Label', label: 'Stat 4 - Etiqueta', tipo: 'texto' },
+          {
+            key: 'lista',
+            label: 'Estadísticas',
+            tipo: 'lista',
+            itemTemplate: {
+              valor: { label: 'Número', tipo: 'texto', placeholder: '20+', maxLength: 10 },
+              label: { label: 'Etiqueta', tipo: 'texto', placeholder: 'Años de experiencia' },
+            },
+            itemLabelKey: 'label',
+            maxItems: 6,
+            ayuda: 'Agrega los números clave de tu negocio. Se muestran en grande en el home.',
+          },
         ],
       },
       {
@@ -421,14 +453,19 @@ export class PaginasComponent implements OnInit {
         campos: [
           { key: 'badge', label: 'Badge', tipo: 'texto' },
           { key: 'titulo', label: 'Título', tipo: 'texto' },
-          { key: 'paso1Titulo', label: 'Paso 1 - Título', tipo: 'texto' },
-          { key: 'paso1Desc', label: 'Paso 1 - Descripción', tipo: 'textarea' },
-          { key: 'paso2Titulo', label: 'Paso 2 - Título', tipo: 'texto' },
-          { key: 'paso2Desc', label: 'Paso 2 - Descripción', tipo: 'textarea' },
-          { key: 'paso3Titulo', label: 'Paso 3 - Título', tipo: 'texto' },
-          { key: 'paso3Desc', label: 'Paso 3 - Descripción', tipo: 'textarea' },
-          { key: 'paso4Titulo', label: 'Paso 4 - Título', tipo: 'texto' },
-          { key: 'paso4Desc', label: 'Paso 4 - Descripción', tipo: 'textarea' },
+          {
+            key: 'lista',
+            label: 'Pasos del proceso',
+            tipo: 'lista',
+            itemTemplate: {
+              numero: { label: 'Número', tipo: 'texto', placeholder: '01', maxLength: 3 },
+              titulo: { label: 'Título del paso', tipo: 'texto' },
+              descripcion: { label: 'Descripción', tipo: 'textarea' },
+            },
+            itemLabelKey: 'titulo',
+            maxItems: 8,
+            ayuda: 'Define cómo trabajas con tus clientes paso a paso.',
+          },
         ],
       },
       {
@@ -467,16 +504,10 @@ export class PaginasComponent implements OnInit {
             key: 'titulo',
             label: 'Título',
             tipo: 'texto',
-            default: 'Diseñamos con *propósito*, construimos con *historia*',
             ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
           },
           { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
-          {
-            key: 'imagenFondo',
-            label: 'Imagen de fondo',
-            tipo: 'imagen',
-            default: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1920',
-          }, // en hero
+          { key: 'imagenFondo', label: 'Imagen de fondo', tipo: 'imagen' },
         ],
       },
       {
@@ -514,16 +545,56 @@ export class PaginasComponent implements OnInit {
         campos: [
           { key: 'nombre', label: 'Nombre completo', tipo: 'texto' },
           { key: 'titulo', label: 'Cargo / Título', tipo: 'texto' },
-          {
-            key: 'foto',
-            label: 'Foto (URL)',
-            tipo: 'imagen',
-            default: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600',
-          }, // en arquitecto
+          { key: 'foto', label: 'Foto', tipo: 'imagen' },
           { key: 'biografia', label: 'Biografía (párrafo 1)', tipo: 'textarea' },
           { key: 'biografia2', label: 'Biografía (párrafo 2)', tipo: 'textarea' },
           { key: 'email', label: 'Email de contacto', tipo: 'texto' },
           { key: 'linkedin', label: 'LinkedIn (URL)', tipo: 'url' },
+        ],
+      },
+      {
+        id: 'credenciales',
+        nombre: 'Credenciales',
+        icono: '🎓',
+        campos: [
+          {
+            key: 'lista',
+            label: 'Formación y certificaciones',
+            tipo: 'lista',
+            itemTemplate: {
+              titulo: {
+                label: 'Título / Certificación',
+                tipo: 'texto',
+                placeholder: 'Ej: Arquitecto Titulado',
+              },
+              institucion: { label: 'Institución', tipo: 'texto' },
+              anio: { label: 'Año', tipo: 'texto', placeholder: '2003', maxLength: 4 },
+            },
+            itemLabelKey: 'titulo',
+            maxItems: 20,
+            ayuda: 'Agrega los grados académicos y certificaciones del arquitecto.',
+          },
+        ],
+      },
+      {
+        id: 'hitos',
+        nombre: 'Hitos / Timeline',
+        icono: '📅',
+        campos: [
+          {
+            key: 'lista',
+            label: 'Hitos en la trayectoria',
+            tipo: 'lista',
+            itemTemplate: {
+              anio: { label: 'Año', tipo: 'texto', placeholder: '2005', maxLength: 4 },
+              titulo: { label: 'Título del hito', tipo: 'texto' },
+              descripcion: { label: 'Descripción', tipo: 'textarea' },
+            },
+            itemLabelKey: 'titulo',
+            maxItems: 20,
+            ayuda:
+              'Hitos importantes ordenados cronológicamente. Se muestran como timeline en el sitio.',
+          },
         ],
       },
       {
@@ -534,6 +605,25 @@ export class PaginasComponent implements OnInit {
           { key: 'badge', label: 'Badge', tipo: 'texto' },
           { key: 'titulo', label: 'Título', tipo: 'texto' },
           { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+          {
+            key: 'lista',
+            label: 'Valores',
+            tipo: 'lista',
+            itemTemplate: {
+              icono: {
+                label: 'Ícono',
+                tipo: 'texto',
+                placeholder:
+                  'shield-check | hard-hat | leaf | document-check | handshake | lightning',
+              },
+              titulo: { label: 'Título', tipo: 'texto' },
+              descripcion: { label: 'Descripción', tipo: 'textarea' },
+            },
+            itemLabelKey: 'titulo',
+            maxItems: 12,
+            ayuda:
+              'Íconos disponibles: shield-check, hard-hat, leaf, document-check, handshake, lightning',
+          },
         ],
       },
       {
@@ -687,7 +777,7 @@ export class PaginasComponent implements OnInit {
   };
 
   // Almacén del contenido (en producción esto vendría del backend)
-  contenidoPaginas: Record<string, Record<string, Record<string, string>>> = {};
+  contenidoPaginas: Record<string, Record<string, Record<string, any>>> = {};
 
   // ============ PREVIEW EMBEBIDA ============
   mostrarPreviewPagina = false;
@@ -700,7 +790,7 @@ export class PaginasComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   private rutasPublicas: Record<string, string> = {
-    '/': '/home',
+    '/': '/',
     '/nosotros': '/nosotros',
     '/proyectos': '/proyectos',
     '/servicios': '/servicios',
@@ -729,7 +819,55 @@ export class PaginasComponent implements OnInit {
     this.mostrarMenuBloques = false;
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.cargarPaginasDinamicas();
+  }
+
+  private cargarPaginasDinamicas() {
+    this.paginasService.getAdmin().subscribe({
+      next: (data) => {
+        this.paginasDinamicas = data.map((p) => this.mapearBackend(p));
+        this.cargando.set(false); // 👈 NUEVO
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.paginasDinamicas = [];
+        this.cargando.set(false); // 👈 NUEVO
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  private mapearBackend(p: PaginaBackend): Pagina {
+    return {
+      id: p.id,
+      titulo: p.titulo,
+      slug: `/p/${p.slug}`,
+      tipo: 'personalizada',
+      visible: p.visible,
+      estado: p.estado, // 👈 NUEVO
+      ultimaEdicion: this.tiempoRelativo(p.updatedAt),
+      icono: p.icono || 'document',
+      color: p.color || 'gray',
+    };
+  }
+
+  private tiempoRelativo(iso?: string): string {
+    if (!iso) return 'Recién creada';
+    const diff = Date.now() - new Date(iso).getTime();
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return 'Hace unos segundos';
+    if (min < 60) return `Hace ${min} min`;
+    const horas = Math.floor(min / 60);
+    if (horas < 24) return `Hace ${horas} h`;
+    const dias = Math.floor(horas / 24);
+    if (dias === 1) return 'Ayer';
+    if (dias < 7) return `Hace ${dias} días`;
+    const sem = Math.floor(dias / 7);
+    if (sem < 4) return `Hace ${sem} semana${sem > 1 ? 's' : ''}`;
+    const meses = Math.floor(dias / 30);
+    return `Hace ${meses} mes${meses > 1 ? 'es' : ''}`;
+  }
 
   get paginasFiltradas(): Pagina[] {
     let resultado = this.paginas;
@@ -750,6 +888,9 @@ export class PaginasComponent implements OnInit {
         break;
       case 'ocultas':
         resultado = resultado.filter((p) => !p.visible);
+        break;
+      case 'borradores': // 👈 NUEVO
+        resultado = resultado.filter((p) => p.estado === 'borrador');
         break;
     }
 
@@ -775,14 +916,57 @@ export class PaginasComponent implements OnInit {
   }
 
   toggleVisibilidad(pagina: Pagina) {
-    pagina.visible = !pagina.visible;
     this.menuAbiertoId = null;
+
+    if (pagina.tipo === 'fija') {
+      // Las fijas son rutas de Angular - solo local, sin persistir.
+      // (Si en futuro quieres ocultar fijas del menú, agrega columna en BD)
+      pagina.visible = !pagina.visible;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // Personalizada → persistir al backend
+    const nuevoVisible = !pagina.visible;
+    this.paginasService.actualizar(pagina.id, { visible: nuevoVisible }).subscribe({
+      next: () => {
+        pagina.visible = nuevoVisible;
+        this.cdr.markForCheck();
+        this.flashMensaje(nuevoVisible ? 'Página visible' : 'Página oculta');
+      },
+      error: () => {
+        this.flashMensaje('Error al cambiar visibilidad', 'info');
+      },
+    });
   }
 
   eliminarPagina(pagina: Pagina) {
-    if (pagina.tipo === 'fija') return;
-    this.paginas = this.paginas.filter((p) => p.id !== pagina.id);
     this.menuAbiertoId = null;
+    if (pagina.tipo === 'fija') return; // Fijas no se eliminan
+    this.paginaAEliminar = pagina; // Abre modal de confirmación
+  }
+
+  cancelarEliminarPagina() {
+    this.paginaAEliminar = null;
+  }
+
+  confirmarEliminarPagina() {
+    if (!this.paginaAEliminar) return;
+    const id = this.paginaAEliminar.id;
+
+    this.paginasService.eliminar(id).subscribe({
+      next: () => {
+        this.paginasDinamicas = this.paginasDinamicas.filter((p) => p.id !== id);
+        this.paginaAEliminar = null;
+        this.flashMensaje('Página eliminada');
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.paginaAEliminar = null;
+        this.flashMensaje('Error al eliminar la página', 'info');
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   @HostListener('document:click')
@@ -791,6 +975,7 @@ export class PaginasComponent implements OnInit {
   }
 
   abrirNuevaPagina() {
+    this.paginaEditandoId = null; // 👈 modo CREAR
     this.mostrarNuevaPagina = true;
     this.seccionActiva = 'plantilla';
     this.plantillaSeleccionada = '';
@@ -841,14 +1026,7 @@ export class PaginasComponent implements OnInit {
     } else if (tipo === 'galeria') {
       nuevoBloque.imagenes = [];
     } else if (tipo === 'servicios') {
-      nuevoBloque.items = [
-        {
-          titulo: 'Diseño arquitectónico',
-          descripcion: 'Planos y renders 3D profesionales',
-          icono: '✏️',
-        },
-        { titulo: 'Construcción', descripcion: 'Supervisión completa de obra', icono: '🏗️' },
-      ];
+      nuevoBloque.serviciosIds = []; // empieza sin nada seleccionado
     } else if (tipo === 'contacto') {
       nuevoBloque.campos = ['Nombre', 'Correo', 'Teléfono', 'Mensaje'];
     } else if (tipo === 'mapa') {
@@ -898,9 +1076,60 @@ export class PaginasComponent implements OnInit {
   }
 
   guardarPagina(publicar: boolean) {
-    this.formNuevaPagina.estado = publicar ? 'publicada' : 'borrador';
-    console.log('Página guardada:', this.formNuevaPagina);
-    this.cerrarNuevaPagina();
+    if (!this.formNuevaPagina.titulo.trim()) {
+      this.flashMensaje('El título es requerido', 'info');
+      return;
+    }
+
+    // Construir payload limpio para el backend (sin campos de UI)
+    const payload: Partial<PaginaBackend> = {
+      titulo: this.formNuevaPagina.titulo.trim(),
+      slug: this.formNuevaPagina.slug.trim() || undefined,
+      descripcion: this.formNuevaPagina.descripcion || '',
+      imagenDestacada: this.formNuevaPagina.imagenDestacada || '',
+      categoria: this.formNuevaPagina.categoria,
+      estado: publicar ? 'publicada' : 'borrador',
+      visibilidad: this.formNuevaPagina.visibilidad,
+      mostrarEnMenu: this.formNuevaPagina.mostrarEnMenu,
+      visible: true,
+      // Stripear "expandido" (UI state) antes de mandar al backend
+      bloques: this.formNuevaPagina.bloques.map((b) => {
+        const { expandido, ...resto } = b;
+        return resto;
+      }),
+      seo: this.formNuevaPagina.seo,
+      permitirComentarios: this.formNuevaPagina.permitirComentarios,
+    };
+
+    this.guardandoServicio = true;
+    this.cdr.markForCheck();
+
+    const obs$ = this.paginaEditandoId
+      ? this.paginasService.actualizar(this.paginaEditandoId, payload)
+      : this.paginasService.crear(payload);
+
+    obs$.subscribe({
+      next: (data) => {
+        this.guardandoServicio = false;
+        const mapeada = this.mapearBackend(data);
+
+        if (this.paginaEditandoId) {
+          const idx = this.paginasDinamicas.findIndex((p) => p.id === this.paginaEditandoId);
+          if (idx >= 0) this.paginasDinamicas[idx] = mapeada;
+        } else {
+          this.paginasDinamicas.push(mapeada);
+        }
+
+        this.cdr.markForCheck();
+        this.cerrarNuevaPagina();
+        this.flashMensaje(publicar ? 'Página publicada' : 'Borrador guardado');
+      },
+      error: (err) => {
+        this.guardandoServicio = false;
+        this.flashMensaje(err?.error?.message || 'Error al guardar', 'info');
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   obtenerLabelBloque(tipo: string): string {
@@ -991,25 +1220,76 @@ export class PaginasComponent implements OnInit {
   editarPagina(pagina: Pagina) {
     this.menuAbiertoId = null;
 
-    // Si es personalizada, abrimos el editor de Nueva Página (lo agregamos después)
     if (pagina.tipo === 'personalizada') {
-      // TODO: cargar pagina en formNuevaPagina y abrir modal
-      this.abrirNuevaPagina();
+      // Cargar datos del backend y abrir modal en modo edición
+      this.paginasService.getAdminPorId(pagina.id).subscribe({
+        next: (data) => {
+          this.paginaEditandoId = data.id;
+          this.formNuevaPagina = {
+            titulo: data.titulo,
+            slug: data.slug,
+            descripcion: data.descripcion,
+            imagenDestacada: data.imagenDestacada,
+            categoria: data.categoria,
+            mostrarEnMenu: data.mostrarEnMenu,
+            posicionMenu: data.posicionMenu,
+            bloques: (data.bloques || []).map((b, i) => ({
+              ...b,
+              id: b.id || Date.now() + i,
+              expandido: false,
+              serviciosIds: b.tipo === 'servicios' ? b.serviciosIds || [] : b.serviciosIds,
+            })) as BloqueContenido[],
+            seo: {
+              metaTitle: data.seo?.metaTitle || '',
+              metaDescription: data.seo?.metaDescription || '',
+              keywords: data.seo?.keywords || '',
+            },
+            estado: data.estado,
+            fechaPublicacion: data.fechaPublicacion
+              ? String(data.fechaPublicacion).substring(0, 16)
+              : '',
+            visibilidad: data.visibilidad,
+            permitirComentarios: data.permitirComentarios,
+            plantillaLayout: 'default',
+          };
+          // Saltar la selección de plantilla cuando editamos
+          this.plantillaSeleccionada = 'blanco';
+          this.seccionActiva = 'info';
+          this.mostrarNuevaPagina = true;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.flashMensaje('No se pudo cargar la página', 'info');
+        },
+      });
       return;
     }
 
-    // Fija → abrir editor de página fija
+    // Fija → flujo existente del schema editor
     this.paginaEditando = pagina;
-
     const schemaKey = this.slugASchema[pagina.slug];
     if (!schemaKey) return;
 
-    // Inicializar contenido si no existe
     this.contenidoPaginas[schemaKey] = {};
     this.schemasPaginas[schemaKey].forEach((seccion) => {
       this.contenidoPaginas[schemaKey][seccion.id] = {};
       seccion.campos.forEach((campo) => {
         if (campo.tipo === 'catalogo') return;
+
+        // 👇 NUEVO: tipo 'lista'
+        if (campo.tipo === 'lista') {
+          const listaGuardada = this.contenidoService.getLista<any>(
+            schemaKey,
+            seccion.id,
+            [],
+            campo.key,
+          );
+          this.contenidoPaginas[schemaKey][seccion.id][campo.key] = listaGuardada.map((item) => ({
+            ...item,
+          })); // copia defensiva
+          return;
+        }
+
         const guardado = this.contenidoService.getCampo(schemaKey, seccion.id, campo.key, '');
         if (campo.tipo === 'seleccion') {
           let valores = this.opcionesDe(campo).map((o) => o.value);
@@ -1026,7 +1306,6 @@ export class PaginasComponent implements OnInit {
     });
 
     this.seccionEditandoActiva = this.schemasPaginas[schemaKey][0]?.id || '';
-    // Copia de trabajo del catálogo (solo se aplica al Guardar cambios)
     this.serviciosDraft = this.catalogo.servicios().map((s) => ({ ...s }));
     this.servicioFormAbierto = false;
     this.servicioEditandoId = null;
@@ -1088,13 +1367,13 @@ export class PaginasComponent implements OnInit {
     return this.seccionesPaginaActual.find((s) => s.id === this.seccionEditandoActiva);
   }
 
-  get contenidoSeccionActual(): Record<string, string> {
+  get contenidoSeccionActual(): Record<string, any> {
     if (!this.paginaEditando) return {};
     const key = this.slugASchema[this.paginaEditando.slug];
     return this.contenidoPaginas[key]?.[this.seccionEditandoActiva] || {};
   }
 
-  actualizarCampo(campoKey: string, valor: string) {
+  actualizarCampo(campoKey: string, valor: any) {
     if (!this.paginaEditando) return;
     const key = this.slugASchema[this.paginaEditando.slug];
     if (!this.contenidoPaginas[key][this.seccionEditandoActiva]) {
@@ -1107,7 +1386,7 @@ export class PaginasComponent implements OnInit {
     this.seccionEditandoActiva = id;
   }
 
-   guardarEdicionPagina() {
+  guardarEdicionPagina() {
     if (!this.paginaEditando) return;
     const key = this.slugASchema[this.paginaEditando.slug];
     if (!key) return;
@@ -1194,7 +1473,7 @@ export class PaginasComponent implements OnInit {
   }
 
   estaSeleccionado(campoKey: string, value: string): boolean {
-    const actual = this.contenidoSeccionActual[campoKey] || '';
+    const actual = String(this.contenidoSeccionActual[campoKey] || '');
     return actual
       .split(',')
       .map((s) => s.trim())
@@ -1203,7 +1482,7 @@ export class PaginasComponent implements OnInit {
   }
 
   contarSeleccionados(campoKey: string): number {
-    const actual = this.contenidoSeccionActual[campoKey] || '';
+    const actual = String(this.contenidoSeccionActual[campoKey] || '');
     return actual
       .split(',')
       .map((s) => s.trim())
@@ -1215,7 +1494,7 @@ export class PaginasComponent implements OnInit {
   }
 
   toggleSeleccion(campo: CampoEdicion, value: string) {
-    let seleccionados = (this.contenidoSeccionActual[campo.key] || '')
+    let seleccionados = String(this.contenidoSeccionActual[campo.key] || '')
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
@@ -1229,14 +1508,20 @@ export class PaginasComponent implements OnInit {
     this.actualizarCampo(campo.key, seleccionados.join(','));
   }
 
-  private catalogo = inject(CatalogoService);
+  protected catalogo = inject(CatalogoService);
 
   opcionesDe(campo: CampoEdicion): { value: string; label: string }[] {
     if (campo.fuente === 'servicios') {
-      return this.catalogo.getServicios().map((s, i) => ({ value: String(i), label: s.titulo }));
+      return this.catalogo.getServicios().map((s) => ({
+        value: String(s.id),
+        label: s.titulo,
+      }));
     }
     if (campo.fuente === 'proyectos') {
-      return this.catalogo.getProyectos().map((p, i) => ({ value: String(i), label: p.nombre }));
+      return this.catalogo.getProyectos().map((p) => ({
+        value: String(p.id),
+        label: p.nombre,
+      }));
     }
     return campo.opciones || [];
   }
@@ -1486,7 +1771,8 @@ export class PaginasComponent implements OnInit {
     if (!this.proyectoForm.nombre.trim()) return;
     if (this.proyectoEditandoId != null) {
       const idx = this.proyectosDraft.findIndex((p) => p.id === this.proyectoEditandoId);
-      if (idx >= 0) this.proyectosDraft[idx] = { ...this.proyectosDraft[idx], ...this.proyectoForm };
+      if (idx >= 0)
+        this.proyectosDraft[idx] = { ...this.proyectosDraft[idx], ...this.proyectoForm };
     } else {
       this.proyectosDraft.push({
         id: this.tempIdSeqProyecto--,
@@ -1517,4 +1803,103 @@ export class PaginasComponent implements OnInit {
   }
 
   trackProyecto = (_: number, p: Proyecto) => p.id;
+
+  /** Una página está "live" cuando es visible Y publicada. */
+  estaLive(pagina: Pagina): boolean {
+    return pagina.visible && pagina.estado === 'publicada';
+  }
+
+  get totalBorradores(): number {
+    return this.paginas.filter((p) => p.estado === 'borrador').length;
+  }
+
+  toggleServicioEnBloque(bloque: BloqueContenido, servicioId: number) {
+    if (!bloque.serviciosIds) bloque.serviciosIds = [];
+    const idx = bloque.serviciosIds.indexOf(servicioId);
+    if (idx >= 0) {
+      bloque.serviciosIds.splice(idx, 1);
+    } else {
+      bloque.serviciosIds.push(servicioId);
+    }
+  }
+
+  estaServicioEnBloque(bloque: BloqueContenido, servicioId: number): boolean {
+    return (bloque.serviciosIds || []).includes(servicioId);
+  }
+
+  // ============ MANEJO DE LISTAS DINÁMICAS ============
+
+  /** Obtiene la lista del campo actual (array de objetos) */
+  obtenerLista(campo: CampoEdicion): any[] {
+    if (!this.paginaEditando) return [];
+    const key = this.slugASchema[this.paginaEditando.slug];
+    const sec = this.seccionEditandoActiva;
+    return this.contenidoPaginas[key]?.[sec]?.[campo.key] || [];
+  }
+
+  /** Agrega un item vacío a la lista */
+  agregarItemLista(campo: CampoEdicion) {
+    if (!this.paginaEditando) return;
+    const key = this.slugASchema[this.paginaEditando.slug];
+    const sec = this.seccionEditandoActiva;
+
+    if (!this.contenidoPaginas[key][sec]) this.contenidoPaginas[key][sec] = {};
+    if (!Array.isArray(this.contenidoPaginas[key][sec][campo.key])) {
+      this.contenidoPaginas[key][sec][campo.key] = [];
+    }
+
+    const lista = this.contenidoPaginas[key][sec][campo.key] as any[];
+    if (campo.maxItems && lista.length >= campo.maxItems) return;
+
+    // Crear item vacío con todas las keys del template
+    const nuevoItem: any = {};
+    Object.keys(campo.itemTemplate || {}).forEach((k) => (nuevoItem[k] = ''));
+    lista.push(nuevoItem);
+  }
+
+  /** Elimina un item de la lista por índice */
+  eliminarItemLista(campo: CampoEdicion, index: number) {
+    if (!this.paginaEditando) return;
+    const key = this.slugASchema[this.paginaEditando.slug];
+    const sec = this.seccionEditandoActiva;
+    const lista = this.contenidoPaginas[key]?.[sec]?.[campo.key];
+    if (Array.isArray(lista)) lista.splice(index, 1);
+  }
+
+  /** Actualiza un campo específico de un item de la lista */
+  actualizarItemLista(campo: CampoEdicion, index: number, itemKey: string, valor: any) {
+    if (!this.paginaEditando) return;
+    const key = this.slugASchema[this.paginaEditando.slug];
+    const sec = this.seccionEditandoActiva;
+    const lista = this.contenidoPaginas[key]?.[sec]?.[campo.key];
+    if (Array.isArray(lista) && lista[index]) {
+      lista[index][itemKey] = valor;
+    }
+  }
+
+  /** Reordena items con drag-and-drop */
+  reordenarItemLista(campo: CampoEdicion, event: CdkDragDrop<any[]>) {
+    if (!this.paginaEditando) return;
+    const key = this.slugASchema[this.paginaEditando.slug];
+    const sec = this.seccionEditandoActiva;
+    const lista = this.contenidoPaginas[key]?.[sec]?.[campo.key];
+    if (Array.isArray(lista)) {
+      moveItemInArray(lista, event.previousIndex, event.currentIndex);
+    }
+  }
+
+  /** Helper para iterar keys de itemTemplate en el HTML */
+  keysDeTemplate(campo: CampoEdicion): string[] {
+    return Object.keys(campo.itemTemplate || {});
+  }
+
+  /** Devuelve el label para mostrar un item colapsado */
+  labelDeItem(campo: CampoEdicion, item: any, index: number): string {
+    const key = campo.itemLabelKey;
+    if (key && item[key]?.trim()) return item[key];
+    return `Item ${index + 1}`;
+  }
+
+  /** trackBy para los items de lista (usa el índice porque no tienen ID propio) */
+  trackItemLista = (index: number, _: any) => index;
 }

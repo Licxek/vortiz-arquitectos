@@ -9,6 +9,7 @@ export interface PerfilUsuario {
   apellidos: string;
   correo: string;
   telefono: string | null;
+  avatar: string | null;  // 👈 NUEVO
   rol: string;
   createdAt: string;
   updatedAt: string;
@@ -28,6 +29,7 @@ export class PerfilService {
     apellidos?: string;
     correo?: string;
     telefono?: string | null;
+    avatar?: string | null;  // 👈 NUEVO
   }): Observable<PerfilUsuario> {
     return this.http.put<PerfilUsuario>(this.base, data);
   }

@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cita, EstadoCita } from './cita.entity';
 import { MailService } from '../mail/mail.service'; // ⚠️ ajusta la ruta
+import { CrearCitaDto } from './dto/crear-cita.dto';
 
 const ESTADOS_VALIDOS: EstadoCita[] = [
   'pendiente',
@@ -39,7 +40,7 @@ export class CitasService {
     });
   }
 
-  async crear(data: Partial<Cita>) {
+  async crear(data: CrearCitaDto) {
     if (
       !data.nombre ||
       !data.correo ||

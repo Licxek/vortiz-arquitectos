@@ -1,9 +1,11 @@
-import { Component, OnInit, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, HostListener, ChangeDetectorRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfiguracionService } from '../../../core/services/configuracion.service'; // ajusta la ruta si tu carpeta es distinta
 import { forkJoin } from 'rxjs';
 import { ThemeService } from '../../../core/services/theme.service'; // ajusta la ruta
+import { ImageUploadComponent } from '../../../shared/image-upload/image-upload.component';
+import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 
 interface DiaSemana {
   nombre: string;
@@ -29,19 +31,30 @@ interface RedSocial {
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent],
   templateUrl: './configuracion.component.html',
 })
 export class ConfiguracionComponent implements OnInit {
-
-  constructor(private configuracionService: ConfiguracionService, private theme: ThemeService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private configuracionService: ConfiguracionService,
+    private theme: ThemeService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   // Tab activa
-  tabActiva: 'negocio' | 'contacto' | 'agenda' | 'apariencia' | 'notificaciones' | 'seo' = 'negocio';
+  tabActiva:
+    | 'negocio'
+    | 'contacto'
+    | 'agenda'
+    | 'apariencia'
+    | 'notificaciones'
+    | 'seo'
+    | 'mantenimiento' = 'negocio';
 
   // Mensaje de éxito flotante
   mensajeExito = '';
   guardando = false;
+  cargando = signal(true);
   confirmacionAbierta = false;
   seccionARestaurar = '';
   confirmacionGuardarAbierta = false;
@@ -55,7 +68,7 @@ export class ConfiguracionComponent implements OnInit {
     ciudad: 'Durango',
     estado: 'Dgo.',
     codigoPostal: '34217',
-    rfc: 'VOR000000-001'
+    rfc: 'VOR000000-001',
   };
 
   // =========== CONTACTO ===========
@@ -63,16 +76,40 @@ export class ConfiguracionComponent implements OnInit {
     telefono: '+52 618 000 0000',
     whatsapp: '618 000 0000',
     correoPublico: 'contacto@vortizarquitectos.com',
-    correoNotificaciones: 'alertas@vortizarquitectos.com'
+    correoNotificaciones: 'alertas@vortizarquitectos.com',
   };
 
   redes: RedSocial[] = [
-    { nombre: 'Instagram', icono: 'instagram', url: 'https://www.instagram.com/vortizarquitectos', activa: true, color: 'pink' },
-    { nombre: 'Facebook', icono: 'facebook', url: 'https://www.facebook.com/vortizarquitectos', activa: true, color: 'blue' },
-    { nombre: 'LinkedIn', icono: 'linkedin', url: 'https://www.linkedin.com/in/vortizarquitectos', activa: true, color: 'sky' },
+    {
+      nombre: 'Instagram',
+      icono: 'instagram',
+      url: 'https://www.instagram.com/vortizarquitectos',
+      activa: true,
+      color: 'pink',
+    },
+    {
+      nombre: 'Facebook',
+      icono: 'facebook',
+      url: 'https://www.facebook.com/vortizarquitectos',
+      activa: true,
+      color: 'blue',
+    },
+    {
+      nombre: 'LinkedIn',
+      icono: 'linkedin',
+      url: 'https://www.linkedin.com/in/vortizarquitectos',
+      activa: true,
+      color: 'sky',
+    },
     { nombre: 'Twitter / X', icono: 'twitter', url: '', activa: false, color: 'gray' },
     { nombre: 'YouTube', icono: 'youtube', url: '', activa: false, color: 'red' },
-    { nombre: 'WhatsApp', icono: 'whatsapp', url: 'https://wa.me/526180000000', activa: true, color: 'green' },
+    {
+      nombre: 'WhatsApp',
+      icono: 'whatsapp',
+      url: 'https://wa.me/526180000000',
+      activa: true,
+      color: 'green',
+    },
   ];
 
   // =========== AGENDA ===========
@@ -91,7 +128,7 @@ export class ConfiguracionComponent implements OnInit {
     horaFin: '18:00',
     duracionCita: 60,
     tiempoEntreCitas: 15,
-    limiteDiario: 8
+    limiteDiario: 8,
   };
 
   diasFeriados: DiaFeriado[] = [
@@ -111,7 +148,7 @@ export class ConfiguracionComponent implements OnInit {
     colorTextoNav: '#ffffff',
     colorTextoFooter: '#ffffff',
     degradadoInicio: '#000000',
-    degradadoFin: '#0a1f3d'
+    degradadoFin: '#0a1f3d',
   };
 
   // =========== NOTIFICACIONES ===========
@@ -122,15 +159,22 @@ export class ConfiguracionComponent implements OnInit {
     resumenSemanal: true,
     recordatorio24h: true,
     recordatorio1h: false,
-    canalRecordatorio: 'email' as 'email' | 'whatsapp' | 'ambos'
+    canalRecordatorio: 'email' as 'email' | 'whatsapp' | 'ambos',
   };
 
   // =========== SEO ===========
   seo = {
     metaTitle: 'Vortiz Arquitectos - Diseño y construcción profesional en Durango',
-    metaDescription: 'Firma de arquitectura en Durango especializada en proyectos residenciales, comerciales e industriales. Diseñamos espacios, construimos confianza.',
+    metaDescription:
+      'Firma de arquitectura en Durango especializada en proyectos residenciales, comerciales e industriales. Diseñamos espacios, construimos confianza.',
     keywords: 'arquitectos durango, diseño residencial, proyectos comerciales, construcción',
-    ogImageUrl: '/assets/img/og-image.png'
+    ogImageUrl: '/assets/img/og-image.png',
+  };
+
+  mantenimiento = {
+    activo: false,
+    mensaje: 'Estamos haciendo mejoras en el sitio. Volveremos muy pronto.',
+    fechaEstimada: '',
   };
 
   ngOnInit() {
@@ -153,13 +197,29 @@ export class ConfiguracionComponent implements OnInit {
         if (c.apariencia) this.apariencia = { ...this.apariencia, ...c.apariencia };
         if (c.notificaciones) this.notificaciones = { ...this.notificaciones, ...c.notificaciones };
         if (c.seo) this.seo = { ...this.seo, ...c.seo };
+        if (c.mantenimiento) {
+          this.mantenimiento = { ...this.mantenimiento, ...c.mantenimiento };
+        }
+        this.cargando.set(false); // 👈 NUEVO
         this.cdr.markForCheck();
       },
-      error: () => {} // si falla, se quedan los valores por defecto
+      error: () => {
+        this.cargando.set(false); // 👈 NUEVO: aunque falle, sale del skeleton
+        this.cdr.markForCheck();
+      },
     });
   }
 
-  cambiarTab(tab: 'negocio' | 'contacto' | 'agenda' | 'apariencia' | 'notificaciones' | 'seo') {
+  cambiarTab(
+    tab:
+      | 'negocio'
+      | 'contacto'
+      | 'agenda'
+      | 'apariencia'
+      | 'notificaciones'
+      | 'seo'
+      | 'mantenimiento',
+  ) {
     this.tabActiva = tab;
   }
 
@@ -172,7 +232,14 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   agregarRed() {
-    this.redes.push({ nombre: '', icono: 'generico', url: '', activa: true, color: 'gray', personalizada: true });
+    this.redes.push({
+      nombre: '',
+      icono: 'generico',
+      url: '',
+      activa: true,
+      color: 'gray',
+      personalizada: true,
+    });
   }
 
   private detectarIcono(nombre: string): string {
@@ -206,14 +273,14 @@ export class ConfiguracionComponent implements OnInit {
       this.diasFeriados.push({
         id: Date.now(),
         fecha: this.nuevoFeriado.fecha,
-        motivo: this.nuevoFeriado.motivo
+        motivo: this.nuevoFeriado.motivo,
       });
       this.nuevoFeriado = { fecha: '', motivo: '' };
     }
   }
 
   eliminarFeriado(id: number) {
-    this.diasFeriados = this.diasFeriados.filter(f => f.id !== id);
+    this.diasFeriados = this.diasFeriados.filter((f) => f.id !== id);
   }
 
   guardarCambios(seccion: string) {
@@ -228,11 +295,14 @@ export class ConfiguracionComponent implements OnInit {
         cambios.push({ key: 'redes', datos: this.redes });
         break;
       case 'Agenda':
-        cambios.push({ key: 'agenda', datos: {
-          ...this.agenda,
-          diasSemana: this.diasSemana,
-          diasFeriados: this.diasFeriados
-        }});
+        cambios.push({
+          key: 'agenda',
+          datos: {
+            ...this.agenda,
+            diasSemana: this.diasSemana,
+            diasFeriados: this.diasFeriados,
+          },
+        });
         break;
       case 'Apariencia':
         cambios.push({ key: 'apariencia', datos: this.apariencia });
@@ -243,23 +313,34 @@ export class ConfiguracionComponent implements OnInit {
       case 'SEO':
         cambios.push({ key: 'seo', datos: this.seo });
         break;
+      case 'Mantenimiento':
+        cambios.push({ key: 'mantenimiento', datos: this.mantenimiento });
+        break;
     }
 
     this.guardando = true;
-    forkJoin(cambios.map(c => this.configuracionService.guardarSeccion(c.key, c.datos))).subscribe({
+    forkJoin(
+      cambios.map((c) => this.configuracionService.guardarSeccion(c.key, c.datos)),
+    ).subscribe({
       next: () => {
         this.guardando = false;
         this.configuracionService.cargarPublica();
         this.mensajeExito = `Cambios de "${seccion}" guardados correctamente`;
         this.cdr.markForCheck();
-        setTimeout(() => { this.mensajeExito = ''; this.cdr.markForCheck(); }, 3000);
+        setTimeout(() => {
+          this.mensajeExito = '';
+          this.cdr.markForCheck();
+        }, 3000);
       },
       error: () => {
         this.guardando = false;
         this.mensajeExito = 'Error al guardar. Intenta de nuevo.';
         this.cdr.markForCheck();
-        setTimeout(() => { this.mensajeExito = ''; this.cdr.markForCheck(); }, 3000);
-      }
+        setTimeout(() => {
+          this.mensajeExito = '';
+          this.cdr.markForCheck();
+        }, 3000);
+      },
     });
   }
 
@@ -328,7 +409,7 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   get duracionLabel() {
-    return this.opcionesDuracion.find(o => o.value === this.agenda.duracionCita)?.label || '';
+    return this.opcionesDuracion.find((o) => o.value === this.agenda.duracionCita)?.label || '';
   }
 
   toggleSelectorTiempoEntre(event: Event) {
@@ -344,7 +425,9 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   get tiempoEntreLabel() {
-    return this.opcionesTiempoEntre.find(o => o.value === this.agenda.tiempoEntreCitas)?.label || '';
+    return (
+      this.opcionesTiempoEntre.find((o) => o.value === this.agenda.tiempoEntreCitas)?.label || ''
+    );
   }
 
   private cerrarTodos() {
@@ -394,12 +477,36 @@ export class ConfiguracionComponent implements OnInit {
           correoNotificaciones: 'alertas@vortizarquitectos.com',
         };
         this.redes = [
-          { nombre: 'Instagram', icono: 'instagram', url: 'https://www.instagram.com/vortizarquitectos', activa: true, color: 'pink' },
-          { nombre: 'Facebook', icono: 'facebook', url: 'https://www.facebook.com/vortizarquitectos', activa: true, color: 'blue' },
-          { nombre: 'LinkedIn', icono: 'linkedin', url: 'https://www.linkedin.com/in/vortizarquitectos', activa: true, color: 'sky' },
+          {
+            nombre: 'Instagram',
+            icono: 'instagram',
+            url: 'https://www.instagram.com/vortizarquitectos',
+            activa: true,
+            color: 'pink',
+          },
+          {
+            nombre: 'Facebook',
+            icono: 'facebook',
+            url: 'https://www.facebook.com/vortizarquitectos',
+            activa: true,
+            color: 'blue',
+          },
+          {
+            nombre: 'LinkedIn',
+            icono: 'linkedin',
+            url: 'https://www.linkedin.com/in/vortizarquitectos',
+            activa: true,
+            color: 'sky',
+          },
           { nombre: 'Twitter / X', icono: 'twitter', url: '', activa: false, color: 'gray' },
           { nombre: 'YouTube', icono: 'youtube', url: '', activa: false, color: 'red' },
-          { nombre: 'WhatsApp', icono: 'whatsapp', url: 'https://wa.me/526180000000', activa: true, color: 'green' },
+          {
+            nombre: 'WhatsApp',
+            icono: 'whatsapp',
+            url: 'https://wa.me/526180000000',
+            activa: true,
+            color: 'green',
+          },
         ];
         break;
       case 'Agenda':
@@ -412,7 +519,13 @@ export class ConfiguracionComponent implements OnInit {
           { nombre: 'Sábado', abrev: 'Sáb', activo: false },
           { nombre: 'Domingo', abrev: 'Dom', activo: false },
         ];
-        this.agenda = { horaInicio: '09:00', horaFin: '18:00', duracionCita: 60, tiempoEntreCitas: 15, limiteDiario: 8 };
+        this.agenda = {
+          horaInicio: '09:00',
+          horaFin: '18:00',
+          duracionCita: 60,
+          tiempoEntreCitas: 15,
+          limiteDiario: 8,
+        };
         this.diasFeriados = [
           { id: 1, fecha: '2026-12-25', motivo: 'Navidad' },
           { id: 2, fecha: '2026-01-01', motivo: 'Año nuevo' },
@@ -446,7 +559,8 @@ export class ConfiguracionComponent implements OnInit {
       case 'SEO':
         this.seo = {
           metaTitle: 'Vortiz Arquitectos - Diseño y construcción profesional en Durango',
-          metaDescription: 'Firma de arquitectura en Durango especializada en proyectos residenciales, comerciales e industriales. Diseñamos espacios, construimos confianza.',
+          metaDescription:
+            'Firma de arquitectura en Durango especializada en proyectos residenciales, comerciales e industriales. Diseñamos espacios, construimos confianza.',
           keywords: 'arquitectos durango, diseño residencial, proyectos comerciales, construcción',
           ogImageUrl: '/assets/img/og-image.png',
         };
@@ -454,5 +568,43 @@ export class ConfiguracionComponent implements OnInit {
     }
 
     this.guardarCambios(seccion);
+  }
+
+  async setMantenimiento(nuevoEstado: boolean) {
+    if (this.mantenimiento.activo === nuevoEstado || this.guardando) return;
+
+    this.guardando = true;
+    this.cdr.markForCheck();
+
+    const payload = {
+      activo: nuevoEstado,
+      mensaje: this.mantenimiento.mensaje,
+      fechaEstimada: this.mantenimiento.fechaEstimada,
+    };
+
+    this.configuracionService.guardarSeccion('mantenimiento', payload).subscribe({
+      next: (res) => {
+        this.mantenimiento.activo = nuevoEstado;
+        this.configuracionService.cargarPublica();
+        this.guardando = false;
+        this.mensajeExito = nuevoEstado
+          ? '🛠️ Modo mantenimiento ACTIVADO'
+          : '✅ Sitio público restaurado';
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.mensajeExito = '';
+          this.cdr.markForCheck();
+        }, 3000);
+      },
+      error: (err) => {
+        this.guardando = false;
+        this.mensajeExito = 'Error al cambiar el modo. Intenta de nuevo.';
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.mensajeExito = '';
+          this.cdr.markForCheck();
+        }, 3000);
+      },
+    });
   }
 }

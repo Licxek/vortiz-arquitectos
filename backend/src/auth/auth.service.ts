@@ -3,6 +3,7 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  OnModuleDestroy,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
@@ -10,20 +11,62 @@ import { UsuariosService } from '../usuarios/usuarios.service';
 import { MailService } from '../mail/mail.service';
 import { randomInt } from 'crypto';
 
+interface IntentosEntry {
+  count: number;
+  resetAt: number;
+}
+
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleDestroy {
+  // 🔒 Rate limit por email (en memoria, complementa el throttle por IP)
+  private intentosLogin = new Map<string, IntentosEntry>();
+  private readonly MAX_INTENTOS_LOGIN = 5;
+  private readonly BLOQUEO_LOGIN_MS = 15 * 60 * 1000; // 15 min
+
+  // 🧹 Cleanup periódico para evitar memory leak
+  private cleanupInterval: NodeJS.Timeout;
+
   constructor(
     private usuarios: UsuariosService,
     private jwt: JwtService,
     private mail: MailService,
-  ) {}
+  ) {
+    // Cada hora limpia entradas caducadas
+    this.cleanupInterval = setInterval(
+      () => this.limpiarIntentosCaducados(),
+      60 * 60 * 1000,
+    );
+  }
+
+  onModuleDestroy() {
+    if (this.cleanupInterval) clearInterval(this.cleanupInterval);
+  }
+
+  private normalizar(correo: string): string {
+    return correo.toLowerCase().trim();
+  }
 
   async login(correo: string, password: string) {
-    const usuario = await this.usuarios.findByCorreo(correo);
-    if (!usuario) throw new UnauthorizedException('Credenciales inválidas');
+    // 🔒 1) Verificar bloqueo por exceso de intentos
+    const correoNorm = this.normalizar(correo);
+    this.verificarBloqueoLogin(correoNorm);
 
+    // 2) Buscar usuario
+    const usuario = await this.usuarios.findByCorreo(correo);
+    if (!usuario) {
+      this.registrarIntentoLoginFallido(correo);
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
+
+    // 3) Comparar password
     const ok = await bcrypt.compare(password, usuario.password);
-    if (!ok) throw new UnauthorizedException('Credenciales inválidas');
+    if (!ok) {
+      this.registrarIntentoLoginFallido(correo);
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
+
+    // ✅ 4) Login exitoso: limpiar contador de intentos
+    this.intentosLogin.delete(correo);
 
     const payload = {
       sub: usuario.id,
@@ -32,11 +75,11 @@ export class AuthService {
     };
     const token = await this.jwt.signAsync(payload);
 
-    const { password: _, ...datos } = usuario; // nunca devolver el hash
+    const { password: _, ...datos } = usuario;
     return { token, usuario: datos };
   }
 
-  // PASO 1: genera y "envía" el código de 6 dígitos
+  // PASO 1: genera y envía el código de 6 dígitos
   async solicitarRecuperacion(correo: string) {
     const usuario = await this.usuarios.findByCorreo(correo);
     if (usuario) {
@@ -74,6 +117,53 @@ export class AuthService {
     usuario!.resetToken = null;
     usuario!.resetTokenExpira = null;
     await this.usuarios.guardar(usuario!);
+
+    // ✅ Al restablecer, limpiar también el bloqueo de login
+    this.intentosLogin.delete(correo);
+
     return { message: 'Contraseña actualizada. Ya puedes iniciar sesión.' };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 🔒 PRIVADOS — Rate limit por email
+  // ═══════════════════════════════════════════════════════════
+
+  private verificarBloqueoLogin(correo: string): void {
+    const ahora = Date.now();
+    const entry = this.intentosLogin.get(correo);
+
+    if (!entry || entry.resetAt <= ahora) return;
+
+    if (entry.count >= this.MAX_INTENTOS_LOGIN) {
+      const minutos = Math.ceil((entry.resetAt - ahora) / 60000);
+      throw new UnauthorizedException(
+        `Cuenta bloqueada temporalmente por exceso de intentos. Intenta en ${minutos} ${
+          minutos === 1 ? 'minuto' : 'minutos'
+        }.`,
+      );
+    }
+  }
+
+  private registrarIntentoLoginFallido(correo: string): void {
+    const ahora = Date.now();
+    const entry = this.intentosLogin.get(correo);
+
+    if (entry && entry.resetAt > ahora) {
+      entry.count++;
+    } else {
+      this.intentosLogin.set(correo, {
+        count: 1,
+        resetAt: ahora + this.BLOQUEO_LOGIN_MS,
+      });
+    }
+  }
+
+  private limpiarIntentosCaducados(): void {
+    const ahora = Date.now();
+    for (const [correo, entry] of this.intentosLogin.entries()) {
+      if (entry.resetAt <= ahora) {
+        this.intentosLogin.delete(correo);
+      }
+    }
   }
 }

@@ -6,6 +6,8 @@ import { ContenidoService } from '../../core/services/contenido.service';
 import { CatalogoService, Servicio } from '../../core/services/catalogo.service';
 import { CitasService } from '../../core/services/citas.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
+import { TelefonoInputComponent } from '../../shared/telefono-input/telefono-input.component';
+import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 
 interface FormCita {
   nombreCompleto: string;
@@ -21,7 +23,7 @@ interface FormCita {
 @Component({
   selector: 'app-citas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, FormatoTextoPipe],
+  imports: [CommonModule, FormsModule, RouterModule, FormatoTextoPipe, TelefonoInputComponent, SkeletonComponent],
   templateUrl: './citas.component.html',
 })
 export class CitasComponent implements OnInit {
@@ -29,24 +31,24 @@ export class CitasComponent implements OnInit {
   private catalogo = inject(CatalogoService);
   private citas = inject(CitasService);
 
-  // Catálogo real (señal del CatalogoService)
   servicios = this.catalogo.servicios;
 
-  // HERO
-  heroBadge = 'Agenda tu cita';
-  heroTitulo = 'Conversemos sobre *tu proyecto*';
-  heroDescripcion =
-    'Llena el formulario y nos pondremos en contacto contigo en menos de 24 horas.';
-  // BENEFICIOS
-  benefTitulo = '¿Por qué agendar con nosotros?';
-  benef1 = 'Respuesta en menos de 24h';
-  benef2 = 'Consulta inicial sin compromiso';
-  benef3 = 'Asesoría de un profesional certificado';
-  benef4 = 'Cotización rápida y transparente';
-  // HORARIOS
-  horarioLunVie = '9:00 – 18:00';
-  horarioSabado = '9:00 – 13:00';
-  horarioDomingo = 'Cerrado';
+  // ============ HERO ============
+  heroBadge = '';
+  heroTitulo = '';
+  heroDescripcion = '';
+
+  // ============ BENEFICIOS ============
+  benefTitulo = '';
+  benef1 = '';
+  benef2 = '';
+  benef3 = '';
+  benef4 = '';
+
+  // ============ HORARIOS ============
+  horarioLunVie = '';
+  horarioSabado = '';
+  horarioDomingo = '';
 
   form = signal<FormCita>({
     nombreCompleto: '',
@@ -163,18 +165,21 @@ export class CitasComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.heroBadge = this.contenidoService.getCampo('citas', 'hero', 'badge', this.heroBadge);
-    this.heroTitulo = this.contenidoService.getCampo('citas', 'hero', 'titulo', this.heroTitulo);
-    this.heroDescripcion = this.contenidoService.getCampo('citas', 'hero', 'descripcion', this.heroDescripcion);
+    // HERO
+    this.heroBadge = this.contenidoService.getCampo('citas', 'hero', 'badge');
+    this.heroTitulo = this.contenidoService.getCampo('citas', 'hero', 'titulo');
+    this.heroDescripcion = this.contenidoService.getCampo('citas', 'hero', 'descripcion');
 
-    this.benefTitulo = this.contenidoService.getCampo('citas', 'beneficios', 'titulo', this.benefTitulo);
-    this.benef1 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio1', this.benef1);
-    this.benef2 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio2', this.benef2);
-    this.benef3 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio3', this.benef3);
-    this.benef4 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio4', this.benef4);
+    // BENEFICIOS
+    this.benefTitulo = this.contenidoService.getCampo('citas', 'beneficios', 'titulo');
+    this.benef1 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio1');
+    this.benef2 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio2');
+    this.benef3 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio3');
+    this.benef4 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio4');
 
-    this.horarioLunVie = this.contenidoService.getCampo('citas', 'horarios', 'lunVie', this.horarioLunVie);
-    this.horarioSabado = this.contenidoService.getCampo('citas', 'horarios', 'sabado', this.horarioSabado);
-    this.horarioDomingo = this.contenidoService.getCampo('citas', 'horarios', 'domingo', this.horarioDomingo);
+    // HORARIOS
+    this.horarioLunVie = this.contenidoService.getCampo('citas', 'horarios', 'lunVie');
+    this.horarioSabado = this.contenidoService.getCampo('citas', 'horarios', 'sabado');
+    this.horarioDomingo = this.contenidoService.getCampo('citas', 'horarios', 'domingo');
   }
 }

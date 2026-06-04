@@ -21,3 +21,10 @@ INSERT INTO configuracion (negocio, contacto, redes, agenda, apariencia, notific
   '{"nuevaCita":true,"nuevaConsulta":true,"resumenDiario":false,"resumenSemanal":true,"recordatorio24h":true,"recordatorio1h":false,"canalRecordatorio":"email"}',
   '{"metaTitle":"Vortiz Arquitectos - Diseño y construcción profesional en Durango","metaDescription":"Firma de arquitectura en Durango especializada en proyectos residenciales, comerciales e industriales.","keywords":"arquitectos durango, diseño residencial, proyectos comerciales, construcción","ogImageUrl":"/assets/img/og-image.png"}'
 );
+
+
+ALTER TABLE configuracion
+  ADD COLUMN IF NOT EXISTS mantenimiento JSONB NOT NULL DEFAULT '{"activo":false,"mensaje":"Estamos haciendo mejoras en el sitio. Volveremos muy pronto.","fechaEstimada":""}'::jsonb;
+
+COMMENT ON COLUMN configuracion.mantenimiento IS 
+  'Configuración del modo mantenimiento: { activo, mensaje, fechaEstimada }';

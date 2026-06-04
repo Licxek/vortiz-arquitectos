@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Put,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, UseGuards } from '@nestjs/common';
 import { ContenidoPaginasService } from './contenido-paginas.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'; // ⚠️ ajusta a tu ruta real
 
@@ -29,7 +22,7 @@ export class ContenidoPaginasController {
   @Put(':pagina')
   guardar(
     @Param('pagina') pagina: string,
-    @Body() contenido: Record<string, Record<string, string>>,
+    @Body() contenido: Record<string, Record<string, any>>,
   ) {
     return this.servicio.guardar(pagina, contenido);
   }

@@ -30,18 +30,32 @@
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-[fadeIn_0.2s_ease-out]"
     (click)="cancelarRestauracion()"
   >
-    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6" (click)="$event.stopPropagation()">
+    <div
+      class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6"
+      (click)="$event.stopPropagation()"
+    >
       <div class="flex items-start gap-4">
         <div class="w-11 h-11 bg-amber-100 rounded-full flex items-center justify-center shrink-0">
-          <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          <svg
+            class="w-6 h-6 text-amber-600"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+            />
           </svg>
         </div>
         <div class="flex-1">
           <h3 class="text-base font-semibold text-gray-900 mb-1">Restaurar valores originales</h3>
           <p class="text-sm text-gray-500">
             Se sobrescribirá lo que tengas guardado en
-            <span class="font-semibold text-gray-700">{{ seccionARestaurar }}</span>. Esta acción no se puede deshacer.
+            <span class="font-semibold text-gray-700">{{ seccionARestaurar }}</span
+            >. Esta acción no se puede deshacer.
           </p>
         </div>
       </div>
@@ -65,16 +79,25 @@
     </div>
   </div>
 
-    <!-- Modal de confirmación de guardado -->
+  <!-- Modal de confirmación de guardado -->
   <div
     *ngIf="confirmacionGuardarAbierta"
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-[fadeIn_0.2s_ease-out]"
     (click)="cancelarGuardado()"
   >
-    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6" (click)="$event.stopPropagation()">
+    <div
+      class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6"
+      (click)="$event.stopPropagation()"
+    >
       <div class="flex items-start gap-4">
         <div class="w-11 h-11 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-          <svg class="w-6 h-6 text-[#0a4d7a]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <svg
+            class="w-6 h-6 text-[#0a4d7a]"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
@@ -82,7 +105,8 @@
           <h3 class="text-base font-semibold text-gray-900 mb-1">Guardar cambios</h3>
           <p class="text-sm text-gray-500">
             ¿Guardar los cambios de
-            <span class="font-semibold text-gray-700">{{ seccionAGuardar }}</span>? Se actualizarán en el sitio.
+            <span class="font-semibold text-gray-700">{{ seccionAGuardar }}</span
+            >? Se actualizarán en el sitio.
           </p>
         </div>
       </div>
@@ -222,11 +246,52 @@
         </svg>
         SEO
       </button>
+
+      <button
+        (click)="cambiarTab('mantenimiento')"
+        class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+        [class.bg-[#0a4d7a]]="tabActiva === 'mantenimiento'"
+        [class.text-white]="tabActiva === 'mantenimiento'"
+        [class.shadow-md]="tabActiva === 'mantenimiento'"
+        [class.text-gray-600]="tabActiva !== 'mantenimiento'"
+        [class.hover:bg-gray-50]="tabActiva !== 'mantenimiento'"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+        Mantenimiento
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ SKELETON: mientras carga la configuración completa ============ -->
+  <div *ngIf="cargando()" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+    <div
+      *ngFor="let _ of [1, 2, 3]"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6"
+    >
+      <app-skeleton variant="text" width="35%" height="1.25rem" class="block mb-2" />
+      <app-skeleton variant="text" width="55%" class="block mb-5" />
+      <div class="space-y-4">
+        <div *ngFor="let __ of [1, 2]" class="space-y-2">
+          <app-skeleton variant="text" width="140px" height="0.75rem" />
+          <app-skeleton variant="rect" height="42px" />
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- ============ TAB: NEGOCIO ============ -->
-  <div *ngIf="tabActiva === 'negocio'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+  <div *ngIf="tabActiva === 'negocio' && !cargando()" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
     <!-- Información general -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Información general</h3>
@@ -359,7 +424,7 @@
   </div>
 
   <!-- ============ TAB: CONTACTO ============ -->
-  <div *ngIf="tabActiva === 'contacto'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+  <div *ngIf="tabActiva === 'contacto' && !cargando()" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <h3 class="text-base font-semibold text-gray-900 mb-1">Información de contacto</h3>
       <p class="text-xs text-gray-500 mb-5">Datos que verán tus clientes</p>
@@ -473,12 +538,17 @@
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
       <div class="flex items-center justify-between mb-1">
         <h3 class="text-base font-semibold text-gray-900">Redes sociales</h3>
-        <span class="text-xs font-medium" [class.text-gray-400]="redesActivas <= 4" [class.text-amber-600]="redesActivas > 4">
+        <span
+          class="text-xs font-medium"
+          [class.text-gray-400]="redesActivas <= 4"
+          [class.text-amber-600]="redesActivas > 4"
+        >
           {{ redesActivas }} activas
         </span>
       </div>
       <p class="text-xs text-gray-500 mb-5">
-        Activa las redes que aparecerán en el footer. Solo se muestran las primeras <span class="font-semibold">4 activas</span>.
+        Activa las redes que aparecerán en el footer. Solo se muestran las primeras
+        <span class="font-semibold">4 activas</span>.
       </p>
 
       <div class="space-y-3">
@@ -495,25 +565,144 @@
               [class.bg-green-500]="red.activa"
               [class.bg-gray-300]="!red.activa"
             >
-              <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" [class.translate-x-5]="red.activa"></span>
+              <span
+                class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                [class.translate-x-5]="red.activa"
+              ></span>
             </button>
 
             <div class="flex items-center gap-2 w-40 shrink-0">
               <ng-container [ngSwitch]="red.icono">
-                <svg *ngSwitchCase="'instagram'" class="w-5 h-5" [class.text-pink-500]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                <svg *ngSwitchCase="'facebook'" class="w-5 h-5" [class.text-blue-600]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                <svg *ngSwitchCase="'linkedin'" class="w-5 h-5" [class.text-sky-600]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                <svg *ngSwitchCase="'twitter'" class="w-5 h-5" [class.text-gray-900]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                <svg *ngSwitchCase="'youtube'" class="w-5 h-5" [class.text-red-600]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                <svg *ngSwitchCase="'whatsapp'" class="w-5 h-5" [class.text-green-500]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z"/></svg>
-                <svg *ngSwitchCase="'tiktok'" class="w-5 h-5" [class.text-gray-900]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
-                <svg *ngSwitchCase="'pinterest'" class="w-5 h-5" [class.text-red-600]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592.026 11.985.026L12.017 0z"/></svg>
-                <svg *ngSwitchCase="'telegram'" class="w-5 h-5" [class.text-sky-500]="red.activa" [class.text-gray-400]="!red.activa" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                <svg
+                  *ngSwitchCase="'instagram'"
+                  class="w-5 h-5"
+                  [class.text-pink-500]="red.activa"
+                  [class.text-gray-400]="!red.activa"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'facebook'"
+                  class="w-5 h-5"
+                  [class.text-blue-600]="red.activa"
+                  [class.text-gray-400]="!red.activa"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'linkedin'"
+                  class="w-5 h-5"
+                  [class.text-sky-600]="red.activa"
+                  [class.text-gray-400]="!red.activa"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'twitter'"
+                  class="w-5 h-5"
+                  [class.text-gray-900]="red.activa"
+                  [class.text-gray-400]="!red.activa"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'youtube'"
+                  class="w-5 h-5"
+                  [class.text-red-600]="red.activa"
+                  [class.text-gray-400]="!red.activa"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'whatsapp'"
+                  class="w-5 h-5"
+                  [class.text-green-500]="red.activa"
+                  [class.text-gray-400]="!red.activa"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'tiktok'"
+                  class="w-5 h-5"
+                  [class.text-gray-900]="red.activa"
+                  [class.text-gray-400]="!red.activa"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'pinterest'"
+                  class="w-5 h-5"
+                  [class.text-red-600]="red.activa"
+                  [class.text-gray-400]="!red.activa"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592.026 11.985.026L12.017 0z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'telegram'"
+                  class="w-5 h-5"
+                  [class.text-sky-500]="red.activa"
+                  [class.text-gray-400]="!red.activa"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"
+                  />
+                </svg>
                 <!-- Genérico para redes personalizadas -->
-                <svg *ngSwitchDefault class="w-5 h-5" [class.text-gray-600]="red.activa" [class.text-gray-400]="!red.activa" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0zM3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18 15 15 0 010-18z"/></svg>
+                <svg
+                  *ngSwitchDefault
+                  class="w-5 h-5"
+                  [class.text-gray-600]="red.activa"
+                  [class.text-gray-400]="!red.activa"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0zM3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18 15 15 0 010-18z"
+                  />
+                </svg>
               </ng-container>
 
-              <span *ngIf="!red.personalizada" class="text-sm font-medium text-gray-700">{{ red.nombre }}</span>
+              <span *ngIf="!red.personalizada" class="text-sm font-medium text-gray-700">{{
+                red.nombre
+              }}</span>
               <input
                 *ngIf="red.personalizada"
                 type="text"
@@ -540,7 +729,19 @@
             aria-label="Eliminar red"
             class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
           </button>
         </div>
       </div>
@@ -550,7 +751,15 @@
         type="button"
         class="mt-3 flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#0a4d7a] hover:bg-blue-50 rounded-lg transition-colors"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
         Agregar red social
       </button>
     </div>
@@ -589,7 +798,7 @@
   </div>
 </div>
 <!-- ============ TAB: AGENDA ============ -->
-<div *ngIf="tabActiva === 'agenda'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+<div *ngIf="tabActiva === 'agenda' && !cargando()" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
   <!-- Días y horarios -->
   <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
     <h3 class="text-base font-semibold text-gray-900 mb-1">Días y horarios de atención</h3>
@@ -968,12 +1177,12 @@
 
   <div class="flex justify-end gap-3 sticky bottom-4 z-10">
     <button
-        (click)="restaurar('Agenda')"
-        type="button"
-        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
-      >
-        Restaurar original
-      </button>
+      (click)="restaurar('Agenda')"
+      type="button"
+      class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+    >
+      Restaurar original
+    </button>
     <button
       (click)="pedirGuardar('Agenda')"
       [disabled]="guardando"
@@ -1000,7 +1209,7 @@
 </div>
 
 <!-- ============ TAB: APARIENCIA ============ -->
-<div *ngIf="tabActiva === 'apariencia'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+<div *ngIf="tabActiva === 'apariencia' && !cargando()" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
   <!-- Logos -->
   <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
     <h3 class="text-base font-semibold text-gray-900 mb-1">Logos e iconos</h3>
@@ -1009,50 +1218,41 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- Logo principal -->
       <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-          >Logo del sitio</label
-        >
-        <div
-          class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 hover:border-[#0a4d7a] transition-colors cursor-pointer"
-        >
-          <img [src]="apariencia.logoUrl" class="h-20 w-auto" />
-          <button class="text-xs text-[#0a4d7a] font-semibold hover:underline">
-            Cambiar imagen
-          </button>
-        </div>
+        <app-image-upload
+          label="Logo del sitio"
+          [valor]="apariencia.logoUrl || ''"
+          (valorChange)="apariencia.logoUrl = $event"
+          carpeta="marca"
+          aspectRatio="square"
+          objectFit="contain"
+        ></app-image-upload>
         <p class="text-xs text-gray-500 mt-1.5">Aparece en el header</p>
       </div>
 
       <!-- Logo footer -->
       <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-          >Logo del footer</label
-        >
-        <div
-          class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 bg-gray-900 hover:border-[#0a4d7a] transition-colors cursor-pointer"
-        >
-          <img [src]="apariencia.logoFooterUrl" class="h-20 w-auto" />
-          <button class="text-xs text-blue-400 font-semibold hover:underline">
-            Cambiar imagen
-          </button>
-        </div>
+        <app-image-upload
+          label="Logo del footer"
+          [valor]="apariencia.logoFooterUrl || ''"
+          (valorChange)="apariencia.logoFooterUrl = $event"
+          carpeta="marca"
+          aspectRatio="square"
+          objectFit="contain"
+        ></app-image-upload>
         <p class="text-xs text-gray-500 mt-1.5">Versión para fondo oscuro</p>
       </div>
 
       <!-- Favicon -->
       <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-          >Favicon</label
-        >
-        <div
-          class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 hover:border-[#0a4d7a] transition-colors cursor-pointer h-[120px]"
-        >
-          <img [src]="apariencia.faviconUrl" class="h-12 w-12" />
-          <button class="text-xs text-[#0a4d7a] font-semibold hover:underline">
-            Cambiar imagen
-          </button>
-        </div>
-        <p class="text-xs text-gray-500 mt-1.5">Icono en la pestaña del navegador</p>
+        <app-image-upload
+          label="Favicon"
+          [valor]="apariencia.faviconUrl || ''"
+          (valorChange)="apariencia.faviconUrl = $event"
+          carpeta="marca"
+          aspectRatio="square"
+          objectFit="contain"
+        ></app-image-upload>
+        <p class="text-xs text-gray-500 mt-1.5">Icono de la pestaña</p>
       </div>
     </div>
   </div>
@@ -1263,7 +1463,7 @@
 </div>
 
 <!-- ============ TAB: NOTIFICACIONES ============ -->
-<div *ngIf="tabActiva === 'notificaciones'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+<div *ngIf="tabActiva === 'notificaciones' && !cargando()" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
   <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
     <h3 class="text-base font-semibold text-gray-900 mb-1">Notificaciones para ti</h3>
     <p class="text-xs text-gray-500 mb-5">Recibirás avisos en tu correo de notificaciones</p>
@@ -1459,12 +1659,12 @@
 
   <div class="flex justify-end gap-3 sticky bottom-4 z-10">
     <button
-        (click)="restaurar('Notificaciones')"
-        type="button"
-        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
-      >
-        Restaurar original
-      </button>
+      (click)="restaurar('Notificaciones')"
+      type="button"
+      class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+    >
+      Restaurar original
+    </button>
     <button
       (click)="pedirGuardar('Notificaciones')"
       [disabled]="guardando"
@@ -1491,7 +1691,7 @@
 </div>
 
 <!-- ============ TAB: SEO ============ -->
-<div *ngIf="tabActiva === 'seo'" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+<div *ngIf="tabActiva === 'seo' && !cargando()" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
   <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
     <h3 class="text-base font-semibold text-gray-900 mb-1">Optimización para buscadores</h3>
     <p class="text-xs text-gray-500 mb-5">
@@ -1564,35 +1764,25 @@
   <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
     <h3 class="text-base font-semibold text-gray-900 mb-1">Imagen para compartir</h3>
     <p class="text-xs text-gray-500 mb-5">
-      Esta imagen aparece cuando alguien comparte tu sitio en redes sociales
+      Aparece cuando alguien comparte tu sitio en redes sociales · Recomendado 1200 x 630 px
     </p>
 
-    <div
-      class="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center gap-2 hover:border-[#0a4d7a] transition-colors cursor-pointer"
-    >
-      <div
-        class="w-full max-w-md aspect-video bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] rounded-lg flex items-center justify-center text-white"
-      >
-        <div class="text-center">
-          <p class="text-2xl font-bold">Vortiz Arquitectos</p>
-          <p class="text-sm text-gray-300 mt-1">{{ negocio.eslogan }}</p>
-        </div>
-      </div>
-      <button class="text-xs text-[#0a4d7a] font-semibold hover:underline mt-2">
-        Cambiar imagen
-      </button>
-      <p class="text-xs text-gray-500">Tamaño recomendado: 1200 x 630 px</p>
-    </div>
+    <app-image-upload
+      [valor]="seo.ogImageUrl || ''"
+      (valorChange)="seo.ogImageUrl = $event"
+      carpeta="seo"
+      aspectRatio="wide"
+    ></app-image-upload>
   </div>
 
   <div class="flex justify-end gap-3 sticky bottom-4 z-10">
     <button
-        (click)="restaurar('SEO')"
-        type="button"
-        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
-      >
-        Restaurar original
-      </button>
+      (click)="restaurar('SEO')"
+      type="button"
+      class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+    >
+      Restaurar original
+    </button>
     <button
       (click)="pedirGuardar('SEO')"
       [disabled]="guardando"
@@ -1614,6 +1804,140 @@
         ></path>
       </svg>
       {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+    </button>
+  </div>
+</div>
+<!-- ============ TAB: MANTENIMIENTO ============ -->
+<div *ngIf="tabActiva === 'mantenimiento' && !cargando()" class="space-y-6 animate-[fadeIn_0.2s_ease-out]">
+  <section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+    <div class="flex items-start justify-between gap-4 mb-6">
+      <div class="flex items-start gap-3">
+        <div
+          class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+          [class.bg-orange-100]="mantenimiento.activo"
+          [class.bg-gray-100]="!mantenimiento.activo"
+        >
+          <svg
+            class="w-5 h-5"
+            [class.text-orange-600]="mantenimiento.activo"
+            [class.text-gray-500]="!mantenimiento.activo"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-lg font-bold text-gray-900">Modo mantenimiento</h2>
+          <p class="text-sm text-gray-500 mt-0.5">
+            Bloquea el acceso público al sitio temporalmente.
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        (click)="setMantenimiento(!mantenimiento.activo)"
+        [disabled]="guardando"
+        class="relative w-14 h-7 rounded-full transition-colors shrink-0 disabled:opacity-60"
+        [class.bg-orange-500]="mantenimiento.activo"
+        [class.bg-gray-300]="!mantenimiento.activo"
+      >
+        <span
+          class="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform"
+          [class.translate-x-7]="mantenimiento.activo"
+        ></span>
+      </button>
+    </div>
+
+    <div
+      *ngIf="mantenimiento.activo"
+      class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-5 flex items-start gap-3"
+    >
+      <svg
+        class="w-5 h-5 text-orange-600 shrink-0 mt-0.5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+        />
+      </svg>
+      <div class="text-sm text-orange-800">
+        <p class="font-semibold mb-0.5">Tu sitio público está en mantenimiento.</p>
+        <p class="text-xs">
+          Los visitantes verán la página de mantenimiento. El admin sigue accesible.
+        </p>
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-sm font-semibold text-gray-700 mb-2">
+        Mensaje que verán los visitantes
+      </label>
+      <textarea
+        [(ngModel)]="mantenimiento.mensaje"
+        rows="3"
+        maxlength="200"
+        placeholder="Ej: Estamos actualizando nuestro portafolio. Volvemos el viernes."
+        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d7a] focus:bg-white resize-none"
+      ></textarea>
+      <p class="text-xs text-gray-500 mt-1">
+        {{ (mantenimiento.mensaje || '').length }}/200 caracteres
+      </p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-2">
+        Fecha estimada de regreso <span class="text-gray-400 font-normal">(opcional)</span>
+      </label>
+      <input
+        type="datetime-local"
+        [(ngModel)]="mantenimiento.fechaEstimada"
+        class="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+      />
+      <p class="text-xs text-gray-500 mt-1">Si la dejas vacía, no se muestra fecha en la página.</p>
+    </div>
+  </section>
+
+  <!-- Botones guardar/restaurar -->
+  <div class="flex justify-end gap-3 sticky bottom-4 z-10">
+    <button
+      (click)="pedirGuardar('Mantenimiento')"
+      [disabled]="guardando"
+      class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
+    >
+      <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+          class="opacity-25"
+        ></circle>
+        <path
+          fill="currentColor"
+          class="opacity-75"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+        ></path>
+      </svg>
+      {{ guardando ? 'Guardando...' : 'Guardar mensaje y fecha' }}
     </button>
   </div>
 </div>

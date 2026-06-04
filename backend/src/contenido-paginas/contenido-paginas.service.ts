@@ -3,7 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ContenidoPagina } from './contenido-pagina.entity';
 
-const PAGINAS_PERMITIDAS = ['inicio', 'nosotros', 'proyectos', 'servicios', 'citas'];
+const PAGINAS_PERMITIDAS = [
+  'inicio',
+  'nosotros',
+  'proyectos',
+  'servicios',
+  'citas',
+];
 
 @Injectable()
 export class ContenidoPaginasService {
@@ -12,9 +18,11 @@ export class ContenidoPaginasService {
     private repo: Repository<ContenidoPagina>,
   ) {}
 
-  async obtenerTodo(): Promise<Record<string, Record<string, Record<string, string>>>> {
+  async obtenerTodo(): Promise<
+    Record<string, Record<string, Record<string, any>>>
+  > {
     const filas = await this.repo.find();
-    const resultado: Record<string, Record<string, Record<string, string>>> = {};
+    const resultado: Record<string, Record<string, Record<string, any>>> = {};
     for (const f of filas) resultado[f.pagina] = f.contenido || {};
     return resultado;
   }
@@ -26,7 +34,7 @@ export class ContenidoPaginasService {
 
   async guardar(
     pagina: string,
-    contenido: Record<string, Record<string, string>>,
+    contenido: Record<string, Record<string, any>>,
   ) {
     if (!PAGINAS_PERMITIDAS.includes(pagina)) {
       throw new BadRequestException(`Página no válida: ${pagina}`);

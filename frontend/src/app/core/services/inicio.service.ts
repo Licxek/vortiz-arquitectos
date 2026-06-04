@@ -21,6 +21,29 @@ export interface CitaBackend {
   updatedAt: string;
 }
 
+export interface ProyectoBackend {
+  id: number;
+  nombre: string;
+  iniciales: string;
+  logoUrl: string;
+  categoria: string;
+  ubicacion: string;
+  anio: number;
+  colorMarca: string;
+  descripcion: string;
+  orden: number;
+  estado: string;
+  publicado: boolean;
+  cliente: string;
+  superficie: string;
+  progreso: number;
+  fechaInicio: string | null;
+  fechaEntrega: string | null;
+  imagen: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface StatsResponse {
   periodo: string;
   citas: { valor: number; cambio: number };
@@ -45,5 +68,21 @@ export class InicioService {
 
   obtenerConsultas(): Observable<CitaBackend[]> {
     return this.http.get<CitaBackend[]>(`${this.base}/consultas-pendientes`);
+  }
+
+  obtenerProyectosRecientes(): Observable<ProyectoBackend[]> {
+    return this.http.get<ProyectoBackend[]>(`${this.base}/proyectos-recientes`);
+  }
+
+  obtenerProyectosAdmin(): Observable<ProyectoBackend[]> {
+    return this.http.get<ProyectoBackend[]>(`${environment.apiUrl}/proyectos/admin`);
+  }
+
+  crearProyecto(datos: Partial<ProyectoBackend>): Observable<ProyectoBackend> {
+    return this.http.post<ProyectoBackend>(`${environment.apiUrl}/proyectos`, datos);
+  }
+
+  actualizarProyecto(id: number, datos: Partial<ProyectoBackend>): Observable<ProyectoBackend> {
+    return this.http.put<ProyectoBackend>(`${environment.apiUrl}/proyectos/${id}`, datos);
   }
 }
