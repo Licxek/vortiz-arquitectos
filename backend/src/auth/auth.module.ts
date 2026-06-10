@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { UsuariosModule } from '../usuarios/usuarios.module';
+import { SesionesModule } from '../sesiones/sesiones.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { UsuariosModule } from '../usuarios/usuarios.module';
       secret: process.env.JWT_SECRET || 'cambia-esto',
       signOptions: { expiresIn: '1d' },
     }),
+    SesionesModule,
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],

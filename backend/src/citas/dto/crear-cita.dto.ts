@@ -10,7 +10,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
-import { TipoCita } from '../cita.entity';
+import { TipoCita , EstadoCita} from '../cita.entity';
 
 export class CrearCitaDto {
   @IsString()
@@ -61,4 +61,11 @@ export class CrearCitaDto {
   @Min(15, { message: 'La duración mínima es de 15 minutos' })
   @Max(480, { message: 'La duración máxima es de 480 minutos (8 horas)' })
   duracion?: number;
+
+  // 👇 NUEVO
+  @IsOptional()
+  @IsEnum(['pendiente', 'confirmada', 'cancelada', 'completada'], {
+    message: 'El estado no es válido',
+  })
+  estado?: EstadoCita;
 }

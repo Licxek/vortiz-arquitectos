@@ -1,4 +1,11 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  ChangeDetectorRef,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,10 +14,6 @@ import { ImageUploadComponent } from '../../../shared/image-upload/image-upload.
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import {
   ReportesService,
-  CitasPorMes,
-  CategoriaServicio,
-  ActividadDia,
-  ClienteNuevo,
   HeatmapData,
   HeatmapSerie,
   FunnelData,
@@ -21,6 +24,10 @@ import {
 } from '../../../shared/grafica-dashboard/grafica-dashboard.component';
 import { HeatmapHorariosComponent } from '../../../shared/heatmap-horarios/heatmap-horarios.component';
 import { FunnelConversionComponent } from '../../../shared/funnel-conversion/funnel-conversion.component';
+import { RouterLink } from '@angular/router';
+import { ActivatedRoute, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { AuthService } from '../../../core/services/auth.service';
 
 // ============ INTERFACES ============
 interface StatCard {
@@ -40,6 +47,7 @@ interface Notificacion {
   descripcion: string;
   tiempo: string;
   leida: boolean;
+  cliente?: string; // 👈 NUEVO
 }
 
 interface ConsultaPendiente {
@@ -87,6 +95,20 @@ interface ConsultaPendiente {
   urgente: boolean;
 }
 
+interface AccionSugerida {
+  tipo: 'urgente' | 'info' | 'exito';
+  icono: 'alerta' | 'calendario' | 'mensaje' | 'check';
+  titulo: string;
+  mensaje: string;
+  textoAccion?: string;
+  accion?: () => void;
+}
+
+interface Tip {
+  icono: string;
+  texto: string;
+}
+
 @Component({
   selector: 'app-inicio',
   standalone: true,
@@ -98,10 +120,11 @@ interface ConsultaPendiente {
     GraficaDashboardComponent,
     HeatmapHorariosComponent,
     FunnelConversionComponent,
+    RouterLink,
   ],
   templateUrl: './inicio.component.html',
 })
-export class InicioComponent implements OnInit {
+export class InicioComponent implements OnInit, OnDestroy {
   // ============ DATOS GENERALES ============
   fechaHoy = '';
 
@@ -114,8 +137,21 @@ export class InicioComponent implements OnInit {
   // Detalle de cita
   citaSeleccionada: Cita | null = null;
 
+  modoFocus = false;
+
+  toggleFocus() {
+    this.modoFocus = !this.modoFocus;
+  }
+
   stats: StatCard[] = [];
 
+  gaConectado = false; // 🔧 cambia a true cuando esté integrado
+  mostrarInfoGA = false;
+
+  private agendaRaw: CitaBackend[] = [];
+  private consultasRaw: CitaBackend[] = [];
+  private readonly STORAGE_LEIDAS = 'vortiz_notif_leidas';
+  private route = inject(ActivatedRoute);
   // ============ ESTADOS DE LOADING ============
   cargandoStats = true;
   cargandoAgenda = true;
@@ -147,6 +183,32 @@ export class InicioComponent implements OnInit {
     'infraestructura',
     'institucional',
   ];
+
+  // En la clase:
+  tips: Tip[] = [
+    {
+      icono: '⚡',
+      texto: 'Responde consultas urgentes en menos de 2 horas para mejorar la conversión a citas.',
+    },
+    {
+      icono: '📱',
+      texto: 'Confirma las citas el día anterior por WhatsApp para reducir cancelaciones.',
+    },
+    {
+      icono: '📸',
+      texto: 'Sube fotos de tus proyectos finalizados al sitio público para atraer más clientes.',
+    },
+    { icono: '⏰', texto: 'Mantén actualizada tu disponibilidad horaria desde Configuración.' },
+    { icono: '✨', texto: 'Marca como urgentes las consultas que pidan cita para hoy o mañana.' },
+    { icono: '🎯', texto: 'Usa la tecla N para crear un proyecto nuevo rápidamente.' },
+    {
+      icono: '📊',
+      texto: 'Revisa el reporte semanal para ver tendencias de citas y servicios populares.',
+    },
+  ];
+
+  tipActual = 0;
+  private intervaloTips: any;
 
   proyectosRecientes: Proyecto[] = [];
   todosLosProyectos: Proyecto[] = [];
@@ -190,48 +252,7 @@ export class InicioComponent implements OnInit {
   citasHoy: Cita[] = [];
   consultasPendientes: ConsultaPendiente[] = [];
   // ============ NOTIFICACIONES ============
-  notificaciones: Notificacion[] = [
-    {
-      id: 1,
-      tipo: 'cita',
-      titulo: 'Nueva cita agendada',
-      descripcion: 'Juan Alfonso reservó una consulta para mañana',
-      tiempo: 'Hace 15 min',
-      leida: false,
-    },
-    {
-      id: 2,
-      tipo: 'consulta',
-      titulo: 'Nueva consulta recibida',
-      descripcion: 'María González preguntó sobre remodelación',
-      tiempo: 'Hace 1 hora',
-      leida: false,
-    },
-    {
-      id: 3,
-      tipo: 'confirmacion',
-      titulo: 'Cita confirmada',
-      descripcion: 'Carlos Méndez confirmó su cita del jueves',
-      tiempo: 'Hace 2 horas',
-      leida: false,
-    },
-    {
-      id: 4,
-      tipo: 'mensaje',
-      titulo: 'Comentario en proyecto',
-      descripcion: 'Ana Martínez dejó comentarios en el proyecto Villa Costanera',
-      tiempo: 'Hace 4 horas',
-      leida: true,
-    },
-    {
-      id: 5,
-      tipo: 'cancelacion',
-      titulo: 'Cita cancelada',
-      descripcion: 'Roberto Silva canceló su cita del viernes',
-      tiempo: 'Ayer',
-      leida: true,
-    },
-  ];
+  notificaciones: Notificacion[] = [];
 
   // ============ CONSULTAS: DATOS Y ESTADOS ============
 
@@ -274,6 +295,7 @@ export class InicioComponent implements OnInit {
   private inicioService = inject(InicioService);
   private cdr = inject(ChangeDetectorRef);
   private reportesService = inject(ReportesService);
+  private authService = inject(AuthService);
 
   ngOnInit() {
     const hoy = new Date();
@@ -299,6 +321,12 @@ export class InicioComponent implements OnInit {
     this.cargarConsultas();
     this.cargarProyectosRecientes(); // 👈 nuevo
     this.cargarGraficas();
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => this.aplicarParamsDeUrl());
+
+    this.aplicarParamsDeUrl();
+    this.iniciarRotacionTips();
   }
 
   // ============ GETTERS ============
@@ -398,10 +426,10 @@ export class InicioComponent implements OnInit {
       },
       {
         label: `Visitas ${periodo}`,
-        value: data.visitas?.valor ?? 0,
+        value: this.gaConectado ? (data.visitas?.valor ?? 0) : 0,
         cambioValor: 0,
-        cambioTipo: 'neutral',
-        cambioEtiqueta: 'próximamente',
+        cambioTipo: 'neutral' as const,
+        cambioEtiqueta: this.gaConectado ? 'desde Google Analytics' : 'Conecta Google Analytics',
         icon: 'eye',
         color: 'purple',
       },
@@ -419,6 +447,8 @@ export class InicioComponent implements OnInit {
 
   // ============ NOTIFICACIONES ============
   marcarTodasLeidas() {
+    const ids = this.notificaciones.map((n) => n.id);
+    this.guardarLeidas([...new Set([...this.obtenerLeidas(), ...ids])]);
     this.notificaciones.forEach((n) => (n.leida = true));
   }
 
@@ -824,7 +854,14 @@ export class InicioComponent implements OnInit {
 
   // ============ NOTIFICACIÓN: DETALLE ============
   abrirNotificacion(notif: Notificacion) {
-    notif.leida = true;
+    if (!notif.leida) {
+      notif.leida = true;
+      const leidas = this.obtenerLeidas();
+      if (!leidas.includes(notif.id)) {
+        leidas.push(notif.id);
+        this.guardarLeidas(leidas);
+      }
+    }
     this.notificacionSeleccionada = notif;
   }
   cerrarNotificacion() {
@@ -880,15 +917,19 @@ export class InicioComponent implements OnInit {
     this.cargandoAgenda = true;
     this.inicioService.obtenerAgenda().subscribe({
       next: (lista) => {
+        this.agendaRaw = lista;
         this.citasHoy = lista
           .filter((c) => c.estado === 'confirmada' || c.estado === 'pendiente')
           .map((c) => this.mapearCita(c));
         this.cargandoAgenda = false;
+        this.reconstruirNotificaciones();
         this.cdr.detectChanges();
       },
       error: () => {
+        this.agendaRaw = [];
         this.citasHoy = [];
         this.cargandoAgenda = false;
+        this.reconstruirNotificaciones();
         this.cdr.detectChanges();
       },
     });
@@ -898,16 +939,88 @@ export class InicioComponent implements OnInit {
     this.cargandoConsultas = true;
     this.inicioService.obtenerConsultas().subscribe({
       next: (lista) => {
+        this.consultasRaw = lista;
         this.consultasPendientes = lista.map((c) => this.mapearConsulta(c));
         this.cargandoConsultas = false;
+        this.reconstruirNotificaciones();
         this.cdr.detectChanges();
       },
       error: () => {
+        this.consultasRaw = [];
         this.consultasPendientes = [];
         this.cargandoConsultas = false;
+        this.reconstruirNotificaciones();
         this.cdr.detectChanges();
       },
     });
+  }
+
+  private reconstruirNotificaciones() {
+    const leidasIds = this.obtenerLeidas();
+    const items: (Notificacion & { _meta?: CitaBackend })[] = [];
+
+    // Consultas → tipo 'consulta'
+    for (const c of this.consultasRaw) {
+      const id = c.id * 10 + 2;
+      items.push({
+        id,
+        tipo: 'consulta',
+        titulo: `Nueva consulta de ${c.nombre}`,
+        descripcion: c.motivo?.slice(0, 100) || c.servicio?.titulo || 'Mensaje sin descripción',
+        tiempo: this.tiempoRelativo(c.createdAt),
+        leida: leidasIds.includes(id),
+        cliente: c.nombre, // 👈 NUEVO
+        _meta: c,
+      });
+    }
+
+    // Citas → tipo según estado
+    for (const c of this.agendaRaw) {
+      const id = c.id * 10 + 1;
+      let tipo: Notificacion['tipo'] = 'cita';
+      let titulo = `Nueva cita: ${c.nombre}`;
+      if (c.estado === 'confirmada') {
+        tipo = 'confirmacion';
+        titulo = `Cita confirmada: ${c.nombre}`;
+      } else if (c.estado === 'cancelada') {
+        tipo = 'cancelacion';
+        titulo = `Cita cancelada: ${c.nombre}`;
+      }
+      items.push({
+        id,
+        tipo,
+        titulo,
+        descripcion: `${c.hora || 'Sin hora'} · ${c.servicio?.titulo || 'Sin servicio'}`,
+        tiempo: this.tiempoRelativo(c.createdAt),
+        leida: leidasIds.includes(id),
+        cliente: c.nombre, // 👈 NUEVO
+        _meta: c,
+      });
+    }
+
+    // Ordenar por createdAt desc
+    items.sort((a, b) => {
+      const ta = new Date(a._meta?.createdAt || 0).getTime();
+      const tb = new Date(b._meta?.createdAt || 0).getTime();
+      return tb - ta;
+    });
+
+    this.notificaciones = items.slice(0, 10);
+  }
+
+  private obtenerLeidas(): number[] {
+    try {
+      const raw = localStorage.getItem(this.STORAGE_LEIDAS);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private guardarLeidas(ids: number[]) {
+    try {
+      localStorage.setItem(this.STORAGE_LEIDAS, JSON.stringify(ids));
+    } catch {}
   }
 
   private mapearCita(c: CitaBackend): Cita {
@@ -1126,5 +1239,430 @@ export class InicioComponent implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  private aplicarParamsDeUrl() {
+    const accion = this.route.snapshot.queryParamMap.get('accion');
+    if (accion === 'nuevo-proyecto') {
+      setTimeout(() => {
+        this.nuevoProyecto(); // 👈 antes era abrirNuevoProyecto
+        this.cdr.detectChanges();
+      }, 400);
+    }
+  }
+  /** Banner inteligente: evalúa el estado actual y sugiere acciones prioritarias */
+  get accionSugerida(): AccionSugerida | null {
+    // 🔴 Prioridad 1: consultas urgentes pendientes
+    // 🔴 Prioridad 1: consultas urgentes pendientes
+    const urgentes = this.consultasPendientes.filter((c) => c.urgente).length;
+    if (urgentes > 0) {
+      return {
+        tipo: 'urgente',
+        icono: 'alerta',
+        titulo:
+          urgentes === 1 ? 'Tienes 1 consulta urgente' : `Tienes ${urgentes} consultas urgentes`,
+        mensaje:
+          'Estos clientes solicitan cita para hoy o mañana. Revisa tu agenda para responder con disponibilidad real.',
+        textoAccion: 'Ir a citas',
+        accion: () => this.irACitas(), // 👈 cambio: ahora va a citas
+      };
+    }
+
+    // 🟠 Prioridad 2: citas pendientes de confirmar de hoy
+    const pendientesHoy = this.citasHoy.filter((c) => c.estado === 'pendiente').length;
+    if (pendientesHoy > 0) {
+      return {
+        tipo: 'info',
+        icono: 'calendario',
+        titulo:
+          pendientesHoy === 1
+            ? 'Tienes 1 cita pendiente de confirmar'
+            : `Tienes ${pendientesHoy} citas pendientes de confirmar`,
+        mensaje: 'Confirma las citas de hoy para evitar empalmes y avisar a tus clientes.',
+        textoAccion: 'Ir al calendario',
+        accion: () => this.irACitas(),
+      };
+    }
+
+    // 🟡 Prioridad 3: consultas sin urgencia pero pendientes
+    if (this.consultasPendientes.length > 0) {
+      return {
+        tipo: 'info',
+        icono: 'mensaje',
+        titulo:
+          this.consultasPendientes.length === 1
+            ? 'Tienes 1 consulta esperando respuesta'
+            : `Tienes ${this.consultasPendientes.length} consultas esperando respuesta`,
+        mensaje: 'Mantener tiempos de respuesta cortos mejora la conversión de citas.',
+        textoAccion: 'Responder',
+        accion: () => this.abrirTodasConsultas(),
+      };
+    }
+
+    // 🟢 Estado: todo al día
+    if (this.citasHoy.length > 0) {
+      return {
+        tipo: 'exito',
+        icono: 'check',
+        titulo: '¡Todo al día!',
+        mensaje: `Tienes ${this.citasHoy.length} ${this.citasHoy.length === 1 ? 'cita confirmada' : 'citas confirmadas'} para hoy. Buen trabajo.`,
+      };
+    }
+
+    // 🟢 Estado: día tranquilo
+    return {
+      tipo: 'exito',
+      icono: 'check',
+      titulo: 'Día tranquilo',
+      mensaje:
+        'No tienes citas ni consultas pendientes. Buen momento para revisar proyectos o publicar nuevos.',
+      textoAccion: 'Ver proyectos',
+      accion: () => this.abrirTodosProyectos(),
+    };
+  }
+
+  ejecutarAccionSugerida() {
+    this.accionSugerida?.accion?.();
+  }
+
+  /** Devuelve la posición temporal de una cita respecto a la hora actual */
+  estadoTemporalCita(cita: Cita): 'ahora' | 'proxima' | 'pasada' | 'futura' {
+    if (!cita.hora) return 'futura';
+
+    // Parsear hora "HH:MM"
+    const [horas, minutos] = cita.hora.split(':').map(Number);
+    if (isNaN(horas) || isNaN(minutos)) return 'futura';
+
+    const ahora = new Date();
+    const inicio = new Date();
+    inicio.setHours(horas, minutos, 0, 0);
+    const fin = new Date(inicio);
+    fin.setHours(fin.getHours() + 1); // asume 1h por cita
+
+    const diffMin = (inicio.getTime() - ahora.getTime()) / 60000;
+
+    if (ahora >= inicio && ahora <= fin) return 'ahora';
+    if (diffMin > 0 && diffMin <= 30) return 'proxima';
+    if (diffMin < 0) return 'pasada';
+    return 'futura';
+  }
+
+  /** Texto auxiliar bajo la hora ("en 15 min", "hace 1h", etc) */
+  textoTemporalCita(cita: Cita): string {
+    if (!cita.hora) return '';
+    const [horas, minutos] = cita.hora.split(':').map(Number);
+    if (isNaN(horas)) return '';
+
+    const ahora = new Date();
+    const inicio = new Date();
+    inicio.setHours(horas, minutos, 0, 0);
+
+    const diffMin = Math.round((inicio.getTime() - ahora.getTime()) / 60000);
+
+    if (Math.abs(diffMin) < 1) return 'ahora';
+    if (diffMin > 0 && diffMin <= 60) return `en ${diffMin} min`;
+    if (diffMin > 60 && diffMin < 1440) {
+      const h = Math.floor(diffMin / 60);
+      const m = diffMin % 60;
+      return m === 0 ? `en ${h}h` : `en ${h}h ${m}m`;
+    }
+    if (diffMin < 0 && diffMin > -60) return `hace ${Math.abs(diffMin)} min`;
+    if (diffMin < -60) return `hace ${Math.floor(Math.abs(diffMin) / 60)}h`;
+    return '';
+  }
+
+  abrirInfoGA() {
+    this.mostrarInfoGA = true;
+  }
+
+  cerrarInfoGA() {
+    this.mostrarInfoGA = false;
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  manejarAtajos(event: KeyboardEvent) {
+    // No activar si está escribiendo en input/textarea
+    const target = event.target as HTMLElement;
+    const editando =
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.tagName === 'SELECT' ||
+      target.isContentEditable;
+
+    // Esc: cerrar el modal activo (funciona incluso si está escribiendo)
+    if (event.key === 'Escape') {
+      this.cerrarModalActivo();
+      return;
+    }
+
+    // Si está editando, no activamos atajos sin modificador
+    if (editando) return;
+
+    // Si hay un modal abierto, no activamos atajos
+    if (this.hayModalAbierto()) return;
+
+    const key = event.key.toLowerCase();
+
+    // N: nuevo proyecto (sin modificador, estilo Linear/Notion)
+    if (key === 'n') {
+      event.preventDefault();
+      this.nuevoProyecto();
+      return;
+    }
+  }
+
+  private hayModalAbierto(): boolean {
+    return !!(
+      this.proyectoSeleccionado ||
+      this.mostrarTodosProyectos ||
+      this.mostrarEditarProyecto ||
+      this.mostrarConfirmarFinalizado ||
+      this.mostrarAgregarPublico ||
+      this.consultaSeleccionada ||
+      this.mostrarRespuesta ||
+      this.mostrarTodasConsultas ||
+      this.notificacionSeleccionada ||
+      this.citaSeleccionada ||
+      this.mostrarInfoGA
+    );
+  }
+
+  private cerrarModalActivo() {
+    // Cerrar en orden de prioridad: el más interno primero
+    if (this.mostrarRespuesta) {
+      this.cerrarRespuesta();
+    } else if (this.consultaSeleccionada) {
+      this.cerrarConsulta();
+    } else if (this.notificacionSeleccionada) {
+      this.cerrarNotificacion();
+    } else if (this.citaSeleccionada) {
+      this.cerrarCita();
+    } else if (this.mostrarConfirmarFinalizado) {
+      this.mostrarConfirmarFinalizado = false;
+    } else if (this.mostrarAgregarPublico) {
+      this.cerrarAgregarPublico();
+    } else if (this.mostrarEditarProyecto) {
+      this.cerrarEditarProyecto();
+    } else if (this.proyectoSeleccionado) {
+      this.cerrarProyecto();
+    } else if (this.mostrarTodasConsultas) {
+      this.cerrarTodasConsultas();
+    } else if (this.mostrarTodosProyectos) {
+      this.cerrarTodosProyectos();
+    } else if (this.mostrarInfoGA) {
+      this.cerrarInfoGA();
+    }
+  }
+
+  filtroNotif: 'todas' | 'citas' | 'consultas' = 'todas';
+
+  get notificacionesFiltradas(): Notificacion[] {
+    if (this.filtroNotif === 'citas') {
+      return this.notificaciones.filter((n) =>
+        ['cita', 'confirmacion', 'cancelacion'].includes(n.tipo),
+      );
+    }
+    if (this.filtroNotif === 'consultas') {
+      return this.notificaciones.filter((n) => ['consulta', 'mensaje'].includes(n.tipo));
+    }
+    return this.notificaciones;
+  }
+
+  get conteoCitas(): number {
+    return this.notificaciones.filter((n) =>
+      ['cita', 'confirmacion', 'cancelacion'].includes(n.tipo),
+    ).length;
+  }
+
+  get conteoConsultas(): number {
+    return this.notificaciones.filter((n) => ['consulta', 'mensaje'].includes(n.tipo)).length;
+  }
+
+  iniciales(nombre?: string): string {
+    if (!nombre) return '?';
+    const partes = nombre.trim().split(/\s+/);
+    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+  }
+
+  colorAvatar(nombre?: string): string {
+    if (!nombre) return 'bg-gray-400';
+    const colors = [
+      'bg-blue-500',
+      'bg-purple-500',
+      'bg-pink-500',
+      'bg-amber-500',
+      'bg-emerald-500',
+      'bg-indigo-500',
+      'bg-rose-500',
+      'bg-teal-500',
+      'bg-cyan-500',
+    ];
+    let hash = 0;
+    for (let i = 0; i < nombre.length; i++) {
+      hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+  }
+
+  marcarLeida(notif: Notificacion, event: Event) {
+    event.stopPropagation(); // 👈 evita abrir el detalle
+    if (notif.leida) return;
+    notif.leida = true;
+    const leidas = this.obtenerLeidas();
+    if (!leidas.includes(notif.id)) {
+      leidas.push(notif.id);
+      this.guardarLeidas(leidas);
+    }
+  }
+
+  /** Acción rápida según el tipo de notificación */
+  accionRapida(notif: Notificacion, event: Event) {
+    event.stopPropagation();
+    const meta = (notif as any)._meta as CitaBackend | undefined;
+
+    // Marcar como leída automáticamente
+    if (!notif.leida) {
+      notif.leida = true;
+      const leidas = this.obtenerLeidas();
+      if (!leidas.includes(notif.id)) {
+        leidas.push(notif.id);
+        this.guardarLeidas(leidas);
+      }
+    }
+
+    // Acción según tipo
+    if (notif.tipo === 'consulta' || notif.tipo === 'mensaje') {
+      // Buscar la consulta y abrir modal de respuesta directo
+      const consulta = this.consultasPendientes.find((c) => c.id === meta?.id);
+      if (consulta) {
+        this.responderConsulta(consulta);
+      } else {
+        // Si ya no está pendiente, abrir la lista completa
+        this.abrirTodasConsultas();
+      }
+    } else if (notif.tipo === 'cita') {
+      // Para citas nuevas: ir al calendario para confirmar
+      this.irACitas();
+    } else if (notif.tipo === 'confirmacion' || notif.tipo === 'cancelacion') {
+      // Ya están confirmadas o canceladas: ver en calendario
+      this.irACitas();
+    }
+  }
+
+  /** Texto del botón según tipo */
+  textoAccionRapida(tipo: Notificacion['tipo']): string {
+    if (tipo === 'consulta' || tipo === 'mensaje') return 'Responder';
+    if (tipo === 'cita') return 'Ver en calendario';
+    if (tipo === 'confirmacion') return 'Ver detalles';
+    if (tipo === 'cancelacion') return 'Ver detalles';
+    return 'Ver';
+  }
+
+  /** Color del botón según tipo */
+  colorAccionRapida(tipo: Notificacion['tipo']): string {
+    if (tipo === 'consulta' || tipo === 'mensaje') return 'bg-green-500 hover:bg-green-600';
+    if (tipo === 'cita') return 'bg-blue-500 hover:bg-blue-600';
+    return 'bg-gray-500 hover:bg-gray-600';
+  }
+  get etiquetaPeriodo(): string {
+    const map: Record<typeof this.periodoActivo, string> = {
+      hoy: 'Hoy',
+      semana: 'Esta semana',
+      mes: 'Este mes',
+      año: 'Este año',
+    };
+    return map[this.periodoActivo];
+  }
+  get saludo(): string {
+    const hora = new Date().getHours();
+    if (hora < 12) return 'Buenos días';
+    if (hora < 19) return 'Buenas tardes';
+    return 'Buenas noches';
+  }
+
+  get nombreCorto(): string {
+    const u = this.authService.getUser();
+    return u?.nombre?.split(' ')[0] || 'Bienvenido';
+  }
+
+  get resumenDelDia(): string {
+    const citasConfirmadas = this.citasHoy.filter((c) => c.estado === 'confirmada').length;
+    const pendientes = this.citasHoy.filter((c) => c.estado === 'pendiente').length;
+    const consultas = this.consultasPendientes.length;
+
+    const partes: string[] = [];
+    if (citasConfirmadas > 0) {
+      partes.push(
+        `${citasConfirmadas} ${citasConfirmadas === 1 ? 'cita confirmada' : 'citas confirmadas'}`,
+      );
+    }
+    if (pendientes > 0) {
+      partes.push(`${pendientes} por confirmar`);
+    }
+    if (consultas > 0) {
+      partes.push(`${consultas} ${consultas === 1 ? 'consulta' : 'consultas'} pendientes`);
+    }
+
+    if (partes.length === 0) return 'No tienes pendientes hoy. ¡Día tranquilo!';
+
+    // Unir con comas y "y" antes del último
+    if (partes.length === 1) return `Hoy tienes ${partes[0]}.`;
+    if (partes.length === 2) return `Hoy tienes ${partes[0]} y ${partes[1]}.`;
+    return `Hoy tienes ${partes.slice(0, -1).join(', ')} y ${partes[partes.length - 1]}.`;
+  }
+
+  get diaActual(): number {
+    return new Date().getDate();
+  }
+
+  get mesActualCorto(): string {
+    const meses = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
+    return meses[new Date().getMonth()];
+  }
+
+  get diaSemanaCorto(): string {
+    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    return dias[new Date().getDay()];
+  }
+
+  ngOnDestroy() {
+    if (this.intervaloTips) clearInterval(this.intervaloTips);
+  }
+
+  get tip(): Tip {
+    return this.tips[this.tipActual];
+  }
+
+  iniciarRotacionTips() {
+    // Empezar con tip aleatorio
+    this.tipActual = Math.floor(Math.random() * this.tips.length);
+    this.intervaloTips = setInterval(() => {
+      this.tipActual = (this.tipActual + 1) % this.tips.length;
+      this.cdr.detectChanges();
+    }, 10000); // rota cada 10s
+  }
+
+  siguienteTip() {
+    this.tipActual = (this.tipActual + 1) % this.tips.length;
+    // Reiniciar timer para que dé 10s desde el clic
+    if (this.intervaloTips) clearInterval(this.intervaloTips);
+    this.intervaloTips = setInterval(() => {
+      this.tipActual = (this.tipActual + 1) % this.tips.length;
+      this.cdr.detectChanges();
+    }, 10000);
   }
 }

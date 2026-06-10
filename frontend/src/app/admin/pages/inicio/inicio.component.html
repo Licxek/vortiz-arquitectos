@@ -4,9 +4,74 @@
     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
       <div>
         <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Inicio</h1>
-        <p class="text-sm text-gray-500 mt-1 capitalize">{{ fechaHoy }}</p>
       </div>
       <div class="flex flex-wrap gap-2">
+        <button
+          (click)="toggleFocus()"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all shadow-sm border"
+          [class.bg-white]="!modoFocus"
+          [class.text-gray-700]="!modoFocus"
+          [class.border-gray-200]="!modoFocus"
+          [class.hover:bg-gray-50]="!modoFocus"
+          [class.bg-[#0a4d7a]]="modoFocus"
+          [class.text-white]="modoFocus"
+          [class.border-transparent]="modoFocus"
+          [class.hover:bg-[#0a5d8f]]="modoFocus"
+        >
+          <svg
+            *ngIf="!modoFocus"
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
+            />
+          </svg>
+          <svg
+            *ngIf="modoFocus"
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            />
+          </svg>
+          {{ modoFocus ? 'Mostrar gráficas' : 'Ocultar gráficas' }}
+        </button>
+        <a
+          routerLink="/admin/reportes/historial"
+          class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          Ver historial
+        </a>
         <button
           (click)="nuevoProyecto()"
           class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
@@ -43,61 +108,251 @@
         </button>
       </div>
     </div>
+  </div>
 
-    <!-- Filtro temporal -->
-    <div
-      class="flex flex-wrap gap-2 bg-white rounded-xl shadow-sm border border-gray-100 p-1.5 self-start"
-    >
-      <button
-        (click)="cambiarPeriodo('hoy')"
-        class="px-4 py-1.5 text-sm font-medium rounded-lg transition-all"
-        [class.bg-[#0a4d7a]]="periodoActivo === 'hoy'"
-        [class.text-white]="periodoActivo === 'hoy'"
-        [class.shadow-md]="periodoActivo === 'hoy'"
-        [class.text-gray-600]="periodoActivo !== 'hoy'"
-        [class.hover:bg-gray-50]="periodoActivo !== 'hoy'"
+  <!-- Hero de bienvenida -->
+  <div
+    class="bg-gradient-to-br from-[#0a1f3d] via-[#0a4d7a] to-[#0a5d8f] rounded-2xl p-5 md:p-6 text-white shadow-md relative overflow-hidden"
+  >
+    <!-- Patrón decorativo -->
+    <div class="absolute -right-8 -top-8 w-40 h-40 bg-white/5 rounded-full"></div>
+    <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-white/5 rounded-full"></div>
+
+    <div class="relative flex items-center justify-between gap-4">
+      <div class="min-w-0 flex-1">
+        <p class="text-[10px] uppercase tracking-widest text-blue-300 font-bold mb-1">
+          {{ saludo }}
+        </p>
+        <h1 class="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-2">
+          {{ nombreCorto }}
+          <span class="text-2xl">👋</span>
+        </h1>
+        <p class="text-sm text-blue-100 leading-relaxed">{{ resumenDelDia }}</p>
+      </div>
+
+      <!-- Calendar block -->
+      <div
+        class="hidden sm:flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-xl p-3 shrink-0 min-w-[72px] border border-white/10"
       >
-        Hoy
-      </button>
-      <button
-        (click)="cambiarPeriodo('semana')"
-        class="px-4 py-1.5 text-sm font-medium rounded-lg transition-all"
-        [class.bg-[#0a4d7a]]="periodoActivo === 'semana'"
-        [class.text-white]="periodoActivo === 'semana'"
-        [class.shadow-md]="periodoActivo === 'semana'"
-        [class.text-gray-600]="periodoActivo !== 'semana'"
-        [class.hover:bg-gray-50]="periodoActivo !== 'semana'"
-      >
-        Esta semana
-      </button>
-      <button
-        (click)="cambiarPeriodo('mes')"
-        class="px-4 py-1.5 text-sm font-medium rounded-lg transition-all"
-        [class.bg-[#0a4d7a]]="periodoActivo === 'mes'"
-        [class.text-white]="periodoActivo === 'mes'"
-        [class.shadow-md]="periodoActivo === 'mes'"
-        [class.text-gray-600]="periodoActivo !== 'mes'"
-        [class.hover:bg-gray-50]="periodoActivo !== 'mes'"
-      >
-        Este mes
-      </button>
-      <button
-        (click)="cambiarPeriodo('año')"
-        class="px-4 py-1.5 text-sm font-medium rounded-lg transition-all"
-        [class.bg-[#0a4d7a]]="periodoActivo === 'año'"
-        [class.text-white]="periodoActivo === 'año'"
-        [class.shadow-md]="periodoActivo === 'año'"
-        [class.text-gray-600]="periodoActivo !== 'año'"
-        [class.hover:bg-gray-50]="periodoActivo !== 'año'"
-      >
-        Este año
-      </button>
+        <p class="text-[9px] uppercase tracking-widest text-blue-300 font-bold">
+          {{ mesActualCorto }}
+        </p>
+        <p class="text-3xl font-bold leading-none my-0.5">{{ diaActual }}</p>
+        <p class="text-[9px] uppercase tracking-widest text-blue-300 font-semibold">
+          {{ diaSemanaCorto }}
+        </p>
+      </div>
     </div>
+  </div>
+  <!-- Banner de acción sugerida -->
+  <div
+    *ngIf="accionSugerida"
+    class="rounded-2xl p-4 md:p-5 flex items-start gap-4 shadow-sm border animate-fadeInUp"
+    [class.bg-red-50]="accionSugerida.tipo === 'urgente'"
+    [class.border-red-100]="accionSugerida.tipo === 'urgente'"
+    [class.bg-blue-50]="accionSugerida.tipo === 'info'"
+    [class.border-blue-100]="accionSugerida.tipo === 'info'"
+    [class.bg-green-50]="accionSugerida.tipo === 'exito'"
+    [class.border-green-100]="accionSugerida.tipo === 'exito'"
+  >
+    <!-- Icono -->
+    <div
+      class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+      [class.bg-red-500]="accionSugerida.tipo === 'urgente'"
+      [class.bg-[#0a4d7a]]="accionSugerida.tipo === 'info'"
+      [class.bg-green-500]="accionSugerida.tipo === 'exito'"
+    >
+      <ng-container [ngSwitch]="accionSugerida.icono">
+        <!-- Alerta -->
+        <svg
+          *ngSwitchCase="'alerta'"
+          class="w-5 h-5 text-white"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+        <!-- Calendario -->
+        <svg
+          *ngSwitchCase="'calendario'"
+          class="w-5 h-5 text-white"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+        <!-- Mensaje -->
+        <svg
+          *ngSwitchCase="'mensaje'"
+          class="w-5 h-5 text-white"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          />
+        </svg>
+        <!-- Check -->
+        <svg
+          *ngSwitchCase="'check'"
+          class="w-5 h-5 text-white"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </ng-container>
+    </div>
+
+    <!-- Contenido -->
+    <div class="flex-1 min-w-0">
+      <h3
+        class="text-sm md:text-base font-bold"
+        [class.text-red-900]="accionSugerida.tipo === 'urgente'"
+        [class.text-[#0a1f3d]]="accionSugerida.tipo === 'info'"
+        [class.text-green-900]="accionSugerida.tipo === 'exito'"
+      >
+        {{ accionSugerida.titulo }}
+      </h3>
+      <p
+        class="text-xs md:text-sm mt-0.5"
+        [class.text-red-700]="accionSugerida.tipo === 'urgente'"
+        [class.text-gray-700]="accionSugerida.tipo === 'info'"
+        [class.text-green-800]="accionSugerida.tipo === 'exito'"
+      >
+        {{ accionSugerida.mensaje }}
+      </p>
+    </div>
+
+    <!-- Botón de acción -->
+    <button
+      *ngIf="accionSugerida.textoAccion"
+      (click)="ejecutarAccionSugerida()"
+      class="px-3 md:px-4 py-2 text-xs md:text-sm font-semibold rounded-lg shadow-sm transition-all shrink-0 whitespace-nowrap"
+      [class.bg-red-600]="accionSugerida.tipo === 'urgente'"
+      [class.hover:bg-red-700]="accionSugerida.tipo === 'urgente'"
+      [class.text-white]="accionSugerida.tipo !== 'exito' || !!accionSugerida.accion"
+      [class.bg-[#0a4d7a]]="accionSugerida.tipo === 'info'"
+      [class.hover:bg-[#0a5d8f]]="accionSugerida.tipo === 'info'"
+      [class.bg-green-600]="accionSugerida.tipo === 'exito'"
+      [class.hover:bg-green-700]="accionSugerida.tipo === 'exito'"
+    >
+      {{ accionSugerida.textoAccion }}
+    </button>
+  </div>
+  <!-- Tip contextual -->
+  <div
+    class="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 rounded-xl px-4 py-2.5 flex items-center gap-3 animate-fadeInUp"
+    style="animation-delay: 100ms"
+  >
+    <div class="text-xl shrink-0">{{ tip.icono }}</div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-1.5 mb-0.5">
+        <span class="text-[9px] font-bold uppercase tracking-widest text-amber-700">Tip</span>
+        <span class="text-[9px] text-amber-600">·</span>
+        <span class="text-[9px] font-semibold text-amber-600"
+          >{{ tipActual + 1 }} de {{ tips.length }}</span
+        >
+      </div>
+      <p class="text-xs text-gray-700 leading-snug">{{ tip.texto }}</p>
+    </div>
+    <button
+      (click)="siguienteTip()"
+      class="shrink-0 w-7 h-7 hover:bg-amber-100 rounded-lg flex items-center justify-center text-amber-700 transition-colors"
+      title="Siguiente tip"
+    >
+      <svg
+        class="w-3.5 h-3.5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
   </div>
 
   <!-- Stat Cards con comparativas -->
   <div>
-    <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Resumen</h2>
+    <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+      <div class="flex items-center gap-2">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">
+          Resumen del periodo
+        </h2>
+        <span
+          class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#0a4d7a] text-white rounded-full"
+        >
+          {{ etiquetaPeriodo }}
+        </span>
+      </div>
+
+      <!-- Filtro temporal (ahora claramente asociado al resumen) -->
+      <div class="flex flex-wrap gap-1 bg-white rounded-xl shadow-sm border border-gray-100 p-1">
+        <button
+          (click)="cambiarPeriodo('hoy')"
+          class="px-3 py-1 text-xs font-medium rounded-lg transition-all"
+          [class.bg-[#0a4d7a]]="periodoActivo === 'hoy'"
+          [class.text-white]="periodoActivo === 'hoy'"
+          [class.shadow-sm]="periodoActivo === 'hoy'"
+          [class.text-gray-600]="periodoActivo !== 'hoy'"
+          [class.hover:bg-gray-50]="periodoActivo !== 'hoy'"
+        >
+          Hoy
+        </button>
+        <button
+          (click)="cambiarPeriodo('semana')"
+          class="px-3 py-1 text-xs font-medium rounded-lg transition-all"
+          [class.bg-[#0a4d7a]]="periodoActivo === 'semana'"
+          [class.text-white]="periodoActivo === 'semana'"
+          [class.shadow-sm]="periodoActivo === 'semana'"
+          [class.text-gray-600]="periodoActivo !== 'semana'"
+          [class.hover:bg-gray-50]="periodoActivo !== 'semana'"
+        >
+          Semana
+        </button>
+        <button
+          (click)="cambiarPeriodo('mes')"
+          class="px-3 py-1 text-xs font-medium rounded-lg transition-all"
+          [class.bg-[#0a4d7a]]="periodoActivo === 'mes'"
+          [class.text-white]="periodoActivo === 'mes'"
+          [class.shadow-sm]="periodoActivo === 'mes'"
+          [class.text-gray-600]="periodoActivo !== 'mes'"
+          [class.hover:bg-gray-50]="periodoActivo !== 'mes'"
+        >
+          Mes
+        </button>
+        <button
+          (click)="cambiarPeriodo('año')"
+          class="px-3 py-1 text-xs font-medium rounded-lg transition-all"
+          [class.bg-[#0a4d7a]]="periodoActivo === 'año'"
+          [class.text-white]="periodoActivo === 'año'"
+          [class.shadow-sm]="periodoActivo === 'año'"
+          [class.text-gray-600]="periodoActivo !== 'año'"
+          [class.hover:bg-gray-50]="periodoActivo !== 'año'"
+        >
+          Año
+        </button>
+      </div>
+    </div>
 
     <!-- Skeleton mientras carga -->
     <div *ngIf="cargandoStats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -116,198 +371,261 @@
 
     <div *ngIf="!cargandoStats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div
-        *ngFor="let stat of stats"
-        class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+        *ngFor="let stat of stats; let i = index"
+        class="bg-white rounded-2xl p-4 md:p-5 shadow-sm border transition-all duration-200 cursor-pointer animate-fadeInUp relative overflow-hidden"
+        [class.border-gray-100]="!(stat.icon === 'eye' && !gaConectado)"
+        [class.hover:shadow-lg]="!(stat.icon === 'eye' && !gaConectado)"
+        [class.hover:-translate-y-0.5]="!(stat.icon === 'eye' && !gaConectado)"
+        [class.border-dashed]="stat.icon === 'eye' && !gaConectado"
+        [class.border-2]="stat.icon === 'eye' && !gaConectado"
+        [class.border-purple-200]="stat.icon === 'eye' && !gaConectado"
+        [class.bg-gradient-to-br]="stat.icon === 'eye' && !gaConectado"
+        [class.from-purple-50/50]="stat.icon === 'eye' && !gaConectado"
+        [class.to-white]="stat.icon === 'eye' && !gaConectado"
+        [style.animation-delay.ms]="i * 80"
+        (click)="stat.icon === 'eye' && !gaConectado ? abrirInfoGA() : null"
       >
-        <div class="flex items-start justify-between mb-4">
-          <div
-            class="w-11 h-11 rounded-xl flex items-center justify-center"
-            [class.bg-blue-100]="stat.color === 'blue'"
-            [class.bg-orange-100]="stat.color === 'orange'"
-            [class.bg-green-100]="stat.color === 'green'"
-            [class.bg-purple-100]="stat.color === 'purple'"
-          >
-            <ng-container [ngSwitch]="stat.icon">
-              <svg
-                *ngSwitchCase="'projects'"
-                class="w-5 h-5 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
+        <!-- Caso especial: GA no conectado -->
+        <ng-container *ngIf="stat.icon === 'eye' && !gaConectado; else statNormal">
+          <div class="flex items-start justify-between mb-4">
+            <div class="w-11 h-11 bg-purple-100 rounded-xl flex items-center justify-center">
+              <!-- Logo simulado de Google Analytics -->
+              <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                  d="M22.84 2.998v17.999a2.983 2.983 0 0 1-5.967 0V3.218C16.873 1.54 18.225 0 19.94 0c1.715 0 3.067 1.32 2.9 2.998zM4.733 17.034c-1.715 0-2.9 1.32-2.733 2.998v.965c.167 1.678 1.518 2.998 2.733 2.998 1.715 0 3.067-1.32 2.9-2.998v-.965c.167-1.678-1.185-2.998-2.9-2.998zm6.917-8.519c-1.715 0-2.9 1.32-2.733 2.998v9.484c.167 1.678 1.518 2.998 2.733 2.998 1.715 0 3.067-1.32 2.9-2.998v-9.484c.167-1.678-1.185-2.998-2.9-2.998z"
                 />
               </svg>
-              <svg
-                *ngSwitchCase="'calendar'"
-                class="w-5 h-5 text-orange-600"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <svg
-                *ngSwitchCase="'chat'"
-                class="w-5 h-5 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-              <svg
-                *ngSwitchCase="'eye'"
-                class="w-5 h-5 text-purple-600"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
-              </svg>
-            </ng-container>
+            </div>
+            <span
+              class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 bg-purple-100 text-purple-700 rounded-full"
+            >
+              Sin conectar
+            </span>
           </div>
+          <p class="text-2xl md:text-3xl font-bold text-gray-400">—</p>
+          <p class="text-sm text-gray-600 mt-1 font-medium">{{ stat.label }}</p>
+          <button
+            class="mt-3 text-xs font-semibold text-purple-700 hover:text-purple-900 flex items-center gap-1 group"
+          >
+            Conecta Google Analytics
+            <svg
+              class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </ng-container>
 
-          <!-- Comparativa con flecha -->
-          <div
-            *ngIf="stat.cambioTipo !== 'neutral'"
-            class="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
-            [class.bg-green-50]="stat.cambioTipo === 'positive'"
-            [class.text-green-700]="stat.cambioTipo === 'positive'"
-            [class.bg-red-50]="stat.cambioTipo === 'negative'"
-            [class.text-red-700]="stat.cambioTipo === 'negative'"
-          >
-            <svg
-              *ngIf="stat.cambioTipo === 'positive'"
-              class="w-3 h-3"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="3"
-              viewBox="0 0 24 24"
+        <!-- Caso normal: render igual que antes -->
+        <ng-template #statNormal>
+          <div class="flex items-start justify-between mb-4">
+            <div
+              class="w-11 h-11 rounded-xl flex items-center justify-center"
+              [class.bg-blue-100]="stat.color === 'blue'"
+              [class.bg-orange-100]="stat.color === 'orange'"
+              [class.bg-green-100]="stat.color === 'green'"
+              [class.bg-purple-100]="stat.color === 'purple'"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-            </svg>
-            <svg
-              *ngIf="stat.cambioTipo === 'negative'"
-              class="w-3 h-3"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="3"
-              viewBox="0 0 24 24"
+              <ng-container [ngSwitch]="stat.icon">
+                <svg
+                  *ngSwitchCase="'projects'"
+                  class="w-5 h-5 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'calendar'"
+                  class="w-5 h-5 text-orange-600"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'chat'"
+                  class="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+                <svg
+                  *ngSwitchCase="'eye'"
+                  class="w-5 h-5 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
+                </svg>
+              </ng-container>
+            </div>
+
+            <div
+              *ngIf="stat.cambioTipo !== 'neutral'"
+              class="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
+              [class.bg-green-50]="stat.cambioTipo === 'positive'"
+              [class.text-green-700]="stat.cambioTipo === 'positive'"
+              [class.bg-red-50]="stat.cambioTipo === 'negative'"
+              [class.text-red-700]="stat.cambioTipo === 'negative'"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-            {{ stat.cambioValor > 0 ? '+' : '' }}{{ stat.cambioValor }}%
+              <svg
+                *ngIf="stat.cambioTipo === 'positive'"
+                class="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 10l7-7m0 0l7 7m-7-7v18"
+                />
+              </svg>
+              <svg
+                *ngIf="stat.cambioTipo === 'negative'"
+                class="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                />
+              </svg>
+              {{ stat.cambioValor > 0 ? '+' : '' }}{{ stat.cambioValor }}%
+            </div>
+            <span
+              *ngIf="stat.cambioTipo === 'neutral'"
+              class="text-xs font-semibold px-2 py-1 rounded-full bg-orange-50 text-orange-700"
+            >
+              {{ stat.cambioValor }} {{ stat.cambioEtiqueta }}
+            </span>
           </div>
-          <span
-            *ngIf="stat.cambioTipo === 'neutral'"
-            class="text-xs font-semibold px-2 py-1 rounded-full bg-orange-50 text-orange-700"
-          >
-            {{ stat.cambioValor }} {{ stat.cambioEtiqueta }}
-          </span>
-        </div>
-        <p class="text-2xl md:text-3xl font-bold text-gray-900">{{ stat.value | number }}</p>
-        <p class="text-sm text-gray-500 mt-1">{{ stat.label }}</p>
-        <p *ngIf="stat.cambioTipo !== 'neutral'" class="text-xs text-gray-400 mt-1">
-          {{ stat.cambioEtiqueta }}
-        </p>
+          <p class="text-2xl md:text-3xl font-bold text-gray-900">{{ stat.value | number }}</p>
+          <p class="text-sm text-gray-500 mt-1">{{ stat.label }}</p>
+          <p *ngIf="stat.cambioTipo !== 'neutral'" class="text-xs text-gray-400 mt-1">
+            {{ stat.cambioEtiqueta }}
+          </p>
+        </ng-template>
       </div>
     </div>
   </div>
 
   <!-- Visión General — Gráficas reales con ApexCharts -->
-  <div>
+  <div *ngIf="!modoFocus">
     <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
       Visión General
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- Citas por mes (área) -->
-      <app-grafica-dashboard
-        titulo="Citas por Mes"
-        subtitulo="Últimos 12 meses"
-        tipo="area"
-        [data]="citasPorMes"
-        [cargando]="cargandoCitasPorMes"
-        color="#0a4d7a"
-        linkDetalle="/admin/reportes/citas-por-mes"
-        unidad="citas"
-      ></app-grafica-dashboard>
-
+      <div class="animate-fadeInUp" style="animation-delay: 320ms">
+        <app-grafica-dashboard
+          titulo="Citas por Mes"
+          subtitulo="Últimos 12 meses"
+          tipo="area"
+          [data]="citasPorMes"
+          [cargando]="cargandoCitasPorMes"
+          color="#0a4d7a"
+          linkDetalle="/admin/reportes/citas-por-mes"
+          unidad="citas"
+        ></app-grafica-dashboard>
+      </div>
       <!-- Categorías de servicios (donut) -->
-      <app-grafica-dashboard
-        titulo="Categorías de Servicios"
-        subtitulo="Distribución de citas"
-        tipo="donut"
-        [data]="categoriasServicios"
-        [cargando]="cargandoCategorias"
-        linkDetalle="/admin/reportes/categorias-servicios"
-        unidad="citas"
-      ></app-grafica-dashboard>
-
+      <div class="animate-fadeInUp" style="animation-delay: 400ms">
+        <app-grafica-dashboard
+          titulo="Categorías de Servicios"
+          subtitulo="Distribución de citas"
+          tipo="donut"
+          [data]="categoriasServicios"
+          [cargando]="cargandoCategorias"
+          linkDetalle="/admin/reportes/categorias-servicios"
+          unidad="citas"
+        ></app-grafica-dashboard>
+      </div>
       <!-- Actividad semanal (línea) -->
-      <app-grafica-dashboard
-        titulo="Actividad de Citas"
-        subtitulo="Últimos 7 días"
-        tipo="line"
-        [data]="actividadSemanal"
-        [cargando]="cargandoActividad"
-        color="#10b981"
-        linkDetalle="/admin/reportes/actividad-semanal"
-        unidad="citas"
-      ></app-grafica-dashboard>
-
+      <div class="animate-fadeInUp" style="animation-delay: 480ms">
+        <app-grafica-dashboard
+          titulo="Actividad de Citas"
+          subtitulo="Últimos 30 días"
+          tipo="line"
+          [data]="actividadSemanal"
+          [cargando]="cargandoActividad"
+          color="#10b981"
+          linkDetalle="/admin/reportes/actividad-semanal"
+          unidad="citas"
+        ></app-grafica-dashboard>
+      </div>
       <!-- Clientes nuevos (barras) -->
-      <app-grafica-dashboard
-        titulo="Clientes Nuevos"
-        subtitulo="Por mes (últimos 12 meses)"
-        tipo="bar"
-        [data]="clientesNuevos"
-        [cargando]="cargandoClientes"
-        color="#f97316"
-        linkDetalle="/admin/reportes/clientes-nuevos"
-        unidad="clientes"
-      ></app-grafica-dashboard>
+      <div class="animate-fadeInUp" style="animation-delay: 560ms">
+        <app-grafica-dashboard
+          titulo="Clientes Nuevos"
+          subtitulo="Por mes (últimos 12 meses)"
+          tipo="bar"
+          [data]="clientesNuevos"
+          [cargando]="cargandoClientes"
+          color="#f97316"
+          linkDetalle="/admin/reportes/clientes-nuevos"
+          unidad="clientes"
+        ></app-grafica-dashboard>
+      </div>
     </div>
     <!-- Heatmap de horarios populares (Fase 4) -->
-    <div>
+    <div class="mt-10">
       <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
         Cuándo prefieren agendar
       </h2>
-      <app-heatmap-horarios
-        titulo="Horarios populares"
-        subtitulo="Distribución de citas por día y hora (últimos 30 días)"
-        [data]="heatmapHorarios"
-        [cargando]="cargandoHeatmap"
-      ></app-heatmap-horarios>
-
+      <div class="animate-fadeInUp" style="animation-delay: 640ms">
+        <app-heatmap-horarios
+          titulo="Horarios populares"
+          subtitulo="Distribución de citas por día y hora (últimos 30 días)"
+          [data]="heatmapHorarios"
+          [cargando]="cargandoHeatmap"
+        ></app-heatmap-horarios>
+      </div>
       <!-- Insights del heatmap -->
       <div
         *ngIf="!cargandoHeatmap && heatmapInsights && heatmapInsights.totalCitas > 0"
-        class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4"
+        class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 animate-fadeInUp"
+        style="animation-delay: 720ms"
       >
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
@@ -331,7 +649,7 @@
 
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
-            🎯 Combo top
+            🎯 Mejor combinación
           </p>
           <p class="text-2xl font-bold text-gray-900">
             {{ heatmapInsights.mejorCombo.dia }} {{ heatmapInsights.mejorCombo.hora }}
@@ -341,21 +659,26 @@
       </div>
     </div>
     <!-- Funnel de Conversión (Fase 4) -->
-    <div>
+    <div class="mt-10">
       <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-        Conversión de citas
+        Cómo avanzan tus citas
       </h2>
-      <app-funnel-conversion
-        titulo="Funnel de conversión"
-        subtitulo="De citas agendadas a citas completadas (últimos 30 días)"
-        [data]="funnelData"
-        [cargando]="cargandoFunnel"
-      ></app-funnel-conversion>
+      <div class="animate-fadeInUp" style="animation-delay: 800ms">
+        <app-funnel-conversion
+          titulo="Etapas de tus citas"
+          subtitulo="Cuántas se agendan, cuántas se confirman y cuántas se completan (últimos 30 días)"
+          [data]="funnelData"
+          [cargando]="cargandoFunnel"
+        ></app-funnel-conversion>
+      </div>
     </div>
   </div>
 
   <!-- DOS COLUMNAS: Proyectos Recientes + Actividad -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <div
+    class="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fadeInUp"
+    style="animation-delay: 880ms"
+  >
     <!-- Proyectos Recientes (2 columnas) -->
     <div class="lg:col-span-2">
       <div class="flex items-center justify-between mb-3">
@@ -468,6 +791,7 @@
     </div>
 
     <!-- Centro de Actividad -->
+    <!-- Centro de Actividad -->
     <div>
       <div class="flex items-center justify-between mb-3">
         <h2
@@ -488,106 +812,242 @@
           Marcar leídas
         </button>
       </div>
+
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <!-- Tabs de filtro -->
+        <div class="flex gap-1 px-3 py-2 border-b border-gray-100 bg-gray-50/50">
+          <button
+            (click)="filtroNotif = 'todas'"
+            class="flex-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5"
+            [class.bg-white]="filtroNotif === 'todas'"
+            [class.shadow-sm]="filtroNotif === 'todas'"
+            [class.text-gray-900]="filtroNotif === 'todas'"
+            [class.text-gray-500]="filtroNotif !== 'todas'"
+            [class.hover:text-gray-700]="filtroNotif !== 'todas'"
+          >
+            Todas
+            <span
+              class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+              [class.bg-gray-200]="filtroNotif === 'todas'"
+              [class.text-gray-700]="filtroNotif === 'todas'"
+              [class.bg-gray-100]="filtroNotif !== 'todas'"
+              [class.text-gray-500]="filtroNotif !== 'todas'"
+            >
+              {{ notificaciones.length }}
+            </span>
+          </button>
+          <button
+            (click)="filtroNotif = 'citas'"
+            class="flex-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5"
+            [class.bg-white]="filtroNotif === 'citas'"
+            [class.shadow-sm]="filtroNotif === 'citas'"
+            [class.text-gray-900]="filtroNotif === 'citas'"
+            [class.text-gray-500]="filtroNotif !== 'citas'"
+            [class.hover:text-gray-700]="filtroNotif !== 'citas'"
+          >
+            Citas
+            <span
+              *ngIf="conteoCitas > 0"
+              class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+              [class.bg-blue-100]="filtroNotif === 'citas'"
+              [class.text-blue-700]="filtroNotif === 'citas'"
+              [class.bg-gray-100]="filtroNotif !== 'citas'"
+              [class.text-gray-500]="filtroNotif !== 'citas'"
+            >
+              {{ conteoCitas }}
+            </span>
+          </button>
+          <button
+            (click)="filtroNotif = 'consultas'"
+            class="flex-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5"
+            [class.bg-white]="filtroNotif === 'consultas'"
+            [class.shadow-sm]="filtroNotif === 'consultas'"
+            [class.text-gray-900]="filtroNotif === 'consultas'"
+            [class.text-gray-500]="filtroNotif !== 'consultas'"
+            [class.hover:text-gray-700]="filtroNotif !== 'consultas'"
+          >
+            Consultas
+            <span
+              *ngIf="conteoConsultas > 0"
+              class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+              [class.bg-green-100]="filtroNotif === 'consultas'"
+              [class.text-green-700]="filtroNotif === 'consultas'"
+              [class.bg-gray-100]="filtroNotif !== 'consultas'"
+              [class.text-gray-500]="filtroNotif !== 'consultas'"
+            >
+              {{ conteoConsultas }}
+            </span>
+          </button>
+        </div>
+
+        <!-- Lista de notificaciones -->
         <div class="divide-y divide-gray-100 max-h-[420px] overflow-y-auto">
           <div
-            *ngFor="let notif of notificaciones"
+            *ngFor="let notif of notificacionesFiltradas"
             (click)="abrirNotificacion(notif)"
-            class="p-3 hover:bg-gray-50 transition-colors cursor-pointer flex gap-3"
-            [class.bg-blue-50/30]="!notif.leida"
+            class="p-3 hover:bg-gray-50 transition-colors cursor-pointer flex gap-3 group relative"
+            [class.bg-blue-50/40]="!notif.leida"
           >
-            <!-- Punto indicador -->
+            <!-- Borde lateral si no leída -->
             <div
-              class="w-2 h-2 rounded-full mt-2 shrink-0"
-              [class.bg-blue-500]="!notif.leida"
-              [class.bg-transparent]="notif.leida"
+              *ngIf="!notif.leida"
+              class="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-500"
             ></div>
 
-            <!-- Icono por tipo -->
-            <div
-              class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-              [class.bg-blue-100]="notif.tipo === 'cita'"
-              [class.bg-green-100]="notif.tipo === 'consulta' || notif.tipo === 'confirmacion'"
-              [class.bg-red-100]="notif.tipo === 'cancelacion'"
-              [class.bg-orange-100]="notif.tipo === 'mensaje'"
-            >
-              <ng-container [ngSwitch]="notif.tipo">
-                <svg
-                  *ngSwitchCase="'cita'"
-                  class="w-4 h-4 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <svg
-                  *ngSwitchCase="'consulta'"
-                  class="w-4 h-4 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-                <svg
-                  *ngSwitchCase="'confirmacion'"
-                  class="w-4 h-4 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <svg
-                  *ngSwitchCase="'cancelacion'"
-                  class="w-4 h-4 text-red-600"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                <svg
-                  *ngSwitchCase="'mensaje'"
-                  class="w-4 h-4 text-orange-600"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M3 5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-5l-5 5v-5H5a2 2 0 01-2-2V5z"
-                  />
-                </svg>
-              </ng-container>
+            <!-- Avatar con iniciales + badge de tipo -->
+            <div class="relative shrink-0">
+              <!-- Avatar -->
+              <div
+                class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-bold"
+                [ngClass]="colorAvatar(notif.cliente)"
+              >
+                {{ iniciales(notif.cliente) }}
+              </div>
+
+              <!-- Badge del tipo (esquina inferior derecha) -->
+              <div
+                class="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg ring-2 ring-white flex items-center justify-center"
+                [class.bg-blue-500]="notif.tipo === 'cita'"
+                [class.bg-green-500]="notif.tipo === 'consulta' || notif.tipo === 'confirmacion'"
+                [class.bg-red-500]="notif.tipo === 'cancelacion'"
+                [class.bg-orange-500]="notif.tipo === 'mensaje'"
+              >
+                <ng-container [ngSwitch]="notif.tipo">
+                  <svg
+                    *ngSwitchCase="'cita'"
+                    class="w-2.5 h-2.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <svg
+                    *ngSwitchCase="'consulta'"
+                    class="w-2.5 h-2.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  <svg
+                    *ngSwitchCase="'confirmacion'"
+                    class="w-2.5 h-2.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <svg
+                    *ngSwitchCase="'cancelacion'"
+                    class="w-2.5 h-2.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <svg
+                    *ngSwitchCase="'mensaje'"
+                    class="w-2.5 h-2.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M3 5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-5l-5 5v-5H5a2 2 0 01-2-2V5z"
+                    />
+                  </svg>
+                </ng-container>
+              </div>
             </div>
 
             <!-- Contenido -->
+            <!-- Contenido -->
             <div class="flex-1 min-w-0">
-              <p
-                class="text-sm font-semibold text-gray-900 truncate"
-                [class.font-bold]="!notif.leida"
-              >
-                {{ notif.titulo }}
-              </p>
+              <div class="flex items-start justify-between gap-2">
+                <p
+                  class="text-sm font-semibold text-gray-900 truncate"
+                  [class.font-bold]="!notif.leida"
+                >
+                  {{ notif.titulo }}
+                </p>
+
+                <!-- Botón "Marcar leída" - aparece al hover si no leída -->
+                <button
+                  *ngIf="!notif.leida"
+                  (click)="marcarLeida(notif, $event)"
+                  class="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-[10px] font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2 py-0.5 rounded"
+                  title="Marcar como leída"
+                >
+                  ✓ Leída
+                </button>
+              </div>
               <p class="text-xs text-gray-500 line-clamp-2 mt-0.5">{{ notif.descripcion }}</p>
-              <p class="text-[11px] text-gray-400 mt-1">{{ notif.tiempo }}</p>
+
+              <div class="flex items-center justify-between gap-2 mt-1.5">
+                <p class="text-[11px] text-gray-400">{{ notif.tiempo }}</p>
+
+                <!-- Botón de acción rápida (aparece al hover) -->
+                <button
+                  (click)="accionRapida(notif, $event)"
+                  class="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-[10px] font-semibold text-white px-2.5 py-1 rounded-md shadow-sm"
+                  [ngClass]="colorAccionRapida(notif.tipo)"
+                >
+                  {{ textoAccionRapida(notif.tipo) }}
+                </button>
+              </div>
             </div>
+          </div>
+
+          <!-- Empty state cuando filtro no devuelve nada -->
+          <div *ngIf="notificacionesFiltradas.length === 0" class="px-6 py-10 text-center">
+            <div
+              class="w-14 h-14 mx-auto mb-3 bg-gray-100 rounded-2xl flex items-center justify-center"
+            >
+              <svg
+                class="w-7 h-7 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
+              </svg>
+            </div>
+            <p class="text-sm font-semibold text-gray-700 mb-1">
+              {{
+                filtroNotif === 'citas'
+                  ? 'Sin notificaciones de citas'
+                  : filtroNotif === 'consultas'
+                    ? 'Sin notificaciones de consultas'
+                    : 'Todo tranquilo'
+              }}
+            </p>
+            <p class="text-xs text-gray-500 max-w-xs mx-auto leading-relaxed">
+              Las notificaciones recientes aparecerán aquí.
+            </p>
           </div>
         </div>
       </div>
@@ -595,7 +1055,10 @@
   </div>
 
   <!-- DOS COLUMNAS: Consultas Pendientes + Agenda -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div
+    class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fadeInUp"
+    style="animation-delay: 960ms"
+  >
     <!-- Consultas pendientes -->
     <div>
       <div class="flex items-center justify-between mb-3">
@@ -685,8 +1148,27 @@
             </div>
           </div>
         </div>
-        <div *ngIf="!cargandoConsultas && consultasPendientes.length === 0" class="p-8 text-center">
-          <p class="text-sm text-gray-500">No hay consultas pendientes</p>
+        <div
+          *ngIf="!cargandoConsultas && consultasPendientes.length === 0"
+          class="px-6 py-10 text-center"
+        >
+          <div
+            class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl flex items-center justify-center"
+          >
+            <svg
+              class="w-8 h-8 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p class="text-sm font-semibold text-gray-800 mb-1">¡Bandeja al día!</p>
+          <p class="text-xs text-gray-500 max-w-xs mx-auto leading-relaxed">
+            No tienes consultas pendientes de responder. Cuando lleguen nuevas, aparecerán aquí.
+          </p>
         </div>
       </div>
     </div>
@@ -718,25 +1200,86 @@
           <div
             *ngFor="let cita of citasHoy"
             (click)="abrirCita(cita)"
-            class="flex items-center gap-3 md:gap-4 p-3 md:p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+            class="flex items-center gap-3 md:gap-4 p-3 md:p-4 hover:bg-gray-50 transition-colors cursor-pointer relative"
+            [class.bg-green-50/40]="estadoTemporalCita(cita) === 'ahora'"
           >
+            <!-- Borde lateral animado para "ahora" -->
             <div
-              class="flex flex-col items-center justify-center w-14 h-14 rounded-xl shrink-0"
-              [class.bg-blue-50]="cita.estado === 'confirmada'"
-              [class.bg-orange-50]="cita.estado === 'pendiente'"
+              *ngIf="estadoTemporalCita(cita) === 'ahora'"
+              class="absolute left-0 top-0 bottom-0 w-1 bg-green-500"
+            ></div>
+
+            <!-- Bloque de hora -->
+            <div
+              class="flex flex-col items-center justify-center w-14 h-14 rounded-xl shrink-0 relative"
+              [class.bg-green-100]="estadoTemporalCita(cita) === 'ahora'"
+              [class.ring-2]="estadoTemporalCita(cita) === 'ahora'"
+              [class.ring-green-400]="estadoTemporalCita(cita) === 'ahora'"
+              [class.bg-amber-50]="estadoTemporalCita(cita) === 'proxima'"
+              [class.bg-blue-50]="
+                estadoTemporalCita(cita) === 'futura' && cita.estado === 'confirmada'
+              "
+              [class.bg-orange-50]="
+                estadoTemporalCita(cita) === 'futura' && cita.estado === 'pendiente'
+              "
+              [class.bg-gray-100]="estadoTemporalCita(cita) === 'pasada'"
             >
+              <!-- Pulse para "ahora" -->
+              <span
+                *ngIf="estadoTemporalCita(cita) === 'ahora'"
+                class="absolute -top-1 -right-1 flex h-3 w-3"
+              >
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
+                ></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              </span>
+
               <span
                 class="text-sm font-bold"
-                [class.text-blue-700]="cita.estado === 'confirmada'"
-                [class.text-orange-700]="cita.estado === 'pendiente'"
+                [class.text-green-700]="estadoTemporalCita(cita) === 'ahora'"
+                [class.text-amber-700]="estadoTemporalCita(cita) === 'proxima'"
+                [class.text-blue-700]="
+                  estadoTemporalCita(cita) === 'futura' && cita.estado === 'confirmada'
+                "
+                [class.text-orange-700]="
+                  estadoTemporalCita(cita) === 'futura' && cita.estado === 'pendiente'
+                "
+                [class.text-gray-500]="estadoTemporalCita(cita) === 'pasada'"
               >
                 {{ cita.hora }}
               </span>
             </div>
+
+            <!-- Info -->
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-gray-900 truncate">{{ cita.cliente }}</p>
-              <p class="text-xs text-gray-500">{{ cita.tipo }}</p>
+              <div class="flex items-center gap-2 flex-wrap">
+                <p class="text-sm font-semibold text-gray-900 truncate">{{ cita.cliente }}</p>
+
+                <!-- Badge temporal -->
+                <span
+                  *ngIf="estadoTemporalCita(cita) === 'ahora'"
+                  class="text-[10px] font-bold px-2 py-0.5 bg-green-500 text-white rounded-full uppercase tracking-wider flex items-center gap-1"
+                >
+                  <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                  En curso
+                </span>
+                <span
+                  *ngIf="estadoTemporalCita(cita) === 'proxima'"
+                  class="text-[10px] font-bold px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full uppercase tracking-wider"
+                >
+                  Próxima
+                </span>
+              </div>
+              <p class="text-xs text-gray-500 mt-0.5">
+                {{ cita.tipo }}
+                <span *ngIf="textoTemporalCita(cita)" class="text-gray-400">
+                  · {{ textoTemporalCita(cita) }}</span
+                >
+              </p>
             </div>
+
+            <!-- Estado -->
             <span
               class="text-xs font-semibold px-3 py-1 rounded-full"
               [class.bg-green-50]="cita.estado === 'confirmada'"
@@ -748,19 +1291,80 @@
             </span>
           </div>
         </div>
-        <div *ngIf="!cargandoAgenda && citasHoy.length === 0" class="p-8 text-center">
-          <p class="text-sm text-gray-500">No tienes citas programadas para hoy</p>
+        <div *ngIf="!cargandoAgenda && citasHoy.length === 0" class="px-6 py-10 text-center">
+          <div
+            class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center"
+          >
+            <svg
+              class="w-8 h-8 text-[#0a4d7a]"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+              <circle cx="12" cy="15" r="1.5" fill="currentColor" />
+            </svg>
+          </div>
+          <p class="text-sm font-semibold text-gray-800 mb-1">Día despejado</p>
+          <p class="text-xs text-gray-500 mb-4 max-w-xs mx-auto leading-relaxed">
+            No tienes citas para hoy. Buen momento para enfocarte en proyectos o responder
+            consultas.
+          </p>
+          <button
+            (click)="irACitas()"
+            class="text-xs font-semibold text-[#0a4d7a] hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
+          >
+            Ver calendario completo
+            <svg
+              class="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Accesos Rápidos -->
-  <div>
+  <div class="animate-fadeInUp" style="animation-delay: 1040ms">
     <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
       Accesos Rápidos
     </h2>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <a
+        routerLink="/admin/reportes/historial"
+        class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left block group"
+      >
+        <div
+          class="w-11 h-11 bg-emerald-100 group-hover:bg-emerald-200 rounded-xl flex items-center justify-center mb-3 transition-colors"
+        >
+          <svg
+            class="w-5 h-5 text-emerald-600"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        </div>
+        <p class="text-sm font-semibold text-gray-900">Historial</p>
+        <p class="text-xs text-gray-500 mt-0.5">Reportes generados</p>
+      </a>
       <button
         (click)="nuevoProyecto()"
         class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-left"
@@ -1070,7 +1674,52 @@
           *ngIf="!cargandoTodosProyectos && proyectosFiltrados.length === 0"
           class="text-center py-12"
         >
-          <p class="text-sm text-gray-500">No se encontraron proyectos</p>
+          <div
+            class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center"
+          >
+            <svg
+              class="w-10 h-10 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+          <p class="text-sm font-semibold text-gray-800 mb-1">
+            {{ busquedaProyectos.trim() ? 'Sin coincidencias' : 'No hay proyectos' }}
+          </p>
+          <p class="text-xs text-gray-500 max-w-xs mx-auto leading-relaxed mb-4">
+            <ng-container *ngIf="busquedaProyectos.trim(); else sinFiltro">
+              No se encontraron proyectos para
+              <strong class="text-gray-700">"{{ busquedaProyectos }}"</strong>. Intenta con otra
+              búsqueda.
+            </ng-container>
+            <ng-template #sinFiltro>
+              No tienes proyectos en este estado todavía. Crea uno nuevo para empezar.
+            </ng-template>
+          </p>
+          <button
+            *ngIf="!busquedaProyectos.trim()"
+            (click)="abrirNuevoDesdeTodos()"
+            class="text-xs font-semibold text-white bg-[#0a4d7a] hover:bg-[#0a5d8f] px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-sm"
+          >
+            <svg
+              class="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Crear nuevo proyecto
+          </button>
         </div>
 
         <div
@@ -2003,6 +2652,118 @@
             Cerrar
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+  <!-- ============ MODAL: Info Google Analytics ============ -->
+  <div
+    *ngIf="mostrarInfoGA"
+    (click)="cerrarInfoGA()"
+    class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
+  >
+    <div
+      (click)="$event.stopPropagation()"
+      class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+    >
+      <!-- Header -->
+      <div class="p-6 pb-4 relative border-b border-gray-100">
+        <button
+          (click)="cerrarInfoGA()"
+          class="absolute top-4 right-4 w-8 h-8 hover:bg-gray-100 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center shrink-0">
+            <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M22.84 2.998v17.999a2.983 2.983 0 0 1-5.967 0V3.218C16.873 1.54 18.225 0 19.94 0c1.715 0 3.067 1.32 2.9 2.998zM4.733 17.034c-1.715 0-2.9 1.32-2.733 2.998v.965c.167 1.678 1.518 2.998 2.733 2.998 1.715 0 3.067-1.32 2.9-2.998v-.965c.167-1.678-1.185-2.998-2.9-2.998zm6.917-8.519c-1.715 0-2.9 1.32-2.733 2.998v9.484c.167 1.678 1.518 2.998 2.733 2.998 1.715 0 3.067-1.32 2.9-2.998v-9.484c.167-1.678-1.185-2.998-2.9-2.998z"
+              />
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <h3 class="text-base font-semibold text-gray-900">Conecta Google Analytics</h3>
+            <p class="text-xs text-gray-500 mt-0.5">Para ver las visitas reales de tu sitio</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6 space-y-4">
+        <p class="text-sm text-gray-700 leading-relaxed">
+          Una vez que tu sitio esté en producción, podrás conectar Google Analytics para ver el
+          tráfico real de tu sitio público directamente en este dashboard.
+        </p>
+
+        <!-- Pasos -->
+        <div class="space-y-3">
+          <div class="flex items-start gap-3">
+            <div
+              class="w-7 h-7 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
+            >
+              1
+            </div>
+            <p class="text-sm text-gray-700 leading-relaxed">
+              Crea una propiedad en Google Analytics 4 para tu dominio.
+            </p>
+          </div>
+          <div class="flex items-start gap-3">
+            <div
+              class="w-7 h-7 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
+            >
+              2
+            </div>
+            <p class="text-sm text-gray-700 leading-relaxed">
+              Genera credenciales de servicio en Google Cloud Console.
+            </p>
+          </div>
+          <div class="flex items-start gap-3">
+            <div
+              class="w-7 h-7 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
+            >
+              3
+            </div>
+            <p class="text-sm text-gray-700 leading-relaxed">
+              Pega las credenciales en la configuración del sistema.
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-purple-50 border border-purple-100 rounded-xl p-3 flex items-start gap-2.5">
+          <svg
+            class="w-4 h-4 text-purple-600 mt-0.5 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <p class="text-xs text-purple-900 leading-relaxed">
+            La integración está planeada para activarse junto con el despliegue del sitio en
+            producción.
+          </p>
+        </div>
+
+        <button
+          (click)="cerrarInfoGA()"
+          class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-sm transition-all"
+        >
+          Entendido
+        </button>
       </div>
     </div>
   </div>

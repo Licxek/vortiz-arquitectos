@@ -10,7 +10,7 @@ import {
 import { Servicio } from '../servicios/servicio.entity';
 
 export type TipoCita = 'consulta' | 'proyecto';
-export type EstadoCita = 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
+export type EstadoCita = 'pendiente' | 'confirmada' | 'cancelada' | 'completada' | 'no_asistio';
 
 @Entity('citas')
 export class Cita {

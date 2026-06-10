@@ -5,10 +5,14 @@ import { ReportesService } from './reportes.service';
 import { Cita } from '../citas/cita.entity';
 import { Servicio } from '../servicios/servicio.entity';
 import { Proyecto } from '../proyectos/proyecto.entity';
+import { PdfReportesService } from './pdf-reportes.service'; // 👈 NUEVO
+import { EmailReportesService } from './email-reportes.service'; // 👈 NUEVO
+import { HistorialReportesService } from './historial-reportes.service'; // 👈 NUEVO
+import { ReporteGenerado } from './reporte-generado.entity'; // 👈 NUEVO
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Cita, Servicio, Proyecto])],
+  imports: [TypeOrmModule.forFeature([Cita, Servicio, Proyecto, ReporteGenerado,])],
   controllers: [ReportesController],
-  providers: [ReportesService],
+  providers: [ReportesService, PdfReportesService,EmailReportesService,HistorialReportesService,],
 })
 export class ReportesModule {}

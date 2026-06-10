@@ -9,12 +9,14 @@ import { Repository } from 'typeorm';
 import { Cita, EstadoCita } from './cita.entity';
 import { MailService } from '../mail/mail.service'; // ⚠️ ajusta la ruta
 import { CrearCitaDto } from './dto/crear-cita.dto';
+import { ConfiguracionService } from '../configuracion/configuracion.service'; // 👈 NUEVO
 
 const ESTADOS_VALIDOS: EstadoCita[] = [
   'pendiente',
   'confirmada',
   'cancelada',
   'completada',
+  'no_asistio', // 👈 NUEVO
 ];
 
 @Injectable()
@@ -24,6 +26,7 @@ export class CitasService {
   constructor(
     @InjectRepository(Cita) private repo: Repository<Cita>,
     private mailService: MailService,
+    private configuracionService: ConfiguracionService,
   ) {}
 
   findAll() {
@@ -60,6 +63,25 @@ export class CitasService {
       );
     }
 
+    // 🔒 No permitir citas en fechas pasadas
+    const fechaCita = new Date(data.fecha + 'T00:00:00');
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    if (fechaCita.getTime() < hoy.getTime()) {
+      throw new BadRequestException(
+        'No se pueden agendar citas en fechas pasadas.',
+      );
+    }
+
+    // Validar que no haya empalme con otra cita activa
+    const duracion = data.duracion ?? 60;
+    const conflicto = await this.hayEmpalme(data.fecha, data.hora, duracion);
+    if (conflicto) {
+      throw new BadRequestException(
+        'El horario solicitado no está disponible. Por favor elige otro.',
+      );
+    }
+
     const cita = this.repo.create({
       nombre: data.nombre.trim(),
       correo: data.correo.trim().toLowerCase(),
@@ -70,17 +92,31 @@ export class CitasService {
       fecha: data.fecha,
       hora: data.hora,
       duracion: data.duracion ?? 60,
-      estado: 'pendiente',
+      estado: data.estado ?? 'pendiente',
     });
 
     const guardada = await this.repo.save(cita);
     const completa = await this.findOne(guardada.id);
 
-    // 📧 Notificaciones (fire-and-forget, no bloquean la respuesta)
+    // 📧 Notificaciones según el estado inicial
     if (completa) {
-      this.notificarNuevaCita(completa).catch((err) =>
-        this.logger.error(`Error notificando nueva cita: ${err.message}`),
-      );
+      if (completa.estado === 'confirmada') {
+        // Admin la creó ya confirmada: solo correo de confirmación al cliente
+        this.mailService
+          .enviar(
+            completa.correo,
+            'Tu cita ha sido confirmada — Vortiz Arquitectos',
+            this.htmlConfirmacion(completa),
+          )
+          .catch((err) =>
+            this.logger.error(`Error enviando confirmación: ${err.message}`),
+          );
+      } else {
+        // Cliente la solicitó (pendiente): acuse + aviso a admin
+        this.notificarNuevaCita(completa).catch((err) =>
+          this.logger.error(`Error notificando nueva cita: ${err.message}`),
+        );
+      }
     }
 
     return completa;
@@ -116,6 +152,18 @@ export class CitasService {
         )
         .catch((err) =>
           this.logger.error(`Error enviando cancelación: ${err.message}`),
+        );
+    } else if (actualizada && estado === 'no_asistio') {
+      this.mailService
+        .enviar(
+          actualizada.correo,
+          'Lamentamos no haberte visto — Vortiz Arquitectos',
+          this.htmlNoAsistio(actualizada),
+        )
+        .catch((err) =>
+          this.logger.error(
+            `Error enviando aviso de no asistencia: ${err.message}`,
+          ),
         );
     }
 
@@ -157,12 +205,27 @@ export class CitasService {
   private formatearFecha(fechaISO: string, hora: string): string {
     const d = new Date(fechaISO + 'T00:00:00');
     const dias = [
-      'domingo', 'lunes', 'martes', 'miércoles',
-      'jueves', 'viernes', 'sábado',
+      'domingo',
+      'lunes',
+      'martes',
+      'miércoles',
+      'jueves',
+      'viernes',
+      'sábado',
     ];
     const meses = [
-      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
     ];
     return `${dias[d.getDay()]} ${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()} · ${hora}`;
   }
@@ -249,6 +312,72 @@ export class CitasService {
         <li>Correo: <strong>info@vortizarquitectos.com</strong></li>
       </ul>
       `,
+    );
+  }
+
+  /**
+   * Verifica si una cita propuesta choca con otra existente.
+   * Considera duración completa (inicio + duracion minutos).
+   * Las canceladas se ignoran (su horario queda libre).
+   */
+  private async hayEmpalme(
+    fecha: string,
+    hora: string,
+    duracion: number,
+    idIgnorar?: number,
+  ): Promise<Cita | null> {
+    // Buffer entre citas desde config
+    const config = await this.configuracionService.obtener();
+    const buffer: number = config.agenda?.tiempoEntreCitas ?? 0;
+
+    const candidatas = await this.repo.find({
+      where: { fecha },
+      relations: ['servicio'],
+    });
+
+    const [hN, mN] = hora.split(':').map(Number);
+    const inicioNueva = hN * 60 + mN;
+    const finNueva = inicioNueva + duracion;
+
+    for (const c of candidatas) {
+      if (idIgnorar && c.id === idIgnorar) continue;
+      if (c.estado === 'cancelada') continue;
+
+      const [hC, mC] = c.hora.split(':').map(Number);
+      const inicioExistente = hC * 60 + mC;
+      const finExistente = inicioExistente + (c.duracion || 60);
+
+      // Solape considerando buffer (debe haber AL MENOS `buffer` min entre citas)
+      if (
+        inicioNueva - buffer < finExistente &&
+        finNueva + buffer > inicioExistente
+      ) {
+        return c;
+      }
+    }
+    return null;
+  }
+
+  private calcularHoraFin(horaInicio: string, duracion: number): string {
+    const [h, m] = horaInicio.split(':').map(Number);
+    const total = h * 60 + m + duracion;
+    const hF = Math.floor(total / 60);
+    const mF = total % 60;
+    return `${String(hF).padStart(2, '0')}:${String(mF).padStart(2, '0')}`;
+  }
+  private htmlNoAsistio(cita: Cita): string {
+    return this.layout(
+      'No te vimos en tu cita',
+      `
+    <h2 style="color: #d97706; margin-top: 0;">Hola ${cita.nombre.split(' ')[0]}</h2>
+    <p>Te esperábamos para tu cita del <strong>${this.formatearFecha(cita.fecha, cita.hora)}</strong>, pero no pudimos atenderte.</p>
+    <p>Sabemos que pueden pasar imprevistos. Si quieres reagendar, contáctanos:</p>
+    <ul style="font-size: 14px;">
+      <li>WhatsApp: <strong>+52 618 000 0000</strong></li>
+      <li>Correo: <strong>info@vortizarquitectos.com</strong></li>
+    </ul>
+    <p>Estaremos encantados de encontrar otra fecha que te funcione.</p>
+    `,
     );
   }
 }

@@ -29,11 +29,14 @@ async function bootstrap() {
   // 2) Helmet con HSTS estricto solo en prod
   app.use(
     helmet({
-      hsts: {
-        maxAge: 63072000,
-        includeSubDomains: true,
-        preload: true,
-      },
+      // HSTS solo en producción (en dev con cert self-signed puede causar problemas)
+      hsts: isProd
+        ? {
+            maxAge: 63072000,
+            includeSubDomains: true,
+            preload: true,
+          }
+        : false,
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
@@ -53,25 +56,22 @@ async function bootstrap() {
             'data:',
             'blob:',
             'https://images.unsplash.com', // hero images
-            'https://api.vortiz.local', // tu backend (dev)
-            // 👇 PRODUCCIÓN: cambia por tu dominio real
-            // 'https://api.vortizarquitectos.com',
+            // En desarrollo, el backend está en otro hostname
+            ...(isProd ? [] : ['https://api.vortiz.local']),
           ],
           connectSrc: [
             "'self'",
-            'https://api.vortiz.local',
-            // 👇 PRODUCCIÓN:
-            // 'https://api.vortizarquitectos.com',
+            // En desarrollo, el frontend llama al backend en otro hostname
+            ...(isProd ? [] : ['https://api.vortiz.local']),
           ],
           frameSrc: [
             "'self'",
             'https://www.google.com', // iframe del mapa en footer
           ],
-          objectSrc: ["'none'"], // bloquea Flash, applets, etc.
-          upgradeInsecureRequests: [], // fuerza upgrade de http:// a https://
+          objectSrc: ["'none'"],
+          upgradeInsecureRequests: isProd ? [] : null, // solo en prod fuerza https
         },
       },
-      // ... resto de helmet config (referrerPolicy, etc.) ...
     }),
   );
 

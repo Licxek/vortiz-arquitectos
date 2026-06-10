@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.vortizarquitectos.com/api',
+  apiUrl: 'https://vortizarquitectos.com.mx/api',
+  publicUrl: 'https://vortizarquitectos.com.mx',
 };

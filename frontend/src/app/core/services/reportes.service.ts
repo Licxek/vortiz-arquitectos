@@ -143,6 +143,21 @@ export interface FunnelData {
   metricas: FunnelMetricas;
 }
 
+// ============ TIPOS DE PDF ============
+
+export interface OpcionesGenerarPDF {
+  desde?: string;
+  hasta?: string;
+  accion: 'descargar' | 'enviar' | 'ambas';
+  destinatarios?: string[];
+}
+
+export interface RespuestaEnvioPDF {
+  mensaje: string;
+  destinatarios?: string[];
+  previewUrl?: string;
+}
+
 // ============ SERVICE ============
 
 @Injectable({ providedIn: 'root' })
@@ -192,5 +207,23 @@ export class ReportesService {
     if (desde) params = params.set('desde', desde);
     if (hasta) params = params.set('hasta', hasta);
     return this.http.get<FunnelData>(`${this.apiUrl}/funnel-conversion`, { params });
+  }
+
+  /**
+   * Genera el PDF y lo descarga como blob.
+   * Úsalo para acciones 'descargar' o 'ambas'.
+   */
+  descargarReportePDF(tipo: string, opciones: OpcionesGenerarPDF): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/generar-pdf/${tipo}`, opciones, {
+      responseType: 'blob',
+    });
+  }
+
+  /**
+   * Genera el PDF y lo envía por correo (sin descargar).
+   * Úsalo para acción 'enviar'.
+   */
+  enviarReportePDF(tipo: string, opciones: OpcionesGenerarPDF): Observable<RespuestaEnvioPDF> {
+    return this.http.post<RespuestaEnvioPDF>(`${this.apiUrl}/generar-pdf/${tipo}`, opciones);
   }
 }

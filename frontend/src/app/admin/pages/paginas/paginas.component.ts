@@ -11,6 +11,8 @@ import { forkJoin, Observable } from 'rxjs';
 import { PaginasService, Pagina as PaginaBackend } from '../../../core/services/paginas.service';
 import { ImageUploadComponent } from '../../../shared/image-upload/image-upload.component';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
+import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 interface Pagina {
   id: number;
@@ -90,6 +92,17 @@ interface SeccionEditable {
   icono: string;
   campos: CampoEdicion[];
 }
+type VistaModo = 'grid' | 'lista';
+
+type EstadoAutoSave = 'oculto' | 'cambios' | 'guardando' | 'guardado' | 'error';
+
+interface BorradorLocal {
+  formNuevaPagina: any;
+  plantillaSeleccionada: string;
+  seccionActiva: string;
+  paginaEditandoId: number | null;
+  timestamp: number;
+}
 
 @Component({
   selector: 'app-paginas',
@@ -115,7 +128,18 @@ export class PaginasComponent implements OnInit {
   private snapshotContenido = '';
   private snapshotServicios = '';
   private paginasService = inject(PaginasService);
-
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+  vistaModo: VistaModo = 'grid';
+  // Auto-save
+  estadoAutoSave: EstadoAutoSave = 'oculto';
+  private ultimoGuardado: number | null = null;
+  tiempoUltimoGuardado = '';
+  borradorPendiente: BorradorLocal | null = null;
+  private readonly STORAGE_BORRADOR = 'vortiz_paginas_borrador_local';
+  private autoSaveTimer: any = null;
+  private actualizadorTiempoTimer: any = null;
   private paginasFijas: Pagina[] = [
     {
       id: -1,
@@ -787,7 +811,6 @@ export class PaginasComponent implements OnInit {
 
   private sanitizer = inject(DomSanitizer);
   private contenidoService = inject(ContenidoService);
-  private cdr = inject(ChangeDetectorRef);
 
   private rutasPublicas: Record<string, string> = {
     '/': '/',
@@ -821,6 +844,12 @@ export class PaginasComponent implements OnInit {
 
   ngOnInit() {
     this.cargarPaginasDinamicas();
+    this.cargarPreferenciaVista(); // 👈 NUEVO
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => this.aplicarParamsDeUrl());
+
+    this.aplicarParamsDeUrl();
   }
 
   private cargarPaginasDinamicas() {
@@ -974,17 +1003,30 @@ export class PaginasComponent implements OnInit {
     this.menuAbiertoId = null;
   }
 
-  abrirNuevaPagina() {
-    this.paginaEditandoId = null; // 👈 modo CREAR
-    this.mostrarNuevaPagina = true;
-    this.seccionActiva = 'plantilla';
-    this.plantillaSeleccionada = '';
-    this.formNuevaPagina = this.crearFormVacio();
+  abrirNuevaPagina(): void {
+    // Revisar si hay un borrador local pendiente
+    const borradorRaw = localStorage.getItem(this.STORAGE_BORRADOR);
+
+    if (borradorRaw) {
+      try {
+        const borrador: BorradorLocal = JSON.parse(borradorRaw);
+        // Solo ofrecer restaurar si hay título mínimo
+        if (borrador.formNuevaPagina?.titulo?.trim()) {
+          this.borradorPendiente = borrador;
+          return; // Espera decisión del usuario
+        }
+      } catch {
+        localStorage.removeItem(this.STORAGE_BORRADOR);
+      }
+    }
+
+    this.iniciarNuevaPaginaLimpia();
   }
 
-  cerrarNuevaPagina() {
+  cerrarNuevaPagina(): void {
     this.mostrarNuevaPagina = false;
     this.mostrarMenuBloques = false;
+    this.detenerActualizadorTiempo();
   }
 
   seleccionarPlantilla(id: string) {
@@ -1122,6 +1164,9 @@ export class PaginasComponent implements OnInit {
 
         this.cdr.markForCheck();
         this.cerrarNuevaPagina();
+        localStorage.removeItem(this.STORAGE_BORRADOR);
+        this.estadoAutoSave = 'oculto';
+        this.ultimoGuardado = null;
         this.flashMensaje(publicar ? 'Página publicada' : 'Borrador guardado');
       },
       error: (err) => {
@@ -1902,4 +1947,354 @@ export class PaginasComponent implements OnInit {
 
   /** trackBy para los items de lista (usa el índice porque no tienen ID propio) */
   trackItemLista = (index: number, _: any) => index;
+
+  private aplicarParamsDeUrl() {
+    const params = this.route.snapshot.queryParamMap;
+
+    // Filtros
+    const filtro = params.get('filtro');
+    if (filtro && ['todas', 'fijas', 'personalizadas', 'borradores', 'ocultas'].includes(filtro)) {
+      this.filtroActivo = filtro as any;
+    }
+
+    // Acciones
+    const accion = params.get('accion');
+
+    if (accion === 'nueva') {
+      setTimeout(() => {
+        this.abrirNuevaPagina();
+        this.cdr.detectChanges();
+      }, 400);
+    } else if (accion === 'editar') {
+      const paginaKey = params.get('pagina');
+      if (paginaKey) {
+        // Map: nombre amigable → slug real de página fija
+        const slugMap: Record<string, string> = {
+          inicio: '/',
+          nosotros: '/nosotros',
+          proyectos: '/proyectos',
+          servicios: '/servicios',
+          citas: '/citas',
+        };
+        const slugReal = slugMap[paginaKey];
+        if (slugReal) {
+          // Esperar un poco más para que las páginas carguen
+          setTimeout(() => {
+            const paginaFija = this.paginasFijas.find((p) => p.slug === slugReal);
+            if (paginaFija) {
+              this.editarPagina(paginaFija);
+              this.cdr.detectChanges();
+            }
+          }, 500);
+        }
+      }
+    }
+  }
+
+  get resumenSitio(): string {
+    const publicadas = this.paginas.filter((p) => p.estado === 'publicada' && p.visible).length;
+    const borradores = this.totalBorradores;
+    const ocultas = this.totalOcultas;
+
+    const partes: string[] = [];
+    if (publicadas > 0) {
+      partes.push(`${publicadas} ${publicadas === 1 ? 'página publicada' : 'páginas publicadas'}`);
+    }
+    if (borradores > 0) {
+      partes.push(`${borradores} en borrador`);
+    }
+    if (ocultas > 0) {
+      partes.push(`${ocultas} ${ocultas === 1 ? 'oculta' : 'ocultas'}`);
+    }
+
+    if (partes.length === 0) return 'Aún no tienes páginas. Crea la primera para empezar.';
+    if (partes.length === 1) return `Tu sitio tiene ${partes[0]}.`;
+    if (partes.length === 2) return `Tu sitio tiene ${partes[0]} y ${partes[1]}.`;
+    return `Tu sitio tiene ${partes.slice(0, -1).join(', ')} y ${partes[partes.length - 1]}.`;
+  }
+
+  get hayAlertas(): boolean {
+    return this.totalBorradores > 0 || this.totalOcultas > 0;
+  }
+
+  /** Estado consolidado de una página para mostrar en la card */
+  estadoVisual(pagina: Pagina): 'live' | 'borrador' | 'programada' | 'oculta' {
+    if (pagina.estado === 'borrador') return 'borrador';
+    if (pagina.estado === 'programada') return 'programada';
+    if (pagina.estado === 'publicada' && !pagina.visible) return 'oculta';
+    return 'live'; // publicada y visible
+  }
+
+  textoEstadoVisual(pagina: Pagina): string {
+    const map = {
+      live: 'En vivo',
+      borrador: 'Borrador',
+      programada: 'Programada',
+      oculta: 'Oculta',
+    };
+    return map[this.estadoVisual(pagina)];
+  }
+
+  claseEstadoVisual(pagina: Pagina): Record<string, boolean> {
+    const e = this.estadoVisual(pagina);
+    return {
+      'bg-green-50 text-green-700': e === 'live',
+      'bg-orange-50 text-orange-700': e === 'borrador',
+      'bg-blue-50 text-blue-700': e === 'programada',
+      'bg-gray-100 text-gray-600': e === 'oculta',
+    };
+  }
+
+  dotEstadoVisual(pagina: Pagina): Record<string, boolean> {
+    const e = this.estadoVisual(pagina);
+    return {
+      'bg-green-500 animate-pulse': e === 'live',
+      'bg-orange-500': e === 'borrador',
+      'bg-blue-500': e === 'programada',
+      'bg-gray-400': e === 'oculta',
+    };
+  }
+
+  // Junto a las demás propiedades:
+  private readonly STORAGE_VISTA = 'vortiz_paginas_vista';
+
+  cambiarVistaModo(modo: VistaModo): void {
+    this.vistaModo = modo;
+    localStorage.setItem(this.STORAGE_VISTA, modo);
+  }
+
+  private cargarPreferenciaVista(): void {
+    const guardada = localStorage.getItem(this.STORAGE_VISTA);
+    if (guardada === 'lista' || guardada === 'grid') {
+      this.vistaModo = guardada;
+    }
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  manejarAtajos(event: KeyboardEvent) {
+    const target = event.target as HTMLElement;
+    const editando =
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.tagName === 'SELECT' ||
+      target.isContentEditable;
+
+    // Esc: cerrar modal activo (funciona incluso si está escribiendo)
+    if (event.key === 'Escape') {
+      this.cerrarModalActivo();
+      return;
+    }
+
+    // Ctrl+S / Cmd+S: guardar cambios
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+      if (this.mostrarEditarPaginaFija) {
+        event.preventDefault();
+        this.pedirGuardarEdicionPagina();
+        return;
+      }
+      if (this.mostrarNuevaPagina && this.formNuevaPagina.titulo.trim()) {
+        event.preventDefault();
+        this.guardarPagina(false); // guarda como borrador
+        return;
+      }
+    }
+
+    // Si está editando o hay modal abierto, no activamos atajos simples
+    if (editando || this.hayModalAbierto()) return;
+
+    const key = event.key.toLowerCase();
+
+    // N: nueva página
+    if (key === 'n') {
+      event.preventDefault();
+      this.abrirNuevaPagina();
+      return;
+    }
+
+    // G: alternar vista grid/lista
+    if (key === 'g') {
+      event.preventDefault();
+      this.cambiarVistaModo(this.vistaModo === 'grid' ? 'lista' : 'grid');
+      return;
+    }
+  }
+
+  private hayModalAbierto(): boolean {
+    return !!(
+      this.mostrarNuevaPagina ||
+      this.mostrarEditarPaginaFija ||
+      this.mostrarPreviewPagina ||
+      this.mostrarConfirmarSalir ||
+      this.mostrarConfirmarGuardar ||
+      this.paginaAEliminar ||
+      this.proyectoAEliminar ||
+      this.servicioAEliminar
+    );
+  }
+
+  private cerrarModalActivo() {
+    // Cerrar en orden: más interno primero
+    if (this.mostrarConfirmarSalir) {
+      this.cancelarSalirEditarPagina();
+      return;
+    }
+    if (this.mostrarConfirmarGuardar) {
+      this.cancelarGuardarEdicionPagina();
+      return;
+    }
+    if (this.servicioAEliminar) {
+      this.cancelarEliminarServicio();
+      return;
+    }
+    if (this.proyectoAEliminar) {
+      this.cancelarEliminarProyecto();
+      return;
+    }
+    if (this.paginaAEliminar) {
+      this.cancelarEliminarPagina();
+      return;
+    }
+    if (this.mostrarPreviewPagina) {
+      this.cerrarPreviewPagina();
+      return;
+    }
+    if (this.mostrarEditarPaginaFija) {
+      this.pedirCerrarEditarPagina();
+      return;
+    }
+    if (this.mostrarNuevaPagina) {
+      this.cerrarNuevaPagina();
+      return;
+    }
+  }
+
+  /** Llamar cuando hay cambios en el form del wizard */
+  marcarCambios(): void {
+    // No marcar cambios si no hay título mínimo o si está cargando inicial
+    if (!this.mostrarNuevaPagina) return;
+
+    this.estadoAutoSave = 'cambios';
+
+    // Debounce: 2 segundos después del último cambio
+    if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
+    this.autoSaveTimer = setTimeout(() => {
+      this.guardarBorradorLocal();
+    }, 2000);
+  }
+
+  private guardarBorradorLocal(): void {
+    // No guardar si no hay nada relevante
+    if (!this.formNuevaPagina.titulo.trim() && this.formNuevaPagina.bloques.length === 0) {
+      this.estadoAutoSave = 'oculto';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.estadoAutoSave = 'guardando';
+    this.cdr.markForCheck();
+
+    try {
+      const borrador: BorradorLocal = {
+        formNuevaPagina: this.formNuevaPagina,
+        plantillaSeleccionada: this.plantillaSeleccionada,
+        seccionActiva: this.seccionActiva,
+        paginaEditandoId: this.paginaEditandoId,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(this.STORAGE_BORRADOR, JSON.stringify(borrador));
+
+      this.ultimoGuardado = Date.now();
+      this.estadoAutoSave = 'guardado';
+      this.actualizarTextoTiempo();
+      this.iniciarActualizadorTiempo();
+      this.cdr.markForCheck();
+    } catch (e) {
+      this.estadoAutoSave = 'error';
+      this.cdr.markForCheck();
+    }
+  }
+
+  private actualizarTextoTiempo(): void {
+    if (!this.ultimoGuardado) {
+      this.tiempoUltimoGuardado = '';
+      return;
+    }
+
+    const segundos = Math.floor((Date.now() - this.ultimoGuardado) / 1000);
+
+    if (segundos < 5) this.tiempoUltimoGuardado = 'Guardado';
+    else if (segundos < 60) this.tiempoUltimoGuardado = `Guardado hace ${segundos} seg`;
+    else {
+      const min = Math.floor(segundos / 60);
+      this.tiempoUltimoGuardado = `Guardado hace ${min} min`;
+    }
+  }
+
+  private iniciarActualizadorTiempo(): void {
+    if (this.actualizadorTiempoTimer) clearInterval(this.actualizadorTiempoTimer);
+    this.actualizadorTiempoTimer = setInterval(() => {
+      this.actualizarTextoTiempo();
+      this.cdr.markForCheck();
+    }, 5000);
+  }
+
+  private detenerActualizadorTiempo(): void {
+    if (this.actualizadorTiempoTimer) {
+      clearInterval(this.actualizadorTiempoTimer);
+      this.actualizadorTiempoTimer = null;
+    }
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
+      this.autoSaveTimer = null;
+    }
+  }
+
+  /** Restaura un borrador pendiente */
+  restaurarBorradorPendiente(): void {
+    if (!this.borradorPendiente) return;
+    const b = this.borradorPendiente;
+
+    this.formNuevaPagina = b.formNuevaPagina;
+    this.plantillaSeleccionada = b.plantillaSeleccionada;
+    this.seccionActiva = b.seccionActiva as any;
+    this.paginaEditandoId = b.paginaEditandoId;
+    this.ultimoGuardado = b.timestamp;
+
+    this.borradorPendiente = null;
+    this.mostrarNuevaPagina = true;
+    this.estadoAutoSave = 'guardado';
+    this.actualizarTextoTiempo();
+    this.iniciarActualizadorTiempo();
+    this.cdr.markForCheck();
+  }
+
+  /** Descarta el borrador y empieza limpio */
+  descartarBorradorPendiente(): void {
+    localStorage.removeItem(this.STORAGE_BORRADOR);
+    this.borradorPendiente = null;
+    this.iniciarNuevaPaginaLimpia();
+  }
+
+  private iniciarNuevaPaginaLimpia(): void {
+    this.paginaEditandoId = null;
+    this.mostrarNuevaPagina = true;
+    this.seccionActiva = 'plantilla';
+    this.plantillaSeleccionada = '';
+    this.formNuevaPagina = this.crearFormVacio();
+    this.estadoAutoSave = 'oculto';
+    this.ultimoGuardado = null;
+  }
+
+  /** Devuelve el tiempo relativo del borrador pendiente */
+  get tiempoBorradorPendiente(): string {
+    if (!this.borradorPendiente) return '';
+    const diff = Date.now() - this.borradorPendiente.timestamp;
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return 'hace unos segundos';
+    if (min < 60) return `hace ${min} min`;
+    const horas = Math.floor(min / 60);
+    if (horas < 24) return `hace ${horas} h`;
+    const dias = Math.floor(horas / 24);
+    return dias === 1 ? 'ayer' : `hace ${dias} días`;
+  }
 }

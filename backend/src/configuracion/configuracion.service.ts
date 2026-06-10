@@ -58,8 +58,12 @@ export class ConfiguracionService {
       throw new BadRequestException('Sección de configuración inválida');
     }
 
-    // Validar el shape contra el DTO
     await this.validarShape(seccion, datos);
+
+    // 👇 NUEVO: validar coherencia para agenda
+    if (seccion === 'agenda') {
+      this.validarCoherenciaAgenda(datos);
+    }
 
     const config = await this.obtener();
     (config as any)[seccion] = datos;
@@ -100,12 +104,50 @@ export class ConfiguracionService {
     }
   }
 
+  private validarCoherenciaAgenda(datos: any) {
+    if (!datos.horaInicio || !datos.horaFin) {
+      throw new BadRequestException('Debes definir hora de inicio y fin.');
+    }
+    const [hI, mI] = datos.horaInicio.split(':').map(Number);
+    const [hF, mF] = datos.horaFin.split(':').map(Number);
+    const inicioMin = hI * 60 + mI;
+    const finMin = hF * 60 + mF;
+    const total = finMin - inicioMin;
+
+    if (total <= 0) {
+      throw new BadRequestException(
+        'La hora de cierre debe ser posterior a la de apertura.',
+      );
+    }
+    if (!datos.duracionCita || datos.duracionCita <= 0) {
+      throw new BadRequestException('La duración de cita debe ser mayor a 0.');
+    }
+    if (datos.duracionCita > total) {
+      throw new BadRequestException(
+        `Una cita de ${datos.duracionCita} min no cabe en el horario configurado.`,
+      );
+    }
+    if (datos.tiempoEntreCitas < 0) {
+      throw new BadRequestException(
+        'El tiempo entre citas no puede ser negativo.',
+      );
+    }
+    if (
+      !Array.isArray(datos.diasSemana) ||
+      !datos.diasSemana.some((d: any) => d.activo)
+    ) {
+      throw new BadRequestException('Debes activar al menos un día laboral.');
+    }
+  }
+
   /** Aplana los errores de class-validator para que sean legibles */
   private formatearErrores(errors: ValidationError[]): any {
     return errors.map((err) => ({
       campo: err.property,
       restricciones: err.constraints,
-      hijos: err.children?.length ? this.formatearErrores(err.children) : undefined,
+      hijos: err.children?.length
+        ? this.formatearErrores(err.children)
+        : undefined,
     }));
   }
 
@@ -121,7 +163,8 @@ export class ConfiguracionService {
     return {
       id: c.id,
       logo_url: c.apariencia?.logoUrl || '/assets/img/logo.png',
-      logo_footer_url: c.apariencia?.logoFooterUrl || '/assets/img/logo_vortiz.png',
+      logo_footer_url:
+        c.apariencia?.logoFooterUrl || '/assets/img/logo_vortiz.png',
       telefono: c.contacto?.telefono || '',
       correo_contacto: c.contacto?.correoPublico || '',
       direccion: c.negocio?.direccion || '',
@@ -137,7 +180,8 @@ export class ConfiguracionService {
       meta_description: c.seo?.metaDescription || '',
       meta_keywords: c.seo?.keywords || '',
       nombre: c.negocio?.nombre || 'Vortiz Arquitectos',
-      eslogan: c.negocio?.eslogan || 'Diseñamos espacios, construimos confianza.',
+      eslogan:
+        c.negocio?.eslogan || 'Diseñamos espacios, construimos confianza.',
       mantenimiento: c.mantenimiento,
     };
   }

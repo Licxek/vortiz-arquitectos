@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ChangeDetectorRef, signal } from '@angular/core';
+import { Component, OnInit, HostListener, ChangeDetectorRef, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfiguracionService } from '../../../core/services/configuracion.service'; // ajusta la ruta si tu carpeta es distinta
@@ -6,6 +6,10 @@ import { forkJoin } from 'rxjs';
 import { ThemeService } from '../../../core/services/theme.service'; // ajusta la ruta
 import { ImageUploadComponent } from '../../../shared/image-upload/image-upload.component';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
+import { ActivatedRoute } from '@angular/router';
+import { combineLatest } from 'rxjs';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 interface DiaSemana {
   nombre: string;
@@ -40,7 +44,8 @@ export class ConfiguracionComponent implements OnInit {
     private theme: ThemeService,
     private cdr: ChangeDetectorRef,
   ) {}
-
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   // Tab activa
   tabActiva:
     | 'negocio'
@@ -200,6 +205,7 @@ export class ConfiguracionComponent implements OnInit {
         if (c.mantenimiento) {
           this.mantenimiento = { ...this.mantenimiento, ...c.mantenimiento };
         }
+        this.capturarTodosLosSnapshots();
         this.cargando.set(false); // 👈 NUEVO
         this.cdr.markForCheck();
       },
@@ -208,23 +214,30 @@ export class ConfiguracionComponent implements OnInit {
         this.cdr.markForCheck();
       },
     });
+
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => this.aplicarTabYFragment());
+
+    this.aplicarTabYFragment();
   }
 
-  cambiarTab(
-    tab:
-      | 'negocio'
-      | 'contacto'
-      | 'agenda'
-      | 'apariencia'
-      | 'notificaciones'
-      | 'seo'
-      | 'mantenimiento',
-  ) {
+  cambiarTab(tab: typeof this.tabActiva): void {
+    if (tab === this.tabActiva) return;
+
+    // Si la tab actual tiene cambios sin guardar, pedir confirmación
+    if (this.hayCambiosEn(this.tabActiva)) {
+      this.tabPendiente = tab;
+      this.mostrarConfirmarCambioTab = true;
+      return;
+    }
+
     this.tabActiva = tab;
   }
 
   toggleDia(dia: DiaSemana) {
     dia.activo = !dia.activo;
+    // No requiere ajuste numérico, pero recalcula coherencia
   }
 
   toggleRed(red: RedSocial) {
@@ -325,6 +338,16 @@ export class ConfiguracionComponent implements OnInit {
       next: () => {
         this.guardando = false;
         this.configuracionService.cargarPublica();
+        const mapInverso: Record<string, string> = {
+          Negocio: 'negocio',
+          Contacto: 'contacto',
+          Agenda: 'agenda',
+          Apariencia: 'apariencia',
+          Notificaciones: 'notificaciones',
+          SEO: 'seo',
+          Mantenimiento: 'mantenimiento',
+        };
+        if (mapInverso[seccion]) this.capturarSnapshot(mapInverso[seccion]);
         this.mensajeExito = `Cambios de "${seccion}" guardados correctamente`;
         this.cdr.markForCheck();
         setTimeout(() => {
@@ -394,6 +417,7 @@ export class ConfiguracionComponent implements OnInit {
     if (tipo === 'inicio') this.agenda.horaInicio = hora;
     else this.agenda.horaFin = hora;
     this.cerrarTodos();
+    this.ajustarCoherencia(tipo === 'inicio' ? 'horaInicio' : 'horaFin'); // 👈 NUEVO
   }
 
   toggleSelectorDuracion(event: Event) {
@@ -406,6 +430,7 @@ export class ConfiguracionComponent implements OnInit {
   seleccionarDuracion(valor: number) {
     this.agenda.duracionCita = valor;
     this.cerrarTodos();
+    this.ajustarCoherencia('duracion'); // 👈 NUEVO
   }
 
   get duracionLabel() {
@@ -422,6 +447,7 @@ export class ConfiguracionComponent implements OnInit {
   seleccionarTiempoEntre(valor: number) {
     this.agenda.tiempoEntreCitas = valor;
     this.cerrarTodos();
+    this.ajustarCoherencia('buffer'); // 👈 NUEVO
   }
 
   get tiempoEntreLabel() {
@@ -606,5 +632,271 @@ export class ConfiguracionComponent implements OnInit {
         }, 3000);
       },
     });
+  }
+
+  // Método nuevo en la clase:
+  private aplicarTabYFragment() {
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    const fragment = this.route.snapshot.fragment;
+    const tabsValidas = [
+      'negocio',
+      'contacto',
+      'agenda',
+      'apariencia',
+      'notificaciones',
+      'seo',
+      'mantenimiento',
+    ];
+
+    if (tab && tabsValidas.includes(tab)) {
+      this.tabActiva = tab as any;
+    }
+    if (fragment) {
+      setTimeout(() => {
+        const el = document.getElementById(fragment);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('vortiz-highlight-flash');
+          setTimeout(() => el.classList.remove('vortiz-highlight-flash'), 2000);
+        }
+      }, 400);
+    }
+  }
+  // ====== Cálculo de coherencia de Agenda ======
+
+  /** Minutos totales de horario laboral */
+  get minutosLaborales(): number {
+    if (!this.agenda.horaInicio || !this.agenda.horaFin) return 0;
+    const [hI, mI] = this.agenda.horaInicio.split(':').map(Number);
+    const [hF, mF] = this.agenda.horaFin.split(':').map(Number);
+    const total = hF * 60 + mF - (hI * 60 + mI);
+    return Math.max(0, total);
+  }
+
+  /** Horas laborales formateadas (ej: "9 h" o "8.5 h") */
+  get horasLaboralesLabel(): string {
+    const min = this.minutosLaborales;
+    const h = min / 60;
+    return h === Math.floor(h) ? `${h} h` : `${h.toFixed(1)} h`;
+  }
+
+  /** Cuántas citas físicamente caben con la config actual */
+  get capacidadDiariaCalculada(): number {
+    const total = this.minutosLaborales;
+    if (total === 0) return 0;
+    const duracion = this.agenda.duracionCita || 60;
+    const buffer = this.agenda.tiempoEntreCitas || 0;
+    if (duracion > total) return 0;
+    const slot = duracion + buffer;
+    // El último slot no necesita buffer después
+    return Math.floor((total - duracion) / slot) + 1;
+  }
+
+  /** Límite efectivo (min entre capacidad física y limiteDiario) */
+  get limiteEfectivo(): number {
+    const cap = this.capacidadDiariaCalculada;
+    if (!this.agenda.limiteDiario || this.agenda.limiteDiario <= 0) return cap;
+    return Math.min(cap, this.agenda.limiteDiario);
+  }
+
+  /** Estado de coherencia: errores duros + advertencias suaves */
+  get coherenciaAgenda(): { advertencias: string[] } {
+    const advertencias: string[] = [];
+
+    const diasActivos = this.diasSemana.filter((d) => d.activo).length;
+    if (diasActivos === 0) {
+      advertencias.push(
+        'No tienes días laborales activos. Activa al menos uno para recibir citas.',
+      );
+    }
+
+    return { advertencias };
+  }
+  /**
+   * Auto-ajusta los valores de agenda cuando cambia cualquier parámetro,
+   * para mantener todo coherente sin necesidad de bloquear al usuario.
+   */
+  ajustarCoherencia(
+    campoCambiado: 'horaInicio' | 'horaFin' | 'duracion' | 'buffer' | 'limite' | 'dia' = 'limite',
+  ) {
+    // 1. Hora fin debe ser posterior a hora inicio
+    if (this.minutosLaborales <= 0) {
+      const [hI, mI] = this.agenda.horaInicio.split(':').map(Number);
+      const [hF, mF] = this.agenda.horaFin.split(':').map(Number);
+      const inicioMin = hI * 60 + mI;
+      const finMin = hF * 60 + mF;
+
+      if (campoCambiado === 'horaInicio') {
+        // El usuario movió inicio: bajamos inicio si excedió fin
+        const nuevoInicio = Math.max(0, finMin - 60);
+        this.agenda.horaInicio = this.minToHHMM(nuevoInicio);
+      } else {
+        // Caso general: empujamos fin hacia adelante 1h
+        const nuevoFin = Math.min(23 * 60 + 59, inicioMin + 60);
+        this.agenda.horaFin = this.minToHHMM(nuevoFin);
+      }
+    }
+
+    // 2. Duración válida y cabe en el horario
+    if (this.agenda.duracionCita <= 0) {
+      this.agenda.duracionCita = 30;
+    }
+    const total = this.minutosLaborales;
+    if (this.agenda.duracionCita > total && total > 0) {
+      // Bajar a un múltiplo de 15 que sí entre
+      const max = Math.floor(total / 15) * 15;
+      this.agenda.duracionCita = Math.max(15, max);
+    }
+
+    // 3. Buffer no negativo
+    if (this.agenda.tiempoEntreCitas < 0) {
+      this.agenda.tiempoEntreCitas = 0;
+    }
+    // Si el buffer es tan grande que no caben ni 2 citas, reducirlo
+    if (this.agenda.tiempoEntreCitas + this.agenda.duracionCita > total && total > 0) {
+      this.agenda.tiempoEntreCitas = Math.max(0, total - this.agenda.duracionCita);
+    }
+
+    // 4. Límite diario coherente con capacidad
+    const cap = this.capacidadDiariaCalculada;
+    if (this.agenda.limiteDiario > cap && cap > 0) {
+      this.agenda.limiteDiario = cap;
+    }
+    if (this.agenda.limiteDiario < 1) {
+      this.agenda.limiteDiario = 1;
+    }
+  }
+
+  private minToHHMM(min: number): string {
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  // Sistema de cambios sin guardar
+  private snapshots: Record<string, string> = {};
+  private tabPendiente: typeof this.tabActiva | null = null;
+  mostrarConfirmarCambioTab = false;
+
+  private readonly TABS_VALIDAS = [
+    'negocio',
+    'contacto',
+    'agenda',
+    'apariencia',
+    'notificaciones',
+    'seo',
+    'mantenimiento',
+  ] as const;
+
+  readonly MAP_TAB_LABEL: Record<string, string> = {
+    negocio: 'Negocio',
+    contacto: 'Contacto',
+    agenda: 'Agenda',
+    apariencia: 'Apariencia',
+    notificaciones: 'Notificaciones',
+    seo: 'SEO',
+    mantenimiento: 'Mantenimiento',
+  };
+
+  /** Serializa el estado actual de una sección */
+  private serializarSeccion(seccion: string): string {
+    switch (seccion) {
+      case 'negocio':
+        return JSON.stringify(this.negocio);
+      case 'contacto':
+        return JSON.stringify({ contacto: this.contacto, redes: this.redes });
+      case 'agenda':
+        return JSON.stringify({
+          ...this.agenda,
+          diasSemana: this.diasSemana,
+          diasFeriados: this.diasFeriados,
+        });
+      case 'apariencia':
+        return JSON.stringify(this.apariencia);
+      case 'notificaciones':
+        return JSON.stringify(this.notificaciones);
+      case 'seo':
+        return JSON.stringify(this.seo);
+      case 'mantenimiento':
+        return JSON.stringify(this.mantenimiento);
+      default:
+        return '';
+    }
+  }
+
+  /** Captura snapshot del estado actual */
+  private capturarSnapshot(seccion: string): void {
+    this.snapshots[seccion] = this.serializarSeccion(seccion);
+  }
+
+  /** Captura snapshots de TODAS las secciones */
+  private capturarTodosLosSnapshots(): void {
+    this.TABS_VALIDAS.forEach((s) => this.capturarSnapshot(s));
+  }
+
+  /** Verifica si una sección tiene cambios sin guardar */
+  hayCambiosEn(seccion: string): boolean {
+    if (!this.snapshots[seccion]) return false;
+    return this.serializarSeccion(seccion) !== this.snapshots[seccion];
+  }
+
+  /** Restaura el estado de una sección desde su snapshot */
+  private restaurarDesdeSnapshot(seccion: string): void {
+    const snap = this.snapshots[seccion];
+    if (!snap) return;
+    const datos = JSON.parse(snap);
+    switch (seccion) {
+      case 'negocio':
+        this.negocio = datos;
+        break;
+      case 'contacto':
+        this.contacto = datos.contacto;
+        this.redes = datos.redes;
+        break;
+      case 'agenda':
+        const { diasSemana, diasFeriados, ...scalars } = datos;
+        this.agenda = scalars;
+        this.diasSemana = diasSemana;
+        this.diasFeriados = diasFeriados;
+        break;
+      case 'apariencia':
+        this.apariencia = datos;
+        break;
+      case 'notificaciones':
+        this.notificaciones = datos;
+        break;
+      case 'seo':
+        this.seo = datos;
+        break;
+      case 'mantenimiento':
+        this.mantenimiento = datos;
+        break;
+    }
+  }
+
+  descartarCambiosYCambiarTab(): void {
+    this.restaurarDesdeSnapshot(this.tabActiva);
+    this.mostrarConfirmarCambioTab = false;
+    if (this.tabPendiente) {
+      this.tabActiva = this.tabPendiente;
+      this.tabPendiente = null;
+    }
+    this.cdr.markForCheck();
+  }
+
+  cancelarCambioTab(): void {
+    this.mostrarConfirmarCambioTab = false;
+    this.tabPendiente = null;
+  }
+
+  guardarYCambiarTab(): void {
+    const tabActual = this.tabActiva;
+    const label = this.MAP_TAB_LABEL[tabActual];
+    this.guardarCambios(label);
+    this.mostrarConfirmarCambioTab = false;
+    if (this.tabPendiente) {
+      this.tabActiva = this.tabPendiente;
+      this.tabPendiente = null;
+    }
   }
 }

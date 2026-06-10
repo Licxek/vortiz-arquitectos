@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export type TipoCita = 'consulta' | 'proyecto';
-export type EstadoCita = 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
+export type EstadoCita = 'pendiente' | 'confirmada' | 'cancelada' | 'completada' | 'no_asistio';
 
 export interface CrearCitaDto {
   nombre: string;
@@ -15,6 +15,8 @@ export interface CrearCitaDto {
   motivo?: string;
   fecha: string; // YYYY-MM-DD
   hora: string;  // HH:MM
+  duracion?: number; // 👈 NUEVO
+  estado?: EstadoCita; // 👈 NUEVO: admin puede mandar 'confirmada'
 }
 
 export interface Cita {

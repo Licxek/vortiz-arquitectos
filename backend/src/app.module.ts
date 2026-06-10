@@ -6,7 +6,6 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CitasModule } from './citas/citas.module';
 import { PaginasModule } from './paginas/paginas.module';
-import { DashboardsModule } from './dashboards/dashboards.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ServiciosModule } from './servicios/servicios.module';
@@ -21,6 +20,7 @@ import { InicioModule } from './inicio/inicio.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { HealthModule } from './health/health.module';
 import { ReportesModule } from './reportes/reportes.module';
+import { SesionesModule } from './sesiones/sesiones.module';
 
 @Module({
   imports: [
@@ -92,7 +92,6 @@ import { ReportesModule } from './reportes/reportes.module';
     CitasModule,
     ServiciosModule,
     PaginasModule,
-    DashboardsModule,
     ConfiguracionModule,
     ProyectosModule,
     ContenidoPaginasModule,
@@ -102,6 +101,7 @@ import { ReportesModule } from './reportes/reportes.module';
     UploadsModule,
     HealthModule,
     ReportesModule,
+    SesionesModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

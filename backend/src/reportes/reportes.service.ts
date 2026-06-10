@@ -148,9 +148,11 @@ export class ReportesService {
    * Para gráfica línea/área pequeña.
    */
   async obtenerActividadSemanal() {
+    // Últimos 30 días (más robusto que 7 o 14)
     const hoy = new Date();
-    const hace7Dias = new Date(hoy.getTime() - 6 * 24 * 60 * 60 * 1000);
-    const desdeStr = this.toIsoDate(hace7Dias);
+    const dias = 30;
+    const desde = new Date(hoy.getTime() - (dias - 1) * 24 * 60 * 60 * 1000);
+    const desdeStr = this.toIsoDate(desde);
     const hastaStr = this.toIsoDate(hoy);
 
     const rows = await this.citasRepo
@@ -165,20 +167,33 @@ export class ReportesService {
       .orderBy('cita.fecha', 'ASC')
       .getRawMany();
 
-    // Rellenar días sin citas
-    const dias: { fecha: string; label: string; valor: number }[] = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(hace7Dias.getTime() + i * 24 * 60 * 60 * 1000);
+    // Rellenar TODOS los días del rango (con 0 si no hay citas)
+    const resultado: { fecha: string; label: string; valor: number }[] = [];
+    for (let i = 0; i < dias; i++) {
+      const d = new Date(desde.getTime() + i * 24 * 60 * 60 * 1000);
       const fechaStr = this.toIsoDate(d);
-      const row = rows.find((r: any) => r.fecha === fechaStr);
-      dias.push({
+      const row = rows.find((r: any) => {
+        // r.fecha puede venir como Date o string, normalizamos
+        const rFecha =
+          typeof r.fecha === 'string'
+            ? r.fecha
+            : this.toIsoDate(new Date(r.fecha));
+        return rFecha === fechaStr;
+      });
+      resultado.push({
         fecha: fechaStr,
-        label: this.diaSemanaLabel(d),
+        label: `${d.getDate()}/${d.getMonth() + 1}`,
         valor: row ? Number(row.valor) : 0,
       });
     }
 
-    return dias;
+    // Log para debug
+    const totalCitas = resultado.reduce((sum, d) => sum + d.valor, 0);
+    console.log(
+      `📊 Actividad: ${totalCitas} citas en últimos ${dias} días (${desdeStr} a ${hastaStr})`,
+    );
+
+    return resultado;
   }
 
   /**
@@ -556,7 +571,13 @@ export class ReportesService {
     for (let i = 0; i < diasRango; i++) {
       const d = new Date(desde.getTime() + i * 24 * 60 * 60 * 1000);
       const fechaStr = this.toIsoDate(d);
-      const row = rows.find((r: any) => r.fecha === fechaStr);
+      const row = rows.find((r: any) => {
+        const rFecha =
+          typeof r.fecha === 'string'
+            ? r.fecha
+            : this.toIsoDate(new Date(r.fecha));
+        return rFecha === fechaStr;
+      });
 
       const label =
         diasRango <= 31

@@ -67,6 +67,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'reportes/historial',
+        loadComponent: () =>
+          import('./admin/pages/historial-reportes/historial-reportes.component').then(
+            (m) => m.HistorialReportesComponent,
+          ),
+      },
+      {
         path: 'reportes/:tipo',
         loadComponent: () =>
           import('./admin/pages/reportes-detalle/reportes-detalle.component').then(

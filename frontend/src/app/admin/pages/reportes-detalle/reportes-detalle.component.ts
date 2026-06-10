@@ -20,6 +20,9 @@ import {
   SelectorRangoFechaComponent,
 } from '../../../shared/selector-rango-fecha/selector-rango-fecha.component';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
+import { ModalGenerarPdfComponent } from '../../../shared/modal-generar-pdf/modal-generar-pdf.component';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-reportes-detalle',
@@ -30,6 +33,7 @@ import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
     GraficaDashboardComponent,
     SelectorRangoFechaComponent,
     SkeletonComponent,
+    ModalGenerarPdfComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './reportes-detalle.component.html',
@@ -38,6 +42,7 @@ export class ReportesDetalleComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private reportesService = inject(ReportesService);
   private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
 
   tipo = signal<string>('');
   rangoActual = signal<RangoSeleccionado | null>(null);
@@ -96,6 +101,11 @@ export class ReportesDetalleComponent implements OnInit {
         this.cargarDetalle();
       }
     });
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => this.aplicarParamsDeUrl());
+
+    this.aplicarParamsDeUrl();
   }
 
   onRangoChange(rango: RangoSeleccionado) {
@@ -134,36 +144,28 @@ export class ReportesDetalleComponent implements OnInit {
     };
   }
 
-  exportarCSV() {
-    const d = this.detalle();
-    if (!d) return;
+  modalPdfAbierto = signal(false);
 
-    // Formar contenido CSV con escape de comillas/comas
-    const escapar = (celda: string | number): string => {
-      const s = String(celda);
-      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-        return `"${s.replace(/"/g, '""')}"`;
-      }
-      return s;
-    };
+  abrirModalPdf() {
+    this.modalPdfAbierto.set(true);
+  }
 
-    const headers = d.tabla.columnas.map(escapar).join(',');
-    const rows = d.tabla.filas.map((fila) => fila.map(escapar).join(','));
-    const csv = [headers, ...rows].join('\n');
+  cerrarModalPdf() {
+    this.modalPdfAbierto.set(false);
+  }
 
-    // BOM para que Excel reconozca UTF-8 (importante para acentos)
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+  private aplicarParamsDeUrl() {
+    const params = this.route.snapshot.queryParamMap;
+    const accion = params.get('accion');
 
-    const link = document.createElement('a');
-    const fechaActual = new Date().toISOString().split('T')[0];
-    link.setAttribute('href', url);
-    link.setAttribute('download', `vortiz-${this.tipo()}-${fechaActual}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    if (accion === 'generar') {
+      // Esperar a que el reporte cargue antes de abrir modal
+      setTimeout(() => {
+        if (!this.cargando() && this.detalle()) {
+          this.abrirModalPdf();
+          this.cdr.detectChanges();
+        }
+      }, 800); // 800ms porque el reporte tarda en cargar
+    }
   }
 }

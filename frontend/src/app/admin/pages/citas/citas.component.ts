@@ -1,9 +1,14 @@
-import { Component, OnInit, HostListener, inject, signal } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CitasService, Cita as CitaBackend } from '../../../core/services/citas.service'; // ⚠️ ajusta la ruta
 import { CatalogoService, Servicio } from '../../../core/services/catalogo.service'; // ⚠️ ajusta la ruta
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
+import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { ConfiguracionService } from '../../../core/services/configuracion.service'; // 👈 NUEVO
+import { TelefonoInputComponent } from '../../../shared/telefono-input/telefono-input.component';
+import { EstadoCita } from '../../../core/services/citas.service';
 
 interface Cita {
   id: number;
@@ -12,7 +17,7 @@ interface Cita {
   hora: string;
   duracion: number;
   tipo: 'consulta' | 'proyecto';
-  estado: 'confirmada' | 'pendiente' | 'cancelada' | 'completada';
+  estado: 'confirmada' | 'pendiente' | 'cancelada' | 'completada' | 'no_asistio'; // 👈 actualizado
   servicio?: string;
   notas?: string;
   telefono?: string;
@@ -27,15 +32,26 @@ interface DiaCalendario {
   citas: Cita[];
 }
 
+interface GrupoCitas {
+  key: string;
+  titulo: string;
+  subtitulo: string;
+  icono: string;
+  citas: Cita[];
+}
+
 @Component({
   selector: 'app-citas',
   standalone: true,
-  imports: [CommonModule, FormsModule,SkeletonComponent],
+  imports: [CommonModule, FormsModule, SkeletonComponent, TelefonoInputComponent],
   templateUrl: './citas.component.html',
 })
 export class CitasComponent implements OnInit {
   private citasService = inject(CitasService);
   private catalogo = inject(CatalogoService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private configuracionService = inject(ConfiguracionService);
 
   vista: 'lista' | 'calendario' = 'lista';
   filtroEstado: 'todas' | 'confirmada' | 'pendiente' | 'cancelada' = 'todas';
@@ -44,6 +60,22 @@ export class CitasComponent implements OnInit {
   citaSeleccionada: Cita | null = null;
   filtroEstadoAbierto = false;
   cargando = signal(true);
+  private cdr = inject(ChangeDetectorRef);
+  errorEmpalme = '';
+  mostrarAtajos = false;
+
+  // Configuración de agenda (cargada del backend)
+  configAgenda: any = {
+    horaInicio: '09:00',
+    horaFin: '18:00',
+    duracionCita: 60,
+    tiempoEntreCitas: 15,
+    diasSemana: [],
+    diasFeriados: [],
+  };
+
+  // Advertencia de fecha inválida en modal nueva cita
+  advertenciaFecha = '';
 
   mesActual = new Date();
   meses = [
@@ -97,6 +129,7 @@ export class CitasComponent implements OnInit {
     servicioId: null as number | null,
     servicio: '',
     notas: '',
+    estado: 'confirmada' as EstadoCita, // 👈 NUEVO
   };
 
   // Confirmación de cancelación
@@ -108,22 +141,39 @@ export class CitasComponent implements OnInit {
   // Catálogo real (señal del CatalogoService — antes era una lista hardcodeada)
   serviciosDisponibles = this.catalogo.servicios;
 
-  horasDisponibles = [
-    '09:00',
-    '10:00',
-    '11:00',
-    '12:00',
-    '13:00',
-    '15:00',
-    '16:00',
-    '17:00',
-    '18:00',
-  ];
+  get horasDisponibles(): string[] {
+    if (!this.configAgenda) return [];
+    const { horaInicio, horaFin, duracionCita, tiempoEntreCitas } = this.configAgenda;
+    if (!horaInicio || !horaFin) return [];
+
+    const [hI, mI] = horaInicio.split(':').map(Number);
+    const [hF, mF] = horaFin.split(':').map(Number);
+    const inicioMin = hI * 60 + mI;
+    const finMin = hF * 60 + mF;
+
+    const slot = (duracionCita || 60) + (tiempoEntreCitas || 0);
+    const horas: string[] = [];
+
+    for (let m = inicioMin; m + (duracionCita || 60) <= finMin; m += slot) {
+      const h = Math.floor(m / 60);
+      const min = m % 60;
+      horas.push(`${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`);
+    }
+    return horas;
+  }
 
   mostrarSelectorServicioNueva = false;
 
   ngOnInit() {
+    this.cargarConfig();
     this.cargarCitas();
+    // Escuchar navegación para reaccionar a queryParams del buscador
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => this.aplicarParamsDeUrl());
+
+    // Primera carga
+    this.aplicarParamsDeUrl();
   }
 
   // ====== Carga y mapeo desde backend ======
@@ -180,44 +230,153 @@ export class CitasComponent implements OnInit {
   // ====== Lista (sin cambios) ======
   get citasFiltradas(): Cita[] {
     let resultado = this.citas();
-    if (this.busqueda.trim()) {
-      const q = this.busqueda.toLowerCase();
+    const hayBusqueda = !!this.busqueda.trim();
+
+    // ⚠️ Si hay búsqueda, mostramos TODAS las citas (incluso pasadas/canceladas/completadas)
+    // Si NO hay búsqueda, excluimos las que ya no necesitan atención
+    if (!hayBusqueda) {
       resultado = resultado.filter(
-        (c) => c.cliente.toLowerCase().includes(q) || c.servicio?.toLowerCase().includes(q),
+        (c) =>
+          !this.esCitaPasada(c) &&
+          c.estado !== 'completada' &&
+          c.estado !== 'cancelada' &&
+          !this.requiereCompletarUrgente(c),
       );
     }
+
+    // Búsqueda por nombre, servicio, correo o teléfono
+    if (hayBusqueda) {
+      const q = this.busqueda.toLowerCase();
+      resultado = resultado.filter(
+        (c) =>
+          c.cliente.toLowerCase().includes(q) ||
+          c.servicio?.toLowerCase().includes(q) ||
+          c.correo?.toLowerCase().includes(q) ||
+          c.telefono?.replace(/\s/g, '').includes(q.replace(/\s/g, '')) ||
+          c.notas?.toLowerCase().includes(q),
+      );
+    }
+
+    // Filtro de estado (siempre se aplica)
     if (this.filtroEstado !== 'todas') {
       resultado = resultado.filter((c) => c.estado === this.filtroEstado);
     }
-    return resultado.sort(
-      (a, b) => a.fecha.getTime() - b.fecha.getTime() || a.hora.localeCompare(b.hora),
-    );
-  }
 
-  get citasAgrupadas() {
-    const grupos: { [key: string]: Cita[] } = {};
-    this.citasFiltradas.forEach((cita) => {
-      const key = this.formatearFechaGrupo(cita.fecha);
-      if (!grupos[key]) grupos[key] = [];
-      grupos[key].push(cita);
+    // Orden: cuando hay búsqueda, más recientes primero; sin búsqueda, próximas primero
+    return resultado.sort((a, b) => {
+      if (hayBusqueda) {
+        return b.fecha.getTime() - a.fecha.getTime() || b.hora.localeCompare(a.hora);
+      }
+      return a.fecha.getTime() - b.fecha.getTime() || a.hora.localeCompare(b.hora);
     });
-    return Object.entries(grupos).map(([titulo, citas]) => ({ titulo, citas }));
   }
 
-  formatearFechaGrupo(fecha: Date): string {
+  get citasAgrupadas(): GrupoCitas[] {
+    // 🔍 Si hay búsqueda → un solo grupo "Resultados"
+    if (this.busqueda.trim()) {
+      const resultados = this.citasFiltradas;
+      if (resultados.length === 0) return [];
+      return [
+        {
+          key: 'resultados',
+          titulo: 'Resultados de búsqueda',
+          subtitulo: `${resultados.length} cita${resultados.length > 1 ? 's' : ''} con "${this.busqueda}"`,
+          icono: '🔍',
+          citas: resultados,
+        },
+      ];
+    }
+
+    // Lógica normal (sin búsqueda) — esto queda igual que ya tienes
     const hoy = this.fechaHoy();
-    const mañana = this.fechaMañana();
-    const f = new Date(fecha);
-    f.setHours(0, 0, 0, 0);
-    if (f.getTime() === hoy.getTime()) return 'Hoy';
-    if (f.getTime() === mañana.getTime()) return 'Mañana';
-    const diff = Math.floor((f.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-    if (diff > 0 && diff < 7) return 'Esta semana';
-    return f.toLocaleDateString('es-MX', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
+    const manana = this.fechaMañana();
+    const finSemana = new Date(hoy);
+    finSemana.setDate(hoy.getDate() + 7);
+    const finProximaSemana = new Date(hoy);
+    finProximaSemana.setDate(hoy.getDate() + 14);
+
+    const buckets = {
+      hoy: [] as Cita[],
+      manana: [] as Cita[],
+      semana: [] as Cita[],
+      proxSemana: [] as Cita[],
+      futuro: [] as Cita[],
+    };
+
+    this.citasFiltradas.forEach((cita) => {
+      const f = new Date(cita.fecha);
+      f.setHours(0, 0, 0, 0);
+
+      if (f.getTime() === hoy.getTime()) buckets.hoy.push(cita);
+      else if (f.getTime() === manana.getTime()) buckets.manana.push(cita);
+      else if (f.getTime() <= finSemana.getTime()) buckets.semana.push(cita);
+      else if (f.getTime() <= finProximaSemana.getTime()) buckets.proxSemana.push(cita);
+      else buckets.futuro.push(cita);
     });
+
+    const grupos: GrupoCitas[] = [];
+
+    const urgentes = this.citasPorCompletar;
+    if (urgentes.length > 0) {
+      grupos.push({
+        key: 'urgentes',
+        titulo: 'Acción requerida',
+        subtitulo: `${urgentes.length} cita${urgentes.length > 1 ? 's' : ''} sin marcar como completada${urgentes.length > 1 ? 's' : ''}`,
+        icono: '⚠️',
+        citas: urgentes,
+      });
+    }
+
+    if (buckets.hoy.length)
+      grupos.push({
+        key: 'hoy',
+        titulo: 'Hoy',
+        subtitulo: this.subtituloFecha(hoy),
+        icono: '🔴',
+        citas: buckets.hoy,
+      });
+
+    if (buckets.manana.length)
+      grupos.push({
+        key: 'manana',
+        titulo: 'Mañana',
+        subtitulo: this.subtituloFecha(manana),
+        icono: '📅',
+        citas: buckets.manana,
+      });
+
+    if (buckets.semana.length)
+      grupos.push({
+        key: 'semana',
+        titulo: 'Esta semana',
+        subtitulo: 'Próximos 7 días',
+        icono: '📆',
+        citas: buckets.semana,
+      });
+
+    if (buckets.proxSemana.length)
+      grupos.push({
+        key: 'proxSemana',
+        titulo: 'Próxima semana',
+        subtitulo: 'En 1–2 semanas',
+        icono: '🗓️',
+        citas: buckets.proxSemana,
+      });
+
+    if (buckets.futuro.length)
+      grupos.push({
+        key: 'futuro',
+        titulo: 'Más adelante',
+        subtitulo: 'Citas a futuro',
+        icono: '⏳',
+        citas: buckets.futuro,
+      });
+
+    return grupos;
+  }
+
+  private subtituloFecha(d: Date): string {
+    return d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
   }
 
   // ====== Stats ======
@@ -314,7 +473,8 @@ export class CitasComponent implements OnInit {
     this.citaSeleccionada = cita;
   }
 
-  cerrarDetalle() {
+  cerrarDetalle(event?: Event) {
+    if (event) event.stopPropagation();
     this.citaSeleccionada = null;
   }
 
@@ -323,8 +483,11 @@ export class CitasComponent implements OnInit {
     this.citasService.cambiarEstado(cita.id, 'confirmada').subscribe({
       next: () => {
         cita.estado = 'confirmada';
-        this.citas.update((arr) => [...arr]); // 👈 dispara la detección
+        if (this.citaSeleccionada?.id === cita.id) {
+          this.citaSeleccionada = { ...cita };
+        }
         this.menuAbiertoId = null;
+        this.refrescarVistas(); // 👈 reemplaza citas.update + cdr.detectChanges
       },
       error: () => alert('No se pudo confirmar la cita. Intenta de nuevo.'),
     });
@@ -334,8 +497,11 @@ export class CitasComponent implements OnInit {
     this.citasService.cambiarEstado(cita.id, 'cancelada').subscribe({
       next: () => {
         cita.estado = 'cancelada';
-        this.citas.update((arr) => [...arr]); // 👈 dispara la detección
+        if (this.citaSeleccionada?.id === cita.id) {
+          this.citaSeleccionada = { ...cita };
+        }
         this.menuAbiertoId = null;
+        this.refrescarVistas();
       },
       error: () => alert('No se pudo cancelar la cita. Intenta de nuevo.'),
     });
@@ -459,6 +625,141 @@ export class CitasComponent implements OnInit {
     this.mostrarSelectorServicioNueva = false;
   }
 
+  @HostListener('document:keydown', ['$event'])
+  manejarAtajos(event: KeyboardEvent) {
+    // No interferir si está escribiendo en input/textarea
+    const target = event.target as HTMLElement;
+    if (
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.tagName === 'SELECT' ||
+      target.isContentEditable
+    ) {
+      return;
+    }
+
+    // No interferir con combinaciones del SO (Ctrl, Cmd, Alt)
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+    // ESC: cerrar lo que esté abierto (en orden de prioridad)
+    if (event.key === 'Escape') {
+      if (this.mostrarConfirmarCancelar) {
+        this.cerrarConfirmarCancelar();
+        return;
+      }
+      if (this.mostrarDialogoConfirmar) {
+        this.cerrarDialogoConfirmar();
+        return;
+      }
+      if (this.mostrarConfirmarCompletar) {
+        this.cerrarConfirmarCompletar();
+        return;
+      }
+      if (this.mostrarConfirmarNoAsistio) {
+        this.cerrarConfirmarNoAsistio();
+        return;
+      }
+      if (this.mostrarNuevaCita) {
+        this.cerrarNuevaCita();
+        return;
+      }
+      if (this.diaSeleccionado) {
+        this.cerrarDia();
+        return;
+      }
+      if (this.citaSeleccionada) {
+        this.cerrarDetalle();
+        return;
+      }
+      if (this.mostrarAtajos) {
+        this.mostrarAtajos = false;
+        return;
+      }
+      return;
+    }
+
+    // Si hay modal abierto, ignorar el resto de atajos
+    const hayModal =
+      this.citaSeleccionada ||
+      this.mostrarNuevaCita ||
+      this.diaSeleccionado ||
+      this.mostrarConfirmarCancelar ||
+      this.mostrarDialogoConfirmar ||
+      this.mostrarConfirmarCompletar ||
+      this.mostrarConfirmarNoAsistio ||
+      this.mostrarAtajos;
+    if (hayModal) return;
+
+    const k = event.key.toLowerCase();
+
+    // ? o / → abrir panel de atajos
+    if (event.key === '?' || event.key === '/') {
+      event.preventDefault();
+      this.mostrarAtajos = !this.mostrarAtajos;
+      return;
+    }
+
+    // N → nueva cita (solo si no hay urgentes pendientes)
+    if (k === 'n') {
+      event.preventDefault();
+      if (this.numPorCompletar === 0) this.abrirNuevaCita();
+      return;
+    }
+
+    // T → ir a hoy (solo en calendario)
+    if (k === 't' && this.vista === 'calendario') {
+      event.preventDefault();
+      this.irHoy();
+      return;
+    }
+
+    // L → vista lista
+    if (k === 'l') {
+      event.preventDefault();
+      this.vista = 'lista';
+      return;
+    }
+
+    // C → vista calendario
+    if (k === 'c') {
+      event.preventDefault();
+      this.vista = 'calendario';
+      return;
+    }
+
+    // 1/2/3 → modo del calendario (cambia a calendario si no estás ahí)
+    if (k === '1') {
+      event.preventDefault();
+      this.vista = 'calendario';
+      this.modoCalendario = 'mes';
+      return;
+    }
+    if (k === '2') {
+      event.preventDefault();
+      this.vista = 'calendario';
+      this.modoCalendario = 'semana';
+      return;
+    }
+    if (k === '3') {
+      event.preventDefault();
+      this.vista = 'calendario';
+      this.modoCalendario = 'dia';
+      return;
+    }
+
+    // ← / → navegar en calendario
+    if (event.key === 'ArrowLeft' && this.vista === 'calendario') {
+      event.preventDefault();
+      this.navegarAnterior();
+      return;
+    }
+    if (event.key === 'ArrowRight' && this.vista === 'calendario') {
+      event.preventDefault();
+      this.navegarSiguiente();
+      return;
+    }
+  }
+
   opcionesEstado = [
     { value: 'todas' as const, label: 'Todos los estados', color: 'gray' },
     { value: 'confirmada' as const, label: 'Confirmadas', color: 'green' },
@@ -487,24 +788,30 @@ export class CitasComponent implements OnInit {
   }
 
   cerrarDia() {
+    if (this.citaSeleccionada) return; // 👈 ESTA LÍNEA es crítica
     this.diaSeleccionado = null;
   }
 
   // ====== Nueva cita (admin) ======
   abrirNuevaCita() {
-    this.mostrarNuevaCita = true;
+    if (this.numPorCompletar > 0) return;
+
     this.nuevaCita = {
       cliente: '',
       correo: '',
       telefono: '',
       fecha: '',
       hora: '',
-      duracion: 60,
+      duracion: this.configAgenda?.duracionCita || 60,
       tipo: 'consulta',
       servicioId: null,
       servicio: '',
       notas: '',
+      estado: 'confirmada', // 👈 NUEVO
     };
+    this.errorEmpalme = '';
+    this.advertenciaFecha = '';
+    this.mostrarNuevaCita = true;
   }
 
   cerrarNuevaCita() {
@@ -513,6 +820,53 @@ export class CitasComponent implements OnInit {
 
   guardarNuevaCita() {
     if (!this.nuevaCitaValida) return;
+
+    // 🚫 Bloquear si hay citas urgentes sin resolver
+    if (this.numPorCompletar > 0) {
+      this.errorEmpalme = `Tienes ${this.numPorCompletar} cita${this.numPorCompletar > 1 ? 's' : ''} sin marcar. Resuélvelas antes de crear una nueva.`;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    // 🗓️ Validar fecha (pasada, día laboral, feriado, límite diario)
+    const errorFecha = this.validarFecha(this.nuevaCita.fecha);
+    if (errorFecha) {
+      this.advertenciaFecha = errorFecha;
+      this.errorEmpalme = '';
+      this.cdr.detectChanges();
+      return;
+    }
+    this.advertenciaFecha = '';
+
+    // 🚦 Validar empalme
+    const conflicto = this.hayEmpalmeLocal(
+      this.nuevaCita.fecha,
+      this.nuevaCita.hora,
+      this.nuevaCita.duracion,
+    );
+    if (conflicto) {
+      const finCnf = this.calcularHoraFin(conflicto.hora, conflicto.duracion || 60);
+      const buffer = this.configAgenda?.tiempoEntreCitas || 0;
+
+      // Detectar si es solapamiento DIRECTO o solo problema de buffer
+      const [hN, mN] = this.nuevaCita.hora.split(':').map(Number);
+      const inicioNueva = hN * 60 + mN;
+      const finNueva = inicioNueva + this.nuevaCita.duracion;
+      const [hC, mC] = conflicto.hora.split(':').map(Number);
+      const inicioExistente = hC * 60 + mC;
+      const finExistente = inicioExistente + (conflicto.duracion || 60);
+      const seSolapaDirecto = inicioNueva < finExistente && finNueva > inicioExistente;
+
+      if (seSolapaDirecto) {
+        this.errorEmpalme = `Se solapa con la cita de ${conflicto.cliente} (${conflicto.hora} – ${finCnf}). Elige un horario que no la pise.`;
+      } else {
+        this.errorEmpalme = `Faltan ${buffer} min de descanso entre citas. La cita de ${conflicto.cliente} termina a las ${finCnf}.`;
+      }
+      this.cdr.detectChanges();
+      return;
+    }
+    this.errorEmpalme = '';
+
     const payload = {
       nombre: this.nuevaCita.cliente.trim(),
       correo: this.nuevaCita.correo.trim(),
@@ -522,18 +876,30 @@ export class CitasComponent implements OnInit {
       motivo: this.nuevaCita.notas?.trim() || '',
       fecha: this.nuevaCita.fecha,
       hora: this.nuevaCita.hora,
+      duracion: this.nuevaCita.duracion, // 👈 NUEVO: mandar la duración (puede venir de config)
+      estado: 'confirmada' as const,
     };
     this.citasService.crear(payload).subscribe({
       next: (creada) => {
-        this.citas.update((arr) => [this.mapearCita(creada), ...arr]); // 👈
+        this.citas.update((arr) => [this.mapearCita(creada), ...arr]);
         this.cerrarNuevaCita();
       },
-      error: (err) =>
-        alert(
+      error: (err) => {
+        const msg =
           err?.error?.message ||
-            'No se pudo guardar la cita. Revisa los campos e intenta de nuevo.',
-        ),
+          'No se pudo guardar la cita. Revisa los campos e intenta de nuevo.';
+        this.errorEmpalme = msg;
+        this.cdr.detectChanges();
+      },
     });
+  }
+
+  private calcularHoraFin(horaInicio: string, duracion: number): string {
+    const [h, m] = horaInicio.split(':').map(Number);
+    const total = h * 60 + m + duracion;
+    const hF = Math.floor(total / 60);
+    const mF = total % 60;
+    return `${String(hF).padStart(2, '0')}:${String(mF).padStart(2, '0')}`;
   }
 
   // ====== Confirmar cancelación ======
@@ -628,5 +994,505 @@ export class CitasComponent implements OnInit {
     this.nuevaCita.servicioId = s.id;
     this.nuevaCita.servicio = s.titulo;
     this.mostrarSelectorServicioNueva = false;
+  }
+
+  private aplicarParamsDeUrl() {
+    const params = this.route.snapshot.queryParamMap;
+
+    // Cambiar vista (lista / calendario)
+    const vista = params.get('vista');
+    if (vista === 'lista' || vista === 'calendario') {
+      this.vista = vista;
+    }
+
+    // Cambiar modo del calendario (mes / semana / dia)
+    const modo = params.get('modo');
+    if (modo === 'mes' || modo === 'semana' || modo === 'dia') {
+      this.modoCalendario = modo as any;
+      // Si se pidió vista diaria, asegurar que se vea hoy
+      if (modo === 'dia' && typeof this.irHoy === 'function') {
+        this.irHoy();
+      }
+    }
+
+    // Aplicar filtro de estado
+    const estado = params.get('estado');
+    if (estado && ['todas', 'pendiente', 'confirmada', 'cancelada'].includes(estado)) {
+      this.filtroEstado = estado as any;
+    }
+
+    // Acciones especiales
+    const accion = params.get('accion');
+    if (accion === 'nueva') {
+      setTimeout(() => {
+        this.abrirNuevaCita();
+        this.cdr.detectChanges(); // 👈 fuerza CD
+      }, 400); // aumentado de 200 a 400
+    } else if (accion === 'historial') {
+      this.mostrarHistorial = true;
+      setTimeout(() => {
+        const el = document.getElementById('historial');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('vortiz-highlight-flash');
+          setTimeout(() => el.classList.remove('vortiz-highlight-flash'), 2000);
+        }
+      }, 400);
+    }
+
+    //this.cdr.markForCheck();
+  }
+
+  // ====== Avatares con iniciales ======
+  iniciales(nombre: string): string {
+    if (!nombre) return '?';
+    return nombre
+      .trim()
+      .split(/\s+/)
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  }
+
+  estiloAvatar(nombre: string): string {
+    const gradientes = [
+      'linear-gradient(135deg, #60a5fa, #2563eb)',
+      'linear-gradient(135deg, #a78bfa, #7c3aed)',
+      'linear-gradient(135deg, #f472b6, #db2777)',
+      'linear-gradient(135deg, #fb923c, #ea580c)',
+      'linear-gradient(135deg, #2dd4bf, #0d9488)',
+      'linear-gradient(135deg, #818cf8, #4f46e5)',
+      'linear-gradient(135deg, #34d399, #059669)',
+      'linear-gradient(135deg, #fb7185, #e11d48)',
+    ];
+    let hash = 0;
+    for (let i = 0; i < (nombre || '').length; i++) {
+      hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return gradientes[Math.abs(hash) % gradientes.length];
+  }
+
+  // ====== Urgencia / proximidad ======
+  esCitaUrgente(cita: Cita): boolean {
+    // Pendiente que es hoy o mañana → necesita confirmación pronto
+    if (cita.estado !== 'pendiente') return false;
+    const hoy = this.fechaHoy();
+    const f = new Date(cita.fecha);
+    f.setHours(0, 0, 0, 0);
+    const diffDias = (f.getTime() - hoy.getTime()) / 86400000;
+    return diffDias >= 0 && diffDias <= 1;
+  }
+
+  esCitaProxima(cita: Cita): boolean {
+    // Confirmada y faltan <60 minutos
+    if (cita.estado !== 'confirmada') return false;
+    const ahora = new Date();
+    const f = new Date(cita.fecha);
+    const [h, m] = (cita.hora || '00:00').split(':').map(Number);
+    f.setHours(h, m, 0, 0);
+    const diffMin = (f.getTime() - ahora.getTime()) / 60000;
+    return diffMin > 0 && diffMin <= 60;
+  }
+  puedeCompletar(cita: Cita): boolean {
+    // Solo confirmadas cuya hora de fin ya pasó
+    if (cita.estado !== 'confirmada') return false;
+    const ahora = new Date();
+    const fechaFin = new Date(cita.fecha);
+    const [h, m] = (cita.hora || '00:00').split(':').map(Number);
+    fechaFin.setHours(h, m, 0, 0);
+    fechaFin.setMinutes(fechaFin.getMinutes() + (cita.duracion || 60));
+    return ahora.getTime() > fechaFin.getTime();
+  }
+
+  minutosHastaCita(cita: Cita): number {
+    const ahora = new Date();
+    const f = new Date(cita.fecha);
+    const [h, m] = (cita.hora || '00:00').split(':').map(Number);
+    f.setHours(h, m, 0, 0);
+    return Math.round((f.getTime() - ahora.getTime()) / 60000);
+  }
+
+  trackByCitaId = (_: number, c: Cita) => c.id;
+  trackByGrupoKey = (_: number, g: GrupoCitas) => g.key;
+
+  // ====== Completar cita ======
+  mostrarConfirmarCompletar = false;
+  citaACompletar: Cita | null = null;
+
+  solicitarCompletarCita(cita: Cita, event?: Event) {
+    if (event) event.stopPropagation();
+    this.citaACompletar = cita;
+    this.mostrarConfirmarCompletar = true;
+  }
+
+  aceptarCompletar() {
+    if (this.citaACompletar) this.completarCita(this.citaACompletar);
+    this.cerrarConfirmarCompletar();
+  }
+
+  cerrarConfirmarCompletar() {
+    this.mostrarConfirmarCompletar = false;
+    this.citaACompletar = null;
+  }
+
+  completarCita(cita: Cita) {
+    this.citasService.cambiarEstado(cita.id, 'completada').subscribe({
+      next: () => {
+        cita.estado = 'completada';
+        if (this.citaSeleccionada?.id === cita.id) {
+          this.citaSeleccionada = { ...cita };
+        }
+        this.menuAbiertoId = null;
+        this.refrescarVistas();
+      },
+      error: () => alert('No se pudo marcar como completada. Intenta de nuevo.'),
+    });
+  }
+
+  /**
+   * Verifica si una cita propuesta choca con otra existente (frontend).
+   * Solo para UX inmediata — el backend valida como fuente de verdad.
+   */
+  private hayEmpalmeLocal(
+    fecha: string,
+    hora: string,
+    duracion: number,
+    idIgnorar?: number,
+  ): Cita | null {
+    if (!fecha || !hora) return null;
+    const buffer: number = this.configAgenda?.tiempoEntreCitas ?? 0;
+
+    const [hN, mN] = hora.split(':').map(Number);
+    const inicioNueva = hN * 60 + mN;
+    const finNueva = inicioNueva + duracion;
+
+    const fechaCita = new Date(fecha + 'T00:00:00');
+
+    for (const c of this.citas()) {
+      if (idIgnorar && c.id === idIgnorar) continue;
+      if (c.estado === 'cancelada') continue;
+
+      const fc = new Date(c.fecha);
+      fc.setHours(0, 0, 0, 0);
+      if (fc.getTime() !== fechaCita.getTime()) continue;
+
+      const [hC, mC] = c.hora.split(':').map(Number);
+      const inicioExistente = hC * 60 + mC;
+      const finExistente = inicioExistente + (c.duracion || 60);
+
+      if (inicioNueva - buffer < finExistente && finNueva + buffer > inicioExistente) {
+        return c;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Valida si una fecha es válida según config (días laborales + feriados).
+   * Devuelve mensaje vacío si es válida, o el motivo si no.
+   */
+  validarFecha(fecha: string): string {
+    if (!fecha) return '';
+    const d = new Date(fecha + 'T00:00:00');
+
+    // 🔒 NUEVO: No permitir fechas pasadas
+    const hoy = this.fechaHoy();
+    if (d.getTime() < hoy.getTime()) {
+      return `No puedes agendar citas en fechas pasadas. Elige hoy o un día futuro.`;
+    }
+
+    // Validar día de la semana
+    const idx = d.getDay();
+    const mapDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const nombreDia = mapDias[idx];
+    const diaConfig = this.configAgenda?.diasSemana?.find((ds: any) => ds.nombre === nombreDia);
+    if (diaConfig && !diaConfig.activo) {
+      return `${nombreDia} no es día laboral. Cambia la fecha o ajusta tus días en Configuración → Agenda.`;
+    }
+
+    // Validar feriado
+    const feriado = this.configAgenda?.diasFeriados?.find((f: any) => f.fecha === fecha);
+    if (feriado) {
+      return `📅 ${feriado.motivo}. Si necesitas atender ese día, quita el feriado en Configuración → Agenda.`;
+    }
+
+    // 🔒 NUEVO: validar límite diario
+    const limite = this.configAgenda?.limiteDiario || 0;
+    if (limite > 0) {
+      const numCitas = this.numCitasDelDia(fecha);
+      if (numCitas >= limite) {
+        return `Ya hay ${numCitas} citas ese día (límite: ${limite}). Elige otra fecha o ajusta el límite en Configuración → Agenda.`;
+      }
+    }
+
+    return '';
+  }
+
+  // 👇 ESTE MÉTODO TIENE QUE ESTAR DENTRO DE LA CLASE
+  private cargarConfig() {
+    this.configuracionService.obtenerCompleta().subscribe({
+      next: (c) => {
+        if (c.agenda) {
+          this.configAgenda = c.agenda;
+          if (this.nuevaCita.duracion === 60 && c.agenda.duracionCita) {
+            this.nuevaCita.duracion = c.agenda.duracionCita;
+          }
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  /**
+   * Cita confirmada cuya hora fin + grace period ya pasó.
+   * Debe completarse YA o se pierde el registro.
+   */
+  requiereCompletarUrgente(cita: Cita): boolean {
+    if (cita.estado !== 'confirmada') return false;
+    const grace = this.configAgenda?.tiempoEntreCitas ?? 0;
+    const ahora = new Date();
+    const fechaFin = new Date(cita.fecha);
+    const [h, m] = (cita.hora || '00:00').split(':').map(Number);
+    fechaFin.setHours(h, m, 0, 0);
+    fechaFin.setMinutes(fechaFin.getMinutes() + (cita.duracion || 60) + grace);
+    return ahora.getTime() > fechaFin.getTime();
+  }
+
+  /** Tiempo legible desde que terminó la cita */
+  tiempoDesdeTermino(cita: Cita): string {
+    const ahora = new Date();
+    const fechaFin = new Date(cita.fecha);
+    const [h, m] = (cita.hora || '00:00').split(':').map(Number);
+    fechaFin.setHours(h, m, 0, 0);
+    fechaFin.setMinutes(fechaFin.getMinutes() + (cita.duracion || 60));
+    const diffMin = Math.round((ahora.getTime() - fechaFin.getTime()) / 60000);
+
+    if (diffMin < 60) return `Terminó hace ${diffMin} min`;
+    if (diffMin < 1440) {
+      const horas = Math.round(diffMin / 60);
+      return `Terminó hace ${horas} h`;
+    }
+    const dias = Math.round(diffMin / 1440);
+    return `Terminó hace ${dias} día${dias > 1 ? 's' : ''}`;
+  }
+
+  get citasPorCompletar(): Cita[] {
+    return this.citas().filter((c) => this.requiereCompletarUrgente(c));
+  }
+
+  get numPorCompletar(): number {
+    return this.citasPorCompletar.length;
+  }
+
+  // ====== Marcar no asistió ======
+  mostrarConfirmarNoAsistio = false;
+  citaANoAsistio: Cita | null = null;
+
+  solicitarNoAsistioCita(cita: Cita, event?: Event) {
+    if (event) event.stopPropagation();
+    this.citaANoAsistio = cita;
+    this.mostrarConfirmarNoAsistio = true;
+  }
+
+  aceptarNoAsistio() {
+    if (this.citaANoAsistio) this.marcarNoAsistio(this.citaANoAsistio);
+    this.cerrarConfirmarNoAsistio();
+  }
+
+  cerrarConfirmarNoAsistio() {
+    this.mostrarConfirmarNoAsistio = false;
+    this.citaANoAsistio = null;
+  }
+
+  marcarNoAsistio(cita: Cita) {
+    this.citasService.cambiarEstado(cita.id, 'no_asistio').subscribe({
+      next: () => {
+        cita.estado = 'no_asistio';
+        if (this.citaSeleccionada?.id === cita.id) {
+          this.citaSeleccionada = { ...cita };
+        }
+        this.menuAbiertoId = null;
+        this.refrescarVistas();
+      },
+      error: () => alert('No se pudo marcar como no asistió. Intenta de nuevo.'),
+    });
+  }
+
+  /** Cuenta citas activas (no canceladas) en una fecha */
+  numCitasDelDia(fecha: string): number {
+    if (!fecha) return 0;
+    const f = new Date(fecha + 'T00:00:00');
+    f.setHours(0, 0, 0, 0);
+    return this.citas().filter((c) => {
+      const fc = new Date(c.fecha);
+      fc.setHours(0, 0, 0, 0);
+      return fc.getTime() === f.getTime() && c.estado !== 'cancelada';
+    }).length;
+  }
+
+  /** Fecha de hoy en formato YYYY-MM-DD (para input type=date) */
+  get hoyISO(): string {
+    const d = new Date();
+    return d.toISOString().split('T')[0];
+  }
+
+  /** Solo los días del mes actual que tienen al menos 1 cita (para vista móvil) */
+  get diasConCitasDelMes(): DiaCalendario[] {
+    return this.diasMes.filter((d) => d.esMesActual && d.citas.length > 0);
+  }
+
+  // ====== Acciones rápidas en el modal de detalle ======
+
+  /** URL de WhatsApp con mensaje pre-llenado */
+  get whatsappUrl(): string {
+    if (!this.citaSeleccionada?.telefono) return '';
+    const tel = this.citaSeleccionada.telefono.replace(/\D/g, '');
+    // Si son 10 dígitos, asumir México (lada 52)
+    const numero = tel.length === 10 ? `52${tel}` : tel;
+    const nombre = this.citaSeleccionada.cliente.split(' ')[0];
+    const fechaStr = this.citaSeleccionada.fecha.toLocaleDateString('es-MX', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
+    const mensaje = encodeURIComponent(
+      `Hola ${nombre}, te escribo de Vortiz Arquitectos sobre tu cita del ${fechaStr} a las ${this.citaSeleccionada.hora}.`,
+    );
+    return `https://wa.me/${numero}?text=${mensaje}`;
+  }
+
+  /** URL para llamar */
+  get telefonoUrl(): string {
+    if (!this.citaSeleccionada?.telefono) return '';
+    return `tel:${this.citaSeleccionada.telefono.replace(/\s/g, '')}`;
+  }
+
+  /** URL para email con subject pre-llenado */
+  get emailUrl(): string {
+    if (!this.citaSeleccionada?.correo) return '';
+    const subject = encodeURIComponent(`Tu cita en Vortiz Arquitectos`);
+    const fechaStr = this.citaSeleccionada!.fecha.toLocaleDateString('es-MX', {
+      day: 'numeric',
+      month: 'long',
+    });
+    const body = encodeURIComponent(
+      `Hola ${this.citaSeleccionada!.cliente.split(' ')[0]},\n\nTe escribo respecto a tu cita del ${fechaStr} a las ${this.citaSeleccionada!.hora}.\n\nSaludos,\nVortiz Arquitectos`,
+    );
+    return `mailto:${this.citaSeleccionada.correo}?subject=${subject}&body=${body}`;
+  }
+
+  /** Otras citas del mismo cliente (por email o teléfono) */
+  get otrasCitasDelCliente(): Cita[] {
+    if (!this.citaSeleccionada) return [];
+    const actual = this.citaSeleccionada;
+    return this.citas()
+      .filter(
+        (c) =>
+          c.id !== actual.id &&
+          ((c.correo && c.correo === actual.correo) ||
+            (c.telefono && c.telefono === actual.telefono)),
+      )
+      .sort((a, b) => b.fecha.getTime() - a.fecha.getTime())
+      .slice(0, 4);
+  }
+
+  /** Label largo del estado para mostrar en modal */
+  estadoLabel(estado: string): string {
+    const map: Record<string, string> = {
+      confirmada: 'Confirmada',
+      pendiente: 'Pendiente',
+      cancelada: 'Cancelada',
+      completada: 'Completada',
+      no_asistio: 'No asistió',
+    };
+    return map[estado] || estado;
+  }
+
+  /** Color de fondo del badge según estado (para historial dentro del modal) */
+  estadoBadgeClass(estado: string): string {
+    const map: Record<string, string> = {
+      confirmada: 'bg-green-100 text-green-700',
+      pendiente: 'bg-orange-100 text-orange-700',
+      cancelada: 'bg-red-100 text-red-700',
+      completada: 'bg-gray-100 text-gray-700',
+      no_asistio: 'bg-amber-100 text-amber-700',
+    };
+    return map[estado] || 'bg-gray-100 text-gray-700';
+  }
+
+  reagendarCita(cita: Cita) {
+    if (this.numPorCompletar > 0) return;
+
+    this.nuevaCita = {
+      cliente: cita.cliente,
+      correo: cita.correo ?? '',
+      telefono: cita.telefono ?? '',
+      fecha: '',
+      hora: '',
+      duracion: cita.duracion || this.configAgenda?.duracionCita || 60,
+      tipo: cita.tipo,
+      servicioId: (cita as any).servicioId ?? null,
+      servicio: cita.servicio ?? '',
+      notas: cita.notas ?? '',
+      estado: 'confirmada' as EstadoCita, // 👈 AGREGAR ESTO
+    };
+
+    this.errorEmpalme = '';
+    this.advertenciaFecha = '';
+    this.cerrarDetalle();
+    this.mostrarNuevaCita = true;
+    this.cdr.detectChanges();
+  }
+  /**
+   * Refresca todas las vistas donde puede aparecer una cita:
+   * lista principal (signal) y modal del día (si está abierto).
+   */
+  private refrescarVistas() {
+    // Refrescar lista principal (signal)
+    this.citas.update((arr) => [...arr]);
+
+    // Refrescar modal del día si está abierto
+    if (this.diaSeleccionado) {
+      this.diaSeleccionado = {
+        ...this.diaSeleccionado,
+        citas: [...this.diaSeleccionado.citas],
+      };
+    }
+
+    this.cdr.detectChanges();
+  }
+  cerrarDiaSeguro() {
+    if (this.citaSeleccionada) return; // Hay detalle abierto, no cerrar el día
+    this.cerrarDia();
+  }
+
+  /** Citas pasadas filtradas por búsqueda y filtro de estado (para vista de historial) */
+  get citasPasadasFiltradas(): Cita[] {
+    let resultado = this.citas().filter((c) => this.esCitaPasada(c));
+
+    if (this.busqueda.trim()) {
+      const q = this.busqueda.toLowerCase();
+      resultado = resultado.filter(
+        (c) =>
+          c.cliente.toLowerCase().includes(q) ||
+          c.servicio?.toLowerCase().includes(q) ||
+          c.correo?.toLowerCase().includes(q) ||
+          c.telefono?.replace(/\s/g, '').includes(q.replace(/\s/g, '')) ||
+          c.notas?.toLowerCase().includes(q),
+      );
+    }
+
+    if (this.filtroEstado !== 'todas') {
+      resultado = resultado.filter((c) => c.estado === this.filtroEstado);
+    }
+
+    // Más recientes primero
+    return resultado.sort(
+      (a, b) => b.fecha.getTime() - a.fecha.getTime() || b.hora.localeCompare(a.hora),
+    );
   }
 }

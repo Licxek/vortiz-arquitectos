@@ -1,5 +1,5 @@
 // src/auth/auth.controller.ts
-import { Body, Controller, Get, Post, UseGuards, Request } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -15,14 +15,21 @@ export class AuthController {
   // 🔒 LOGIN: 5 intentos por minuto (anti brute-force de passwords)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.auth.login(dto.correo, dto.password);
+  login(@Body() dto: LoginDto, @Req() req: any) {
+    const userAgent = req.headers['user-agent'] || '';
+    // Detectar IP considerando proxy reverso (nginx)
+    const ip =
+      req.headers['x-forwarded-for']?.split(',')[0].trim() ||
+      req.connection?.remoteAddress ||
+      req.ip ||
+      '';
+    return this.auth.login(dto.correo, dto.password, userAgent, ip);
   }
 
   // 🟢 ME: el JwtAuthGuard ya lo protege; throttle global (60/min) es suficiente
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(@Request() req) {
+  me(@Req() req: any) {
     return req.user;
   }
 
@@ -45,5 +52,14 @@ export class AuthController {
   @Post('reset')
   reset(@Body() dto: ResetDto) {
     return this.auth.restablecer(dto.correo, dto.codigo, dto.password);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@Req() req: any) {
+    const auth = req.headers.authorization || '';
+    const token = auth.replace(/^Bearer\s+/i, '');
+    if (token) await this.auth.logout(token);
+    return { message: 'Sesión cerrada' };
   }
 }

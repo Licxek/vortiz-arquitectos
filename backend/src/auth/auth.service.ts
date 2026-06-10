@@ -10,6 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { MailService } from '../mail/mail.service';
 import { randomInt } from 'crypto';
+import { SesionesService } from '../sesiones/sesiones.service';
 
 interface IntentosEntry {
   count: number;
@@ -30,6 +31,7 @@ export class AuthService implements OnModuleDestroy {
     private usuarios: UsuariosService,
     private jwt: JwtService,
     private mail: MailService,
+    private sesionesService: SesionesService, // 👈 AGREGAR
   ) {
     // Cada hora limpia entradas caducadas
     this.cleanupInterval = setInterval(
@@ -46,7 +48,7 @@ export class AuthService implements OnModuleDestroy {
     return correo.toLowerCase().trim();
   }
 
-  async login(correo: string, password: string) {
+  async login(correo: string, password: string, userAgent: string, ip: string) {
     // 🔒 1) Verificar bloqueo por exceso de intentos
     const correoNorm = this.normalizar(correo);
     this.verificarBloqueoLogin(correoNorm);
@@ -65,7 +67,7 @@ export class AuthService implements OnModuleDestroy {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // ✅ 4) Login exitoso: limpiar contador de intentos
+    // ✅ 4) Login exitoso: limpiar contador
     this.intentosLogin.delete(correo);
 
     const payload = {
@@ -74,6 +76,14 @@ export class AuthService implements OnModuleDestroy {
       rol: usuario.rol,
     };
     const token = await this.jwt.signAsync(payload);
+
+    // 👇 NUEVO: registrar la sesión
+    try {
+      await this.sesionesService.registrar(usuario.id, token, userAgent, ip);
+    } catch (err) {
+      // No bloqueamos el login si falla el registro de sesión
+      console.error('Error registrando sesión:', err);
+    }
 
     const { password: _, ...datos } = usuario;
     return { token, usuario: datos };
@@ -165,5 +175,8 @@ export class AuthService implements OnModuleDestroy {
         this.intentosLogin.delete(correo);
       }
     }
+  }
+  async logout(token: string): Promise<void> {
+    await this.sesionesService.cerrarSesionPorToken(token);
   }
 }

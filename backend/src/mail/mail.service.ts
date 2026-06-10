@@ -23,7 +23,7 @@ export class MailService implements OnModuleInit {
     const pass = this.config.get<string>('SMTP_PASS') || '';
     this.from =
       this.config.get<string>('SMTP_FROM') ||
-      'no-reply@vortizarquitectos.com';
+      'Vortiz Arquitectos <Admin@vortizarquitectos.com.mx>';
 
     if (!host || !user || !pass) {
       this.logger.warn(
@@ -70,9 +70,7 @@ export class MailService implements OnModuleInit {
   async enviarAAdmins(subject: string, html: string): Promise<void> {
     const emails = await this.getAdminEmails();
     if (emails.length === 0) {
-      this.logger.warn(
-        'No hay administradores con correo registrado en la BD',
-      );
+      this.logger.warn('No hay administradores con correo registrado en la BD');
       return;
     }
     for (const email of emails) {
