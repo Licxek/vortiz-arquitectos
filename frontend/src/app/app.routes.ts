@@ -83,28 +83,6 @@ export const routes: Routes = [
     ],
   },
 
-<<<<<<< HEAD
-{
-    path: 'home',
-    loadComponent: () =>
-      import('./public/home/home.component').then(m => m.HomeComponent),
-  },
-
-  {
-  path: 'nosotros',
-  loadComponent: () =>
-    import('./public/aboutus/nosotros.component').then(m => m.NosotrosComponent),
-},
-
-{
-  path: 'proyectos',
-  loadComponent: () =>
-    import('./public/proyectos/proyectos.component').then(m => m.ProyectosComponent),
-},
-
-  // Wildcard
-=======
->>>>>>> f5ae073d605a98ace4aacae66bb9396ab7698a09
   {
     path: 'mantenimiento',
     canActivate: [mantenimientoGuard],
