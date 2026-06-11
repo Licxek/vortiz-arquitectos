@@ -23,6 +23,9 @@ async function bootstrap() {
       : ['error', 'warn', 'log', 'debug', 'verbose'],
   });
 
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
   // 1) Trust proxy — necesario detrás de nginx para que el throttler reciba la IP real
   app.set('trust proxy', 1);
 
