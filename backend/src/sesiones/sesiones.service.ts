@@ -31,17 +31,6 @@ export class SesionesService {
     const parsed = parseUserAgent(userAgent || '');
     const ubicacion = await this.obtenerUbicacion(ip); // 👈 NUEVO
 
-    // 🆕 NUEVO: cerrar sesiones previas del mismo dispositivo
-    await this.repo.update(
-      {
-        usuario: { id: usuarioId } as any,
-        navegador: parsed.navegador,
-        sistemaOperativo: parsed.sistemaOperativo,
-        activa: true,
-      },
-      { activa: false, cerradaEn: new Date() },
-    );
-
     const sesion = this.repo.create({
       usuario: { id: usuarioId } as any,
       tokenHash: this.hashearToken(token),
