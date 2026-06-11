@@ -1,0 +1,204 @@
+<div class="space-y-6">
+  <!-- Breadcrumb / Volver -->
+
+  <a
+    routerLink="/admin/inicio"
+    class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-[#0a4d7a] transition-colors"
+  >
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+    Volver al Inicio
+  </a>
+
+  <!-- Header con título + selector de rango -->
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+    <div class="flex items-start gap-4">
+      <div
+        class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+        [style.background-color]="colorGrafica() + '20'"
+      >
+        <svg
+          class="w-6 h-6"
+          [style.color]="colorGrafica()"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="iconoPath()" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">{{ titulo() }}</h1>
+        <p class="text-sm text-gray-500 mt-1">{{ descripcion() }}</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap">
+      <app-selector-rango-fecha (rangoChange)="onRangoChange($event)"></app-selector-rango-fecha>
+      <button
+        (click)="abrirModalPdf()"
+        [disabled]="cargando() || !detalle()"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a1f3d] text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        Generar reporte
+      </button>
+    </div>
+  </div>
+
+  <!-- Cards de Insights -->
+  <ng-container *ngIf="cargando()">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div
+        *ngFor="let _ of [1, 2, 3, 4]"
+        class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
+      >
+        <app-skeleton variant="text" width="40%" height="0.75rem" class="block mb-2" />
+        <app-skeleton variant="text" width="60%" height="2rem" class="block mb-2" />
+        <app-skeleton variant="text" width="50%" height="0.65rem" />
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!cargando() && detalle() as d">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Total -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div class="flex items-start justify-between mb-3">
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Total</p>
+          <ng-container *ngIf="formatearCambio(d.insights.cambio) as ci">
+            <span
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+              [ngClass]="ci.color"
+            >
+              {{ ci.flecha }} {{ ci.texto }}
+            </span>
+          </ng-container>
+        </div>
+        <p class="text-3xl font-bold text-gray-900">{{ d.insights.total }}</p>
+        <p class="text-xs text-gray-500 mt-1">Período anterior: {{ d.insights.totalAnterior }}</p>
+      </div>
+
+      <!-- Promedio -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Promedio</p>
+        <p class="text-3xl font-bold text-gray-900">{{ d.insights.promedio }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ d.unidad }} por período</p>
+      </div>
+
+      <!-- Mejor -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+          Mejor período
+        </p>
+        <p class="text-lg font-bold text-gray-900 truncate">{{ d.insights.mejor.label }}</p>
+        <p class="text-2xl font-bold text-emerald-600 mt-1">
+          {{ d.insights.mejor.valor }}
+          <span class="text-sm font-normal text-gray-500">{{ d.unidad }}</span>
+        </p>
+      </div>
+
+      <!-- Peor -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+          Menor actividad
+        </p>
+        <p class="text-lg font-bold text-gray-900 truncate">{{ d.insights.peor.label }}</p>
+        <p class="text-2xl font-bold text-orange-600 mt-1">
+          {{ d.insights.peor.valor }}
+          <span class="text-sm font-normal text-gray-500">{{ d.unidad }}</span>
+        </p>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Gráfica grande -->
+  <app-grafica-dashboard
+    [titulo]="titulo()"
+    subtitulo="Vista detallada del período seleccionado"
+    [tipo]="tipoGrafica()"
+    [data]="serieGrafica()"
+    [cargando]="cargando()"
+    [color]="colorGrafica()"
+    [altura]="400"
+    [unidad]="detalle()?.unidad || ''"
+  ></app-grafica-dashboard>
+
+  <!-- Tabla detallada -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-5 border-b border-gray-100">
+      <h3 class="text-base font-semibold text-gray-900">Detalle por período</h3>
+      <p class="text-xs text-gray-500 mt-0.5">Datos exactos del rango seleccionado</p>
+    </div>
+
+    <!-- Skeleton -->
+    <div *ngIf="cargando()" class="p-5 space-y-3">
+      <app-skeleton *ngFor="let _ of [1, 2, 3, 4, 5]" variant="rect" height="40px" />
+    </div>
+
+    <!-- Tabla con datos -->
+    <div *ngIf="!cargando() && detalle() as d" class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-100">
+          <tr>
+            <th
+              *ngFor="let col of d.tabla.columnas; let i = index"
+              class="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500"
+              [class.text-left]="i === 0"
+              [class.text-right]="i > 0"
+            >
+              {{ col }}
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr *ngFor="let fila of d.tabla.filas" class="hover:bg-gray-50 transition-colors">
+            <td
+              *ngFor="let celda of fila; let i = index"
+              class="px-5 py-3"
+              [class.text-left]="i === 0"
+              [class.text-right]="i > 0"
+              [class.font-medium]="i === 0"
+              [class.text-gray-900]="i === 0"
+              [class.text-gray-700]="i > 0"
+            >
+              <span
+                *ngIf="i === 2 && celda !== '—'"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+                [class.text-emerald-700]="$any(celda).startsWith('+')"
+                [class.bg-emerald-50]="$any(celda).startsWith('+')"
+                [class.text-red-700]="$any(celda).startsWith('-')"
+                [class.bg-red-50]="$any(celda).startsWith('-')"
+              >
+                {{ celda }}
+              </span>
+              <span *ngIf="!(i === 2 && celda !== '—')">{{ celda }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Empty state -->
+      <div *ngIf="d.tabla.filas.length === 0" class="p-10 text-center">
+        <p class="text-sm text-gray-500">No hay datos en este rango</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal generar PDF -->
+  <app-modal-generar-pdf
+    *ngIf="modalPdfAbierto() && detalle() as d"
+    [tipo]="tipo()"
+    [titulo]="titulo()"
+    [desde]="d.rango.desde"
+    [hasta]="d.rango.hasta"
+    (cerrar)="cerrarModalPdf()"
+  ></app-modal-generar-pdf>
+</div>

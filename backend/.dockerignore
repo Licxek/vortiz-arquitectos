@@ -1,0 +1,50 @@
+# Dependencies (NUNCA copiar - se instalan dentro del contenedor)
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist
+build
+
+# Environment files (peligroso copiarlos a la imagen)
+.env
+.env.local
+.env.*.local
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# IDE / Editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+.nyc_output
+
+# Logs
+*.log
+logs
+
+# Cache
+.eslintcache
+.npm
+
+# Docker (evitar inception)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Documentación que no se necesita en la imagen
+README.md
+*.md

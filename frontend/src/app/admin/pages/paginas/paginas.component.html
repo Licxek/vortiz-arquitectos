@@ -1,0 +1,3524 @@
+<div class="space-y-8">
+  <!-- Encabezado -->
+  <!-- Encabezado -->
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <!-- Izquierda: título + subtítulo -->
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Páginas</h1>
+        <p class="text-sm text-gray-500 mt-1">Administra las páginas de tu sitio web</p>
+      </div>
+
+      <!-- Derecha: acciones (toggle + buscar + nueva) -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Toggle vista grid/lista -->
+        <div class="flex bg-white border border-gray-200 rounded-lg p-1 shadow-sm shrink-0">
+          <button
+            (click)="cambiarVistaModo('grid')"
+            class="w-8 h-8 rounded-md flex items-center justify-center transition-all"
+            [class.bg-[#0a4d7a]]="$any(vistaModo) === 'grid'"
+            [class.text-white]="$any(vistaModo) === 'grid'"
+            [class.shadow-sm]="$any(vistaModo) === 'grid'"
+            [class.text-gray-500]="$any(vistaModo) !== 'grid'"
+            [class.hover:bg-gray-50]="$any(vistaModo) !== 'grid'"
+            title="Vista de cuadrícula (G)"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+              />
+            </svg>
+          </button>
+          <button
+            (click)="cambiarVistaModo('lista')"
+            class="w-8 h-8 rounded-md flex items-center justify-center transition-all"
+            [class.bg-[#0a4d7a]]="$any(vistaModo) === 'lista'"
+            [class.text-white]="$any(vistaModo) === 'lista'"
+            [class.shadow-sm]="$any(vistaModo) === 'lista'"
+            [class.text-gray-500]="$any(vistaModo) !== 'lista'"
+            [class.hover:bg-gray-50]="$any(vistaModo) !== 'lista'"
+            title="Vista de lista (G)"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Input de búsqueda -->
+        <div class="relative flex-1 lg:flex-initial lg:w-64">
+          <svg
+            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 21l-4.35-4.35M11 19a8 8 0 110-16 8 8 0 010 16z"
+            />
+          </svg>
+          <input
+            type="text"
+            [(ngModel)]="busqueda"
+            placeholder="Buscar página..."
+            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0a4d7a]/20 focus:border-[#0a4d7a] transition-all"
+          />
+        </div>
+
+        <!-- Botón Nueva página -->
+        <button
+          (click)="abrirNuevaPagina()"
+          class="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 shrink-0"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Nueva página
+          <kbd
+            class="hidden md:inline-block ml-1 px-1.5 py-0.5 text-[10px] font-mono bg-white/20 rounded"
+            >N</kbd
+          >
+        </button>
+      </div>
+    </div>
+
+    <div
+      *ngIf="!cargando()"
+      class="bg-gradient-to-r from-[#0a4d7a]/5 via-blue-50 to-white border border-blue-100 rounded-2xl p-4 md:p-5 flex items-center gap-4 animate-fadeInUp"
+    >
+      <!-- Icono -->
+      <div
+        class="w-11 h-11 bg-[#0a4d7a] rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+      >
+        <svg
+          class="w-5 h-5 text-white"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </div>
+
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-gray-900">{{ resumenSitio }}</p>
+        <p *ngIf="hayAlertas" class="text-xs text-gray-600 mt-0.5">
+          <span *ngIf="totalBorradores > 0">
+            💡 Tienes {{ totalBorradores }}
+            {{ totalBorradores === 1 ? 'borrador' : 'borradores' }} sin publicar.
+          </span>
+          <span *ngIf="totalOcultas > 0">
+            👁️ {{ totalOcultas }}
+            {{ totalOcultas === 1 ? 'página está oculta' : 'páginas están ocultas' }} del sitio.
+          </span>
+        </p>
+        <p *ngIf="!hayAlertas && totalPaginas > 0" class="text-xs text-gray-500 mt-0.5">
+          ✅ Todo está publicado y visible para tus visitantes.
+        </p>
+      </div>
+
+      <button
+        *ngIf="totalBorradores > 0"
+        (click)="filtroActivo = 'borradores'"
+        class="hidden sm:block shrink-0 text-xs font-semibold text-[#0a4d7a] hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors"
+      >
+        Ver borradores →
+      </button>
+    </div>
+
+    <!-- Stats: skeleton -->
+    <div *ngIf="cargando()" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div
+        *ngFor="let _ of [1, 2, 3, 4]"
+        class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+      >
+        <div class="flex items-center gap-3">
+          <app-skeleton variant="rect" width="40px" height="40px" />
+          <div class="space-y-2 flex-1">
+            <app-skeleton variant="text" height="1.5rem" width="40%" />
+            <app-skeleton variant="text" width="70%" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div *ngIf="!cargando()" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+            <svg
+              class="w-5 h-5 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-gray-900">{{ totalPaginas }}</p>
+            <p class="text-xs text-gray-500">Total páginas</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+            <svg
+              class="w-5 h-5 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-gray-900">{{ totalVisibles }}</p>
+            <p class="text-xs text-gray-500">Visibles</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+            <svg
+              class="w-5 h-5 text-orange-600"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
+              />
+            </svg>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-gray-900">{{ totalOcultas }}</p>
+            <p class="text-xs text-gray-500">Ocultas</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+            <svg
+              class="w-5 h-5 text-purple-600"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-gray-900">{{ totalPersonalizadas }}</p>
+            <p class="text-xs text-gray-500">Personalizadas</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="flex flex-wrap gap-2 border-b border-gray-200 pb-3">
+      <button
+        (click)="filtroActivo = 'todas'"
+        class="px-4 py-2 text-sm font-medium rounded-lg transition-all"
+        [class.bg-[#0a4d7a]]="filtroActivo === 'todas'"
+        [class.text-white]="filtroActivo === 'todas'"
+        [class.bg-gray-100]="filtroActivo !== 'todas'"
+        [class.text-gray-700]="filtroActivo !== 'todas'"
+        [class.hover:bg-gray-200]="filtroActivo !== 'todas'"
+      >
+        Todas ({{ totalPaginas }})
+      </button>
+      <button
+        (click)="filtroActivo = 'fijas'"
+        class="px-4 py-2 text-sm font-medium rounded-lg transition-all"
+        [class.bg-[#0a4d7a]]="filtroActivo === 'fijas'"
+        [class.text-white]="filtroActivo === 'fijas'"
+        [class.bg-gray-100]="filtroActivo !== 'fijas'"
+        [class.text-gray-700]="filtroActivo !== 'fijas'"
+        [class.hover:bg-gray-200]="filtroActivo !== 'fijas'"
+      >
+        Fijas
+      </button>
+      <button
+        (click)="filtroActivo = 'personalizadas'"
+        class="px-4 py-2 text-sm font-medium rounded-lg transition-all"
+        [class.bg-[#0a4d7a]]="filtroActivo === 'personalizadas'"
+        [class.text-white]="filtroActivo === 'personalizadas'"
+        [class.bg-gray-100]="filtroActivo !== 'personalizadas'"
+        [class.text-gray-700]="filtroActivo !== 'personalizadas'"
+        [class.hover:bg-gray-200]="filtroActivo !== 'personalizadas'"
+      >
+        Personalizadas ({{ totalPersonalizadas }})
+      </button>
+      <button
+        (click)="filtroActivo = 'borradores'"
+        class="px-4 py-2 text-sm font-medium rounded-lg transition-all"
+        [class.bg-[#0a4d7a]]="filtroActivo === 'borradores'"
+        [class.text-white]="filtroActivo === 'borradores'"
+        [class.bg-gray-100]="filtroActivo !== 'borradores'"
+        [class.text-gray-700]="filtroActivo !== 'borradores'"
+        [class.hover:bg-gray-200]="filtroActivo !== 'borradores'"
+      >
+        Borradores ({{ totalBorradores }})
+      </button>
+      <button
+        (click)="filtroActivo = 'ocultas'"
+        class="px-4 py-2 text-sm font-medium rounded-lg transition-all"
+        [class.bg-[#0a4d7a]]="filtroActivo === 'ocultas'"
+        [class.text-white]="filtroActivo === 'ocultas'"
+        [class.bg-gray-100]="filtroActivo !== 'ocultas'"
+        [class.text-gray-700]="filtroActivo !== 'ocultas'"
+        [class.hover:bg-gray-200]="filtroActivo !== 'ocultas'"
+      >
+        Ocultas ({{ totalOcultas }})
+      </button>
+    </div>
+    <!-- Grid: skeleton -->
+    <div
+      *ngIf="cargando()"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+    >
+      <div
+        *ngFor="let _ of [1, 2, 3, 4, 5, 6, 7, 8]"
+        class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+      >
+        <app-skeleton variant="rect" height="128px" />
+        <div class="p-4 space-y-3">
+          <app-skeleton variant="text" width="70%" />
+          <app-skeleton variant="text" width="50%" height="0.75rem" />
+          <app-skeleton variant="text" width="40%" height="0.75rem" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid de páginas -->
+    <div
+      *ngIf="!cargando() && $any(vistaModo) === 'grid'"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+    >
+      <div
+        *ngFor="let pagina of paginasFiltradas"
+        class="group relative bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
+        [class.opacity-60]="!estaLive(pagina)"
+      >
+        <!-- Header con gradiente -->
+        <div
+          class="h-32 flex items-center justify-center relative overflow-hidden group-hover:brightness-110 transition-all duration-300"
+          [class.bg-gradient-to-br]="true"
+          [class.from-blue-400]="pagina.color === 'blue'"
+          [class.to-blue-600]="pagina.color === 'blue'"
+          [class.from-green-400]="pagina.color === 'green'"
+          [class.to-green-600]="pagina.color === 'green'"
+          [class.from-orange-400]="pagina.color === 'orange'"
+          [class.to-orange-600]="pagina.color === 'orange'"
+          [class.from-purple-400]="pagina.color === 'purple'"
+          [class.to-purple-600]="pagina.color === 'purple'"
+          [class.from-pink-400]="pagina.color === 'pink'"
+          [class.to-pink-600]="pagina.color === 'pink'"
+          [class.from-gray-400]="pagina.color === 'gray'"
+          [class.to-gray-600]="pagina.color === 'gray'"
+        >
+          <!-- Patrón decorativo -->
+          <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full"></div>
+          <div class="absolute -left-2 -top-2 w-16 h-16 bg-white/10 rounded-full"></div>
+
+          <!-- Icono central -->
+          <div
+            class="w-16 h-16 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center relative z-10"
+          >
+            <ng-container [ngSwitch]="pagina.icono">
+              <svg
+                *ngSwitchCase="'home'"
+                class="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+              <svg
+                *ngSwitchCase="'users'"
+                class="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              <svg
+                *ngSwitchCase="'building'"
+                class="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
+              <svg
+                *ngSwitchCase="'briefcase'"
+                class="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+              <svg
+                *ngSwitchCase="'calendar'"
+                class="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <svg
+                *ngSwitchCase="'document'"
+                class="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </ng-container>
+          </div>
+
+          <!-- Badge tipo -->
+          <span
+            class="absolute top-3 left-3 text-[10px] font-bold px-2 py-1 bg-white/30 backdrop-blur text-white rounded-full uppercase tracking-wider"
+          >
+            {{ pagina.tipo === 'fija' ? 'Fija' : 'Custom' }}
+          </span>
+        </div>
+
+        <!-- Menu de 3 puntos -->
+        <!-- Quick actions (aparecen al hover) -->
+        <div
+          class="absolute top-3 right-3 z-30 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <!-- Previsualizar -->
+          <button
+            (click)="previsualizarPagina(pagina); $event.stopPropagation()"
+            class="w-8 h-8 bg-white/90 hover:bg-white text-gray-700 hover:text-[#0a4d7a] rounded-lg flex items-center justify-center transition-colors shadow-sm"
+            title="Previsualizar"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+          </button>
+
+          <!-- Editar -->
+          <button
+            (click)="editarPagina(pagina); $event.stopPropagation()"
+            class="w-8 h-8 bg-white/90 hover:bg-white text-gray-700 hover:text-[#0a4d7a] rounded-lg flex items-center justify-center transition-colors shadow-sm"
+            title="Editar"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </button>
+
+          <!-- Ocultar / Mostrar -->
+          <button
+            (click)="toggleVisibilidad(pagina); $event.stopPropagation()"
+            class="w-8 h-8 bg-white/90 hover:bg-white rounded-lg flex items-center justify-center transition-colors shadow-sm"
+            [class.text-gray-700]="pagina.visible"
+            [class.hover:text-orange-600]="pagina.visible"
+            [class.text-orange-600]="!pagina.visible"
+            [class.hover:text-green-600]="!pagina.visible"
+            [title]="pagina.visible ? 'Ocultar del sitio' : 'Mostrar en el sitio'"
+          >
+            <svg
+              *ngIf="pagina.visible"
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
+              />
+            </svg>
+            <svg
+              *ngIf="!pagina.visible"
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+          </button>
+
+          <!-- Eliminar (solo personalizadas) -->
+          <button
+            *ngIf="pagina.tipo === 'personalizada'"
+            (click)="eliminarPagina(pagina); $event.stopPropagation()"
+            class="w-8 h-8 bg-white/90 hover:bg-red-500 text-gray-700 hover:text-white rounded-lg flex items-center justify-center transition-colors shadow-sm"
+            title="Eliminar"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Contenido del card -->
+        <!-- Contenido del card -->
+        <div class="p-4 flex flex-col gap-2">
+          <!-- Título -->
+          <h3 class="font-semibold text-gray-900 truncate">{{ pagina.titulo }}</h3>
+
+          <!-- Slug -->
+          <p class="text-xs text-gray-500 truncate font-mono">{{ pagina.slug }}</p>
+
+          <!-- Footer compacto: estado + última edición -->
+          <div class="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-gray-50">
+            <!-- Pill de estado consolidado -->
+            <span
+              class="inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shrink-0"
+              [ngClass]="claseEstadoVisual(pagina)"
+            >
+              <span class="w-1.5 h-1.5 rounded-full" [ngClass]="dotEstadoVisual(pagina)"></span>
+              {{ textoEstadoVisual(pagina) }}
+            </span>
+
+            <!-- Última edición -->
+            <span class="text-[11px] text-gray-400 flex items-center gap-1 truncate min-w-0">
+              <svg
+                class="w-3 h-3 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span class="truncate">{{ pagina.ultimaEdicion }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card de "Agregar nueva página" -->
+      <button
+        (click)="abrirNuevaPagina()"
+        class="group min-h-[260px] bg-white rounded-2xl border-2 border-dashed border-gray-200 hover:border-[#0a4d7a] hover:bg-blue-50/30 flex flex-col items-center justify-center gap-3 p-6 transition-all duration-200 cursor-pointer hover:-translate-y-1"
+      >
+        <div
+          class="w-16 h-16 bg-gray-100 group-hover:bg-[#0a4d7a] rounded-2xl flex items-center justify-center transition-colors"
+        >
+          <svg
+            class="w-8 h-8 text-gray-400 group-hover:text-white transition-colors"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+        <div class="text-center">
+          <p class="font-semibold text-gray-700 group-hover:text-[#0a4d7a] transition-colors">
+            Nueva página
+          </p>
+          <p class="text-xs text-gray-400 mt-1">Agrega contenido al sitio</p>
+        </div>
+      </button>
+    </div>
+
+    <!-- Vista LISTA -->
+    <div
+      *ngIf="!cargando() && $any(vistaModo) === 'lista' && paginasFiltradas.length > 0"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+    >
+      <div class="divide-y divide-gray-100">
+        <div
+          *ngFor="let pagina of paginasFiltradas"
+          class="group flex items-center gap-3 md:gap-4 p-3 md:p-4 hover:bg-gray-50 transition-colors"
+          [class.opacity-60]="!estaLive(pagina)"
+        >
+          <!-- Icono con gradiente -->
+          <div
+            class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white bg-gradient-to-br"
+            [class.from-blue-400]="pagina.color === 'blue'"
+            [class.to-blue-600]="pagina.color === 'blue'"
+            [class.from-green-400]="pagina.color === 'green'"
+            [class.to-green-600]="pagina.color === 'green'"
+            [class.from-orange-400]="pagina.color === 'orange'"
+            [class.to-orange-600]="pagina.color === 'orange'"
+            [class.from-purple-400]="pagina.color === 'purple'"
+            [class.to-purple-600]="pagina.color === 'purple'"
+            [class.from-pink-400]="pagina.color === 'pink'"
+            [class.to-pink-600]="pagina.color === 'pink'"
+            [class.from-gray-400]="pagina.color === 'gray'"
+            [class.to-gray-600]="pagina.color === 'gray'"
+          >
+            <ng-container [ngSwitch]="pagina.icono">
+              <svg
+                *ngSwitchCase="'home'"
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+              <svg
+                *ngSwitchCase="'users'"
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              <svg
+                *ngSwitchCase="'building'"
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
+              <svg
+                *ngSwitchCase="'briefcase'"
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+              <svg
+                *ngSwitchCase="'calendar'"
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <svg
+                *ngSwitchCase="'document'"
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </ng-container>
+          </div>
+
+          <!-- Info principal -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-0.5">
+              <h3 class="font-semibold text-gray-900 truncate">{{ pagina.titulo }}</h3>
+              <span
+                class="text-[9px] font-bold px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded uppercase tracking-wider shrink-0"
+              >
+                {{ pagina.tipo === 'fija' ? 'Fija' : 'Custom' }}
+              </span>
+            </div>
+            <p class="text-xs text-gray-500 truncate font-mono">{{ pagina.slug }}</p>
+          </div>
+
+          <!-- Pill estado (oculto en móvil) -->
+          <span
+            class="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shrink-0"
+            [ngClass]="claseEstadoVisual(pagina)"
+          >
+            <span class="w-1.5 h-1.5 rounded-full" [ngClass]="dotEstadoVisual(pagina)"></span>
+            {{ textoEstadoVisual(pagina) }}
+          </span>
+
+          <!-- Última edición (solo lg+) -->
+          <span class="hidden lg:flex text-xs text-gray-400 items-center gap-1 shrink-0">
+            <svg
+              class="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            {{ pagina.ultimaEdicion }}
+          </span>
+
+          <!-- Quick actions -->
+          <div class="flex items-center gap-1 shrink-0">
+            <button
+              (click)="previsualizarPagina(pagina)"
+              class="w-8 h-8 hover:bg-blue-50 text-gray-500 hover:text-[#0a4d7a] rounded-lg flex items-center justify-center transition-colors"
+              title="Previsualizar"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+            </button>
+            <button
+              (click)="editarPagina(pagina)"
+              class="w-8 h-8 hover:bg-blue-50 text-gray-500 hover:text-[#0a4d7a] rounded-lg flex items-center justify-center transition-colors"
+              title="Editar"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+            </button>
+            <button
+              (click)="toggleVisibilidad(pagina)"
+              class="w-8 h-8 hover:bg-orange-50 rounded-lg flex items-center justify-center transition-colors"
+              [class.text-gray-500]="pagina.visible"
+              [class.hover:text-orange-600]="pagina.visible"
+              [class.text-orange-600]="!pagina.visible"
+              [title]="pagina.visible ? 'Ocultar' : 'Mostrar'"
+            >
+              <svg
+                *ngIf="pagina.visible"
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
+                />
+              </svg>
+              <svg
+                *ngIf="!pagina.visible"
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+            </button>
+            <button
+              *ngIf="pagina.tipo === 'personalizada'"
+              (click)="eliminarPagina(pagina)"
+              class="w-8 h-8 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-lg flex items-center justify-center transition-colors"
+              title="Eliminar"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Botón de crear nueva (al final de la lista) -->
+        <button
+          (click)="abrirNuevaPagina()"
+          class="w-full flex items-center justify-center gap-2 p-4 text-gray-500 hover:text-[#0a4d7a] hover:bg-blue-50/40 transition-colors text-sm font-medium"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Crear nueva página
+        </button>
+      </div>
+    </div>
+
+    <!-- Estado vacío -->
+    <div *ngIf="!cargando() && paginasFiltradas.length === 0" class="text-center py-12">
+      <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg
+          class="w-10 h-10 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+          />
+        </svg>
+      </div>
+      <h3 class="text-base font-semibold text-gray-900">No se encontraron páginas</h3>
+      <p class="text-sm text-gray-500 mt-1">Intenta cambiar los filtros o el término de búsqueda</p>
+    </div>
+    <!-- MODAL: Nueva página -->
+    <div
+      *ngIf="mostrarNuevaPagina"
+      class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-2 sm:p-4 animate-[fadeIn_0.2s_ease-out]"
+      (input)="marcarCambios()"
+      (change)="marcarCambios()"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[92vh] flex flex-col overflow-hidden"
+      >
+        <!-- HEADER -->
+        <div
+          class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-5 flex items-center justify-between shrink-0"
+        >
+          <div class="flex items-center gap-4">
+            <div class="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center">
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold">{{ formNuevaPagina.titulo || 'Nueva página' }}</h2>
+              <p class="text-xs text-gray-300">Crea contenido nuevo para tu sitio</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <!-- 👇 INDICADOR AUTO-SAVE (colores claros para fondo oscuro) -->
+            <div
+              *ngIf="estadoAutoSave !== 'oculto'"
+              class="hidden sm:flex items-center gap-1.5 text-xs"
+            >
+              <ng-container [ngSwitch]="estadoAutoSave">
+                <div *ngSwitchCase="'cambios'" class="flex items-center gap-1.5 text-amber-300">
+                  <span class="w-1.5 h-1.5 bg-amber-300 rounded-full animate-pulse"></span>
+                  <span>Cambios sin guardar</span>
+                </div>
+                <div *ngSwitchCase="'guardando'" class="flex items-center gap-1.5 text-blue-200">
+                  <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <span>Guardando...</span>
+                </div>
+                <div *ngSwitchCase="'guardado'" class="flex items-center gap-1.5 text-green-300">
+                  <svg
+                    class="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>{{ tiempoUltimoGuardado }}</span>
+                </div>
+                <div *ngSwitchCase="'error'" class="flex items-center gap-1.5 text-red-300">
+                  <svg
+                    class="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>Error al guardar</span>
+                </div>
+              </ng-container>
+            </div>
+
+            <!-- Badge estado existente -->
+            <span
+              class="text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider"
+              [class.bg-orange-500]="formNuevaPagina.estado === 'borrador'"
+              [class.bg-green-500]="formNuevaPagina.estado === 'publicada'"
+              [class.bg-blue-500]="formNuevaPagina.estado === 'programada'"
+            >
+              {{ formNuevaPagina.estado }}
+            </span>
+
+            <!-- Botón cerrar existente -->
+            <button
+              (click)="cerrarNuevaPagina()"
+              class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- BODY: SIDEBAR + CONTENT -->
+        <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+          <!-- SIDEBAR -->
+          <div
+            class="w-full md:w-64 border-b md:border-b-0 md:border-r border-gray-200 bg-gray-50 shrink-0 flex flex-col overflow-hidden"
+          >
+            <nav class="p-3 flex md:flex-col gap-1 flex-1 overflow-x-auto md:overflow-y-auto">
+              <button
+                *ngFor="let s of secciones; let i = index"
+                (click)="irASeccion(s.id)"
+                class="shrink-0 md:w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+                [class.bg-[#0a4d7a]]="seccionActiva === s.id"
+                [class.text-white]="seccionActiva === s.id"
+                [class.shadow-md]="seccionActiva === s.id"
+                [class.text-gray-600]="seccionActiva !== s.id"
+                [class.hover:bg-white]="seccionActiva !== s.id"
+              >
+                <span
+                  class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                  [class.bg-white]="seccionActiva === s.id"
+                  [class.text-[#0a4d7a]]="seccionActiva === s.id"
+                  [class.bg-gray-200]="seccionActiva !== s.id"
+                  [class.text-gray-600]="seccionActiva !== s.id"
+                >
+                  {{ i + 1 }}
+                </span>
+                {{ s.label }}
+              </button>
+            </nav>
+
+            <!-- Progress (oculto en móvil para ahorrar espacio vertical) -->
+            <div class="hidden md:block p-4 border-t border-gray-200 shrink-0">
+              <p class="text-xs text-gray-500 mb-2">Progreso</p>
+              <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-gradient-to-r from-[#0a4d7a] to-[#1a3a5c] rounded-full transition-all"
+                  [style.width.%]="progresoCreacion"
+                ></div>
+              </div>
+              <p class="text-xs font-semibold text-gray-700 mt-2">
+                {{ progresoCreacion }}% completado
+              </p>
+            </div>
+          </div>
+
+          <!-- MAIN CONTENT -->
+          <div class="flex-1 overflow-y-auto">
+            <!-- SECCIÓN 1: PLANTILLA -->
+            <div *ngIf="seccionActiva === 'plantilla'" class="p-4 md:p-8">
+              <div class="mb-6">
+                <h3 class="text-2xl font-bold text-gray-900">Selecciona una plantilla</h3>
+                <p class="text-sm text-gray-500 mt-1">
+                  Empieza con un layout pre-armado o desde cero
+                </p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div
+                  *ngFor="let p of plantillas"
+                  (click)="seleccionarPlantilla(p.id)"
+                  class="p-5 rounded-2xl border-2 cursor-pointer transition-all hover:-translate-y-0.5"
+                  [class.border-[#0a4d7a]]="plantillaSeleccionada === p.id"
+                  [class.bg-blue-50]="plantillaSeleccionada === p.id"
+                  [class.shadow-lg]="plantillaSeleccionada === p.id"
+                  [class.border-gray-200]="plantillaSeleccionada !== p.id"
+                  [class.hover:border-gray-300]="plantillaSeleccionada !== p.id"
+                >
+                  <div
+                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0a4d7a] to-[#0a1f3d] flex items-center justify-center mb-3"
+                  >
+                    <svg
+                      class="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h4 class="font-semibold text-gray-900">{{ p.nombre }}</h4>
+                  <p class="text-xs text-gray-500 mt-1">{{ p.descripcion }}</p>
+                  <p
+                    *ngIf="p.bloquesIniciales.length > 0"
+                    class="text-[10px] text-gray-400 mt-3 uppercase tracking-wider font-semibold"
+                  >
+                    {{ p.bloquesIniciales.length }} bloques incluidos
+                  </p>
+                  <div
+                    *ngIf="plantillaSeleccionada === p.id"
+                    class="mt-3 flex items-center gap-1 text-xs font-bold text-[#0a4d7a]"
+                  >
+                    <svg
+                      class="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Seleccionada
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECCIÓN 2: INFORMACIÓN -->
+            <div *ngIf="seccionActiva === 'info'" class="p-4 md:p-8 max-w-3xl">
+              <div class="mb-6">
+                <h3 class="text-2xl font-bold text-gray-900">Información básica</h3>
+                <p class="text-sm text-gray-500 mt-1">Datos principales de la página</p>
+              </div>
+
+              <div class="space-y-5">
+                <div>
+                  <label
+                    class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+                    >Título de la página</label
+                  >
+                  <input
+                    type="text"
+                    [(ngModel)]="formNuevaPagina.titulo"
+                    (input)="actualizarSlug()"
+                    placeholder="Ej: Servicios de remodelación"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-base font-medium outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+                    >URL de la página</label
+                  >
+                  <div class="flex items-stretch">
+                    <span
+                      class="px-3 py-2.5 bg-gray-100 border border-r-0 border-gray-200 rounded-l-lg text-sm text-gray-500 flex items-center font-mono"
+                    >
+                      /pages/
+                    </span>
+                    <input
+                      type="text"
+                      [(ngModel)]="formNuevaPagina.slug"
+                      class="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-r-lg text-sm font-mono outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+                    />
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1.5">Se genera automáticamente del título</p>
+                </div>
+
+                <div>
+                  <label
+                    class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+                    >Descripción corta</label
+                  >
+                  <textarea
+                    [(ngModel)]="formNuevaPagina.descripcion"
+                    rows="3"
+                    placeholder="Una breve descripción que verán los visitantes..."
+                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"
+                  ></textarea>
+                </div>
+
+                <app-image-upload
+                  label="Imagen destacada"
+                  [valor]="formNuevaPagina.imagenDestacada || ''"
+                  (valorChange)="formNuevaPagina.imagenDestacada = $event"
+                  carpeta="paginas"
+                  aspectRatio="wide"
+                ></app-image-upload>
+
+                <div>
+                  <label
+                    class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+                    >Categoría</label
+                  >
+                  <div class="relative" (click)="$event.stopPropagation()">
+                    <button
+                      (click)="toggleSelectorCategoria($event)"
+                      class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all"
+                    >
+                      <span class="font-medium">{{ categoriaLabel }}</span>
+                      <svg
+                        class="w-4 h-4 text-gray-500 transition-transform"
+                        [class.rotate-180]="mostrarSelectorCategoria"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    <div
+                      *ngIf="mostrarSelectorCategoria"
+                      class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-[fadeIn_0.15s_ease-out]"
+                    >
+                      <button
+                        *ngFor="let cat of categoriasOpciones"
+                        (click)="seleccionarCategoria(cat.value)"
+                        class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center justify-between border-b border-gray-50 last:border-0"
+                        [class.bg-blue-50]="formNuevaPagina.categoria === cat.value"
+                      >
+                        <div>
+                          <p class="text-sm font-semibold text-gray-900">{{ cat.label }}</p>
+                          <p class="text-xs text-gray-500 mt-0.5">{{ cat.descripcion }}</p>
+                        </div>
+                        <svg
+                          *ngIf="formNuevaPagina.categoria === cat.value"
+                          class="w-4 h-4 text-[#0a4d7a] shrink-0 ml-2"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                          viewBox="0 0 24 24"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECCIÓN 3: CONTENIDO -->
+            <div *ngIf="seccionActiva === 'contenido'" class="p-4 md:p-8">
+              <div class="mb-6 flex items-start justify-between">
+                <div>
+                  <h3 class="text-2xl font-bold text-gray-900">Editor de contenido</h3>
+                  <p class="text-sm text-gray-500 mt-1">
+                    Agrega y organiza los bloques de tu página
+                  </p>
+                </div>
+                <div class="relative" (click)="$event.stopPropagation()">
+                  <button
+                    (click)="mostrarMenuBloques = !mostrarMenuBloques"
+                    class="flex items-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Agregar bloque
+                  </button>
+
+                  <div
+                    *ngIf="mostrarMenuBloques"
+                    class="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 w-72 sm:w-80 z-30 max-h-96 overflow-y-auto animate-[fadeIn_0.15s_ease-out]"
+                  >
+                    <div class="p-2">
+                      <button
+                        *ngFor="let tipo of tiposBloques"
+                        (click)="agregarBloque(tipo.tipo)"
+                        class="w-full flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                      >
+                        <div
+                          class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                          [class.bg-blue-100]="tipo.color === 'blue'"
+                          [class.bg-gray-200]="tipo.color === 'gray'"
+                          [class.bg-green-100]="tipo.color === 'green'"
+                          [class.bg-purple-100]="tipo.color === 'purple'"
+                          [class.bg-orange-100]="tipo.color === 'orange'"
+                          [class.bg-red-100]="tipo.color === 'red'"
+                        >
+                          <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                            [class.text-blue-600]="tipo.color === 'blue'"
+                            [class.text-gray-600]="tipo.color === 'gray'"
+                            [class.text-green-600]="tipo.color === 'green'"
+                            [class.text-purple-600]="tipo.color === 'purple'"
+                            [class.text-orange-600]="tipo.color === 'orange'"
+                            [class.text-red-600]="tipo.color === 'red'"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M4 6h16M4 12h16M4 18h7"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="text-sm font-semibold text-gray-900">{{ tipo.label }}</p>
+                          <p class="text-xs text-gray-500">{{ tipo.descripcion }}</p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Lista de bloques -->
+              <div
+                *ngIf="formNuevaPagina.bloques.length === 0"
+                class="text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200"
+              >
+                <svg
+                  class="w-16 h-16 text-gray-300 mx-auto mb-3"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+                <p class="text-sm text-gray-500">No hay bloques aún</p>
+                <p class="text-xs text-gray-400 mt-1">Haz clic en "Agregar bloque" para empezar</p>
+              </div>
+
+              <div class="space-y-3">
+                <div
+                  *ngFor="let bloque of formNuevaPagina.bloques; let i = index"
+                  class="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+                >
+                  <div class="p-4 flex items-center gap-3 bg-gray-50">
+                    <span class="text-xs font-bold text-gray-400 w-6 text-center">{{ i + 1 }}</span>
+                    <div
+                      class="w-9 h-9 rounded-lg bg-[#0a4d7a]/10 flex items-center justify-center shrink-0"
+                    >
+                      <svg
+                        class="w-4 h-4 text-[#0a4d7a]"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M4 6h16M4 12h16M4 18h7"
+                        />
+                      </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-gray-900">
+                        {{ obtenerLabelBloque(bloque.tipo) }}
+                      </p>
+                      <p class="text-xs text-gray-500 truncate">
+                        {{ bloque.titulo || 'Sin título asignado' }}
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <button
+                        (click)="moverBloque(bloque.id, 'arriba')"
+                        [disabled]="i === 0"
+                        class="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-white rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+                        </svg>
+                      </button>
+                      <button
+                        (click)="moverBloque(bloque.id, 'abajo')"
+                        [disabled]="i === formNuevaPagina.bloques.length - 1"
+                        class="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-white rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      <button
+                        (click)="toggleBloque(bloque.id)"
+                        class="p-1.5 text-[#0a4d7a] hover:bg-blue-50 rounded transition-colors"
+                      >
+                        <svg
+                          class="w-4 h-4 transition-transform"
+                          [class.rotate-180]="bloque.expandido"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      <button
+                        (click)="eliminarBloque(bloque.id)"
+                        class="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Editor expandido del bloque -->
+                  <div
+                    *ngIf="bloque.expandido"
+                    class="p-4 border-t border-gray-200 space-y-3 bg-white"
+                  >
+                    <ng-container [ngSwitch]="bloque.tipo">
+                      <!-- Hero -->
+                      <div *ngSwitchCase="'hero'" class="space-y-3">
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.titulo"
+                          placeholder="Título principal"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.subtitulo"
+                          placeholder="Subtítulo"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                        <app-image-upload
+                          label="Imagen de fondo"
+                          [valor]="bloque.imagenUrl || ''"
+                          (valorChange)="bloque.imagenUrl = $event"
+                          carpeta="paginas"
+                          aspectRatio="wide"
+                        ></app-image-upload>
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.textoBoton"
+                          placeholder="Texto del botón (opcional)"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                      </div>
+
+                      <!-- Texto -->
+                      <div *ngSwitchCase="'texto'" class="space-y-3">
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.titulo"
+                          placeholder="Encabezado de sección"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                        <textarea
+                          [(ngModel)]="bloque.contenido"
+                          rows="5"
+                          placeholder="Escribe el contenido del párrafo..."
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white resize-none"
+                        ></textarea>
+                      </div>
+
+                      <!-- Imagen -->
+                      <div *ngSwitchCase="'imagen'" class="space-y-3">
+                        <app-image-upload
+                          label="Imagen"
+                          [valor]="bloque.imagenUrl || ''"
+                          (valorChange)="bloque.imagenUrl = $event"
+                          carpeta="paginas"
+                          aspectRatio="wide"
+                        ></app-image-upload>
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.titulo"
+                          placeholder="Caption (opcional)"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                      </div>
+
+                      <!-- Galería -->
+                      <div *ngSwitchCase="'galeria'" class="space-y-3">
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.titulo"
+                          placeholder="Título de la galería"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+
+                        <div class="space-y-2">
+                          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                            Imágenes ({{ bloque.imagenes?.length || 0 }})
+                          </p>
+                          <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            <div
+                              *ngFor="let img of bloque.imagenes; let i = index"
+                              class="relative group aspect-video bg-gray-100 rounded-lg overflow-hidden"
+                            >
+                              <img [src]="img" class="w-full h-full object-cover" />
+                              <button
+                                (click)="eliminarImagenGaleria(bloque, i)"
+                                class="absolute top-1 right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <svg
+                                  class="w-3.5 h-3.5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2.5"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M6 18L18 6M6 6l12 12"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                          <app-image-upload
+                            label="Agregar imagen a la galería"
+                            [valor]="''"
+                            (valorChange)="agregarImagenGaleria(bloque, $event)"
+                            carpeta="paginas"
+                            aspectRatio="wide"
+                          ></app-image-upload>
+                        </div>
+                      </div>
+
+                      <!-- Cita -->
+                      <div *ngSwitchCase="'cita'" class="space-y-3">
+                        <textarea
+                          [(ngModel)]="bloque.contenido"
+                          rows="3"
+                          placeholder="La cita o testimonio..."
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white resize-none italic"
+                        ></textarea>
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.titulo"
+                          placeholder="Autor"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.subtitulo"
+                          placeholder="Cargo o empresa (opcional)"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                      </div>
+
+                      <!-- CTA -->
+                      <div *ngSwitchCase="'cta'" class="space-y-3">
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.titulo"
+                          placeholder="Título del CTA"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.subtitulo"
+                          placeholder="Descripción"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.textoBoton"
+                          placeholder="Texto del botón"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                      </div>
+
+                      <!-- Estadísticas -->
+                      <div *ngSwitchCase="'estadisticas'" class="space-y-3">
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.titulo"
+                          placeholder="Título de la sección (ej: 'Nuestros números')"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+
+                        <p
+                          class="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-3"
+                        >
+                          Estadísticas
+                        </p>
+                        <div class="space-y-2">
+                          <div
+                            *ngFor="let item of bloque.items; let i = index"
+                            class="flex gap-2 items-center"
+                          >
+                            <input
+                              [(ngModel)]="item.valor"
+                              placeholder="50+"
+                              maxlength="10"
+                              class="w-24 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-center outline-none focus:border-[#0a4d7a] focus:bg-white"
+                            />
+                            <input
+                              [(ngModel)]="item.titulo"
+                              placeholder="Etiqueta de la estadística"
+                              class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                            />
+                            <button
+                              (click)="eliminarItemBloque(bloque.id, i)"
+                              class="p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
+                            >
+                              <svg
+                                class="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        <button
+                          (click)="agregarItemBloque(bloque.id)"
+                          class="w-full px-3 py-2 border border-dashed border-gray-300 hover:border-[#0a4d7a] hover:bg-blue-50 text-gray-600 hover:text-[#0a4d7a] rounded-lg text-xs font-medium transition-all"
+                        >
+                          + Agregar estadística
+                        </button>
+                      </div>
+
+                      <!-- Servicios (selección del catálogo) -->
+                      <div *ngSwitchCase="'servicios'" class="space-y-3">
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.titulo"
+                          placeholder="Título de la sección (ej: 'Lo que hacemos')"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+
+                        <div
+                          class="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-700 flex items-start gap-2"
+                        >
+                          <svg
+                            class="w-4 h-4 shrink-0 mt-0.5"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <span
+                            >Selecciona qué servicios del catálogo aparecerán en este bloque. Para
+                            crear o editar servicios, ve a la página
+                            <strong>Servicios</strong>.</span
+                          >
+                        </div>
+
+                        <div class="flex items-center justify-between pt-2">
+                          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                            Servicios a mostrar
+                          </p>
+                          <span class="text-xs text-gray-500">
+                            {{ bloque.serviciosIds?.length || 0 }} /
+                            {{ catalogo.getServicios().length }} seleccionados
+                          </span>
+                        </div>
+
+                        <div
+                          *ngFor="let s of catalogo.getServicios()"
+                          class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+                        >
+                          <button
+                            type="button"
+                            (click)="toggleServicioEnBloque(bloque, s.id)"
+                            class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+                            [class.bg-green-500]="estaServicioEnBloque(bloque, s.id)"
+                            [class.bg-gray-300]="!estaServicioEnBloque(bloque, s.id)"
+                          >
+                            <span
+                              class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                              [class.translate-x-5]="estaServicioEnBloque(bloque, s.id)"
+                            ></span>
+                          </button>
+                          <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-800 truncate">
+                              {{ s.titulo }}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                              {{ etiquetaCategoriaServicio(s.categoria) }}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Formulario de Contacto -->
+                      <div *ngSwitchCase="'contacto'" class="space-y-3">
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.titulo"
+                          placeholder="Título del formulario"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.subtitulo"
+                          placeholder="Descripción"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+
+                        <p
+                          class="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-3"
+                        >
+                          Campos del formulario
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                          <span
+                            *ngFor="let campo of bloque.campos; let i = index"
+                            class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium"
+                          >
+                            {{ campo }}
+                            <button
+                              (click)="eliminarCampoFormulario(bloque, i)"
+                              class="hover:text-blue-900"
+                            >
+                              <svg
+                                class="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </button>
+                          </span>
+                        </div>
+
+                        <div class="flex gap-2">
+                          <input
+                            #nuevoCampo
+                            type="text"
+                            placeholder="Nombre del campo (ej: Empresa)"
+                            class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                          />
+                          <button
+                            (click)="
+                              agregarCampoFormulario(bloque, nuevoCampo.value);
+                              nuevoCampo.value = ''
+                            "
+                            class="px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium transition-colors"
+                          >
+                            Agregar
+                          </button>
+                        </div>
+
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.textoBoton"
+                          placeholder="Texto del botón de envío"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                      </div>
+
+                      <!-- Mapa -->
+                      <div *ngSwitchCase="'mapa'" class="space-y-3">
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.titulo"
+                          placeholder="Título de la sección"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                        <input
+                          type="text"
+                          [(ngModel)]="bloque.direccion"
+                          placeholder="Dirección a mostrar"
+                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                        />
+                        <p class="text-xs text-gray-500">
+                          El mapa se generará automáticamente con la dirección
+                        </p>
+                      </div>
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECCIÓN 4: SEO -->
+            <div *ngIf="seccionActiva === 'seo'" class="p-4 md:p-8 max-w-3xl">
+              <div class="mb-6">
+                <h3 class="text-2xl font-bold text-gray-900">SEO y compartir</h3>
+                <p class="text-sm text-gray-500 mt-1">
+                  Optimiza cómo aparece esta página en Google y redes sociales
+                </p>
+              </div>
+
+              <div class="space-y-5">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-gray-500"
+                      >Meta título</label
+                    >
+                    <span class="text-xs text-gray-400"
+                      >{{ formNuevaPagina.seo.metaTitle.length }} / 60</span
+                    >
+                  </div>
+                  <input
+                    type="text"
+                    [(ngModel)]="formNuevaPagina.seo.metaTitle"
+                    maxlength="60"
+                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-semibold uppercase tracking-wider text-gray-500"
+                      >Meta descripción</label
+                    >
+                    <span class="text-xs text-gray-400"
+                      >{{ formNuevaPagina.seo.metaDescription.length }} / 160</span
+                    >
+                  </div>
+                  <textarea
+                    [(ngModel)]="formNuevaPagina.seo.metaDescription"
+                    rows="3"
+                    maxlength="160"
+                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white resize-none"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label
+                    class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+                    >Palabras clave</label
+                  >
+                  <input
+                    type="text"
+                    [(ngModel)]="formNuevaPagina.seo.keywords"
+                    placeholder="Separadas por comas"
+                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                  />
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl p-4 mt-6">
+                  <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+                    Vista previa en Google
+                  </p>
+                  <p class="text-xs text-gray-700 mb-1">
+                    vortizarquitectos.com/pages/{{ formNuevaPagina.slug || 'mi-pagina' }}
+                  </p>
+                  <h4 class="text-lg text-blue-700 hover:underline cursor-pointer mb-1">
+                    {{
+                      formNuevaPagina.seo.metaTitle ||
+                        formNuevaPagina.titulo ||
+                        'Título de la página'
+                    }}
+                  </h4>
+                  <p class="text-sm text-gray-600">
+                    {{
+                      formNuevaPagina.seo.metaDescription ||
+                        formNuevaPagina.descripcion ||
+                        'Descripción de la página...'
+                    }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECCIÓN 5: CONFIGURACIÓN -->
+            <div *ngIf="seccionActiva === 'config'" class="p-4 md:p-8 max-w-3xl">
+              <div class="mb-6">
+                <h3 class="text-2xl font-bold text-gray-900">Configuración avanzada</h3>
+                <p class="text-sm text-gray-500 mt-1">
+                  Controla cómo y cuándo se publica esta página
+                </p>
+              </div>
+
+              <div class="space-y-6">
+                <div>
+                  <label
+                    class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3"
+                    >Estado de publicación</label
+                  >
+                  <div class="grid grid-cols-3 gap-2">
+                    <button
+                      (click)="formNuevaPagina.estado = 'borrador'"
+                      class="p-4 rounded-xl border-2 transition-all"
+                      [class.border-orange-500]="formNuevaPagina.estado === 'borrador'"
+                      [class.bg-orange-50]="formNuevaPagina.estado === 'borrador'"
+                      [class.border-gray-200]="formNuevaPagina.estado !== 'borrador'"
+                    >
+                      <p class="text-sm font-semibold">Borrador</p>
+                      <p class="text-xs text-gray-500 mt-1">Solo visible para ti</p>
+                    </button>
+                    <button
+                      (click)="formNuevaPagina.estado = 'publicada'"
+                      class="p-4 rounded-xl border-2 transition-all"
+                      [class.border-green-500]="formNuevaPagina.estado === 'publicada'"
+                      [class.bg-green-50]="formNuevaPagina.estado === 'publicada'"
+                      [class.border-gray-200]="formNuevaPagina.estado !== 'publicada'"
+                    >
+                      <p class="text-sm font-semibold">Publicada</p>
+                      <p class="text-xs text-gray-500 mt-1">Visible al público</p>
+                    </button>
+                    <button
+                      (click)="formNuevaPagina.estado = 'programada'"
+                      class="p-4 rounded-xl border-2 transition-all"
+                      [class.border-blue-500]="formNuevaPagina.estado === 'programada'"
+                      [class.bg-blue-50]="formNuevaPagina.estado === 'programada'"
+                      [class.border-gray-200]="formNuevaPagina.estado !== 'programada'"
+                    >
+                      <p class="text-sm font-semibold">Programada</p>
+                      <p class="text-xs text-gray-500 mt-1">Se publica después</p>
+                    </button>
+                  </div>
+                </div>
+
+                <div *ngIf="formNuevaPagina.estado === 'programada'">
+                  <label
+                    class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+                    >Fecha de publicación</label
+                  >
+                  <input
+                    type="datetime-local"
+                    [(ngModel)]="formNuevaPagina.fechaPublicacion"
+                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3"
+                    >Visibilidad</label
+                  >
+                  <div class="space-y-2">
+                    <label
+                      class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        [(ngModel)]="formNuevaPagina.visibilidad"
+                        value="publica"
+                        class="accent-[#0a4d7a]"
+                      />
+                      <div>
+                        <p class="text-sm font-semibold text-gray-900">Pública</p>
+                        <p class="text-xs text-gray-500">Cualquier persona puede acceder</p>
+                      </div>
+                    </label>
+                    <label
+                      class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        [(ngModel)]="formNuevaPagina.visibilidad"
+                        value="registrados"
+                        class="accent-[#0a4d7a]"
+                      />
+                      <div>
+                        <p class="text-sm font-semibold text-gray-900">Solo registrados</p>
+                        <p class="text-xs text-gray-500">Requiere iniciar sesión</p>
+                      </div>
+                    </label>
+                    <label
+                      class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        [(ngModel)]="formNuevaPagina.visibilidad"
+                        value="contrasena"
+                        class="accent-[#0a4d7a]"
+                      />
+                      <div>
+                        <p class="text-sm font-semibold text-gray-900">Con contraseña</p>
+                        <p class="text-xs text-gray-500">Requiere contraseña para ver</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                  <button
+                    (click)="formNuevaPagina.mostrarEnMenu = !formNuevaPagina.mostrarEnMenu"
+                    class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+                    [class.bg-green-500]="formNuevaPagina.mostrarEnMenu"
+                    [class.bg-gray-300]="!formNuevaPagina.mostrarEnMenu"
+                  >
+                    <span
+                      class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                      [class.translate-x-5]="formNuevaPagina.mostrarEnMenu"
+                    ></span>
+                  </button>
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-gray-900">Mostrar en menú principal</p>
+                    <p class="text-xs text-gray-500">La página aparecerá en el navbar del sitio</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                  <button
+                    (click)="
+                      formNuevaPagina.permitirComentarios = !formNuevaPagina.permitirComentarios
+                    "
+                    class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+                    [class.bg-green-500]="formNuevaPagina.permitirComentarios"
+                    [class.bg-gray-300]="!formNuevaPagina.permitirComentarios"
+                  >
+                    <span
+                      class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                      [class.translate-x-5]="formNuevaPagina.permitirComentarios"
+                    ></span>
+                  </button>
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-gray-900">Permitir comentarios</p>
+                    <p class="text-xs text-gray-500">Los visitantes podrán dejar comentarios</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div
+          class="border-t border-gray-200 bg-white p-3 md:p-4 flex flex-wrap items-center justify-between gap-2 shrink-0"
+        >
+          <button
+            (click)="cerrarNuevaPagina()"
+            class="hidden sm:block px-5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+          >
+            Cancelar
+          </button>
+          <div class="flex flex-wrap gap-2 w-full sm:w-auto sm:justify-end">
+            <button
+              (click)="irAnterior()"
+              *ngIf="seccionActiva !== 'plantilla'"
+              class="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-xs sm:text-sm whitespace-nowrap"
+            >
+              ← Anterior
+            </button>
+            <button
+              (click)="irSiguiente()"
+              *ngIf="seccionActiva !== 'config'"
+              class="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap"
+            >
+              Siguiente →
+            </button>
+            <button
+              (click)="guardarPagina(false)"
+              class="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap"
+            >
+              Borrador
+            </button>
+            <button
+              (click)="guardarPagina(true)"
+              [disabled]="!formNuevaPagina.titulo.trim()"
+              class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-5 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-xs sm:text-sm font-medium shadow-md transition-all hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              <svg
+                class="w-4 h-4 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Publicar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Editar página fija -->
+    <div
+      *ngIf="mostrarEditarPaginaFija && paginaEditando"
+      class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-2 sm:p-4 animate-[fadeIn_0.2s_ease-out]"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[92vh] flex flex-col overflow-hidden"
+      >
+        <!-- HEADER -->
+        <div
+          class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-5 flex items-center justify-between shrink-0"
+        >
+          <div class="flex items-center gap-4">
+            <div class="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center">
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs text-gray-300 uppercase tracking-wider">Editando página</p>
+              <h2 class="text-lg md:text-xl font-bold truncate">{{ paginaEditando.titulo }}</h2>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span
+              *ngIf="mensajeGuardado"
+              class="hidden sm:inline-block text-xs px-3 py-1.5 text-white rounded-full font-medium animate-[fadeIn_0.2s_ease-out]"
+              [class.bg-green-500]="tipoMensaje === 'exito'"
+              [class.bg-amber-500]="tipoMensaje === 'info'"
+            >
+              <ng-container *ngIf="tipoMensaje === 'exito'">✓ </ng-container>
+              {{ mensajeGuardado }}
+            </span>
+            <button
+              (click)="previsualizarPagina(paginaEditando)"
+              class="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors shrink-0"
+            >
+              <svg
+                class="w-3.5 h-3.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+              <span class="hidden sm:inline">Previsualizar</span>
+            </button>
+            <button
+              (click)="pedirCerrarEditarPagina()"
+              class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- BODY: SIDEBAR + EDITOR -->
+        <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+          <!-- SIDEBAR DE SECCIONES -->
+          <div
+            class="w-full md:w-72 border-b md:border-b-0 md:border-r border-gray-200 bg-gray-50 shrink-0 flex flex-col overflow-hidden md:overflow-y-auto"
+          >
+            <div class="hidden md:block p-4 border-b border-gray-200">
+              <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Secciones</p>
+              <p class="text-xs text-gray-400 mt-1">Selecciona una sección para editarla</p>
+            </div>
+            <nav class="p-3 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible">
+              <button
+                *ngFor="let s of seccionesPaginaActual"
+                (click)="seleccionarSeccionEdicion(s.id)"
+                class="shrink-0 md:w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left whitespace-nowrap"
+                [class.bg-[#0a4d7a]]="seccionEditandoActiva === s.id"
+                [class.text-white]="seccionEditandoActiva === s.id"
+                [class.shadow-md]="seccionEditandoActiva === s.id"
+                [class.text-gray-600]="seccionEditandoActiva !== s.id"
+                [class.hover:bg-white]="seccionEditandoActiva !== s.id"
+              >
+                <span class="text-lg">{{ s.icono }}</span>
+                <span class="md:flex-1">{{ s.nombre }}</span>
+                <svg
+                  *ngIf="seccionEditandoActiva === s.id"
+                  class="hidden md:block w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </nav>
+          </div>
+
+          <!-- EDITOR DE CAMPOS -->
+          <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div *ngIf="seccionActualSchema" class="max-w-3xl">
+              <div class="mb-6 pb-4 border-b border-gray-100">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="text-3xl">{{ seccionActualSchema.icono }}</span>
+                  <h3 class="text-2xl font-bold text-gray-900">{{ seccionActualSchema.nombre }}</h3>
+                </div>
+                <p class="text-sm text-gray-500">Edita los textos e imágenes de esta sección</p>
+              </div>
+
+              <div class="space-y-5">
+                <div *ngFor="let campo of seccionActualSchema.campos">
+                  <label
+                    class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2"
+                  >
+                    {{ campo.label }}
+                  </label>
+
+                  <!-- Texto / URL -->
+                  <input
+                    *ngIf="campo.tipo === 'texto' || campo.tipo === 'url'"
+                    type="text"
+                    [value]="contenidoSeccionActual[campo.key] || ''"
+                    (input)="actualizarCampo(campo.key, $any($event.target).value)"
+                    [placeholder]="campo.placeholder || ''"
+                    [attr.maxlength]="campo.maxLength || null"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+                  />
+
+                  <!-- Textarea -->
+                  <textarea
+                    *ngIf="campo.tipo === 'textarea'"
+                    rows="4"
+                    [value]="contenidoSeccionActual[campo.key] || ''"
+                    (input)="actualizarCampo(campo.key, $any($event.target).value)"
+                    [placeholder]="campo.placeholder || ''"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"
+                  ></textarea>
+
+                  <!-- Imagen -->
+                  <div *ngIf="campo.tipo === 'imagen'" class="space-y-2">
+                    <app-image-upload
+                      [valor]="contenidoSeccionActual[campo.key] || ''"
+                      (valorChange)="actualizarCampo(campo.key, $event)"
+                      carpeta="paginas"
+                      aspectRatio="wide"
+                    ></app-image-upload>
+                  </div>
+
+                  <!-- Selección múltiple (toggles) -->
+                  <div *ngIf="campo.tipo === 'seleccion'" class="space-y-2">
+                    <p
+                      *ngIf="campo.limite"
+                      class="text-xs font-semibold"
+                      [class.text-gray-500]="!limiteAlcanzado(campo)"
+                      [class.text-amber-600]="limiteAlcanzado(campo)"
+                    >
+                      {{ contarSeleccionados(campo.key) }} / {{ campo.limite }} seleccionados
+                    </p>
+                    <div
+                      *ngFor="let op of opcionesDe(campo)"
+                      class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+                    >
+                      <button
+                        type="button"
+                        (click)="toggleSeleccion(campo, op.value)"
+                        [disabled]="
+                          !estaSeleccionado(campo.key, op.value) && limiteAlcanzado(campo)
+                        "
+                        class="relative w-11 h-6 rounded-full transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                        [class.bg-green-500]="estaSeleccionado(campo.key, op.value)"
+                        [class.bg-gray-300]="!estaSeleccionado(campo.key, op.value)"
+                      >
+                        <span
+                          class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                          [class.translate-x-5]="estaSeleccionado(campo.key, op.value)"
+                        ></span>
+                      </button>
+                      <span class="text-sm font-medium text-gray-800">{{ op.label }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Lista dinámica de items (stats, pasos, valores, etc.) -->
+                  <div *ngIf="campo.tipo === 'lista'" class="space-y-3">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm text-gray-500">
+                          {{ obtenerLista(campo).length }} items
+                          <span *ngIf="campo.maxItems"> / máximo {{ campo.maxItems }}</span>
+                        </p>
+                        <p *ngIf="campo.ayuda" class="text-xs text-gray-400 mt-1">
+                          {{ campo.ayuda }}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        (click)="agregarItemLista(campo)"
+                        [disabled]="campo.maxItems && obtenerLista(campo).length >= campo.maxItems"
+                        class="flex items-center gap-1.5 px-3 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-medium transition-colors shrink-0"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                          viewBox="0 0 24 24"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Agregar item
+                      </button>
+                    </div>
+
+                    <!-- Empty state -->
+                    <div
+                      *ngIf="obtenerLista(campo).length === 0"
+                      class="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200"
+                    >
+                      <p class="text-sm text-gray-500">No hay items aún</p>
+                      <p class="text-xs text-gray-400 mt-1">
+                        Haz clic en "Agregar item" para empezar
+                      </p>
+                    </div>
+
+                    <!-- Lista con drag-and-drop -->
+                    <div
+                      *ngIf="obtenerLista(campo).length > 0"
+                      class="space-y-2"
+                      cdkDropList
+                      (cdkDropListDropped)="reordenarItemLista(campo, $event)"
+                    >
+                      <div
+                        *ngFor="
+                          let item of obtenerLista(campo);
+                          let i = index;
+                          trackBy: trackItemLista
+                        "
+                        cdkDrag
+                        class="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden"
+                      >
+                        <!-- Header del item -->
+                        <div class="flex items-center gap-2 p-3 bg-gray-100/50">
+                          <button
+                            type="button"
+                            cdkDragHandle
+                            class="text-gray-400 hover:text-gray-700 cursor-grab active:cursor-grabbing p-1 shrink-0"
+                            title="Arrastrar para reordenar"
+                          >
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                              <circle cx="9" cy="6" r="1.5" />
+                              <circle cx="15" cy="6" r="1.5" />
+                              <circle cx="9" cy="12" r="1.5" />
+                              <circle cx="15" cy="12" r="1.5" />
+                              <circle cx="9" cy="18" r="1.5" />
+                              <circle cx="15" cy="18" r="1.5" />
+                            </svg>
+                          </button>
+
+                          <span
+                            class="w-7 h-7 rounded-full bg-[#0a4d7a] text-white flex items-center justify-center text-xs font-bold shrink-0"
+                          >
+                            {{ i + 1 }}
+                          </span>
+
+                          <p class="flex-1 text-sm font-semibold text-gray-800 truncate">
+                            {{ labelDeItem(campo, item, i) }}
+                          </p>
+
+                          <button
+                            type="button"
+                            (click)="eliminarItemLista(campo, i)"
+                            class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                            title="Eliminar"
+                          >
+                            <svg
+                              class="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <!-- Campos del item -->
+                        <div class="p-3 space-y-2 bg-white">
+                          <div *ngFor="let itemKey of keysDeTemplate(campo)">
+                            <label
+                              class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1"
+                            >
+                              {{ campo.itemTemplate![itemKey].label }}
+                            </label>
+                            <input
+                              *ngIf="campo.itemTemplate![itemKey].tipo === 'texto'"
+                              type="text"
+                              [value]="item[itemKey] || ''"
+                              (input)="
+                                actualizarItemLista(campo, i, itemKey, $any($event.target).value)
+                              "
+                              [placeholder]="campo.itemTemplate![itemKey].placeholder || ''"
+                              [attr.maxlength]="campo.itemTemplate![itemKey].maxLength || null"
+                              class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+                            />
+                            <textarea
+                              *ngIf="campo.itemTemplate![itemKey].tipo === 'textarea'"
+                              rows="2"
+                              [value]="item[itemKey] || ''"
+                              (input)="
+                                actualizarItemLista(campo, i, itemKey, $any($event.target).value)
+                              "
+                              [placeholder]="campo.itemTemplate![itemKey].placeholder || ''"
+                              class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"
+                            ></textarea>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- CRUD del catálogo de servicios -->
+                  <div
+                    *ngIf="campo.tipo === 'catalogo' && campo.fuente === 'servicios'"
+                    class="space-y-3"
+                  >
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm text-gray-500">
+                          {{ serviciosDraft.length }} servicios en el catálogo
+                        </p>
+                        <p class="text-xs text-amber-600">
+                          Los cambios se aplican al sitio al presionar «Guardar cambios».
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        (click)="nuevoServicio()"
+                        class="flex items-center gap-1.5 px-3 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-xs font-medium transition-colors"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                          viewBox="0 0 24 24"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Nuevo servicio
+                      </button>
+                    </div>
+
+                    <!-- Formulario alta/edición -->
+                    <div
+                      *ngIf="servicioFormAbierto"
+                      class="border border-[#0a4d7a]/30 bg-blue-50/40 rounded-xl p-4 space-y-3"
+                    >
+                      <p class="text-sm font-bold text-gray-800">
+                        {{ servicioEditandoId ? 'Editar servicio' : 'Nuevo servicio' }}
+                      </p>
+
+                      <input
+                        type="text"
+                        [(ngModel)]="servicioForm.titulo"
+                        placeholder="Título del servicio"
+                        class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
+                      />
+
+                      <textarea
+                        [(ngModel)]="servicioForm.descripcion"
+                        rows="3"
+                        placeholder="Descripción"
+                        class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] resize-none"
+                      ></textarea>
+
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-semibold text-gray-500 mb-1"
+                            >Categoría</label
+                          >
+                          <select
+                            [(ngModel)]="servicioForm.categoria"
+                            class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
+                          >
+                            <option *ngFor="let c of categoriasServicio" [value]="c.value">
+                              {{ c.label }}
+                            </option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold text-gray-500 mb-1"
+                            >Ícono</label
+                          >
+                          <select
+                            [(ngModel)]="servicioForm.icono"
+                            class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
+                          >
+                            <option *ngFor="let ic of iconosServicio" [value]="ic">{{ ic }}</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <app-image-upload
+                        label="Imagen del servicio"
+                        [valor]="servicioForm.imagen || ''"
+                        (valorChange)="servicioForm.imagen = $event"
+                        carpeta="servicios"
+                        aspectRatio="wide"
+                      ></app-image-upload>
+
+                      <div class="flex justify-end gap-2 pt-1">
+                        <button
+                          type="button"
+                          (click)="cancelarServicioForm()"
+                          class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          (click)="guardarServicioCat()"
+                          [disabled]="!servicioForm.titulo.trim()"
+                          class="px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {{ guardandoServicio ? 'Guardando...' : 'Guardar' }}
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Lista -->
+                    <!-- Lista -->
+                    <div
+                      class="space-y-2"
+                      cdkDropList
+                      (cdkDropListDropped)="reordenarServicio($event)"
+                    >
+                      <div
+                        *ngFor="let s of serviciosDraft; trackBy: trackServicio"
+                        cdkDrag
+                        class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
+                      >
+                        <!-- Handle de arrastre -->
+                        <button
+                          type="button"
+                          cdkDragHandle
+                          class="text-gray-400 hover:text-gray-700 cursor-grab active:cursor-grabbing p-1 -ml-1 shrink-0"
+                          title="Arrastrar para reordenar"
+                        >
+                          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <circle cx="9" cy="6" r="1.5" />
+                            <circle cx="15" cy="6" r="1.5" />
+                            <circle cx="9" cy="12" r="1.5" />
+                            <circle cx="15" cy="12" r="1.5" />
+                            <circle cx="9" cy="18" r="1.5" />
+                            <circle cx="15" cy="18" r="1.5" />
+                          </svg>
+                        </button>
+
+                        <div
+                          class="w-10 h-10 rounded-lg bg-[#0a4d7a]/10 flex items-center justify-center shrink-0 overflow-hidden"
+                        >
+                          <img
+                            *ngIf="s.imagen"
+                            [src]="s.imagen"
+                            class="w-full h-full object-cover"
+                            (error)="$any($event.target).style.display = 'none'"
+                          />
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm font-semibold text-gray-900 truncate">{{ s.titulo }}</p>
+                          <p class="text-xs text-gray-500">
+                            {{ etiquetaCategoriaServicio(s.categoria) }} · {{ s.icono }}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          (click)="editarServicioCat(s)"
+                          class="p-2 text-[#0a4d7a] hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Editar"
+                        >
+                          <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          (click)="pedirEliminarServicio(s)"
+                          class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Eliminar"
+                        >
+                          <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- CRUD del catálogo de proyectos -->
+                  <div
+                    *ngIf="campo.tipo === 'catalogo' && campo.fuente === 'proyectos'"
+                    class="space-y-3"
+                  >
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm text-gray-500">
+                          {{ proyectosDraft.length }} proyectos en el catálogo
+                        </p>
+                        <p class="text-xs text-amber-600">
+                          Los cambios se aplican al sitio al presionar «Guardar cambios».
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        (click)="nuevoProyecto()"
+                        class="flex items-center gap-1.5 px-3 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-xs font-medium transition-colors shrink-0"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                          viewBox="0 0 24 24"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Nuevo proyecto
+                      </button>
+                    </div>
+
+                    <!-- Formulario alta/edición -->
+                    <div
+                      *ngIf="proyectoFormAbierto"
+                      class="border border-[#0a4d7a]/30 bg-blue-50/40 rounded-xl p-4 space-y-3"
+                    >
+                      <p class="text-sm font-bold text-gray-800">
+                        {{ proyectoEditandoId ? 'Editar proyecto' : 'Nuevo proyecto' }}
+                      </p>
+
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-semibold text-gray-500 mb-1"
+                            >Nombre</label
+                          >
+                          <input
+                            type="text"
+                            [(ngModel)]="proyectoForm.nombre"
+                            placeholder="Ej: Toyota"
+                            class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold text-gray-500 mb-1"
+                            >Iniciales (sigla)</label
+                          >
+                          <input
+                            type="text"
+                            [(ngModel)]="proyectoForm.iniciales"
+                            maxlength="3"
+                            placeholder="TY"
+                            class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-bold uppercase outline-none focus:border-[#0a4d7a]"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-semibold text-gray-500 mb-1"
+                            >Categoría</label
+                          >
+                          <select
+                            [(ngModel)]="proyectoForm.categoria"
+                            class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
+                          >
+                            <option *ngFor="let c of categoriasProyecto" [value]="c.value">
+                              {{ c.label }}
+                            </option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold text-gray-500 mb-1">Año</label>
+                          <input
+                            type="number"
+                            [(ngModel)]="proyectoForm.anio"
+                            class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1"
+                          >Ubicación</label
+                        >
+                        <input
+                          type="text"
+                          [(ngModel)]="proyectoForm.ubicacion"
+                          placeholder="Ej: Durango"
+                          class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
+                        />
+                      </div>
+
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1"
+                          >Color de marca</label
+                        >
+                        <div class="flex items-center gap-2">
+                          <input
+                            type="color"
+                            [(ngModel)]="proyectoForm.colorMarca"
+                            class="h-10 w-12 border border-gray-200 rounded-lg cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            [(ngModel)]="proyectoForm.colorMarca"
+                            placeholder="#0a4d7a"
+                            class="flex-1 px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-mono outline-none focus:border-[#0a4d7a]"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <app-image-upload
+                          label="Logo del cliente"
+                          [valor]="proyectoForm.logoUrl || ''"
+                          (valorChange)="proyectoForm.logoUrl = $event"
+                          carpeta="clientes"
+                          aspectRatio="square"
+                        ></app-image-upload>
+                      </div>
+
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1"
+                          >Descripción</label
+                        >
+                        <textarea
+                          [(ngModel)]="proyectoForm.descripcion"
+                          rows="2"
+                          placeholder="Breve descripción del proyecto"
+                          class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] resize-none"
+                        ></textarea>
+                      </div>
+
+                      <div class="flex justify-end gap-2 pt-1">
+                        <button
+                          type="button"
+                          (click)="cancelarProyectoForm()"
+                          class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          (click)="guardarProyectoCat()"
+                          [disabled]="!proyectoForm.nombre.trim()"
+                          class="px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          Guardar
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Lista con drag -->
+                    <div
+                      class="space-y-2"
+                      cdkDropList
+                      (cdkDropListDropped)="reordenarProyecto($event)"
+                    >
+                      <div
+                        *ngFor="let p of proyectosDraft; trackBy: trackProyecto"
+                        cdkDrag
+                        class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
+                      >
+                        <button
+                          type="button"
+                          cdkDragHandle
+                          class="text-gray-400 hover:text-gray-700 cursor-grab active:cursor-grabbing p-1 -ml-1 shrink-0"
+                          title="Arrastrar para reordenar"
+                        >
+                          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <circle cx="9" cy="6" r="1.5" />
+                            <circle cx="15" cy="6" r="1.5" />
+                            <circle cx="9" cy="12" r="1.5" />
+                            <circle cx="15" cy="12" r="1.5" />
+                            <circle cx="9" cy="18" r="1.5" />
+                            <circle cx="15" cy="18" r="1.5" />
+                          </svg>
+                        </button>
+
+                        <div
+                          class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 overflow-hidden p-1"
+                          [style.background-color]="p.logoUrl ? '#f3f4f6' : p.colorMarca"
+                        >
+                          <img
+                            *ngIf="p.logoUrl"
+                            [src]="p.logoUrl"
+                            class="max-w-full max-h-full object-contain"
+                            (error)="$any($event.target).style.display = 'none'"
+                          />
+                          <span *ngIf="!p.logoUrl" class="text-white font-bold text-xs">{{
+                            p.iniciales
+                          }}</span>
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm font-semibold text-gray-900 truncate">{{ p.nombre }}</p>
+                          <p class="text-xs text-gray-500 truncate">
+                            {{ etiquetaCategoriaProyecto(p.categoria) }} · {{ p.ubicacion }} ·
+                            {{ p.anio }}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          (click)="editarProyectoCat(p)"
+                          class="p-2 text-[#0a4d7a] hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Editar"
+                        >
+                          <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          (click)="pedirEliminarProyecto(p)"
+                          class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Eliminar"
+                        >
+                          <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <p *ngIf="campo.ayuda" class="text-xs text-gray-400 mt-2">{{ campo.ayuda }}</p>
+
+                  <!-- Vista previa en vivo (solo para campos con formato) -->
+                  <div
+                    *ngIf="campo.ayuda && contenidoSeccionActual[campo.key]"
+                    class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100"
+                  >
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
+                      Vista previa
+                    </p>
+                    <p
+                      class="text-lg font-bold text-gray-900 leading-snug"
+                      [innerHTML]="contenidoSeccionActual[campo.key] | formatoTexto"
+                    ></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div
+          class="border-t border-gray-200 bg-white p-3 md:p-4 flex justify-between items-center shrink-0"
+        >
+          <button
+            (click)="pedirCerrarEditarPagina()"
+            class="px-5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+          >
+            Cancelar
+          </button>
+          <div class="flex gap-2">
+            <button
+              (click)="pedirGuardarEdicionPagina()"
+              [disabled]="guardandoServicio"
+              class="flex items-center gap-2 px-5 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Guardar cambios
+              <kbd
+                class="hidden md:inline-block ml-1 px-1.5 py-0.5 text-[10px] font-mono bg-white/20 rounded"
+                >⌘S</kbd
+              >
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Preview de página -->
+    <div
+      *ngIf="mostrarPreviewPagina && paginaPrevisualizando"
+      class="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-2 sm:p-4 animate-[fadeIn_0.2s_ease-out]"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[94vh] flex flex-col overflow-hidden"
+      >
+        <!-- Header -->
+        <div
+          class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-4 flex items-center justify-between shrink-0"
+        >
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center shrink-0">
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs text-gray-300 uppercase tracking-wider">Vista previa</p>
+              <h2 class="text-base sm:text-lg font-bold truncate">
+                {{ paginaPrevisualizando.titulo }}
+              </h2>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <!-- Toggle de dispositivos (solo tablet+) -->
+            <div class="flex bg-white/10 rounded-lg p-1">
+              <button
+                (click)="dispositivoPreview = 'desktop'"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all"
+                [class.bg-white]="dispositivoPreview === 'desktop'"
+                [class.text-gray-900]="dispositivoPreview === 'desktop'"
+                [class.text-gray-300]="dispositivoPreview !== 'desktop'"
+              >
+                <svg
+                  class="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+                <span class="hidden sm:inline">Desktop</span>
+              </button>
+              <button
+                (click)="dispositivoPreview = 'tablet'"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all"
+                [class.bg-white]="dispositivoPreview === 'tablet'"
+                [class.text-gray-900]="dispositivoPreview === 'tablet'"
+                [class.text-gray-300]="dispositivoPreview !== 'tablet'"
+              >
+                <svg
+                  class="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                  />
+                </svg>
+                <span class="hidden sm:inline">Tablet</span>
+              </button>
+              <button
+                (click)="dispositivoPreview = 'mobile'"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all"
+                [class.bg-white]="dispositivoPreview === 'mobile'"
+                [class.text-gray-900]="dispositivoPreview === 'mobile'"
+                [class.text-gray-300]="dispositivoPreview !== 'mobile'"
+              >
+                <svg
+                  class="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                  />
+                </svg>
+                <span class="hidden sm:inline">Mobile</span>
+              </button>
+            </div>
+
+            <button
+              (click)="abrirEnPestanaNueva()"
+              class="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors"
+            >
+              <svg
+                class="w-3.5 h-3.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+              <span class="hidden sm:inline">Abrir en pestaña</span>
+            </button>
+
+            <button
+              (click)="cerrarPreviewPagina()"
+              class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Área de preview -->
+        <div class="flex flex-1 bg-gray-100 overflow-auto p-2 md:p-6 items-start justify-center">
+          <div
+            class="bg-white shadow-2xl rounded-xl overflow-hidden transition-all duration-300 mx-auto"
+            [style.width]="anchoPreview"
+            [style.height]="'100%'"
+            [style.min-height]="'600px'"
+          >
+            <iframe
+              *ngIf="urlPreviewSegura"
+              [src]="urlPreviewSegura"
+              sandbox="allow-same-origin allow-scripts allow-forms"
+              (load)="onIframeCargado($event)"
+              class="w-full h-full border-0 block"
+              title="Vista previa de la página"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Confirmar borrado de servicio -->
+    <div
+      *ngIf="servicioAEliminar"
+      class="fixed inset-0 z-[110] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
+      (click)="cancelarEliminarServicio()"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+            <svg
+              class="w-5 h-5 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">Eliminar servicio</h3>
+            <p class="text-sm text-gray-500">Esta acción no se puede deshacer.</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-700 mb-5">
+          ¿Seguro que quieres eliminar
+          <span class="font-semibold">"{{ servicioAEliminar.titulo }}"</span>? Desaparecerá del
+          sitio público.
+        </p>
+        <div class="flex justify-end gap-2">
+          <button
+            (click)="cancelarEliminarServicio()"
+            class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+          >
+            Cancelar
+          </button>
+          <button
+            (click)="confirmarEliminarServicio()"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Confirmar salir sin guardar -->
+    <div
+      *ngIf="mostrarConfirmarSalir"
+      class="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
+      (click)="cancelarSalirEditarPagina()"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="flex items-center gap-3 mb-4">
+          <div
+            class="w-11 h-11 rounded-full bg-amber-100 flex items-center justify-center shrink-0"
+          >
+            <svg
+              class="w-5 h-5 text-amber-600"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">¿Salir sin guardar?</h3>
+            <p class="text-sm text-gray-500">Tienes cambios sin guardar.</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-700 mb-5">
+          Si sales ahora, los cambios que hiciste en esta página se perderán.
+        </p>
+        <div class="flex justify-end gap-2">
+          <button
+            (click)="cancelarSalirEditarPagina()"
+            class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+          >
+            Seguir editando
+          </button>
+          <button
+            (click)="confirmarSalirSinGuardar()"
+            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium"
+          >
+            Salir sin guardar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: Confirmar guardar cambios -->
+    <div
+      *ngIf="mostrarConfirmarGuardar"
+      class="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
+      (click)="cancelarGuardarEdicionPagina()"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+            <svg
+              class="w-5 h-5 text-[#0a4d7a]"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">¿Guardar cambios?</h3>
+            <p class="text-sm text-gray-500">Se aplicarán al sitio público.</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-700 mb-5">
+          Los cambios que hiciste en esta página estarán visibles para todos los visitantes.
+        </p>
+        <div class="flex justify-end gap-2">
+          <button
+            (click)="cancelarGuardarEdicionPagina()"
+            class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+          >
+            Cancelar
+          </button>
+          <button
+            (click)="confirmarGuardarEdicionPagina()"
+            class="px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium"
+          >
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- MODAL: Confirmar borrado de proyecto -->
+    <div
+      *ngIf="proyectoAEliminar"
+      class="fixed inset-0 z-[110] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
+      (click)="cancelarEliminarProyecto()"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+            <svg
+              class="w-5 h-5 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">Eliminar proyecto</h3>
+            <p class="text-sm text-gray-500">Esta acción no se puede deshacer.</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-700 mb-5">
+          ¿Seguro que quieres eliminar
+          <span class="font-semibold">"{{ proyectoAEliminar.nombre }}"</span>? Desaparecerá del
+          sitio público.
+        </p>
+        <div class="flex justify-end gap-2">
+          <button
+            (click)="cancelarEliminarProyecto()"
+            class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+          >
+            Cancelar
+          </button>
+          <button
+            (click)="confirmarEliminarProyecto()"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- MODAL: Confirmar borrado de página -->
+    <div
+      *ngIf="paginaAEliminar"
+      class="fixed inset-0 z-[110] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
+      (click)="cancelarEliminarPagina()"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+            <svg
+              class="w-5 h-5 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">Eliminar página</h3>
+            <p class="text-sm text-gray-500">Esta acción no se puede deshacer.</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-700 mb-5">
+          ¿Seguro que quieres eliminar
+          <span class="font-semibold">"{{ paginaAEliminar.titulo }}"</span>? Desaparecerá del sitio
+          público y se borrará permanentemente.
+        </p>
+        <div class="flex justify-end gap-2">
+          <button
+            (click)="cancelarEliminarPagina()"
+            class="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium"
+          >
+            Cancelar
+          </button>
+          <button
+            (click)="confirmarEliminarPagina()"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal: Recuperar borrador pendiente -->
+  <div
+    *ngIf="borradorPendiente"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-fade-in"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+      <!-- Header con icono -->
+      <div class="p-6 border-b border-gray-100">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
+            <svg
+              class="w-6 h-6 text-[#0a4d7a]"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-gray-900 mb-1">
+              Tienes un borrador sin terminar
+            </h3>
+            <p class="text-sm text-gray-600">
+              Empezaste a crear
+              <span class="font-semibold text-[#0a4d7a]"
+                >"{{ borradorPendiente.formNuevaPagina.titulo || 'Sin título' }}"</span
+              >
+              {{ tiempoBorradorPendiente }}.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="p-4 bg-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+        <button
+          (click)="descartarBorradorPendiente()"
+          class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          Empezar de nuevo
+        </button>
+        <button
+          (click)="restaurarBorradorPendiente()"
+          class="px-4 py-2 text-sm font-medium text-white bg-[#0a4d7a] hover:bg-[#0a5d8f] rounded-lg shadow-sm transition-all hover:shadow-md"
+        >
+          Continuar editando
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

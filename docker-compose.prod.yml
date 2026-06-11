@@ -1,0 +1,83 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: vortiz_nginx_prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - vortiz_frontend_dist:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - vortiz_network
+
+  # Certbot para Let's Encrypt SSL
+  certbot:
+    image: certbot/certbot:latest
+    container_name: vortiz_certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: vortiz_frontend_prod
+    restart: unless-stopped
+    volumes:
+      - vortiz_frontend_dist:/app/dist
+    networks:
+      - vortiz_network
+
+  backend:
+    build:
+      context: ./backend
+      target: production
+    container_name: vortiz_backend_prod
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    volumes:
+      - vortiz_uploads:/app/uploads
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - vortiz_network
+
+  database:
+    image: postgres:16-alpine
+    container_name: vortiz_database_prod
+    restart: unless-stopped
+    # ⚠️ NO exponer puerto al host en producción (más seguro)
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vortiz_network
+
+networks:
+  vortiz_network:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
+  vortiz_uploads:
+  vortiz_frontend_dist:

@@ -1,0 +1,46 @@
+# syntax=docker/dockerfile:1.6
+
+# ═══════════════════════════════════════════════════════════════
+# Stage 1: Base (dev)
+# ═══════════════════════════════════════════════════════════════
+FROM node:20-alpine AS development
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 4200
+CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "4200"]
+
+# ═══════════════════════════════════════════════════════════════
+# Stage 2: Build Angular para producción
+# ═══════════════════════════════════════════════════════════════
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build -- --configuration=production
+
+# ═══════════════════════════════════════════════════════════════
+# Stage 3: Nginx sirve los archivos estáticos
+# ═══════════════════════════════════════════════════════════════
+FROM nginx:alpine AS production
+
+# Healthcheck necesita wget/curl
+RUN apk add --no-cache curl
+
+# Config personalizada de Nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copiar build de Angular
+# ⚠️ Ajusta "vortiz-frontend" al nombre real de tu proyecto Angular
+# (mira en angular.json → projects → [nombre del proyecto])
+COPY --from=builder /app/dist/Vortiz_Arquitectos/browser /usr/share/nginx/html
+
+# Healthcheck Docker
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD curl -f http://localhost:80/healthz || exit 1
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

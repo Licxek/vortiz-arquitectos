@@ -7,6 +7,8 @@
 /bazel-out
 
 # Node
+backend/node_modules
+frontend/node_modules
 /node_modules
 npm-debug.log
 yarn-error.log
@@ -30,6 +32,7 @@ yarn-error.log
 .history/*
 
 # Miscellaneous
+/frontend/.angular
 /.angular/cache
 .sass-cache/
 /connect.lock
@@ -38,8 +41,24 @@ yarn-error.log
 testem.log
 /typings
 __screenshots__/
+backend/dist
 
 # System files
 .DS_Store
 Thumbs.db
 
+# Variables de entorno
+.env
+.env.local
+.env.production
+.env.*.local
+!.env.example
+
+# Credenciales base de datos
+config/database.js
+
+# certs (NUNCA subir certificados al repo)
+certs/
+*.pem
+*.crt
+*.key

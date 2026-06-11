@@ -1,0 +1,8 @@
+<app-loading-bar />
+<app-navbar *ngIf="!ocultarChrome"></app-navbar>
+
+<main class="min-h-screen">
+  <router-outlet></router-outlet>
+</main>
+
+<app-footer *ngIf="!ocultarChrome"></app-footer>

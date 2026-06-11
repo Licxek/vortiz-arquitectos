@@ -1,0 +1,94 @@
+<!-- Versión cargando: skeleton -->
+<div
+  *ngIf="cargandoSignal"
+  class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5"
+>
+  <div class="flex items-start justify-between mb-3">
+    <app-skeleton variant="rect" width="40px" height="40px" />
+    <app-skeleton variant="rect" width="50px" height="20px" />
+  </div>
+  <app-skeleton variant="text" width="60%" height="0.75rem" class="block mb-2" />
+  <app-skeleton variant="text" width="40%" height="2rem" class="block mb-3" />
+  <app-skeleton variant="rect" width="100%" height="40px" />
+</div>
+
+<!-- Versión normal -->
+<ng-container *ngIf="!cargandoSignal">
+  <ng-container *ngIf="linkDetalle; else sinLink">
+
+    <a  [routerLink]="linkDetalle"
+      class="block bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group"
+    >
+      <ng-container *ngTemplateOutlet="contenidoTarjeta"></ng-container>
+    </a>
+  </ng-container>
+
+  <ng-template #sinLink>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <ng-container *ngTemplateOutlet="contenidoTarjeta"></ng-container>
+    </div>
+  </ng-template>
+</ng-container>
+
+<!-- Template del contenido (común para con/sin link) -->
+<ng-template #contenidoTarjeta>
+  <div class="flex items-start justify-between mb-3">
+    <!-- Ícono -->
+    <div
+      class="w-10 h-10 rounded-xl flex items-center justify-center"
+      [style.background-color]="colorFondo"
+    >
+      <svg
+        class="w-5 h-5"
+        [style.color]="color"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="iconoPath" />
+      </svg>
+    </div>
+
+    <!-- Cambio % -->
+    <div
+      *ngIf="cambioInfo() as ci"
+      class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold"
+      [ngClass]="ci.color"
+    >
+      <span>{{ ci.flecha }}</span>
+      <span>{{ ci.texto }}</span>
+    </div>
+  </div>
+
+  <!-- Título -->
+  <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
+    {{ titulo }}
+  </p>
+
+  <!-- Valor grande -->
+  <p class="text-3xl font-bold text-gray-900 mb-3">
+    {{ valorMostrar() }}<span *ngIf="sufijo" class="text-xl text-gray-400">{{ sufijo }}</span>
+  </p>
+
+  <!-- Sparkline -->
+  <div *ngIf="haySparkline()" class="h-[50px] -mx-2">
+    <apx-chart
+      [series]="chartOptions().series!"
+      [chart]="chartOptions().chart!"
+      [stroke]="chartOptions().stroke!"
+      [colors]="chartOptions().colors!"
+      [fill]="chartOptions().fill!"
+      [tooltip]="chartOptions().tooltip!"
+      [xaxis]="chartOptions().xaxis!"
+    ></apx-chart>
+  </div>
+
+  <!-- Empty state si no hay sparkline data -->
+  <div
+    *ngIf="!haySparkline()"
+    class="h-[50px] flex items-center justify-center text-xs text-gray-300"
+  >
+    Sin datos para gráfica
+  </div>
+</ng-template>

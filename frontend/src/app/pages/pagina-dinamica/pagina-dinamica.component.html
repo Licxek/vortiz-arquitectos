@@ -1,0 +1,460 @@
+<div class="bg-white min-h-screen">
+  <!-- ============ LOADING ============ -->
+  <div *ngIf="cargando()" class="animate-[fadeIn_0.2s_ease-out]">
+    <!-- Skeleton del hero -->
+    <section
+      class="relative h-[60vh] min-h-[400px] overflow-hidden bg-gradient-to-br from-[#0a1f3d] to-[#0a4d7a]"
+    >
+      <div class="relative h-full flex flex-col items-center justify-center px-4 gap-6">
+        <app-skeleton variant="rect" width="240px" height="32px" />
+        <app-skeleton variant="rect" width="80%" height="56px" />
+        <app-skeleton variant="rect" width="60%" height="20px" />
+      </div>
+    </section>
+
+    <!-- Skeleton de bloque texto -->
+    <section class="py-16 md:py-20">
+      <div class="max-w-3xl mx-auto px-4 space-y-3">
+        <app-skeleton variant="rect" width="60%" height="32px" class="block mx-auto" />
+        <app-skeleton variant="text" class="block" />
+        <app-skeleton variant="text" class="block" />
+        <app-skeleton variant="text" width="85%" class="block" />
+      </div>
+    </section>
+
+    <!-- Skeleton de imagen + texto -->
+    <section class="py-12">
+      <div class="max-w-5xl mx-auto px-4">
+        <app-skeleton variant="rect" height="400px" />
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ 404 ============ -->
+  <div *ngIf="noEncontrada()" class="py-32 max-w-2xl mx-auto px-4 text-center">
+    <div class="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
+      <svg
+        class="w-12 h-12 text-gray-400"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
+        />
+      </svg>
+    </div>
+    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">Página no encontrada</h1>
+    <p class="text-gray-600 mb-8">La página que buscas no existe o ya no está disponible.</p>
+
+    <a
+      routerLink="/"
+      class="inline-flex items-center gap-2 px-6 py-3 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-semibold shadow-md transition-all hover:-translate-y-0.5"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Volver al inicio
+    </a>
+  </div>
+
+  <!-- ============ CONTENIDO ============ -->
+  <ng-container *ngIf="pagina() as p">
+    <!-- Fallback: si no hay bloques, muestra solo título + descripción -->
+    <section *ngIf="p.bloques.length === 0" class="py-20 md:py-28">
+      <div class="max-w-3xl mx-auto px-4 text-center">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+          {{ p.titulo }}
+        </h1>
+        <p *ngIf="p.descripcion" class="text-base md:text-lg text-gray-600 mt-6 leading-relaxed">
+          {{ p.descripcion }}
+        </p>
+      </div>
+    </section>
+
+    <!-- Renderizado de bloques -->
+    <ng-container *ngFor="let bloque of p.bloques; let i = index; trackBy: trackBloque">
+      <ng-container [ngSwitch]="bloque.tipo">
+        <!-- ============ HERO ============ -->
+        <section *ngSwitchCase="'hero'" class="relative h-[60vh] min-h-[400px] overflow-hidden">
+          <!-- Imagen de fondo optimizada -->
+          <img
+            *ngIf="bloque.imagenUrl"
+            [ngSrc]="bloque.imagenUrl"
+            fill
+            [alt]="bloque.titulo || 'Hero'"
+            class="absolute inset-0 object-cover"
+            [priority]="i === 0"
+          />
+
+          <!-- Fallback gradient cuando no hay imagen -->
+          <div
+            *ngIf="!bloque.imagenUrl"
+            class="absolute inset-0 bg-gradient-to-br from-[#0a1f3d] to-[#0a4d7a]"
+          ></div>
+
+          <!-- Overlay (z-10) -->
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-black/80 via-black/55 to-[#0a1f3d]/55 z-10"
+          ></div>
+
+          <!-- Contenido (z-20) -->
+          <div
+            class="relative z-20 h-full flex flex-col items-center justify-center text-center px-4"
+          >
+            <h1
+              *ngIf="bloque.titulo"
+              class="text-4xl md:text-5xl lg:text-7xl font-bold text-white max-w-4xl leading-tight"
+              [innerHTML]="bloque.titulo | formatoTexto"
+            ></h1>
+            <p *ngIf="bloque.subtitulo" class="text-base md:text-lg text-gray-200 mt-6 max-w-2xl">
+              {{ bloque.subtitulo }}
+            </p>
+
+            <a
+              *ngIf="bloque.textoBoton"
+              routerLink="/citas"
+              class="mt-8 px-7 py-3.5 bg-white hover:bg-gray-100 text-gray-900 rounded-lg text-sm font-semibold shadow-xl transition-all hover:-translate-y-0.5"
+            >
+              {{ bloque.textoBoton }}
+            </a>
+          </div>
+        </section>
+
+        <!-- ============ TEXTO ============ -->
+        <section *ngSwitchCase="'texto'" class="py-16 md:py-20">
+          <div class="max-w-3xl mx-auto px-4">
+            <h2
+              *ngIf="bloque.titulo"
+              class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-6 leading-tight"
+              [innerHTML]="bloque.titulo | formatoTexto"
+            ></h2>
+            <div
+              *ngIf="bloque.contenido"
+              class="text-gray-700 leading-relaxed text-base md:text-lg whitespace-pre-line"
+            >
+              {{ bloque.contenido }}
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ IMAGEN ============ -->
+        <section *ngSwitchCase="'imagen'" class="py-12">
+          <div class="max-w-5xl mx-auto px-4">
+            <div
+              *ngIf="bloque.imagenUrl"
+              class="rounded-2xl overflow-hidden shadow-2xl bg-gray-100"
+            >
+              <img
+                [ngSrc]="bloque.imagenUrl"
+                width="1920"
+                height="1080"
+                [alt]="bloque.titulo || 'Imagen'"
+                class="w-full h-auto block"
+              />
+            </div>
+            <p *ngIf="bloque.titulo" class="text-center text-sm text-gray-500 mt-4 italic">
+              {{ bloque.titulo }}
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ GALERÍA ============ -->
+        <section *ngSwitchCase="'galeria'" class="py-16 md:py-20">
+          <div class="max-w-7xl mx-auto px-4">
+            <h2
+              *ngIf="bloque.titulo"
+              class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 text-center mb-10"
+            >
+              {{ bloque.titulo }}
+            </h2>
+            <div
+              *ngIf="(bloque.imagenes?.length || 0) > 0; else galeriaVacia"
+              class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4"
+            >
+              <div
+                *ngFor="let img of bloque.imagenes"
+                class="relative aspect-square rounded-xl overflow-hidden bg-gray-100 hover:shadow-xl transition-all group"
+              >
+                <img
+                  [ngSrc]="img"
+                  fill
+                  alt="Imagen de galería"
+                  class="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+            </div>
+            <ng-template #galeriaVacia>
+              <p class="text-center text-sm text-gray-400 italic">Galería sin imágenes</p>
+            </ng-template>
+          </div>
+        </section>
+
+        <!-- ============ CITA ============ -->
+        <section *ngSwitchCase="'cita'" class="py-16 md:py-20 bg-gray-50">
+          <div class="max-w-4xl mx-auto px-4 text-center">
+            <svg
+              class="w-12 h-12 text-[#0a4d7a]/30 mx-auto mb-6"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"
+              />
+            </svg>
+            <blockquote
+              *ngIf="bloque.contenido"
+              class="text-xl md:text-2xl lg:text-3xl font-medium text-gray-800 italic leading-relaxed mb-8"
+            >
+              "{{ bloque.contenido }}"
+            </blockquote>
+            <div *ngIf="bloque.titulo || bloque.subtitulo" class="space-y-1">
+              <p *ngIf="bloque.titulo" class="font-bold text-gray-900 text-base md:text-lg">
+                {{ bloque.titulo }}
+              </p>
+              <p *ngIf="bloque.subtitulo" class="text-sm text-gray-500">{{ bloque.subtitulo }}</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ CTA ============ -->
+        <section *ngSwitchCase="'cta'" class="relative py-20 md:py-24 overflow-hidden">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-[#0a1f3d] via-[#0a4d7a] to-[#0a1f3d]"
+          ></div>
+          <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-0 right-0 w-96 h-96 rounded-full bg-white blur-3xl"></div>
+          </div>
+          <div class="relative max-w-4xl mx-auto px-4 text-center">
+            <h2
+              *ngIf="bloque.titulo"
+              class="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight"
+              [innerHTML]="bloque.titulo | formatoTexto"
+            ></h2>
+            <p
+              *ngIf="bloque.subtitulo"
+              class="text-base md:text-lg text-gray-200 mt-6 max-w-2xl mx-auto"
+            >
+              {{ bloque.subtitulo }}
+            </p>
+
+            <a
+              *ngIf="bloque.textoBoton"
+              routerLink="/citas"
+              class="inline-flex items-center gap-2 mt-10 px-8 py-4 bg-white hover:bg-gray-100 text-gray-900 rounded-lg text-base font-bold shadow-2xl transition-all hover:-translate-y-1"
+            >
+              {{ bloque.textoBoton }}
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+          </div>
+        </section>
+
+        <!-- ============ ESTADÍSTICAS ============ -->
+        <section *ngSwitchCase="'estadisticas'" class="py-16 md:py-20">
+          <div class="max-w-7xl mx-auto px-4">
+            <h2
+              *ngIf="bloque.titulo"
+              class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 text-center mb-12"
+            >
+              {{ bloque.titulo }}
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-10">
+              <div *ngFor="let item of bloque.items" class="text-center">
+                <p
+                  class="text-4xl md:text-5xl lg:text-6xl font-bold text-[#0a4d7a] tabular-nums"
+                  [appContador]="item.valor || ''"
+                >
+                  {{ item.valor }}
+                </p>
+                <div class="w-12 h-0.5 bg-[#0a4d7a]/30 mx-auto my-3"></div>
+                <p class="text-sm md:text-base text-gray-600 uppercase tracking-wider font-medium">
+                  {{ item.titulo }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SERVICIOS (filtrados por selección del admin) ============ -->
+        <section *ngSwitchCase="'servicios'" class="py-16 md:py-20 bg-gray-50">
+          <div class="max-w-7xl mx-auto px-4">
+            <h2
+              *ngIf="bloque.titulo"
+              class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 text-center mb-12"
+            >
+              {{ bloque.titulo }}
+            </h2>
+
+            <!-- Mensaje si no hay servicios seleccionados -->
+            <div
+              *ngIf="serviciosDelBloque(bloque).length === 0"
+              class="text-center py-12 text-gray-400 italic"
+            >
+              No hay servicios seleccionados para mostrar en este bloque.
+            </div>
+
+            <!-- Grid de servicios -->
+            <div
+              *ngIf="serviciosDelBloque(bloque).length > 0"
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              <a
+                *ngFor="let s of serviciosDelBloque(bloque)"
+                routerLink="/servicios"
+                class="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-2xl hover:-translate-y-1 hover:border-transparent transition-all duration-300 cursor-pointer group flex flex-col"
+              >
+                <div
+                  class="relative h-44 overflow-hidden bg-gradient-to-br from-[#0a1f3d] to-[#0a4d7a]"
+                >
+                  <img
+                    *ngIf="s.imagen"
+                    [ngSrc]="s.imagen"
+                    fill
+                    [alt]="s.titulo"
+                    class="object-cover opacity-70 group-hover:opacity-90 group-hover:scale-110 transition-all duration-700"
+                  />
+                  <div
+                    class="absolute inset-0 bg-gradient-to-t from-[#0a1f3d] via-[#0a1f3d]/30 to-transparent"
+                  ></div>
+
+                  <span
+                    class="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-sm text-[#0a4d7a]"
+                  >
+                    {{ etiquetaCategoriaServicio(s.categoria) }}
+                  </span>
+                </div>
+
+                <div class="p-5 flex-1 flex flex-col">
+                  <h3
+                    class="text-base md:text-lg font-bold text-gray-900 leading-snug group-hover:text-[#0a4d7a] transition-colors line-clamp-2 mb-2"
+                  >
+                    {{ s.titulo }}
+                  </h3>
+                  <p class="text-sm text-gray-500 leading-relaxed line-clamp-3 flex-1">
+                    {{ s.descripcion }}
+                  </p>
+                  <div class="mt-4 flex items-center gap-2 text-xs font-semibold text-[#0a4d7a]">
+                    Ver detalle
+                    <svg
+                      class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M14 5l7 7m0 0l-7 7m7-7H3"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ CONTACTO ============ -->
+        <section *ngSwitchCase="'contacto'" class="py-16 md:py-20 bg-gray-50">
+          <div class="max-w-2xl mx-auto px-4">
+            <div class="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100">
+              <h2 *ngIf="bloque.titulo" class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                {{ bloque.titulo }}
+              </h2>
+              <p *ngIf="bloque.subtitulo" class="text-gray-600 mb-6">{{ bloque.subtitulo }}</p>
+
+              <div class="space-y-3" *ngIf="(bloque.campos?.length || 0) > 0">
+                <input
+                  *ngFor="let campo of bloque.campos"
+                  type="text"
+                  [placeholder]="campo"
+                  readonly
+                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 outline-none cursor-pointer focus:border-[#0a4d7a]"
+                />
+              </div>
+
+              <a
+                routerLink="/citas"
+                class="block mt-6 w-full px-6 py-4 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white text-center rounded-xl text-sm md:text-base font-bold shadow-md transition-all hover:-translate-y-0.5"
+              >
+                {{ bloque.textoBoton || 'Agendar una cita' }}
+              </a>
+
+              <p class="text-xs text-center text-gray-500 mt-4">
+                Te redirigimos a nuestro formulario completo de citas
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ MAPA ============ -->
+        <section *ngSwitchCase="'mapa'" class="py-16 md:py-20">
+          <div class="max-w-5xl mx-auto px-4">
+            <h2
+              *ngIf="bloque.titulo"
+              class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 text-center mb-4"
+            >
+              {{ bloque.titulo }}
+            </h2>
+            <p *ngIf="bloque.direccion" class="text-center text-gray-600 mb-8">
+              <svg
+                class="inline w-4 h-4 mr-1 text-[#0a4d7a]"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              {{ bloque.direccion }}
+            </p>
+            <div class="rounded-2xl overflow-hidden shadow-xl border border-gray-200">
+              <iframe
+                [src]="urlMapa(bloque.direccion)"
+                width="100%"
+                height="450"
+                style="border: 0"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                [title]="bloque.titulo || 'Ubicación'"
+              ></iframe>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ FALLBACK (tipo desconocido) ============ -->
+        <section *ngSwitchDefault class="py-8">
+          <div class="max-w-3xl mx-auto px-4">
+            <div
+              class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800"
+            >
+              ⚠️ Bloque de tipo "{{ bloque.tipo }}" aún no soportado
+            </div>
+          </div>
+        </section>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+</div>
