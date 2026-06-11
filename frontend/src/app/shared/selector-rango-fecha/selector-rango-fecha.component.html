@@ -1,0 +1,60 @@
+<div class="relative" (click)="$event.stopPropagation()">
+  <button
+    (click)="toggle($event)"
+    type="button"
+    class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg text-sm font-medium text-gray-700 transition-all"
+  >
+    <svg
+      class="w-4 h-4 text-gray-400"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+    </svg>
+    {{ rangoActual().label }}
+    <svg
+      class="w-4 h-4 text-gray-500 transition-transform"
+      [class.rotate-180]="abierto()"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  <div
+    *ngIf="abierto()"
+    class="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 min-w-[200px]"
+  >
+    <button
+      *ngFor="let opcion of opciones"
+      (click)="seleccionar(opcion)"
+      type="button"
+      class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
+      [class.bg-blue-50]="rangoActual().dias === opcion.dias"
+      [class.text-blue-700]="rangoActual().dias === opcion.dias"
+      [class.font-semibold]="rangoActual().dias === opcion.dias"
+      [class.text-gray-700]="rangoActual().dias !== opcion.dias"
+    >
+      <span>{{ opcion.label }}</span>
+      <svg
+        *ngIf="rangoActual().dias === opcion.dias"
+        class="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+    </button>
+  </div>
+</div>

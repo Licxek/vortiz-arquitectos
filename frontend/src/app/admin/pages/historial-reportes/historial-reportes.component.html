@@ -1,0 +1,355 @@
+<div class="space-y-6">
+  <!-- Breadcrumb -->
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Historial de reportes</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        Todos los reportes PDF generados, con opción de re-descargar y reenviar
+      </p>
+    </div>
+
+    <!-- Stats -->
+    <div class="bg-white rounded-xl px-4 py-3 border border-gray-100 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Total</p>
+      <p class="text-2xl font-bold text-[#0a4d7a]">{{ reportes().length }}</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div
+    class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-3"
+  >
+    <input
+      type="text"
+      [ngModel]="busqueda()"
+      (ngModelChange)="busqueda.set($event)"
+      placeholder="Buscar por título..."
+      class="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#0a4d7a] focus:ring-2 focus:ring-[#0a4d7a]/10"
+    />
+    <select
+      [ngModel]="filtroTipo()"
+      (ngModelChange)="filtroTipo.set($event)"
+      class="px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#0a4d7a] focus:ring-2 focus:ring-[#0a4d7a]/10"
+    >
+      <option *ngFor="let t of tiposDisponibles" [value]="t.value">{{ t.label }}</option>
+    </select>
+  </div>
+
+  <!-- Tabla -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- Loading -->
+    <div *ngIf="cargando()" class="p-5 space-y-3">
+      <app-skeleton *ngFor="let _ of [1, 2, 3, 4, 5]" variant="rect" height="60px" />
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="!cargando() && reportesFiltrados().length === 0" class="p-12 text-center">
+      <svg
+        class="w-16 h-16 text-gray-300 mx-auto mb-3"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      </svg>
+      <p class="text-sm text-gray-500">
+        {{
+          reportes().length === 0
+            ? 'No has generado reportes todavía'
+            : 'No hay resultados con esos filtros'
+        }}
+      </p>
+    </div>
+
+    <!-- Lista -->
+    <div *ngIf="!cargando() && reportesFiltrados().length > 0" class="divide-y divide-gray-100">
+      <div
+        *ngFor="let r of reportesFiltrados()"
+        class="p-5 hover:bg-gray-50 transition-colors flex flex-col md:flex-row md:items-center gap-4"
+      >
+        <!-- Info -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start gap-3 mb-2">
+            <span
+              class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold shrink-0"
+              [ngClass]="obtenerColorTipo(r.tipo)"
+            >
+              {{ obtenerTipoLabel(r.tipo) }}
+            </span>
+            <h3 class="text-sm font-semibold text-gray-900 truncate">{{ r.titulo }}</h3>
+          </div>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+            <span class="flex items-center gap-1">
+              📅 {{ formatearRango(r.rangoDesde, r.rangoHasta) }}
+            </span>
+            <span class="flex items-center gap-1"> ⏱ {{ formatearFecha(r.createdAt) }} </span>
+            <span class="flex items-center gap-1"> 📦 {{ r.tamanioKb }} KB </span>
+            <span
+              *ngIf="r.emailEnviado"
+              class="flex items-center gap-1 text-emerald-600 font-medium"
+            >
+              ✓ Enviado ({{ r.destinatarios.length }})
+            </span>
+            <span *ngIf="r.generadoPor" class="flex items-center gap-1">
+              👤 {{ r.generadoPor.nombre }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex items-center gap-2 shrink-0">
+          <button
+            (click)="descargar(r)"
+            class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-[#0a4d7a] text-xs font-medium rounded-lg transition-colors"
+            title="Descargar PDF"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            Descargar
+          </button>
+          <button
+            (click)="abrirReenviar(r)"
+            class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-medium rounded-lg transition-colors"
+            title="Reenviar por correo"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+            Reenviar
+          </button>
+          <button
+            (click)="abrirEliminar(r)"
+            class="inline-flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium rounded-lg transition-colors"
+            title="Eliminar"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL REENVIAR ============ -->
+<div
+  *ngIf="modalReenviarAbierto() && reporteSeleccionado() as r"
+  class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+  (click)="cerrarReenviar()"
+>
+  <div
+    class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="p-6 border-b border-gray-100">
+      <h2 class="text-xl font-bold text-gray-900">📧 Reenviar reporte</h2>
+      <p class="text-sm text-gray-500 mt-1 truncate">{{ r.titulo }}</p>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <!-- Resultado -->
+      <div
+        *ngIf="resultadoReenvio() as res"
+        class="rounded-xl p-4 text-sm font-medium border"
+        [class.bg-emerald-50]="res.tipo === 'exito'"
+        [class.text-emerald-800]="res.tipo === 'exito'"
+        [class.border-emerald-200]="res.tipo === 'exito'"
+        [class.bg-red-50]="res.tipo === 'error'"
+        [class.text-red-800]="res.tipo === 'error'"
+        [class.border-red-200]="res.tipo === 'error'"
+      >
+        {{ res.mensaje }}
+      </div>
+
+      <!-- Form -->
+      <ng-container *ngIf="!resultadoReenvio() || resultadoReenvio()?.tipo === 'error'">
+        <div>
+          <label class="text-sm font-semibold text-gray-700 block mb-2"> Destinatarios </label>
+          <input
+            type="text"
+            [ngModel]="destinatariosReenvio()"
+            (ngModelChange)="destinatariosReenvio.set($event)"
+            placeholder="correo@ejemplo.com, otro@ejemplo.com"
+            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#0a4d7a] focus:ring-2 focus:ring-[#0a4d7a]/10"
+          />
+          <p class="text-xs text-gray-400 mt-1">Separar múltiples correos con coma</p>
+          <p
+            *ngIf="destinatariosValidos().length > 0"
+            class="text-xs text-emerald-600 font-medium mt-1"
+          >
+            ✓ {{ destinatariosValidos().length }} destinatario(s) válido(s)
+          </p>
+        </div>
+
+        <!-- Destinatarios previos (si los hay) -->
+        <div
+          *ngIf="r.destinatarios && r.destinatarios.length > 0"
+          class="bg-gray-50 rounded-lg p-3"
+        >
+          <p class="text-xs font-semibold text-gray-500 mb-1.5">Enviado anteriormente a:</p>
+          <div class="flex flex-wrap gap-1.5">
+            <span
+              *ngFor="let dest of r.destinatarios"
+              class="inline-block px-2 py-0.5 bg-white text-xs text-gray-700 rounded border border-gray-200"
+            >
+              {{ dest }}
+            </span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="p-6 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
+      <button
+        (click)="cerrarReenviar()"
+        [disabled]="reenviandoEmail()"
+        class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+      >
+        {{ resultadoReenvio()?.tipo === 'exito' ? 'Cerrar' : 'Cancelar' }}
+      </button>
+      <button
+        *ngIf="!resultadoReenvio() || resultadoReenvio()?.tipo === 'error'"
+        (click)="confirmarReenviar()"
+        [disabled]="reenviandoEmail() || destinatariosValidos().length === 0"
+        class="px-5 py-2 bg-[#0a4d7a] hover:bg-[#0a1f3d] text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+      >
+        <svg *ngIf="reenviandoEmail()" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          ></path>
+        </svg>
+        {{ reenviandoEmail() ? 'Enviando...' : 'Reenviar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL ELIMINAR ============ -->
+<div
+  *ngIf="modalEliminarAbierto() && reporteAEliminar() as r"
+  class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+  (click)="cerrarEliminar()"
+>
+  <div
+    class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="p-6 border-b border-gray-100">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+          <svg
+            class="w-6 h-6 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-xl font-bold text-gray-900">¿Eliminar este reporte?</h2>
+          <p class="text-sm text-gray-500 mt-1">Esta acción no se puede deshacer</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-6">
+      <div class="bg-gray-50 rounded-lg p-4 space-y-1">
+        <p class="text-sm font-semibold text-gray-900">{{ r.titulo }}</p>
+        <p class="text-xs text-gray-500">{{ formatearRango(r.rangoDesde, r.rangoHasta) }}</p>
+        <p class="text-xs text-gray-500">Generado: {{ formatearFecha(r.createdAt) }}</p>
+      </div>
+    </div>
+
+    <div class="p-6 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
+      <button
+        (click)="cerrarEliminar()"
+        [disabled]="eliminandoReporte()"
+        class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+      >
+        Cancelar
+      </button>
+      <button
+        (click)="confirmarEliminar()"
+        [disabled]="eliminandoReporte()"
+        class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+      >
+        <svg
+          *ngIf="eliminandoReporte()"
+          class="animate-spin h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          ></path>
+        </svg>
+        {{ eliminandoReporte() ? 'Eliminando...' : 'Sí, eliminar' }}
+      </button>
+    </div>
+  </div>
+</div>

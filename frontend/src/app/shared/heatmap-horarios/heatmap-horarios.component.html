@@ -1,0 +1,67 @@
+<!-- Cargando -->
+<div *ngIf="cargandoSig" class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+  <div class="flex items-center justify-between mb-4">
+    <div class="space-y-2">
+      <app-skeleton variant="text" width="180px" />
+      <app-skeleton variant="text" width="120px" height="0.65rem" />
+    </div>
+    <app-skeleton variant="text" width="70px" height="0.75rem" />
+  </div>
+  <app-skeleton variant="rect" [height]="altura + 'px'" />
+</div>
+
+<!-- Cargado -->
+<div *ngIf="!cargandoSig" class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h3 class="text-sm font-semibold text-gray-900">{{ titulo }}</h3>
+      <p *ngIf="subtitulo" class="text-xs text-gray-500">{{ subtitulo }}</p>
+    </div>
+
+    <a  *ngIf="linkDetalle"
+      [routerLink]="linkDetalle"
+      class="text-xs text-[#0a4d7a] hover:underline font-medium"
+    >
+      Ver detalle →
+    </a>
+  </div>
+
+  <!-- Gráfica con datos -->
+  <div *ngIf="hayDatos()" class="-mx-2">
+    <apx-chart
+      [series]="chartOptions().series!"
+      [chart]="chartOptions().chart!"
+      [plotOptions]="chartOptions().plotOptions!"
+      [dataLabels]="chartOptions().dataLabels!"
+      [colors]="chartOptions().colors!"
+      [stroke]="chartOptions().stroke!"
+      [xaxis]="chartOptions().xaxis!"
+      [yaxis]="chartOptions().yaxis!"
+      [grid]="chartOptions().grid!"
+      [legend]="chartOptions().legend!"
+      [tooltip]="chartOptions().tooltip!"
+    ></apx-chart>
+  </div>
+
+  <!-- Empty state -->
+  <div
+    *ngIf="!hayDatos()"
+    class="flex flex-col items-center justify-center text-center"
+    [style.height.px]="altura"
+  >
+    <svg
+      class="w-12 h-12 text-gray-300 mb-2"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M3 10h18M7 15h.01M11 15h.01M15 15h.01M7 19h.01M11 19h.01M15 19h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+    </svg>
+    <p class="text-xs text-gray-400">No hay citas en este rango</p>
+  </div>
+</div>

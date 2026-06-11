@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1.6
+
+# ═══════════════════════════════════════════════════════════════
+# Stage 1: Build (compila Angular en modo producción)
+# ═══════════════════════════════════════════════════════════════
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+RUN apk add --no-cache git python3 make g++
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+
+# Build de producción (defaultConfiguration ya es 'production')
+RUN npm run build
+
+# ═══════════════════════════════════════════════════════════════
+# Stage 2: Production (solo el dist, sin node_modules)
+# ═══════════════════════════════════════════════════════════════
+FROM alpine:latest AS production
+WORKDIR /app
+
+# Crear directorio para los archivos estáticos
+RUN mkdir -p /app/dist
+
+# 👇 OJO: copiar desde dist/Vortiz_Arquitectos/browser (Angular 21 builder)
+COPY --from=builder /app/dist/Vortiz_Arquitectos/browser /app/dist
+
+# El contenedor solo expone el dist via volumen compartido con nginx
+CMD ["sh", "-c", "tail -f /dev/null"]
