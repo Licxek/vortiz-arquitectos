@@ -39,6 +39,24 @@ export const routes: Routes = [
     ]
   },
 
+{
+    path: 'home',
+    loadComponent: () =>
+      import('./public/home/home.component').then(m => m.HomeComponent),
+  },
+
+  {
+  path: 'nosotros',
+  loadComponent: () =>
+    import('./public/aboutus/nosotros.component').then(m => m.NosotrosComponent),
+},
+
+{
+  path: 'proyectos',
+  loadComponent: () =>
+    import('./public/proyectos/proyectos.component').then(m => m.ProyectosComponent),
+},
+
   // Wildcard
   {
     path: '**',
