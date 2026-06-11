@@ -6,6 +6,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+
+// Entidad que representa la tabla "proyectos" en la base de datos.
 @Entity('proyectos')
 export class Proyecto {
   @PrimaryGeneratedColumn()
