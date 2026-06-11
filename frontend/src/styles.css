@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+<<<<<<< HEAD
 :root {
   --color-primario: #0a4d7a;
   --color-secundario: #0a1f3d;
@@ -84,3 +85,23 @@
   border-radius: 16px;
   transition: all 0.3s ease;
 }
+=======
+@keyframes modalEntrada {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.01) translateY(-3px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal {
+  animation: modalEntrada 0.7s cubic-bezier(0.34, 1.1, 0.64, 1) both;
+}
+
+>>>>>>> db57d47cd0b645adbd5bd1779bb106e49f20dd3b

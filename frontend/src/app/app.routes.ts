@@ -83,6 +83,7 @@ export const routes: Routes = [
     ],
   },
 
+<<<<<<< HEAD
   {
     path: 'mantenimiento',
     canActivate: [mantenimientoGuard],
@@ -131,4 +132,14 @@ export const routes: Routes = [
   // Default y wildcard ← AQUÍ ESTABA EL PROBLEMA
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: '**', redirectTo: 'home' },
+=======
+  // Wildcard
+
+  {
+  path: 'servicios',
+  loadComponent: () =>
+    import('./public/servicios/servicios.component').then(m => m.ServiciosComponent),
+},
+
+>>>>>>> db57d47cd0b645adbd5bd1779bb106e49f20dd3b
 ];
