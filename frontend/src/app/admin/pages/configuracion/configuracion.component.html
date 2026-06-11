@@ -556,14 +556,14 @@
 
     <div class="flex justify-end gap-3 pt-2">
       <button
-        (click)="restaurar('Negocio')"
+        (click)="restaurar('negocio')"
         type="button"
         class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
       >
         Restaurar original
       </button>
       <button
-        (click)="pedirGuardar('Negocio')"
+        (click)="pedirGuardar('negocio')"
         [disabled]="guardando || !hayCambiosEn('negocio')"
         class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
       >
@@ -939,15 +939,15 @@
 
     <div class="flex justify-end gap-3 pt-2">
       <button
-        (click)="restaurar('Contacto')"
+        (click)="restaurar('contacto')"
         type="button"
         class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
       >
         Restaurar original
       </button>
       <button
-        (click)="pedirGuardar('Contacto')"
-        [disabled]="guardando || !hayCambiosEn('Contacto')"
+        (click)="pedirGuardar('contacto')"
+        [disabled]="guardando || !hayCambiosEn('contacto')"
         class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
       >
         <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -1441,15 +1441,15 @@
   </div>
   <div class="flex justify-end gap-3 pt-2">
     <button
-      (click)="restaurar('Agenda')"
+      (click)="restaurar('agenda')"
       type="button"
       class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
     >
       Restaurar original
     </button>
     <button
-      (click)="pedirGuardar('Agenda')"
-      [disabled]="guardando || !hayCambiosEn('Agenda')"
+      (click)="pedirGuardar('agenda')"
+      [disabled]="guardando || !hayCambiosEn('agenda')"
       class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
     >
       <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -1698,15 +1698,15 @@
 
   <div class="flex justify-end gap-3 pt-2">
     <button
-      (click)="restaurar('Apariencia')"
+      (click)="restaurar('apariencia')"
       type="button"
       class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
     >
       Restaurar original
     </button>
     <button
-      (click)="pedirGuardar('Apariencia')"
-      [disabled]="guardando || !hayCambiosEn('Apariencia')"
+      (click)="pedirGuardar('apariencia')"
+      [disabled]="guardando || !hayCambiosEn('apariencia')"
       class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
     >
       <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -1929,15 +1929,15 @@
 
   <div class="flex justify-end gap-3 pt-2">
     <button
-      (click)="restaurar('Notificaciones')"
+      (click)="restaurar('notificaciones')"
       type="button"
       class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
     >
       Restaurar original
     </button>
     <button
-      (click)="pedirGuardar('Notificaciones')"
-      [disabled]="guardando || !hayCambiosEn('Notificaciones')"
+      (click)="pedirGuardar('notificaciones')"
+      [disabled]="guardando || !hayCambiosEn('notificaciones')"
       class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
     >
       <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -2047,15 +2047,15 @@
 
   <div class="flex justify-end gap-3 pt-2">
     <button
-      (click)="restaurar('SEO')"
+      (click)="restaurar('seo')"
       type="button"
       class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
     >
       Restaurar original
     </button>
     <button
-      (click)="pedirGuardar('SEO')"
-      [disabled]="guardando || !hayCambiosEn('SEO')"
+      (click)="pedirGuardar('seo')"
+      [disabled]="guardando || !hayCambiosEn('seo')"
       class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
     >
       <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -2194,8 +2194,8 @@
   <!-- Botones guardar/restaurar -->
   <div class="flex justify-end gap-3 pt-2">
     <button
-      (click)="pedirGuardar('Mantenimiento')"
-      [disabled]="guardando || !hayCambiosEn('Mantenimiento')"
+      (click)="pedirGuardar('mantenimiento')"
+      [disabled]="guardando || !hayCambiosEn('mantenimiento')"
       class="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60"
     >
       <svg *ngIf="guardando" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">

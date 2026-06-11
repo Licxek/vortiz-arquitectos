@@ -1,7 +1,13 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
-  Router, RouterOutlet, NavigationEnd, NavigationStart, NavigationCancel, NavigationError,} from '@angular/router';
+  Router,
+  RouterOutlet,
+  NavigationEnd,
+  NavigationStart,
+  NavigationCancel,
+  NavigationError,
+} from '@angular/router';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { FooterComponent } from './shared/footer/footer.component';
 import { filter } from 'rxjs';
@@ -9,6 +15,7 @@ import { ThemeService } from './core/services/theme.service'; // ajusta ruta
 import { Title, Meta } from '@angular/platform-browser';
 import { ConfiguracionService } from './core/services/configuracion.service';
 import { LoadingBarComponent } from './shared/loading-bar/loading-bar.component'; // 👈 NUEVO
+import { DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'app-root',
@@ -18,6 +25,8 @@ import { LoadingBarComponent } from './shared/loading-bar/loading-bar.component'
 })
 export class AppComponent {
   ocultarChrome = this.calcularOcultarChrome(window.location.pathname);
+  private doc = inject(DOCUMENT);
+  private configuracion = inject(ConfiguracionService);
 
   constructor(
     private router: Router,
@@ -58,11 +67,23 @@ export class AppComponent {
       this.title.setTitle(c.meta_title);
       this.meta.updateTag({ name: 'description', content: c.meta_description });
       this.meta.updateTag({ name: 'keywords', content: c.meta_keywords });
+
+      // ✅ DESPUÉS (snake_case plano)
+      //if (c?.faviconUrl) {
+        //this.actualizarFavicon(c.faviconUrl);
+      //}
+      if (c?.meta_title) {
+        this.doc.title = c.meta_title;
+      }
     });
 
     this.config.cargarPublica(); // primera carga (dispara todo)
   }
   private calcularOcultarChrome(url: string): boolean {
     return url.startsWith('/admin') || url.startsWith('/mantenimiento');
+  }
+  private actualizarFavicon(url: string) {
+    const link = this.doc.querySelector("link[rel='icon']") as HTMLLinkElement;
+    if (link) link.href = url;
   }
 }

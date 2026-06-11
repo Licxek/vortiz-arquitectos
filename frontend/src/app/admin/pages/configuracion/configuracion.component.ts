@@ -368,7 +368,8 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   pedirGuardar(seccion: string) {
-    this.seccionAGuardar = seccion;
+    // ✅ Convertir 'negocio' → 'Negocio' usando el mapa
+    this.seccionAGuardar = this.MAP_TAB_LABEL[seccion] || seccion;
     this.confirmacionGuardarAbierta = true;
   }
 
@@ -469,7 +470,8 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   restaurar(seccion: string) {
-    this.seccionARestaurar = seccion;
+    // ✅ Mismo fix
+    this.seccionARestaurar = this.MAP_TAB_LABEL[seccion] || seccion;
     this.confirmacionAbierta = true;
   }
 
@@ -611,6 +613,7 @@ export class ConfiguracionComponent implements OnInit {
     this.configuracionService.guardarSeccion('mantenimiento', payload).subscribe({
       next: (res) => {
         this.mantenimiento.activo = nuevoEstado;
+        this.capturarSnapshot('mantenimiento');
         this.configuracionService.cargarPublica();
         this.guardando = false;
         this.mensajeExito = nuevoEstado
