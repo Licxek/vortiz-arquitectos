@@ -9,6 +9,8 @@ export interface SeoPagina {
   keywords: string;
 }
 
+// Modelo de páginas utilizado por TypeORM para gestionar contenido web y SEO.
+
 export interface BloquePagina {
   id: number;
   tipo: 'hero' | 'texto' | 'imagen' | 'galeria' | 'cita' | 'cta' | 'estadisticas' | 'servicios' | 'contacto' | 'mapa';
