@@ -1,0 +1,1 @@
+import{ab as a}from"./chunk-UZ4FJAQL.js";var n=class r{transform(e){return e?e.replace(/\*(.+?)\*/g,'<span class="italic font-light">$1</span>').replace(/~(.+?)~/g,'<span class="text-[#0a4d7a]">$1</span>'):""}static \u0275fac=function(t){return new(t||r)};static \u0275pipe=a({name:"formatoTexto",type:r,pure:!0})};export{n as a};

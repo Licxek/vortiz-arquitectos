@@ -51,6 +51,14 @@ Thumbs.db
 .env
 .env.local
 .env.production
+.env.*.local
+!.env.example
 
 # Credenciales base de datos
 config/database.js
+
+# certs (NUNCA subir certificados al repo)
+certs/
+*.pem
+*.crt
+*.key

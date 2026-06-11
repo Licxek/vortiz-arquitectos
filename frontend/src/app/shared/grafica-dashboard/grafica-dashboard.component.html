@@ -1,0 +1,72 @@
+<!-- Cargando: skeleton -->
+<div *ngIf="cargandoSig" class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+  <div class="flex items-center justify-between mb-4">
+    <div class="space-y-2">
+      <app-skeleton variant="text" width="140px" />
+      <app-skeleton variant="text" width="100px" height="0.65rem" />
+    </div>
+    <app-skeleton variant="text" width="70px" height="0.75rem" />
+  </div>
+  <app-skeleton variant="rect" [height]="altura + 'px'" />
+</div>
+
+<!-- Cargado -->
+<div *ngIf="!cargandoSig" class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h3 class="text-sm font-semibold text-gray-900">{{ titulo }}</h3>
+      <p *ngIf="subtitulo" class="text-xs text-gray-500">{{ subtitulo }}</p>
+    </div>
+
+    <a
+      *ngIf="linkDetalle"
+      [routerLink]="linkDetalle"
+      class="text-xs text-[#0a4d7a] hover:underline font-medium"
+    >
+      Ver detalle →
+    </a>
+  </div>
+
+  <!-- Gráfica con datos -->
+  <div *ngIf="hayDatos()" class="-mx-2">
+    <apx-chart
+      [series]="chartOptions().series!"
+      [chart]="chartOptions().chart!"
+      [xaxis]="chartOptions().xaxis!"
+      [yaxis]="chartOptions().yaxis!"
+      [stroke]="chartOptions().stroke!"
+      [colors]="chartOptions().colors!"
+      [fill]="chartOptions().fill!"
+      [tooltip]="chartOptions().tooltip!"
+      [grid]="chartOptions().grid!"
+      [dataLabels]="chartOptions().dataLabels!"
+      [labels]="chartOptions().labels!"
+      [legend]="chartOptions().legend!"
+      [plotOptions]="chartOptions().plotOptions!"
+      [markers]="chartOptions().markers!"
+      [responsive]="chartOptions().responsive!"
+    ></apx-chart>
+  </div>
+
+  <!-- Empty state -->
+  <div
+    *ngIf="!hayDatos()"
+    class="flex flex-col items-center justify-center text-center"
+    [style.height.px]="altura"
+  >
+    <svg
+      class="w-12 h-12 text-gray-300 mb-2"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+      />
+    </svg>
+    <p class="text-xs text-gray-400">Sin datos para mostrar</p>
+  </div>
+</div>

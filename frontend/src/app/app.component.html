@@ -1,5 +1,8 @@
-<app-navbar *ngIf="!esRutaAdmin"></app-navbar>
+<app-loading-bar />
+<app-navbar *ngIf="!ocultarChrome"></app-navbar>
 
-<router-outlet></router-outlet>
+<main class="min-h-screen">
+  <router-outlet></router-outlet>
+</main>
 
-<app-footer *ngIf="!esRutaAdmin"></app-footer>
+<app-footer *ngIf="!ocultarChrome"></app-footer>

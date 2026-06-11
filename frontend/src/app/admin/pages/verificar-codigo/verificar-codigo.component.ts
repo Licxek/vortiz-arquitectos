@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { ConfiguracionService, Configuracion } from '../../../core/services/configuracion.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-verificar-codigo',
@@ -25,6 +26,7 @@ export class VerificarCodigoComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
+    private authService: AuthService,
     private route: ActivatedRoute,
     private configuracionService: ConfiguracionService
   ) {}
@@ -109,27 +111,21 @@ export class VerificarCodigoComponent implements OnInit, OnDestroy {
 
   verificar() {
     const codigo = this.digitos.join('');
-    if (codigo.length !== 6) {
-      this.errorMensaje = 'Ingresa los 6 dígitos del código';
-      return;
-    }
-
-    this.cargando = true;
-    this.errorMensaje = '';
-
-    setTimeout(() => {
-      this.cargando = false;
-      // Por ahora simula que el código es correcto
-      this.router.navigate(['/admin/nueva-password'], {
-        queryParams: { correo: this.correo, codigo: codigo }
-      });
-    }, 1200);
+    if (codigo.length !== 6) { this.errorMensaje = 'Ingresa los 6 dígitos del código'; return; }
+    this.cargando = true; this.errorMensaje = '';
+    this.authService.verificarCodigo(this.correo, codigo).subscribe({
+      next: () => {
+        this.cargando = false;
+        this.router.navigate(['/admin/nueva-password'], { queryParams: { correo: this.correo, codigo } });
+      },
+      error: (e) => { this.cargando = false; this.errorMensaje = e.error?.message || 'Código inválido o expirado.'; }
+    });
   }
 
   reenviarCodigo() {
     if (this.tiempoRestante > 0) return;
+    this.authService.solicitarRecuperacion(this.correo).subscribe();
     this.iniciarCuentaRegresiva();
-    // Aquí iría la llamada al backend para reenviar
   }
 
   volver() {

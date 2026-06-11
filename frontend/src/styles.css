@@ -1,3 +1,86 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --color-primario: #0a4d7a;
+  --color-secundario: #0a1f3d;
+  --color-texto-nav: #ffffff;
+  --color-texto-footer: #ffffff;
+  --degradado-inicio: #000000;
+  --degradado-fin: #0a1f3d;
+}
+
+.cdk-drag-preview {
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  border-radius: 12px;
+}
+.cdk-drag-placeholder { opacity: 0.4; }
+.cdk-drag-animating, .cdk-drop-list-dragging .cdk-drag {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+@keyframes vortiz-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInUp {
+  animation: vortiz-fade-in-up 0.5s ease-out both;
+}
+
+/* Buscador: aparición del panel */
+@keyframes vortiz-buscador-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.vortiz-buscador-entrada {
+  animation: vortiz-buscador-entrada 0.18s ease-out both;
+  transform-origin: top center;
+}
+
+/* Buscador: cascada de items (efecto stagger) */
+@keyframes vortiz-cascada-item {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cascada-item {
+  animation: vortiz-cascada-item 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Highlight flash al llegar desde el buscador */
+@keyframes vortiz-highlight-flash {
+  0%, 100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+  50% {
+    background-color: rgba(10, 77, 122, 0.08);
+    box-shadow: 0 0 0 4px rgba(10, 77, 122, 0.15);
+  }
+}
+.vortiz-highlight-flash {
+  animation: vortiz-highlight-flash 1s ease-in-out 2;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}

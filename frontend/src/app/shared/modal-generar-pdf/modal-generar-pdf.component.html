@@ -1,0 +1,170 @@
+<!-- Backdrop con blur -->
+<div
+  class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-[vortiz-fade-in-up_0.2s_ease-out]"
+  (click)="cerrarModal()"
+>
+  <!-- Modal -->
+  <div
+    class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="p-6 border-b border-gray-100">
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0 flex-1">
+          <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+            📊 Generar reporte
+          </h2>
+          <p class="text-sm text-gray-500 mt-1 truncate">{{ titulo }}</p>
+        </div>
+        <button
+          (click)="cerrarModal()"
+          [disabled]="generando()"
+          class="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 shrink-0"
+          aria-label="Cerrar"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 space-y-4">
+      <!-- Resultado (si hay) -->
+      <div
+        *ngIf="resultado() as r"
+        class="rounded-xl p-4 text-sm font-medium"
+        [class.bg-emerald-50]="r.tipo === 'exito'"
+        [class.text-emerald-800]="r.tipo === 'exito'"
+        [class.border]="true"
+        [class.border-emerald-200]="r.tipo === 'exito'"
+        [class.bg-red-50]="r.tipo === 'error'"
+        [class.text-red-800]="r.tipo === 'error'"
+        [class.border-red-200]="r.tipo === 'error'"
+      >
+        {{ r.mensaje }}
+      </div>
+
+      <!-- Form (oculto si hay resultado exitoso) -->
+      <ng-container *ngIf="!resultado() || resultado()?.tipo === 'error'">
+        <p class="text-sm text-gray-600">¿Qué quieres hacer con el reporte?</p>
+
+        <!-- Opción: Descargar PDF -->
+        <label
+          class="flex items-start gap-3 cursor-pointer p-4 rounded-xl border-2 transition-all"
+          [class.border-[#0a4d7a]]="descargar()"
+          [class.bg-blue-50]="descargar()"
+          [class.border-gray-200]="!descargar()"
+          [class.hover:bg-gray-50]="!descargar()"
+        >
+          <input
+            type="checkbox"
+            [checked]="descargar()"
+            (change)="descargar.set($any($event.target).checked)"
+            class="mt-0.5 w-5 h-5 accent-[#0a4d7a]"
+          />
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              📥 Descargar PDF
+            </p>
+            <p class="text-xs text-gray-500 mt-0.5">
+              Guarda el reporte en tu computadora
+            </p>
+          </div>
+        </label>
+
+        <!-- Opción: Enviar por correo -->
+        <label
+          class="flex items-start gap-3 cursor-pointer p-4 rounded-xl border-2 transition-all"
+          [class.border-[#0a4d7a]]="enviar()"
+          [class.bg-blue-50]="enviar()"
+          [class.border-gray-200]="!enviar()"
+          [class.hover:bg-gray-50]="!enviar()"
+        >
+          <input
+            type="checkbox"
+            [checked]="enviar()"
+            (change)="enviar.set($any($event.target).checked)"
+            class="mt-0.5 w-5 h-5 accent-[#0a4d7a]"
+          />
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              📧 Enviar por correo
+            </p>
+            <p class="text-xs text-gray-500 mt-0.5">
+              Envía el reporte como adjunto PDF
+            </p>
+
+            <!-- Input destinatarios (solo si está activo) -->
+            <div *ngIf="enviar()" class="mt-3 space-y-1">
+              <input
+                type="text"
+                [ngModel]="destinatariosTexto()"
+                (ngModelChange)="destinatariosTexto.set($event)"
+                (click)="$event.stopPropagation()"
+                placeholder="correo@ejemplo.com, otro@ejemplo.com"
+                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#0a4d7a] focus:ring-2 focus:ring-[#0a4d7a]/10"
+              />
+              <p class="text-xs text-gray-400">
+                Separar múltiples correos con coma
+              </p>
+              <p
+                *ngIf="destinatariosValidos().length > 0"
+                class="text-xs text-emerald-600 font-medium"
+              >
+                ✓ {{ destinatariosValidos().length }} destinatario(s) válido(s)
+              </p>
+              <p
+                *ngIf="enviar() && destinatariosTexto() && destinatariosValidos().length === 0"
+                class="text-xs text-red-500"
+              >
+                Ingresa al menos un correo válido
+              </p>
+            </div>
+          </div>
+        </label>
+      </ng-container>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-6 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
+      <button
+        (click)="cerrarModal()"
+        [disabled]="generando()"
+        class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+      >
+        {{ resultado()?.tipo === 'exito' ? 'Cerrar' : 'Cancelar' }}
+      </button>
+      <button
+        *ngIf="!resultado() || resultado()?.tipo === 'error'"
+        (click)="generar()"
+        [disabled]="!formValido() || generando()"
+        class="px-5 py-2 bg-[#0a4d7a] hover:bg-[#0a1f3d] text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+      >
+        <svg
+          *ngIf="generando()"
+          class="animate-spin h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        {{ generando() ? 'Generando...' : 'Generar reporte' }}
+      </button>
+    </div>
+  </div>
+</div>

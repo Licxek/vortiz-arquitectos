@@ -18,24 +18,22 @@
           "builder": "@angular/build:application",
           "options": {
             "stylePreprocessorOptions": {
-                          "includePaths": ["src"]
-                        },
+              "includePaths": ["src"]
+            },
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
-                        {
-                          "glob": "**/*",
-                          "input": "public"
-                        },
-                        {
-                          "glob": "**/*",
-                          "input": "src/assets",
-                          "output": "assets"
-                        }
-                      ],
-            "styles": [
-              "src/styles.css"
+              {
+                "glob": "**/*",
+                "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
+              }
             ],
+            "styles": ["src/styles.css"],
             "outputMode": "static",
             "security": {
               "allowedHosts": []
@@ -55,7 +53,17 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": true,
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
@@ -67,6 +75,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "allowedHosts": ["vortiz.local"]
+          },
           "configurations": {
             "production": {
               "buildTarget": "Vortiz_Arquitectos:build:production"
