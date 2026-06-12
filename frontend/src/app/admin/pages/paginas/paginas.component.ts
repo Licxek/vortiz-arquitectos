@@ -13,6 +13,7 @@ import { ImageUploadComponent } from '../../../shared/image-upload/image-upload.
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { ImageGalleryInputComponent } from '../../../shared/image-gallery-input/image-gallery-input.component';
 
 interface Pagina {
   id: number;
@@ -115,6 +116,7 @@ interface BorradorLocal {
     DragDropModule,
     ImageUploadComponent,
     SkeletonComponent,
+    ImageGalleryInputComponent,
   ],
   templateUrl: './paginas.component.html',
 })
@@ -1464,6 +1466,9 @@ export class PaginasComponent implements OnInit {
         anio: p.anio,
         colorMarca: p.colorMarca,
         descripcion: p.descripcion,
+        cliente: p.cliente, // 👈 NUEVO
+        imagenesPublicas: p.imagenesPublicas, // 👈 NUEVO
+        videoUrl: p.videoUrl, // 👈 NUEVO
         orden: i + 1,
       }));
       guardados.push(this.catalogo.sincronizarProyectos(payload));
@@ -1765,6 +1770,9 @@ export class PaginasComponent implements OnInit {
       anio: new Date().getFullYear(),
       colorMarca: '#0a4d7a',
       descripcion: '',
+      cliente: '', // 👈 NUEVO
+      imagenesPublicas: [] as string[], // 👈 NUEVO
+      videoUrl: '', // 👈 NUEVO
     };
   }
 
@@ -1779,8 +1787,12 @@ export class PaginasComponent implements OnInit {
       anio: p.anio,
       colorMarca: p.colorMarca,
       descripcion: p.descripcion,
+      cliente: p.cliente, // 👈 NUEVO
+      imagenesPublicas: p.imagenesPublicas, // 👈 NUEVO
+      videoUrl: p.videoUrl,
     };
   }
+
   etiquetaCategoriaProyecto(cat: string): string {
     return this.catalogo.etiquetaCategoriaProyecto(cat);
   }
@@ -1802,6 +1814,9 @@ export class PaginasComponent implements OnInit {
       anio: p.anio,
       colorMarca: p.colorMarca,
       descripcion: p.descripcion || '',
+      cliente: p.cliente || '', // 👈 NUEVO
+      imagenesPublicas: [...(p.imagenesPublicas || [])], // 👈 NUEVO
+      videoUrl: p.videoUrl || '', // 👈 NUEVO
     };
     this.proyectoFormAbierto = true;
   }
