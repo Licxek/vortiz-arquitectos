@@ -165,6 +165,7 @@ export class ConfiguracionService {
       logo_url: c.apariencia?.logoUrl || '/assets/img/logo.png',
       logo_footer_url:
         c.apariencia?.logoFooterUrl || '/assets/img/logo_vortiz.png',
+      favicon_url: c.apariencia?.faviconUrl || '/assets/img/logo.ico',
       telefono: c.contacto?.telefono || '',
       correo_contacto: c.contacto?.correoPublico || '',
       direccion: c.negocio?.direccion || '',
