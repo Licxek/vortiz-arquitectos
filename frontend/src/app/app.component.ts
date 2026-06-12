@@ -61,6 +61,7 @@ export class AppComponent {
 
   ngOnInit() {
     this.theme.aplicar();
+    this.config.cargarPublica();
     // SEO en vivo
     this.config.configPublica$.subscribe((c) => {
       if (!c) return;
@@ -68,10 +69,9 @@ export class AppComponent {
       this.meta.updateTag({ name: 'description', content: c.meta_description });
       this.meta.updateTag({ name: 'keywords', content: c.meta_keywords });
 
-      // ✅ DESPUÉS (snake_case plano)
-      //if (c?.faviconUrl) {
-        //this.actualizarFavicon(c.faviconUrl);
-      //}
+      if (c?.favicon_url) {
+        this.actualizarFavicon(c.favicon_url);
+      }
       if (c?.meta_title) {
         this.doc.title = c.meta_title;
       }
@@ -84,6 +84,8 @@ export class AppComponent {
   }
   private actualizarFavicon(url: string) {
     const link = this.doc.querySelector("link[rel='icon']") as HTMLLinkElement;
-    if (link) link.href = url;
+    if (link) {
+      link.href = url;
+    }
   }
 }

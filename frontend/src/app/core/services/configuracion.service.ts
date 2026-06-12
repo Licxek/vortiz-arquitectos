@@ -13,6 +13,7 @@ export interface Configuracion {
   id: number;
   logo_url: string;
   logo_footer_url: string;
+  favicon_url: string;
   telefono: string;
   correo_contacto: string;
   direccion: string;
@@ -59,6 +60,7 @@ export class ConfiguracionService {
         id: 1,
         logo_url: '/assets/img/logo.png',
         logo_footer_url: '/assets/img/logo_vortiz.png',
+        favicon_url: '/assets/img/logo.ico',
         telefono: '+52 000-000-0000',
         correo_contacto: 'contacto@vortizarquitectos.com',
         direccion: 'Milpillas 101, La Forestal, 34217 Durango, Dgo.',
