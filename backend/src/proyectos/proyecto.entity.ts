@@ -70,4 +70,10 @@ export class Proyecto {
 
   @Column({ type: 'jsonb', default: [] })
   imagenes: string[];
+
+  @Column({ type: 'jsonb', default: [], name: 'imagenes_publicas' })
+  imagenesPublicas: string[];
+
+  @Column({ default: '', name: 'video_url' })
+  videoUrl: string;
 }

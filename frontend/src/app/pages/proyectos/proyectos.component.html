@@ -187,7 +187,8 @@
       >
         <div
           *ngFor="let p of proyectosFiltrados(); let i = index"
-          class="group relative bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-transparent overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2"
+          (click)="abrirShowcase(p)"
+          class="group relative bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-transparent overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 cursor-pointer"
         >
           <!-- Gradient radial sutil con color de marca -->
           <div
@@ -345,4 +346,10 @@
       </div>
     </div>
   </section>
+  <!-- Modal Showcase -->
+  <app-project-showcase
+    *ngIf="proyectoSeleccionado() as p"
+    [proyecto]="p"
+    (cerrar)="cerrarShowcase()"
+  ></app-project-showcase>
 </div>

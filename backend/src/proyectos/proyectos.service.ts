@@ -103,6 +103,12 @@ export class ProyectosService {
         (x: string) => !!x && x.trim().length > 0,
       );
     }
+    // Limpiar imagenesPublicas también
+    if (Array.isArray(datos.imagenesPublicas)) {
+      datos.imagenesPublicas = datos.imagenesPublicas.filter(
+        (x: string) => !!x && x.trim().length > 0,
+      );
+    }
     return datos;
   }
 }

@@ -1,0 +1,57 @@
+<div
+  class="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center animate-[fadeIn_0.2s_ease-out]"
+  (click)="cerrar.emit()"
+  (touchstart)="onTouchStart($event)"
+  (touchend)="onTouchEnd($event)"
+>
+  <!-- Cerrar -->
+  <button
+    (click)="cerrar.emit()"
+    class="absolute top-4 right-4 w-11 h-11 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-sm transition-all z-10"
+    aria-label="Cerrar"
+  >
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
+
+  <!-- Contador -->
+  <div
+    *ngIf="total() > 1"
+    class="absolute top-4 left-4 bg-white/10 backdrop-blur-sm text-white text-sm font-semibold px-3 py-1.5 rounded-full"
+  >
+    {{ indice() + 1 }} / {{ total() }}
+  </div>
+
+  <!-- Flecha anterior -->
+  <button
+    *ngIf="total() > 1"
+    (click)="anterior($event)"
+    class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-sm transition-all hover:scale-110 z-10"
+    aria-label="Imagen anterior"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+  </button>
+
+  <!-- Imagen -->
+  <img
+    [src]="imagenActual()"
+    (click)="$event.stopPropagation()"
+    class="max-w-[95vw] max-h-[90vh] object-contain animate-[fadeIn_0.3s_ease-out]"
+    alt="Imagen ampliada"
+  />
+
+  <!-- Flecha siguiente -->
+  <button
+    *ngIf="total() > 1"
+    (click)="siguiente($event)"
+    class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-sm transition-all hover:scale-110 z-10"
+    aria-label="Imagen siguiente"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  </button>
+</div>

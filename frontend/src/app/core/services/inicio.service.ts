@@ -43,6 +43,8 @@ export interface ProyectoBackend {
   imagenes?: string[];  // 👈 AGREGAR
   createdAt: string;
   updatedAt: string;
+  imagenesPublicas?: string[];  // 👈 AGREGAR
+  videoUrl?: string;
 }
 
 export interface StatsResponse {
