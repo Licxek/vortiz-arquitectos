@@ -5,6 +5,8 @@ import { ContenidoService } from '../../core/services/contenido.service';
 import { CatalogoService, Servicio, Proyecto } from '../../core/services/catalogo.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
+import { signal } from '@angular/core'; // si no estaba
+import { ProjectShowcaseComponent } from '../../shared/project-showcase/project-showcase.component';
 
 interface Paso {
   numero: string;
@@ -20,7 +22,14 @@ interface Stat {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormatoTextoPipe, SkeletonComponent, NgOptimizedImage],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormatoTextoPipe,
+    SkeletonComponent,
+    NgOptimizedImage,
+    ProjectShowcaseComponent,
+  ],
   templateUrl: './home.component.html',
 })
 export class HomeComponent implements OnInit {
@@ -124,7 +133,10 @@ export class HomeComponent implements OnInit {
 
     // ============ PROYECTOS - cuáles mostrar ============
     const proySel = this.contenidoService.getCampo('inicio', 'proyectos', 'visibles', '');
-    this.proyectosVisibles = this.filtrarPorSeleccion(this.proyectosDestacados, proySel).slice(0, 8);
+    this.proyectosVisibles = this.filtrarPorSeleccion(this.proyectosDestacados, proySel).slice(
+      0,
+      8,
+    );
   }
 
   private filtrarPorSeleccion<T extends { id: number }>(lista: T[], seleccion: string): T[] {
@@ -138,5 +150,16 @@ export class HomeComponent implements OnInit {
 
   etiquetaServicio(cat: string): string {
     return this.catalogo.etiquetaCategoriaServicio(cat);
+  }
+  proyectoSeleccionado = signal<Proyecto | null>(null);
+
+  abrirShowcase(p: Proyecto) {
+    this.proyectoSeleccionado.set(p);
+    document.body.style.overflow = 'hidden';
+  }
+
+  cerrarShowcase() {
+    this.proyectoSeleccionado.set(null);
+    document.body.style.overflow = '';
   }
 }
