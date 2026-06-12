@@ -247,8 +247,11 @@ export class InicioComponent implements OnInit, OnDestroy {
   formPublico = {
     titulo: '',
     descripcion: '',
-    imagenUrl: '',
-    categoria: 'Residencial',
+    imagenUrl: '', // logo
+    categoria: 'residencial',
+    imagenesPublicas: [] as string[], // 👈 NUEVO
+    videoUrl: '', // 👈 NUEVO
+    cliente: '', // 👈 NUEVO
   };
 
   // Navegación entre modales de proyectos
@@ -749,8 +752,11 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.formPublico = {
         titulo: this.proyectoEditando.nombre,
         descripcion: this.proyectoEditando.descripcion || '',
-        imagenUrl: '', // 👈 vacío para que ponga el logo público (no la foto interna)
+        imagenUrl: '',
         categoria: 'residencial',
+        imagenesPublicas: [...(this.proyectoEditando.imagenes || [])], // 👈 pre-llenar
+        videoUrl: '',
+        cliente: this.proyectoEditando.cliente || '', // 👈 pre-llenar
       };
       this.mostrarAgregarPublico = true;
     } else {
@@ -764,8 +770,11 @@ export class InicioComponent implements OnInit, OnDestroy {
     const payload: Partial<ProyectoBackend> = {
       nombre: this.formPublico.titulo.trim(),
       descripcion: this.formPublico.descripcion.trim(),
-      logoUrl: this.formPublico.imagenUrl.trim(), // 👈 el icono para el catálogo público
+      logoUrl: this.formPublico.imagenUrl.trim(),
       categoria: this.formPublico.categoria,
+      cliente: this.formPublico.cliente.trim(),
+      imagenesPublicas: this.formPublico.imagenesPublicas,
+      videoUrl: this.formPublico.videoUrl.trim(),
       publicado: true,
     };
 

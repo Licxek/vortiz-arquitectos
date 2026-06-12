@@ -23,6 +23,9 @@ export interface Proyecto {
   anio: number;
   colorMarca: string;
   descripcion?: string;
+  cliente?: string;                  // 👈 NUEVO
+  imagenesPublicas?: string[];       // 👈 NUEVO
+  videoUrl?: string;                 // 👈 NUEVO
   orden?: number;
 }
 

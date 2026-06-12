@@ -5,6 +5,7 @@ import { CatalogoService, Proyecto } from '../../core/services/catalogo.service'
 import { ContenidoService } from '../../core/services/contenido.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
+import { ProjectShowcaseComponent } from '../../shared/project-showcase/project-showcase.component';
 
 interface CategoriaFiltro {
   id: string;
@@ -15,7 +16,14 @@ interface CategoriaFiltro {
 @Component({
   selector: 'app-proyectos',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormatoTextoPipe, SkeletonComponent, NgOptimizedImage],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormatoTextoPipe,
+    SkeletonComponent,
+    NgOptimizedImage,
+    ProjectShowcaseComponent,
+  ],
   templateUrl: './proyectos.component.html',
 })
 export class ProyectosComponent implements OnInit {
@@ -98,5 +106,18 @@ export class ProyectosComponent implements OnInit {
     // CTA
     this.proyCtaTitulo = this.contenidoService.getCampo('proyectos', 'cta', 'titulo');
     this.proyCtaDescripcion = this.contenidoService.getCampo('proyectos', 'cta', 'descripcion');
+  }
+  // Agrega propiedad en la clase
+  proyectoSeleccionado = signal<Proyecto | null>(null);
+
+  // Métodos
+  abrirShowcase(p: Proyecto) {
+    this.proyectoSeleccionado.set(p);
+    document.body.style.overflow = 'hidden';
+  }
+
+  cerrarShowcase() {
+    this.proyectoSeleccionado.set(null);
+    document.body.style.overflow = '';
   }
 }
