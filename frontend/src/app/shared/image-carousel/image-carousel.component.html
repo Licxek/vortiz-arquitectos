@@ -1,0 +1,83 @@
+<div
+  class="relative w-full bg-gray-100 overflow-hidden group"
+  [class.rounded-2xl]="rounded"
+  [class]="aspectClass()"
+  (touchstart)="onTouchStart($event)"
+  (touchend)="onTouchEnd($event)"
+  tabindex="0"
+>
+  <!-- Imagen actual con transición -->
+  <img
+    [src]="imagenActual()"
+    [alt]="alt"
+    class="w-full h-full transition-all duration-300"
+    [class.object-cover]="objectFit === 'cover'"
+    [class.object-contain]="objectFit === 'contain'"
+    [class.cursor-pointer]="clickable"
+    [class.group-hover:scale-105]="clickable"
+    (click)="onClickImagen()"
+  />
+
+  <!-- Contador X / Y (esquina superior derecha) -->
+  <div
+    *ngIf="tieneMultiples()"
+    class="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-1 rounded-full backdrop-blur-sm"
+  >
+    {{ indiceActual() + 1 }} / {{ total() }}
+  </div>
+
+  <!-- Flecha anterior -->
+  <button
+    *ngIf="tieneMultiples() && showArrows"
+    (click)="anterior($event)"
+    class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+    aria-label="Imagen anterior"
+  >
+    <svg
+      class="w-4 h-4 text-gray-700"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+  </button>
+
+  <!-- Flecha siguiente -->
+  <button
+    *ngIf="tieneMultiples() && showArrows"
+    (click)="siguiente($event)"
+    class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+    aria-label="Imagen siguiente"
+  >
+    <svg
+      class="w-4 h-4 text-gray-700"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      viewBox="0 0 24 24"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  </button>
+
+  <!-- Dots indicadores -->
+  <div
+    *ngIf="tieneMultiples() && showDots"
+    class="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1.5"
+  >
+    <button
+      *ngFor="let _ of _imagenes(); let i = index"
+      (click)="irA(i, $event)"
+      class="rounded-full transition-all duration-200"
+      [class.w-4]="indiceActual() === i"
+      [class.w-1.5]="indiceActual() !== i"
+      [class.h-1.5]="true"
+      [class.bg-white]="indiceActual() === i"
+      [class.bg-white/50]="indiceActual() !== i"
+      [class.hover:bg-white/80]="indiceActual() !== i"
+      [attr.aria-label]="'Ir a imagen ' + (i + 1)"
+    ></button>
+  </div>
+</div>

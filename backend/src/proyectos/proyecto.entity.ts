@@ -67,4 +67,7 @@ export class Proyecto {
 
   @Column({ default: '' })
   imagen: string;
+
+  @Column({ type: 'jsonb', default: [] })
+  imagenes: string[];
 }
