@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfiguracionService, Configuracion } from '../../../core/services/configuracion.service';
+import { timeout, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
@@ -22,12 +23,13 @@ export class LoginComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private configuracionService: ConfiguracionService
+    private configuracionService: ConfiguracionService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
     this.configuracionService.getConfiguracion().subscribe({
-      next: (data) => this.configuracion = data
+      next: (data) => (this.configuracion = data),
     });
   }
 
@@ -44,15 +46,24 @@ export class LoginComponent implements OnInit {
     this.cargando = true;
     this.errorMensaje = '';
 
-    this.authService.login(this.correo, this.password).subscribe({
-      next: () => {
-        this.cargando = false;
-        this.router.navigate(['/admin']);
-      },
-      error: (err) => {
-        this.cargando = false;
-        this.errorMensaje = err.error?.message || 'Credenciales inválidas o servidor no disponible';
-      }
-    });
+    this.authService
+      .login(this.correo, this.password)
+      .pipe(timeout(15000))
+      .subscribe({
+        next: () => {
+          this.cargando = false;
+          this.cdr.detectChanges(); // 👈 NUEVO
+          this.router.navigate(['/admin']);
+        },
+        error: (err) => {
+          this.cargando = false;
+          if (err.name === 'TimeoutError') {
+            this.errorMensaje = 'El servidor tardó demasiado. Intenta de nuevo.';
+          } else {
+            this.errorMensaje = err.error?.message || 'Credenciales inválidas';
+          }
+          this.cdr.detectChanges(); // 👈 NUEVO — fuerza el re-render
+        },
+      });
   }
 }
