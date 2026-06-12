@@ -40,6 +40,7 @@ export interface ProyectoBackend {
   fechaInicio: string | null;
   fechaEntrega: string | null;
   imagen: string;
+  imagenes?: string[];  // 👈 AGREGAR
   createdAt: string;
   updatedAt: string;
 }

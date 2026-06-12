@@ -5,9 +5,7 @@ import { Proyecto } from './proyecto.entity';
 
 @Injectable()
 export class ProyectosService {
-  constructor(
-    @InjectRepository(Proyecto) private repo: Repository<Proyecto>,
-  ) {}
+  constructor(@InjectRepository(Proyecto) private repo: Repository<Proyecto>) {}
 
   findAll() {
     return this.repo.find({
@@ -31,6 +29,7 @@ export class ProyectosService {
 
   async crear(datos: Partial<Proyecto>) {
     delete (datos as any).id;
+    datos = this.sincronizarImagenes(datos); // 👈 AGREGAR
     const ultimo = await this.repo.find({ order: { orden: 'DESC' }, take: 1 });
     const orden = (ultimo[0]?.orden ?? 0) + 1;
     const proyecto = this.repo.create({ ...datos, orden });
@@ -40,6 +39,7 @@ export class ProyectosService {
   async actualizar(id: number, datos: Partial<Proyecto>) {
     const proyecto = await this.findOne(id);
     delete (datos as any).id;
+    datos = this.sincronizarImagenes(datos); // 👈 AGREGAR
     Object.assign(proyecto, datos);
     return this.repo.save(proyecto);
   }
@@ -74,5 +74,35 @@ export class ProyectosService {
       resultado.push(await this.repo.save(nuevo));
     }
     return resultado;
+  }
+
+  /** Mantiene compatibilidad entre `imagen` (single) e `imagenes` (array) */
+  private sincronizarImagenes(datos: any): any {
+    // Si llega array pero no single, hidratar single con primera
+    if (
+      Array.isArray(datos.imagenes) &&
+      datos.imagenes.length > 0 &&
+      !datos.imagen
+    ) {
+      datos.imagen = datos.imagenes[0];
+    }
+    // Si llega single pero no array, hidratar array con la single
+    else if (
+      datos.imagen &&
+      (!Array.isArray(datos.imagenes) || datos.imagenes.length === 0)
+    ) {
+      datos.imagenes = [datos.imagen];
+    }
+    // Si llega array, asegurar que single sea la primera (para compatibilidad)
+    if (Array.isArray(datos.imagenes) && datos.imagenes.length > 0) {
+      datos.imagen = datos.imagenes[0];
+    }
+    // Limpiar array de strings vacíos
+    if (Array.isArray(datos.imagenes)) {
+      datos.imagenes = datos.imagenes.filter(
+        (x: string) => !!x && x.trim().length > 0,
+      );
+    }
+    return datos;
   }
 }

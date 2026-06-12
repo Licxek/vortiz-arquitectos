@@ -30,6 +30,8 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { AnalyticsService } from '../../../core/services/analytics.service';
+import { ImageCarouselComponent } from '../../../shared/image-carousel/image-carousel.component';
+import { ImageGalleryInputComponent } from '../../../shared/image-gallery-input/image-gallery-input.component';
 
 // ============ INTERFACES ============
 interface StatCard {
@@ -68,6 +70,7 @@ interface Proyecto {
   estado: string;
   fecha: string;
   imagen: string;
+  imagenes: string[];
   cliente?: string;
   ubicacion?: string;
   superficie?: string;
@@ -123,6 +126,8 @@ interface Tip {
     HeatmapHorariosComponent,
     FunnelConversionComponent,
     RouterLink,
+    ImageCarouselComponent, // 👈 AGREGAR
+    ImageGalleryInputComponent,
   ],
   templateUrl: './inicio.component.html',
 })
@@ -608,6 +613,7 @@ export class InicioComponent implements OnInit, OnDestroy {
       estado: 'En diseño',
       fecha: '',
       imagen: '',
+      imagenes: [],
       cliente: '',
       ubicacion: '',
       superficie: '',
@@ -1155,12 +1161,16 @@ export class InicioComponent implements OnInit, OnDestroy {
   }
 
   private mapearProyecto(p: ProyectoBackend): Proyecto {
+    // Si llega array, usar array; si llega solo imagen single, convertir a array
+    const imagenes =
+      Array.isArray(p.imagenes) && p.imagenes.length > 0 ? p.imagenes : p.imagen ? [p.imagen] : [];
     return {
       id: p.id,
       nombre: p.nombre,
       estado: this.estadoLabel(p.estado),
       fecha: this.formatearFechaCorta(p.updatedAt),
       imagen: p.imagen || '',
+      imagenes, // 👈 NUEVO
       cliente: p.cliente,
       ubicacion: p.ubicacion,
       superficie: p.superficie,
@@ -1227,6 +1237,7 @@ export class InicioComponent implements OnInit, OnDestroy {
   }
 
   private armarPayloadBackend(p: Proyecto): Partial<ProyectoBackend> {
+    const imagenes = (p.imagenes || []).filter((x) => !!x && x.trim().length > 0);
     return {
       nombre: (p.nombre || '').trim(),
       estado: this.estadoBackend(p.estado),
@@ -1238,6 +1249,7 @@ export class InicioComponent implements OnInit, OnDestroy {
       fechaInicio: (p as any).fechaInicio || null,
       fechaEntrega: (p as any).fechaEntrega || null,
       imagen: (p.imagen || '').trim(),
+      imagenes,
     };
   }
 
@@ -1251,6 +1263,12 @@ export class InicioComponent implements OnInit, OnDestroy {
 
   imagenDeProyecto(p: Proyecto): string {
     return p.imagen || this.placeholderImagen;
+  }
+
+  imagenesDeProyecto(p: Proyecto): string[] {
+    if (p.imagenes && p.imagenes.length > 0) return p.imagenes;
+    if (p.imagen) return [p.imagen];
+    return [];
   }
   private cargarFunnelConversion() {
     this.cargandoFunnel = true;
@@ -1460,7 +1478,7 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.cerrarRespuesta();
     } else if (this.consultaSeleccionada) {
       this.cerrarConsulta();
-    }else if (this.mostrarInfoGA) {
+    } else if (this.mostrarInfoGA) {
       this.cerrarInfoGA();
     } else if (this.notificacionSeleccionada) {
       this.cerrarNotificacion();
