@@ -245,7 +245,7 @@
                 *ngIf="p.logoUrl"
                 [src]="p.logoUrl"
                 [alt]="p.nombre"
-                class="max-w-[120px] max-h-[100px] object-contain transition-all duration-500 group-hover:scale-110"
+                class="max-w-[120px] max-h-[100px] object-contain transition-all duration-500 grayscale group-hover:grayscale-0 opacity-60 group-hover:opacity-100 group-hover:scale-110"
                 (error)="$any($event.target).style.display = 'none'"
               />
 
@@ -308,6 +308,26 @@
                 </svg>
                 {{ p.ubicacion }}
               </p>
+              <!-- Botón "Ver detalle" visible siempre -->
+              <div
+                class="mt-5 pt-4 border-t border-gray-100 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-all duration-300 group-hover:gap-2"
+                [style.color]="p.colorMarca"
+              >
+                Ver detalle
+                <svg
+                  class="w-3.5 h-3.5 transition-transform group-hover:translate-x-1"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
+                </svg>
+              </div>
             </div>
           </div>
         </div>

@@ -488,9 +488,9 @@
         *ngIf="proyectosVisibles.length > 0"
         class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
       >
-        <a
+        <div
           *ngFor="let p of proyectosVisibles; let i = index"
-          routerLink="/proyectos"
+          (click)="abrirShowcase(p)"
           class="group relative bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-transparent overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 cursor-pointer"
         >
           <!-- Gradient radial sutil (con color de marca) -->
@@ -631,7 +631,7 @@
               </svg>
             </div>
           </div>
-        </a>
+        </div>
       </div>
     </div>
   </section>
@@ -770,4 +770,10 @@
       </div>
     </div>
   </section>
+  <!-- Modal Showcase -->
+  <app-project-showcase
+    *ngIf="proyectoSeleccionado() as p"
+    [proyecto]="p"
+    (cerrar)="cerrarShowcase()"
+  ></app-project-showcase>
 </div>
