@@ -21,6 +21,7 @@ import { UploadsModule } from './uploads/uploads.module';
 import { HealthModule } from './health/health.module';
 import { ReportesModule } from './reportes/reportes.module';
 import { SesionesModule } from './sesiones/sesiones.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -57,6 +58,10 @@ import { SesionesModule } from './sesiones/sesiones.module';
         // === Throttling (opcional pero recomendado configurable) ===
         THROTTLE_TTL: Joi.number().default(60000),
         THROTTLE_LIMIT: Joi.number().default(60),
+
+        GA_PROPERTY_ID: Joi.string().optional(),
+        GA_CLIENT_EMAIL: Joi.string().email().optional(),
+        GA_PRIVATE_KEY: Joi.string().optional(),
       }),
     }),
     ThrottlerModule.forRoot([
@@ -102,6 +107,7 @@ import { SesionesModule } from './sesiones/sesiones.module';
     HealthModule,
     ReportesModule,
     SesionesModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
