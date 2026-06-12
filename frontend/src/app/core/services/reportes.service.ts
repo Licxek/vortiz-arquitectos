@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+
 // ============ TIPOS DE KPIS ============
 
 export interface SparklinePoint {
@@ -91,6 +92,13 @@ export interface DetalleReporte {
   unidad: string;
   insights: InsightDetalle;
   tabla: TablaDetalle;
+}
+
+export interface DetalleReporteVisitas extends DetalleReporte {
+  topPaginas?: { nombre: string; vistas: number }[];
+  topPaises?: { pais: string; usuarios: number }[];
+  dispositivos?: { tipo: string; usuarios: number }[];
+  topFuentes?: { fuente: string; usuarios: number }[];
 }
 
 // ============ TIPOS DE HEATMAP ============

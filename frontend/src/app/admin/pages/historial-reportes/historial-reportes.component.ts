@@ -54,6 +54,7 @@ export class HistorialReportesComponent implements OnInit {
     { value: 'categorias-servicios', label: 'Categorías de servicios' },
     { value: 'actividad-semanal', label: 'Actividad semanal' },
     { value: 'clientes-nuevos', label: 'Clientes nuevos' },
+    { value: 'visitas', label: 'Visitas al sitio' },  // 👈
   ];
 
   reportesFiltrados = computed(() => {
@@ -223,6 +224,7 @@ export class HistorialReportesComponent implements OnInit {
       'categorias-servicios': 'bg-purple-100 text-purple-700',
       'actividad-semanal': 'bg-emerald-100 text-emerald-700',
       'clientes-nuevos': 'bg-orange-100 text-orange-700',
+      'visitas': 'bg-fuchsia-100 text-fuchsia-700',  // 👈
     };
     return colores[tipo] || 'bg-gray-100 text-gray-700';
   }

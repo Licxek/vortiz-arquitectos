@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Cita } from '../citas/cita.entity';
 import { Servicio } from '../servicios/servicio.entity';
 import { Proyecto } from '../proyectos/proyecto.entity';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 export interface SparklinePoint {
   fecha: string; // YYYY-MM-DD
@@ -18,6 +19,7 @@ export class ReportesService {
     private readonly serviciosRepo: Repository<Servicio>,
     @InjectRepository(Proyecto)
     private readonly proyectosRepo: Repository<Proyecto>,
+    private readonly analyticsService: AnalyticsService, // 👈 AGREGAR
   ) {}
 
   /**
@@ -359,6 +361,7 @@ export class ReportesService {
       'categorias-servicios',
       'actividad-semanal',
       'clientes-nuevos',
+      'visitas', // 👈 NUEVO
     ];
     if (!tiposValidos.includes(tipo)) {
       throw new Error(`Tipo de reporte no válido: ${tipo}`);
@@ -398,6 +401,12 @@ export class ReportesService {
         unidad: 'clientes',
         columnaLabel: 'Mes',
       },
+      visitas: {
+        // 👈 NUEVO
+        tipoGrafica: 'area',
+        unidad: 'visitas',
+        columnaLabel: 'Día',
+      },
     };
 
     const { tipoGrafica, unidad, columnaLabel } = configs[tipo];
@@ -421,13 +430,12 @@ export class ReportesService {
     const totalAnterior = serieAnterior.reduce((sum, p) => sum + p.valor, 0);
     const cambio = this.calcularCambioPorcentual(total, totalAnterior);
 
+    // Etiqueta de la columna de valores (capitaliza la unidad)
+    const unidadLabel = unidad.charAt(0).toUpperCase() + unidad.slice(1);
+
     // Tabla con cambio vs período anterior fila por fila
     const tabla = {
-      columnas: [
-        columnaLabel,
-        unidad === 'citas' ? 'Citas' : 'Clientes',
-        'vs Anterior',
-      ],
+      columnas: [columnaLabel, unidadLabel, 'vs Anterior'],
       filas: serie.map((p, i) => {
         const prev = i > 0 ? serie[i - 1].valor : null;
         const cambioP =
@@ -442,7 +450,7 @@ export class ReportesService {
       }),
     };
 
-    return {
+    const respuesta: any = {
       tipo,
       rango: {
         desde: this.toIsoDate(fechaDesde),
@@ -461,6 +469,23 @@ export class ReportesService {
       },
       tabla,
     };
+
+    // 👇 Enriquecer con datos extra si es visitas
+    if (tipo === 'visitas') {
+      const enriquecido =
+        await this.analyticsService.obtenerEnriquecidoPorRango(
+          this.toIsoDate(fechaDesde),
+          this.toIsoDate(fechaHasta),
+        );
+      if (enriquecido) {
+        respuesta.topPaginas = enriquecido.topPaginas;
+        respuesta.topPaises = enriquecido.topPaises;
+        respuesta.dispositivos = enriquecido.dispositivos;
+        respuesta.topFuentes = enriquecido.topFuentes;
+      }
+    }
+
+    return respuesta;
   }
 
   private async obtenerSerieDetalle(
@@ -477,6 +502,8 @@ export class ReportesService {
         return this.serieActividadSemanal(desde, hasta);
       case 'clientes-nuevos':
         return this.serieClientesNuevos(desde, hasta);
+      case 'visitas': // 👈 AGREGAR
+        return this.analyticsService.obtenerSerieVisitasPorDia(desde, hasta);
       default:
         return [];
     }
