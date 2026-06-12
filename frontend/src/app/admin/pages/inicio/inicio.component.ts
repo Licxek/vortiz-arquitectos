@@ -29,7 +29,7 @@ import { ActivatedRoute, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { forkJoin, of } from 'rxjs';
-import { AnalyticsService } from '../../../core/services/analytics.service';
+import { AnalyticsService, DashboardGA } from '../../../core/services/analytics.service';
 
 // ============ INTERFACES ============
 interface StatCard {
@@ -138,6 +138,11 @@ export class InicioComponent implements OnInit, OnDestroy {
 
   // Detalle de cita
   citaSeleccionada: Cita | null = null;
+
+  // ============ MODAL DETALLE GA ============
+  mostrarModalVisitas = false;
+  dashboardGA: DashboardGA | null = null;
+  cargandoDashboardGA = false;
 
   modoFocus = false;
   private analyticsService = inject(AnalyticsService);
@@ -1440,7 +1445,8 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.mostrarTodasConsultas ||
       this.notificacionSeleccionada ||
       this.citaSeleccionada ||
-      this.mostrarInfoGA
+      this.mostrarInfoGA ||
+      this.mostrarModalVisitas  // 👈 AGREGAR
     );
   }
 
@@ -1450,7 +1456,11 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.cerrarRespuesta();
     } else if (this.consultaSeleccionada) {
       this.cerrarConsulta();
-    } else if (this.notificacionSeleccionada) {
+    }else if (this.mostrarModalVisitas) {  // 👈 AGREGAR
+    this.cerrarModalVisitas();
+  }else if (this.mostrarInfoGA) {
+    this.cerrarInfoGA();
+  } else if (this.notificacionSeleccionada) {
       this.cerrarNotificacion();
     } else if (this.citaSeleccionada) {
       this.cerrarCita();
@@ -1681,5 +1691,213 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.tipActual = (this.tipActual + 1) % this.tips.length;
       this.cdr.detectChanges();
     }, 10000);
+  }
+  onClickCard(stat: StatCard) {
+    if (stat.icon !== 'eye') return;
+    if (!this.gaConectado) {
+      this.abrirInfoGA();
+    } else {
+      this.abrirModalVisitas();
+    }
+  }
+
+  abrirModalVisitas() {
+    this.mostrarModalVisitas = true;
+    this.cargarDashboardGA();
+  }
+
+  cerrarModalVisitas() {
+    this.mostrarModalVisitas = false;
+  }
+
+  private cargarDashboardGA() {
+    this.cargandoDashboardGA = true;
+    this.dashboardGA = null;
+    this.analyticsService.obtenerDashboard().subscribe({
+      next: (data) => {
+        this.dashboardGA = data;
+        this.cargandoDashboardGA = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.dashboardGA = { configurado: false };
+        this.cargandoDashboardGA = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  // ============ HELPERS GA ============
+
+  tieneSparkline(): boolean {
+    return !!this.dashboardGA?.sparkline?.some((p) => p.valor > 0);
+  }
+
+  totalSparkline(): number {
+    return (this.dashboardGA?.sparkline || []).reduce((sum, p) => sum + p.valor, 0);
+  }
+
+  ultimoDiaSparkline(): number {
+    const arr = this.dashboardGA?.sparkline || [];
+    return arr.length ? arr[arr.length - 1].valor : 0;
+  }
+
+  get sparklineArea(): string {
+    const points = this.dashboardGA?.sparkline || [];
+    if (points.length === 0) return '';
+    const max = Math.max(...points.map((p) => p.valor), 1);
+    const width = 400;
+    const height = 80;
+    const step = points.length > 1 ? width / (points.length - 1) : width;
+    let d = `M 0,${height}`;
+    points.forEach((p, i) => {
+      const x = i * step;
+      const y = height - (p.valor / max) * (height - 4) - 2;
+      d += ` L ${x.toFixed(2)},${y.toFixed(2)}`;
+    });
+    d += ` L ${width},${height} Z`;
+    return d;
+  }
+
+  get sparklineLine(): string {
+    const points = this.dashboardGA?.sparkline || [];
+    if (points.length === 0) return '';
+    const max = Math.max(...points.map((p) => p.valor), 1);
+    const width = 400;
+    const height = 80;
+    const step = points.length > 1 ? width / (points.length - 1) : width;
+    let d = '';
+    points.forEach((p, i) => {
+      const x = i * step;
+      const y = height - (p.valor / max) * (height - 4) - 2;
+      d += (i === 0 ? 'M ' : ' L ') + `${x.toFixed(2)},${y.toFixed(2)}`;
+    });
+    return d;
+  }
+
+  porcentajePagina(vistas: number): number {
+    const max = Math.max(...(this.dashboardGA?.topPaginas || []).map((p) => p.vistas), 1);
+    return Math.round((vistas / max) * 100);
+  }
+
+  dispositivosConPorcentaje() {
+    const total = (this.dashboardGA?.dispositivos || []).reduce((s, d) => s + d.usuarios, 0);
+    if (total === 0) return [];
+    return (this.dashboardGA?.dispositivos || []).map((d) => ({
+      ...d,
+      porcentaje: Math.round((d.usuarios / total) * 100),
+      color: this.colorDispositivo(d.tipo),
+    }));
+  }
+
+  colorDispositivo(tipo: string): string {
+    const map: Record<string, string> = {
+      mobile: '#9333ea',
+      desktop: '#3b82f6',
+      tablet: '#f59e0b',
+    };
+    return map[tipo.toLowerCase()] || '#6b7280';
+  }
+
+  iconoDispositivo(tipo: string): string {
+    const map: Record<string, string> = {
+      mobile: '📱',
+      desktop: '🖥️',
+      tablet: '📟',
+    };
+    return map[tipo.toLowerCase()] || '📊';
+  }
+
+  labelDispositivo(tipo: string): string {
+    const map: Record<string, string> = {
+      mobile: 'Móvil',
+      desktop: 'Escritorio',
+      tablet: 'Tablet',
+    };
+    return map[tipo.toLowerCase()] || tipo;
+  }
+
+  banderaPais(pais: string): string {
+    const map: Record<string, string> = {
+      Mexico: '🇲🇽',
+      'United States': '🇺🇸',
+      Spain: '🇪🇸',
+      Colombia: '🇨🇴',
+      Argentina: '🇦🇷',
+      Chile: '🇨🇱',
+      Peru: '🇵🇪',
+      Venezuela: '🇻🇪',
+      Ecuador: '🇪🇨',
+      Brazil: '🇧🇷',
+      Canada: '🇨🇦',
+      France: '🇫🇷',
+      Germany: '🇩🇪',
+      'United Kingdom': '🇬🇧',
+      Italy: '🇮🇹',
+      Japan: '🇯🇵',
+      China: '🇨🇳',
+      India: '🇮🇳',
+      Australia: '🇦🇺',
+      Russia: '🇷🇺',
+      Netherlands: '🇳🇱',
+      Portugal: '🇵🇹',
+      'South Korea': '🇰🇷',
+      Indonesia: '🇮🇩',
+      Philippines: '🇵🇭',
+    };
+    return map[pais] || '🌍';
+  }
+
+  labelPais(pais: string): string {
+    const map: Record<string, string> = {
+      Mexico: 'México',
+      'United States': 'Estados Unidos',
+      Spain: 'España',
+      Brazil: 'Brasil',
+      Canada: 'Canadá',
+      France: 'Francia',
+      Germany: 'Alemania',
+      'United Kingdom': 'Reino Unido',
+      Italy: 'Italia',
+      Japan: 'Japón',
+      Peru: 'Perú',
+      Netherlands: 'Países Bajos',
+      'South Korea': 'Corea del Sur',
+      Russia: 'Rusia',
+    };
+    return map[pais] || pais;
+  }
+
+  labelFuente(fuente: string): string {
+    const map: Record<string, string> = {
+      '(direct)': 'Tráfico directo',
+      google: 'Google',
+      bing: 'Bing',
+      yahoo: 'Yahoo',
+      duckduckgo: 'DuckDuckGo',
+      'facebook.com': 'Facebook',
+      'l.facebook.com': 'Facebook',
+      'instagram.com': 'Instagram',
+      'l.instagram.com': 'Instagram',
+      'twitter.com': 'Twitter / X',
+      't.co': 'Twitter / X',
+      'linkedin.com': 'LinkedIn',
+      'youtube.com': 'YouTube',
+      whatsapp: 'WhatsApp',
+    };
+    return map[fuente] || fuente;
+  }
+
+  iconoFuente(fuente: string): string {
+    if (fuente.includes('google')) return '🔍';
+    if (fuente === '(direct)') return '🔗';
+    if (fuente.includes('facebook')) return '📘';
+    if (fuente.includes('instagram')) return '📷';
+    if (fuente.includes('twitter') || fuente === 't.co') return '🐦';
+    if (fuente.includes('linkedin')) return '💼';
+    if (fuente.includes('youtube')) return '📺';
+    if (fuente.includes('whatsapp')) return '💬';
+    if (fuente.includes('bing')) return '🔎';
+    return '🌐';
   }
 }
