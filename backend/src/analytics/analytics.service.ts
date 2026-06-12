@@ -239,4 +239,134 @@ export class AnalyticsService {
       return [];
     }
   }
+
+  /** Serie de visitas por día para un rango específico (para gráfica área/line) */
+  async obtenerSerieVisitasPorDia(
+    desde: Date,
+    hasta: Date,
+  ): Promise<{ label: string; valor: number }[]> {
+    if (!this.client) return [];
+
+    const desdeStr = this.toIsoDate(desde);
+    const hastaStr = this.toIsoDate(hasta);
+
+    try {
+      const [response] = await this.client.runReport({
+        property: `properties/${this.propertyId}`,
+        dateRanges: [{ startDate: desdeStr, endDate: hastaStr }],
+        dimensions: [{ name: 'date' }],
+        metrics: [{ name: 'activeUsers' }],
+        orderBys: [{ dimension: { dimensionName: 'date' } }],
+      });
+
+      // Map fecha (YYYY-MM-DD) → valor
+      const valoresPorDia = new Map<string, number>();
+      (response.rows || []).forEach((r) => {
+        const gaDate = r.dimensionValues?.[0]?.value || ''; // YYYYMMDD
+        if (gaDate.length === 8) {
+          const fecha = `${gaDate.slice(0, 4)}-${gaDate.slice(4, 6)}-${gaDate.slice(6, 8)}`;
+          valoresPorDia.set(fecha, Number(r.metricValues?.[0]?.value || 0));
+        }
+      });
+
+      // Rellenar todos los días del rango (con 0 si GA no tiene datos)
+      const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      const diasRango =
+        Math.ceil((hasta.getTime() - desde.getTime()) / 86400000) + 1;
+      const resultado: { label: string; valor: number }[] = [];
+
+      for (let i = 0; i < diasRango; i++) {
+        const d = new Date(desde.getTime() + i * 86400000);
+        const fechaStr = this.toIsoDate(d);
+        const label =
+          diasRango <= 31
+            ? `${diasSemana[d.getDay()]} ${d.getDate()}`
+            : `${d.getDate()}/${d.getMonth() + 1}`;
+        resultado.push({ label, valor: valoresPorDia.get(fechaStr) || 0 });
+      }
+
+      return resultado;
+    } catch (e) {
+      this.logger.error(
+        'Error obteniendo serie visitas por día',
+        (e as Error).message,
+      );
+      return [];
+    }
+  }
+
+  /** Datos enriquecidos (top páginas, países, dispositivos, fuentes) para un rango específico */
+  async obtenerEnriquecidoPorRango(desdeStr: string, hastaStr: string) {
+    if (!this.client) return null;
+
+    try {
+      const property = `properties/${this.propertyId}`;
+      const dateRanges = [{ startDate: desdeStr, endDate: hastaStr }];
+
+      const [[pagesResp], [countriesResp], [devicesResp], [sourcesResp]] =
+        await Promise.all([
+          this.client.runReport({
+            property,
+            dateRanges,
+            dimensions: [{ name: 'pageTitle' }],
+            metrics: [{ name: 'screenPageViews' }],
+            orderBys: [
+              { metric: { metricName: 'screenPageViews' }, desc: true },
+            ],
+            limit: 5,
+          }),
+          this.client.runReport({
+            property,
+            dateRanges,
+            dimensions: [{ name: 'country' }],
+            metrics: [{ name: 'activeUsers' }],
+            orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+            limit: 5,
+          }),
+          this.client.runReport({
+            property,
+            dateRanges,
+            dimensions: [{ name: 'deviceCategory' }],
+            metrics: [{ name: 'activeUsers' }],
+          }),
+          this.client.runReport({
+            property,
+            dateRanges,
+            dimensions: [{ name: 'sessionSource' }],
+            metrics: [{ name: 'activeUsers' }],
+            orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+            limit: 5,
+          }),
+        ]);
+
+      return {
+        topPaginas: (pagesResp.rows || []).map((r) => ({
+          nombre: r.dimensionValues?.[0]?.value || 'Sin título',
+          vistas: Number(r.metricValues?.[0]?.value || 0),
+        })),
+        topPaises: (countriesResp.rows || []).map((r) => ({
+          pais: r.dimensionValues?.[0]?.value || 'Desconocido',
+          usuarios: Number(r.metricValues?.[0]?.value || 0),
+        })),
+        dispositivos: (devicesResp.rows || []).map((r) => ({
+          tipo: r.dimensionValues?.[0]?.value || 'desconocido',
+          usuarios: Number(r.metricValues?.[0]?.value || 0),
+        })),
+        topFuentes: (sourcesResp.rows || []).map((r) => ({
+          fuente: r.dimensionValues?.[0]?.value || 'desconocido',
+          usuarios: Number(r.metricValues?.[0]?.value || 0),
+        })),
+      };
+    } catch (e) {
+      this.logger.error(
+        'Error obteniendo enriquecido por rango',
+        (e as Error).message,
+      );
+      return null;
+    }
+  }
+
+  private toIsoDate(d: Date): string {
+    return d.toISOString().split('T')[0];
+  }
 }

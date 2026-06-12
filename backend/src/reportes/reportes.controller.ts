@@ -131,6 +131,10 @@ export class ReportesController {
           titulo: 'Reporte de Clientes Nuevos',
           descripcion: 'Clientes que reservan por primera vez',
         },
+        visitas: {
+          titulo: 'Reporte de Visitas al Sitio',
+          descripcion: 'Tráfico web registrado en Google Analytics',
+        },
       };
 
     const meta = titulos[tipo];

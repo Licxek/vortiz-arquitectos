@@ -23,6 +23,17 @@ import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { ModalGenerarPdfComponent } from '../../../shared/modal-generar-pdf/modal-generar-pdf.component';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+// AGREGAR imports al inicio
+import { DetalleReporteVisitas } from '../../../core/services/reportes.service';
+import {
+  banderaPais,
+  labelPais,
+  iconoDispositivo,
+  colorDispositivo,
+  labelDispositivo,
+  iconoFuente,
+  labelFuente,
+} from '../../../shared/visitas-helpers';
 
 @Component({
   selector: 'app-reportes-detalle',
@@ -54,6 +65,7 @@ export class ReportesDetalleComponent implements OnInit {
     'categorias-servicios': 'Categorías de servicios',
     'actividad-semanal': 'Actividad semanal',
     'clientes-nuevos': 'Clientes nuevos',
+    visitas: 'Visitas al sitio', // 👈
   };
 
   descripcionesPorTipo: Record<string, string> = {
@@ -61,6 +73,7 @@ export class ReportesDetalleComponent implements OnInit {
     'categorias-servicios': 'Distribución de citas según la categoría del servicio',
     'actividad-semanal': 'Actividad diaria de citas en el período seleccionado',
     'clientes-nuevos': 'Clientes que reservan cita por primera vez (correo único)',
+    visitas: 'Tráfico web registrado en Google Analytics', // 👈
   };
 
   iconosPorTipo: Record<string, string> = {
@@ -70,6 +83,8 @@ export class ReportesDetalleComponent implements OnInit {
     'actividad-semanal': 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
     'clientes-nuevos':
       'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z',
+    visitas:
+      'M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z', // 👈 ojo
   };
 
   // Computed para datos de la gráfica
@@ -85,6 +100,7 @@ export class ReportesDetalleComponent implements OnInit {
       'categorias-servicios': '#a855f7',
       'actividad-semanal': '#10b981',
       'clientes-nuevos': '#f97316',
+      visitas: '#9333ea', // 👈
     };
     return mapa[this.tipo()] || '#0a4d7a';
   });
@@ -168,4 +184,35 @@ export class ReportesDetalleComponent implements OnInit {
       }, 800); // 800ms porque el reporte tarda en cargar
     }
   }
+  // AGREGAR estos al final de la clase
+  detalleVisitas = computed<DetalleReporteVisitas | null>(() => {
+    if (this.tipo() !== 'visitas') return null;
+    return this.detalle() as DetalleReporteVisitas | null;
+  });
+
+  esVisitas = computed(() => this.tipo() === 'visitas');
+
+  dispositivosConPorcentaje = computed(() => {
+    const dispositivos = this.detalleVisitas()?.dispositivos || [];
+    const total = dispositivos.reduce((s, d) => s + d.usuarios, 0);
+    if (total === 0) return [];
+    return dispositivos.map((d) => ({
+      ...d,
+      porcentaje: Math.round((d.usuarios / total) * 100),
+      color: colorDispositivo(d.tipo),
+    }));
+  });
+
+  porcentajePagina(vistas: number): number {
+    const max = Math.max(...(this.detalleVisitas()?.topPaginas || []).map((p) => p.vistas), 1);
+    return Math.round((vistas / max) * 100);
+  }
+
+  // Expose helpers para usar en el template
+  banderaPais = banderaPais;
+  labelPais = labelPais;
+  iconoDispositivo = iconoDispositivo;
+  labelDispositivo = labelDispositivo;
+  iconoFuente = iconoFuente;
+  labelFuente = labelFuente;
 }

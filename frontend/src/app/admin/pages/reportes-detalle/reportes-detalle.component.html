@@ -131,6 +131,120 @@
     [unidad]="detalle()?.unidad || ''"
   ></app-grafica-dashboard>
 
+  <!-- ============ BLOQUE ENRIQUECIDO (solo para visitas) ============ -->
+  <ng-container *ngIf="esVisitas() && !cargando() && detalleVisitas() as dv">
+    <!-- Top páginas + Top países -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Top páginas -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <h3 class="text-sm font-semibold text-gray-900 mb-1 flex items-center gap-2">
+          <span class="text-base">📄</span> Páginas más visitadas
+        </h3>
+        <p class="text-xs text-gray-500 mb-4">Top 5 del período</p>
+        <div *ngIf="dv.topPaginas?.length; else emptyPaginas" class="space-y-3">
+          <div *ngFor="let p of dv.topPaginas">
+            <div class="flex items-center justify-between mb-1 gap-2">
+              <span class="text-sm font-medium text-gray-700 truncate min-w-0">{{ p.nombre }}</span>
+              <span class="text-sm font-bold text-gray-900 shrink-0">{{ p.vistas | number }}</span>
+            </div>
+            <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-fuchsia-500 rounded-full transition-all"
+                [style.width.%]="porcentajePagina(p.vistas)"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <ng-template #emptyPaginas>
+          <p class="text-sm text-gray-400 italic">Sin datos suficientes</p>
+        </ng-template>
+      </div>
+
+      <!-- Top países -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <h3 class="text-sm font-semibold text-gray-900 mb-1 flex items-center gap-2">
+          <span class="text-base">🌍</span> Países
+        </h3>
+        <p class="text-xs text-gray-500 mb-4">Top 5 por visitantes</p>
+        <div *ngIf="dv.topPaises?.length; else emptyPaises" class="space-y-1">
+          <div
+            *ngFor="let p of dv.topPaises"
+            class="flex items-center justify-between gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+          >
+            <span class="flex items-center gap-2 text-sm font-medium text-gray-700 truncate">
+              <span class="text-xl shrink-0">{{ banderaPais(p.pais) }}</span>
+              <span class="truncate">{{ labelPais(p.pais) }}</span>
+            </span>
+            <span class="text-sm font-bold text-gray-900 shrink-0">{{ p.usuarios | number }}</span>
+          </div>
+        </div>
+        <ng-template #emptyPaises>
+          <p class="text-sm text-gray-400 italic">Sin datos suficientes</p>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Dispositivos + Fuentes -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Dispositivos -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <h3 class="text-sm font-semibold text-gray-900 mb-1 flex items-center gap-2">
+          <span class="text-base">📱</span> Dispositivos
+        </h3>
+        <p class="text-xs text-gray-500 mb-4">Distribución de usuarios</p>
+        <div *ngIf="dispositivosConPorcentaje().length; else emptyDevs" class="space-y-3">
+          <div *ngFor="let d of dispositivosConPorcentaje()">
+            <div class="flex items-center justify-between mb-1">
+              <span class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <span>{{ iconoDispositivo(d.tipo) }}</span>
+                <span>{{ labelDispositivo(d.tipo) }}</span>
+              </span>
+              <span class="text-sm font-bold text-gray-900">
+                {{ d.porcentaje }}%
+                <span class="text-xs text-gray-500 font-normal">({{ d.usuarios }})</span>
+              </span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all"
+                [style.width.%]="d.porcentaje"
+                [style.background-color]="d.color"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <ng-template #emptyDevs>
+          <p class="text-sm text-gray-400 italic">Sin datos suficientes</p>
+        </ng-template>
+      </div>
+
+      <!-- Fuentes -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <h3 class="text-sm font-semibold text-gray-900 mb-1 flex items-center gap-2">
+          <span class="text-base">🔗</span> Fuentes de tráfico
+        </h3>
+        <p class="text-xs text-gray-500 mb-4">De dónde llegan los visitantes</p>
+        <div *ngIf="dv.topFuentes?.length; else emptyFuentes" class="space-y-1">
+          <div
+            *ngFor="let f of dv.topFuentes"
+            class="flex items-center justify-between gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+          >
+            <span
+              class="flex items-center gap-2 text-sm font-medium text-gray-700 truncate min-w-0"
+            >
+              <span class="text-base shrink-0">{{ iconoFuente(f.fuente) }}</span>
+              <span class="truncate">{{ labelFuente(f.fuente) }}</span>
+            </span>
+            <span class="text-sm font-bold text-gray-900 shrink-0">{{ f.usuarios | number }}</span>
+          </div>
+        </div>
+        <ng-template #emptyFuentes>
+          <p class="text-sm text-gray-400 italic">Sin datos suficientes</p>
+        </ng-template>
+      </div>
+    </div>
+  </ng-container>
+
   <!-- Tabla detallada -->
   <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="p-5 border-b border-gray-100">
