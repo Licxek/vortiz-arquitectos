@@ -28,6 +28,8 @@ import { RouterLink } from '@angular/router';
 import { ActivatedRoute, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
+import { forkJoin, of } from 'rxjs';
+import { AnalyticsService } from '../../../core/services/analytics.service';
 
 // ============ INTERFACES ============
 interface StatCard {
@@ -138,6 +140,7 @@ export class InicioComponent implements OnInit, OnDestroy {
   citaSeleccionada: Cita | null = null;
 
   modoFocus = false;
+  private analyticsService = inject(AnalyticsService);
 
   toggleFocus() {
     this.modoFocus = !this.modoFocus;
@@ -316,6 +319,13 @@ export class InicioComponent implements OnInit, OnDestroy {
     const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
     this.fechaHoy = `${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
 
+    this.analyticsService.estado().subscribe((estado) => {
+      this.gaConectado = estado.configurado;
+      if (this.gaConectado) {
+        this.cargarStats(); // recargar si pasó de false a true
+      }
+      this.cdr.detectChanges();
+    });
     this.cargarStats(); // 👈 agregar esta línea
     this.cargarAgenda();
     this.cargarConsultas();
@@ -377,9 +387,16 @@ export class InicioComponent implements OnInit, OnDestroy {
 
   private cargarStats() {
     this.cargandoStats = true;
-    this.inicioService.obtenerStats(this.periodoActivo).subscribe({
-      next: (data) => {
-        this.stats = this.construirStats(data, this.periodoActivo);
+
+    forkJoin({
+      stats: this.inicioService.obtenerStats(this.periodoActivo),
+      visitas: this.gaConectado
+        ? this.analyticsService.obtenerVisitas(this.periodoActivo)
+        : of({ valor: 0, cambio: 0 }),
+    }).subscribe({
+      next: ({ stats, visitas }) => {
+        const dataMerged = { ...stats, visitas };
+        this.stats = this.construirStats(dataMerged, this.periodoActivo);
         this.cargandoStats = false;
         this.cdr.detectChanges();
       },
@@ -427,9 +444,9 @@ export class InicioComponent implements OnInit, OnDestroy {
       {
         label: `Visitas ${periodo}`,
         value: this.gaConectado ? (data.visitas?.valor ?? 0) : 0,
-        cambioValor: 0,
-        cambioTipo: 'neutral' as const,
-        cambioEtiqueta: this.gaConectado ? 'desde Google Analytics' : 'Conecta Google Analytics',
+        cambioValor: this.gaConectado ? (data.visitas?.cambio ?? 0) : 0,
+        cambioTipo: this.gaConectado ? tipoDe(data.visitas?.cambio ?? 0) : 'neutral',
+        cambioEtiqueta: this.gaConectado ? etiquetaCambio : 'Conecta Google Analytics',
         icon: 'eye',
         color: 'purple',
       },
