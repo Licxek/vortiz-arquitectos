@@ -25,4 +25,9 @@ export class AnalyticsController {
   async obtenerDashboard() {
     return this.service.obtenerDashboardDetalle();
   }
+
+  @Get('visitas-por-mes')
+  async obtenerVisitasPorMes() {
+    return this.service.obtenerVisitasPorMes();
+  }
 }

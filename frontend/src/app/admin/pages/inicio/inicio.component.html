@@ -595,16 +595,16 @@
         ></app-grafica-dashboard>
       </div>
       <!-- Clientes nuevos (barras) -->
+      <!-- Visitas al sitio (barras) — Google Analytics -->
       <div class="animate-fadeInUp" style="animation-delay: 560ms">
         <app-grafica-dashboard
-          titulo="Clientes Nuevos"
-          subtitulo="Por mes (últimos 12 meses)"
+          titulo="Visitas al sitio"
+          subtitulo="Últimos 12 meses · Google Analytics"
           tipo="bar"
-          [data]="clientesNuevos"
-          [cargando]="cargandoClientes"
-          color="#f97316"
-          linkDetalle="/admin/reportes/clientes-nuevos"
-          unidad="clientes"
+          [data]="visitasPorMes"
+          [cargando]="cargandoVisitasPorMes"
+          color="#9333ea"
+          unidad="visitas"
         ></app-grafica-dashboard>
       </div>
     </div>

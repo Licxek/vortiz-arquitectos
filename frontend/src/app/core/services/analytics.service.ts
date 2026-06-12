@@ -40,4 +40,10 @@ export class AnalyticsService {
       .get<DashboardGA>(`${this.base}/dashboard`)
       .pipe(catchError(() => of({ configurado: false } as DashboardGA)));
   }
+
+  obtenerVisitasPorMes(): Observable<{ label: string; valor: number }[]> {
+    return this.http
+      .get<{ label: string; valor: number }[]>(`${this.base}/visitas-por-mes`)
+      .pipe(catchError(() => of([])));
+  }
 }
