@@ -286,7 +286,7 @@ export class InicioComponent implements OnInit, OnDestroy {
   citasPorMes: PuntoGrafica[] = [];
   categoriasServicios: PuntoGrafica[] = [];
   actividadSemanal: PuntoGrafica[] = [];
-  clientesNuevos: PuntoGrafica[] = [];
+  visitasPorMes: PuntoGrafica[] = [];
   heatmapHorarios: HeatmapSerie[] = [];
   heatmapInsights: HeatmapData['insights'] | null = null;
   cargandoHeatmap = true;
@@ -296,7 +296,7 @@ export class InicioComponent implements OnInit, OnDestroy {
   cargandoCitasPorMes = true;
   cargandoCategorias = true;
   cargandoActividad = true;
-  cargandoClientes = true;
+  cargandoVisitasPorMes = true;
 
   // ============ CONSTRUCTOR Y LIFECYCLE ============
   constructor(private router: Router) {}
@@ -327,7 +327,8 @@ export class InicioComponent implements OnInit, OnDestroy {
     this.analyticsService.estado().subscribe((estado) => {
       this.gaConectado = estado.configurado;
       if (this.gaConectado) {
-        this.cargarStats(); // recargar si pasó de false a true
+        this.cargarStats();
+        this.cargarVisitasPorMes(); // 👈 AGREGAR
       }
       this.cdr.detectChanges();
     });
@@ -479,7 +480,7 @@ export class InicioComponent implements OnInit, OnDestroy {
     this.cargarCitasPorMes();
     this.cargarCategoriasServicios();
     this.cargarActividadSemanal();
-    this.cargarClientesNuevos();
+    this.cargarVisitasPorMes();
     this.cargarHeatmapHorarios();
     this.cargarFunnelConversion();
   }
@@ -550,17 +551,24 @@ export class InicioComponent implements OnInit, OnDestroy {
     });
   }
 
-  private cargarClientesNuevos() {
-    this.cargandoClientes = true;
-    this.reportesService.obtenerClientesNuevos().subscribe({
+  private cargarVisitasPorMes() {
+    if (!this.gaConectado) {
+      this.visitasPorMes = [];
+      this.cargandoVisitasPorMes = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.cargandoVisitasPorMes = true;
+    this.analyticsService.obtenerVisitasPorMes().subscribe({
       next: (data) => {
-        this.clientesNuevos = data.map((d) => ({ label: d.label, valor: d.valor }));
-        this.cargandoClientes = false;
+        this.visitasPorMes = data;
+        this.cargandoVisitasPorMes = false;
         this.cdr.detectChanges();
       },
       error: () => {
-        this.clientesNuevos = [];
-        this.cargandoClientes = false;
+        this.visitasPorMes = [];
+        this.cargandoVisitasPorMes = false;
         this.cdr.detectChanges();
       },
     });
@@ -1446,7 +1454,7 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.notificacionSeleccionada ||
       this.citaSeleccionada ||
       this.mostrarInfoGA ||
-      this.mostrarModalVisitas  // 👈 AGREGAR
+      this.mostrarModalVisitas // 👈 AGREGAR
     );
   }
 
@@ -1456,11 +1464,12 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.cerrarRespuesta();
     } else if (this.consultaSeleccionada) {
       this.cerrarConsulta();
-    }else if (this.mostrarModalVisitas) {  // 👈 AGREGAR
-    this.cerrarModalVisitas();
-  }else if (this.mostrarInfoGA) {
-    this.cerrarInfoGA();
-  } else if (this.notificacionSeleccionada) {
+    } else if (this.mostrarModalVisitas) {
+      // 👈 AGREGAR
+      this.cerrarModalVisitas();
+    } else if (this.mostrarInfoGA) {
+      this.cerrarInfoGA();
+    } else if (this.notificacionSeleccionada) {
       this.cerrarNotificacion();
     } else if (this.citaSeleccionada) {
       this.cerrarCita();

@@ -16,7 +16,9 @@ export class AnalyticsService {
     this.propertyId = this.config.get<string>('GA_PROPERTY_ID') || '';
 
     if (!clientEmail || !privateKeyRaw || !this.propertyId) {
-      this.logger.warn('Google Analytics no configurado (faltan variables de entorno).');
+      this.logger.warn(
+        'Google Analytics no configurado (faltan variables de entorno).',
+      );
       return;
     }
 
@@ -30,7 +32,9 @@ export class AnalyticsService {
           private_key: privateKey,
         },
       });
-      this.logger.log(`Google Analytics conectado (Property: ${this.propertyId})`);
+      this.logger.log(
+        `Google Analytics conectado (Property: ${this.propertyId})`,
+      );
     } catch (e) {
       this.logger.error('Error inicializando GA client', e);
     }
@@ -41,7 +45,9 @@ export class AnalyticsService {
   }
 
   /** Visitas para un periodo + % de cambio vs periodo anterior */
-  async obtenerVisitas(periodo: PeriodoGA): Promise<{ valor: number; cambio: number }> {
+  async obtenerVisitas(
+    periodo: PeriodoGA,
+  ): Promise<{ valor: number; cambio: number }> {
     if (!this.client) return { valor: 0, cambio: 0 };
 
     const { actual, anterior } = this.calcularRangos(periodo);
@@ -53,12 +59,18 @@ export class AnalyticsService {
         metrics: [{ name: 'activeUsers' }],
       });
 
-      const valorActual = Number(response.rows?.[0]?.metricValues?.[0]?.value || 0);
-      const valorAnterior = Number(response.rows?.[1]?.metricValues?.[0]?.value || 0);
+      const valorActual = Number(
+        response.rows?.[0]?.metricValues?.[0]?.value || 0,
+      );
+      const valorAnterior = Number(
+        response.rows?.[1]?.metricValues?.[0]?.value || 0,
+      );
 
       let cambio = 0;
       if (valorAnterior > 0) {
-        cambio = Math.round(((valorActual - valorAnterior) / valorAnterior) * 100);
+        cambio = Math.round(
+          ((valorActual - valorAnterior) / valorAnterior) * 100,
+        );
       } else if (valorActual > 0) {
         cambio = 100; // de 0 a algo
       }
@@ -151,7 +163,10 @@ export class AnalyticsService {
         })),
       };
     } catch (e) {
-      this.logger.error('Error obteniendo dashboard de GA', (e as Error).message);
+      this.logger.error(
+        'Error obteniendo dashboard de GA',
+        (e as Error).message,
+      );
       return { configurado: false };
     }
   }
@@ -176,5 +191,52 @@ export class AnalyticsService {
       },
     };
     return map[periodo];
+  }
+
+  /** Visitas agrupadas por mes (últimos 12 meses) — para gráfica de barras */
+  async obtenerVisitasPorMes(): Promise<{ label: string; valor: number }[]> {
+    if (!this.client) return [];
+
+    try {
+      const [response] = await this.client.runReport({
+        property: `properties/${this.propertyId}`,
+        dateRanges: [{ startDate: '365daysAgo', endDate: 'today' }],
+        dimensions: [{ name: 'yearMonth' }],
+        metrics: [{ name: 'activeUsers' }],
+        orderBys: [{ dimension: { dimensionName: 'yearMonth' } }],
+      });
+
+      const meses = [
+        'Ene',
+        'Feb',
+        'Mar',
+        'Abr',
+        'May',
+        'Jun',
+        'Jul',
+        'Ago',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dic',
+      ];
+
+      return (response.rows || []).map((r) => {
+        const ym = r.dimensionValues?.[0]?.value || ''; // "202610"
+        const year = ym.substring(0, 4);
+        const monthIdx = parseInt(ym.substring(4, 6), 10) - 1;
+        const monthLabel = meses[monthIdx] || '?';
+        return {
+          label: `${monthLabel} ${year.slice(2)}`,
+          valor: Number(r.metricValues?.[0]?.value || 0),
+        };
+      });
+    } catch (e) {
+      this.logger.error(
+        'Error obteniendo visitas por mes de GA',
+        (e as Error).message,
+      );
+      return [];
+    }
   }
 }
