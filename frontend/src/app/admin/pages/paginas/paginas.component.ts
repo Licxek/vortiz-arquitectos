@@ -677,6 +677,12 @@ export class PaginasComponent implements OnInit {
             ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
           },
           { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+          {
+            key: 'imagenFondo', // 👈 NUEVO
+            label: 'Imagen de fondo',
+            tipo: 'imagen',
+            default: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920',
+          },
         ],
       },
       {
@@ -1466,11 +1472,12 @@ export class PaginasComponent implements OnInit {
         anio: p.anio,
         colorMarca: p.colorMarca,
         descripcion: p.descripcion,
-        cliente: p.cliente, // 👈 NUEVO
-        imagenesPublicas: p.imagenesPublicas, // 👈 NUEVO
-        videoUrl: p.videoUrl, // 👈 NUEVO
+        cliente: p.cliente,
+        imagenesPublicas: p.imagenesPublicas,
+        videoUrl: p.videoUrl,
+        publicado: true, // 👈 CRÍTICO
         orden: i + 1,
-      }));
+      })) as any[]; // 👈 cast (publicado no está en interface)
       guardados.push(this.catalogo.sincronizarProyectos(payload));
     }
 
