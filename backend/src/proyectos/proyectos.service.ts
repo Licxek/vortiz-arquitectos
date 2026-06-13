@@ -64,12 +64,12 @@ export class ProyectosService {
       if (datos.id) {
         const existente = await this.repo.findOne({ where: { id: datos.id } });
         if (existente) {
-          Object.assign(existente, datos, { orden });
+          Object.assign(existente, datos, { orden, publicado: true }); // 👈
           resultado.push(await this.repo.save(existente));
           continue;
         }
       }
-      const nuevo = this.repo.create({ ...datos, orden });
+      const nuevo = this.repo.create({ ...datos, orden, publicado: true }); // 👈
       delete (nuevo as any).id;
       resultado.push(await this.repo.save(nuevo));
     }
