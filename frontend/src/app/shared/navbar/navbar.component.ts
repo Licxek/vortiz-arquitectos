@@ -4,12 +4,16 @@ import {
   OnDestroy,
   HostListener,
   NgZone,
-  ChangeDetectorRef,signal
+  ChangeDetectorRef,
+  inject,
+  signal,
 } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { ConfiguracionService, Configuracion } from '../../core/services/configuracion.service';
 import { PaginasService, Pagina } from '../../core/services/paginas.service';
+import { BusquedaService, ResultadoBusqueda } from '../../core/services/busqueda.service';
 import { SkeletonComponent } from '../skeleton/skeleton.component';
 
 interface NavItem {
@@ -20,7 +24,7 @@ interface NavItem {
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterModule, NgOptimizedImage, SkeletonComponent],
+  imports: [CommonModule, RouterModule, NgOptimizedImage, SkeletonComponent, FormsModule],
   templateUrl: './navbar.component.html',
 })
 export class NavbarComponent implements OnInit, OnDestroy {
@@ -34,6 +38,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
   buscadorEscritorioAbierto = false;
   cargando = signal(true);
 
+  // 🔍 Búsqueda
+  queryBusqueda = signal('');
+  resultadosBusqueda = signal<ResultadoBusqueda[]>([]);
+  busquedasRecientes = signal<string[]>([]);
+  private busquedaTimer: any = null;
+
   fixedLinks: NavItem[] = [
     { label: 'Inicio', path: '/home' },
     { label: 'Servicios', path: '/servicios' },
@@ -41,7 +51,17 @@ export class NavbarComponent implements OnInit, OnDestroy {
     { label: 'Nosotros', path: '/nosotros' },
   ];
 
-  // Cuántas páginas dinámicas mostrar inline en escritorio antes del "Más"
+  busquedasPopulares = [
+    'Diseño arquitectónico',
+    'Modelado BIM',
+    'Supervisión técnica',
+    'Gerencia de obra',
+    'Residencial',
+    'Comercial',
+  ];
+
+  private busquedaService = inject(BusquedaService);
+  private router = inject(Router);
 
   constructor(
     private configuracionService: ConfiguracionService,
@@ -53,16 +73,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private scrollHandler = () => {
     const y = window.scrollY;
     let newScrolled = this.scrolled;
-
-    // Para activar necesita pasar de 100px
-    if (!this.scrolled && y > 100) {
-      newScrolled = true;
-    }
-    // Para desactivar necesita bajar de 30px
-    else if (this.scrolled && y < 30) {
-      newScrolled = false;
-    }
-
+    if (!this.scrolled && y > 100) newScrolled = true;
+    else if (this.scrolled && y < 30) newScrolled = false;
     if (newScrolled !== this.scrolled) {
       this.ngZone.run(() => {
         this.scrolled = newScrolled;
@@ -83,6 +95,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
       error: () => (this.paginasDinamicas = []),
     });
 
+    this.busquedasRecientes.set(this.busquedaService.obtenerRecientes());
+
     this.ngZone.runOutsideAngular(() => {
       window.addEventListener('scroll', this.scrollHandler, { passive: true });
     });
@@ -90,15 +104,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     window.removeEventListener('scroll', this.scrollHandler);
+    if (this.busquedaTimer) clearTimeout(this.busquedaTimer);
   }
 
   get inlineDynamic(): Pagina[] {
-    // Solo 1 página → se muestra inline. 2+ → todas van al "Más".
     return this.paginasDinamicas.length === 1 ? this.paginasDinamicas : [];
   }
 
   get overflowPages(): Pagina[] {
-    // Si hay 2 o más, todas viven en el dropdown "Más".
     return this.paginasDinamicas.length >= 2 ? this.paginasDinamicas : [];
   }
 
@@ -113,11 +126,80 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   toggleBuscador() {
     this.buscadorAbierto = !this.buscadorAbierto;
+    if (this.buscadorAbierto) {
+      this.busquedasRecientes.set(this.busquedaService.obtenerRecientes());
+    }
   }
 
   toggleMas(event: Event) {
     event.stopPropagation();
     this.masAbierto = !this.masAbierto;
+  }
+
+  toggleBuscadorEscritorio(event: Event) {
+    event.stopPropagation();
+    this.buscadorEscritorioAbierto = !this.buscadorEscritorioAbierto;
+    if (this.buscadorEscritorioAbierto) {
+      this.busquedasRecientes.set(this.busquedaService.obtenerRecientes());
+    }
+  }
+
+  // 🔍 Lógica de búsqueda
+
+  onInputBusqueda(event: Event) {
+    const valor = (event.target as HTMLInputElement).value;
+    this.queryBusqueda.set(valor);
+
+    if (this.busquedaTimer) clearTimeout(this.busquedaTimer);
+    this.busquedaTimer = setTimeout(() => {
+      const resultados = this.busquedaService.buscar(valor, this.paginasDinamicas);
+      this.resultadosBusqueda.set(resultados);
+    }, 150);
+  }
+
+  abrirResultado(r: ResultadoBusqueda) {
+    if (this.queryBusqueda().trim()) {
+      this.busquedaService.guardarReciente(this.queryBusqueda());
+    }
+    this.cerrarBusqueda();
+    if (r.queryParams) {
+      this.router.navigate([r.ruta], { queryParams: r.queryParams });
+    } else {
+      this.router.navigate([r.ruta]);
+    }
+  }
+
+  buscarRapido(query: string) {
+    this.queryBusqueda.set(query);
+    const resultados = this.busquedaService.buscar(query, this.paginasDinamicas);
+    this.resultadosBusqueda.set(resultados);
+  }
+
+  limpiarQuery() {
+    this.queryBusqueda.set('');
+    this.resultadosBusqueda.set([]);
+  }
+
+  eliminarReciente(event: Event, query: string) {
+    event.stopPropagation();
+    this.busquedasRecientes.set(this.busquedaService.eliminarReciente(query));
+  }
+
+  limpiarTodasRecientes() {
+    this.busquedaService.limpiarRecientes();
+    this.busquedasRecientes.set([]);
+  }
+
+  cerrarBusqueda() {
+    this.buscadorAbierto = false;
+    this.buscadorEscritorioAbierto = false;
+    this.queryBusqueda.set('');
+    this.resultadosBusqueda.set([]);
+  }
+
+  // Helper: icono según tipo de resultado
+  iconoTipo(tipo: ResultadoBusqueda['tipo']): string {
+    return tipo; // 'pagina' | 'servicio' | 'proyecto' | 'pagina-dinamica'
   }
 
   @HostListener('document:click', ['$event'])
@@ -137,10 +219,5 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.buscadorAbierto = false;
     this.masAbierto = false;
     this.buscadorEscritorioAbierto = false;
-  }
-
-  toggleBuscadorEscritorio(event: Event) {
-    event.stopPropagation();
-    this.buscadorEscritorioAbierto = !this.buscadorEscritorioAbierto;
   }
 }
