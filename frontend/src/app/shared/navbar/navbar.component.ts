@@ -157,16 +157,32 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }, 150);
   }
 
-  abrirResultado(r: ResultadoBusqueda) {
-    if (this.queryBusqueda().trim()) {
-      this.busquedaService.guardarReciente(this.queryBusqueda());
+  abrirResultado(r: ResultadoBusqueda, event?: Event) {
+    // Detener propagación para evitar que el HostListener cierre prematuramente
+    event?.stopPropagation();
+    event?.preventDefault();
+
+    // Capturar query ANTES de limpiar
+    const queryActual = this.queryBusqueda();
+
+    // 1. Guardar reciente (solo si es string válido)
+    if (queryActual && typeof queryActual === 'string' && queryActual.trim()) {
+      this.busquedaService.guardarReciente(queryActual);
     }
-    this.cerrarBusqueda();
-    if (r.queryParams) {
-      this.router.navigate([r.ruta], { queryParams: r.queryParams });
-    } else {
-      this.router.navigate([r.ruta]);
-    }
+
+    // 2. Navegar PRIMERO (antes de cerrar el panel)
+    const promesa = r.queryParams
+      ? this.router.navigate([r.ruta], { queryParams: r.queryParams })
+      : this.router.navigate([r.ruta]);
+
+    // 3. Cerrar el panel DESPUÉS de iniciar la navegación
+    promesa.then(() => {
+      this.buscadorAbierto = false;
+      this.buscadorEscritorioAbierto = false;
+      this.queryBusqueda.set('');
+      this.resultadosBusqueda.set([]);
+      this.cdr.markForCheck();
+    });
   }
 
   buscarRapido(query: string) {
