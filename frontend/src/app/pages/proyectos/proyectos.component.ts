@@ -6,6 +6,7 @@ import { ContenidoService } from '../../core/services/contenido.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { ProjectShowcaseComponent } from '../../shared/project-showcase/project-showcase.component';
+import { ActivatedRoute } from '@angular/router';
 
 interface CategoriaFiltro {
   id: string;
@@ -29,6 +30,7 @@ interface CategoriaFiltro {
 export class ProyectosComponent implements OnInit {
   private catalogo = inject(CatalogoService);
   private contenidoService = inject(ContenidoService);
+  private route = inject(ActivatedRoute);
 
   filtroActivo = signal<string>('todos');
   busqueda = signal<string>('');
@@ -106,6 +108,23 @@ export class ProyectosComponent implements OnInit {
     // CTA
     this.proyCtaTitulo = this.contenidoService.getCampo('proyectos', 'cta', 'titulo');
     this.proyCtaDescripcion = this.contenidoService.getCampo('proyectos', 'cta', 'descripcion');
+
+    // 🔍 Escuchar query param ?showcase=:id para abrir modal desde la búsqueda
+    this.route.queryParams.subscribe((params) => {
+      const showcaseId = params['showcase'];
+      if (!showcaseId) return;
+
+      const tryOpen = (intentos = 0) => {
+        if (intentos > 20) return;
+        const proyecto = this.proyectos().find((p) => p.id === Number(showcaseId));
+        if (proyecto) {
+          this.abrirShowcase(proyecto);
+        } else {
+          setTimeout(() => tryOpen(intentos + 1), 200);
+        }
+      };
+      tryOpen();
+    });
   }
   // Agrega propiedad en la clase
   proyectoSeleccionado = signal<Proyecto | null>(null);
