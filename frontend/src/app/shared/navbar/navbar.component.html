@@ -237,7 +237,7 @@
           </p>
           <button
             *ngFor="let r of resultadosBusqueda()"
-            (click)="abrirResultado(r)"
+            (click)="abrirResultado(r, $event)"
             class="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors text-left"
           >
             <div
@@ -557,7 +557,7 @@
       </p>
       <button
         *ngFor="let r of resultadosBusqueda()"
-        (click)="abrirResultado(r)"
+        (click)="abrirResultado(r, $event)"
         class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
       >
         <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"

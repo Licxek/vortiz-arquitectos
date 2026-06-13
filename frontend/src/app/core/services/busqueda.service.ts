@@ -95,7 +95,8 @@ export class BusquedaService {
 
     // Proyectos
     for (const p of this.catalogo.getProyectos()) {
-      const texto = `${p.nombre} ${p.descripcion || ''} ${p.categoria} ${p.cliente || ''} ${p.ubicacion || ''}`.toLowerCase();
+      const texto =
+        `${p.nombre} ${p.descripcion || ''} ${p.categoria} ${p.cliente || ''} ${p.ubicacion || ''}`.toLowerCase();
       if (texto.includes(q)) {
         resultados.push({
           tipo: 'proyecto',
@@ -133,14 +134,27 @@ export class BusquedaService {
 
   obtenerRecientes(): string[] {
     try {
-      return JSON.parse(localStorage.getItem(this.STORAGE_RECIENTES) || '[]');
+      const data = JSON.parse(localStorage.getItem(this.STORAGE_RECIENTES) || '[]');
+      if (!Array.isArray(data)) return [];
+
+      // Filtrar solo strings válidos (defensivo contra basura previa)
+      const limpios = data.filter((q): q is string => typeof q === 'string' && q.trim().length > 0);
+
+      // Si filtramos algo, actualizar localStorage para limpiar la basura
+      if (limpios.length !== data.length) {
+        localStorage.setItem(this.STORAGE_RECIENTES, JSON.stringify(limpios));
+      }
+
+      return limpios;
     } catch {
       return [];
     }
   }
 
   guardarReciente(query: string) {
-    if (!query.trim()) return;
+    // Validación defensiva: SOLO strings no vacíos
+    if (!query || typeof query !== 'string' || !query.trim()) return;
+
     const recientes = this.obtenerRecientes();
     const filtradas = recientes.filter((q) => q.toLowerCase() !== query.toLowerCase());
     filtradas.unshift(query.trim());
