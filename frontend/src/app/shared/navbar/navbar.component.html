@@ -318,6 +318,9 @@
                   >{{ r.badge }}</span
                 >
               </div>
+              <p *ngIf="r.contexto" class="text-[10px] text-blue-600 font-semibold mt-0.5">
+                {{ r.contexto }}
+              </p>
               <p *ngIf="r.descripcion" class="text-xs text-gray-500 truncate mt-0.5">
                 {{ r.descripcion }}
               </p>
@@ -522,15 +525,27 @@
   [class.pointer-events-none]="!buscadorAbierto"
 >
   <!-- Header -->
-  <div class="bg-gradient-to-b from-black via-[#071020] to-[#0a1f3d] px-3 py-3 flex items-center gap-2">
+  <div
+    class="bg-gradient-to-b from-black via-[#071020] to-[#0a1f3d] px-3 py-3 flex items-center gap-2"
+  >
     <button (click)="cerrarBusqueda()" class="p-2 text-white shrink-0">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
     </button>
     <div class="flex-1 flex items-center bg-white rounded-full px-4 py-2 shadow-md">
-      <svg class="w-5 h-5 text-gray-400 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+      <svg
+        class="w-5 h-5 text-gray-400 mr-2 shrink-0"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+        />
       </svg>
       <input
         type="text"
@@ -540,8 +555,18 @@
         (input)="onInputBusqueda($event)"
         autofocus
       />
-      <button *ngIf="queryBusqueda()" (click)="limpiarQuery()" class="text-gray-400 hover:text-gray-700 ml-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <button
+        *ngIf="queryBusqueda()"
+        (click)="limpiarQuery()"
+        class="text-gray-400 hover:text-gray-700 ml-2"
+      >
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+        >
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
@@ -553,47 +578,120 @@
     <!-- CON RESULTADOS -->
     <div *ngIf="queryBusqueda().trim() && resultadosBusqueda().length > 0" class="py-2">
       <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 px-4 py-2">
-        {{ resultadosBusqueda().length }} {{ resultadosBusqueda().length === 1 ? 'resultado' : 'resultados' }}
+        {{ resultadosBusqueda().length }}
+        {{ resultadosBusqueda().length === 1 ? 'resultado' : 'resultados' }}
       </p>
       <button
         *ngFor="let r of resultadosBusqueda()"
         (click)="abrirResultado(r, $event)"
         class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
       >
-        <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-             [class.bg-blue-100]="r.tipo === 'pagina'"
-             [class.bg-green-100]="r.tipo === 'servicio'"
-             [class.bg-purple-100]="r.tipo === 'proyecto'"
-             [class.bg-orange-100]="r.tipo === 'pagina-dinamica'">
-          <svg *ngIf="r.tipo === 'pagina'" class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <div
+          class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+          [class.bg-blue-100]="r.tipo === 'pagina'"
+          [class.bg-green-100]="r.tipo === 'servicio'"
+          [class.bg-purple-100]="r.tipo === 'proyecto'"
+          [class.bg-orange-100]="r.tipo === 'pagina-dinamica'"
+        >
+          <svg
+            *ngIf="r.tipo === 'pagina'"
+            class="w-5 h-5 text-blue-600"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
           </svg>
-          <svg *ngIf="r.tipo === 'servicio'" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          <svg
+            *ngIf="r.tipo === 'servicio'"
+            class="w-5 h-5 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            />
           </svg>
-          <svg *ngIf="r.tipo === 'proyecto'" class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          <svg
+            *ngIf="r.tipo === 'proyecto'"
+            class="w-5 h-5 text-purple-600"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+            />
           </svg>
-          <svg *ngIf="r.tipo === 'pagina-dinamica'" class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          <svg
+            *ngIf="r.tipo === 'pagina-dinamica'"
+            class="w-5 h-5 text-orange-600"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+            />
           </svg>
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <p class="text-sm font-semibold text-gray-900 truncate">{{ r.titulo }}</p>
-            <span *ngIf="r.badge" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded shrink-0">{{ r.badge }}</span>
+            <span
+              *ngIf="r.badge"
+              class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded shrink-0"
+              >{{ r.badge }}</span
+            >
           </div>
-          <p *ngIf="r.descripcion" class="text-xs text-gray-500 truncate mt-0.5">{{ r.descripcion }}</p>
+          <p *ngIf="r.contexto" class="text-[10px] text-blue-600 font-semibold mt-0.5">
+            {{ r.contexto }}
+          </p>
+          <p *ngIf="r.descripcion" class="text-xs text-gray-500 truncate mt-0.5">
+            {{ r.descripcion }}
+          </p>
         </div>
       </button>
     </div>
 
     <!-- SIN RESULTADOS -->
-    <div *ngIf="queryBusqueda().trim() && resultadosBusqueda().length === 0" class="py-16 text-center">
+    <div
+      *ngIf="queryBusqueda().trim() && resultadosBusqueda().length === 0"
+      class="py-16 text-center"
+    >
       <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-        <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+        <svg
+          class="w-7 h-7 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+          />
         </svg>
       </div>
       <p class="text-sm font-semibold text-gray-700">No encontramos «{{ queryBusqueda() }}»</p>
@@ -605,19 +703,48 @@
       <!-- Recientes -->
       <div *ngIf="busquedasRecientes().length > 0" class="px-4 py-4 border-b border-gray-100">
         <div class="flex items-center justify-between mb-3">
-          <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Búsquedas recientes</p>
-          <button (click)="limpiarTodasRecientes()" class="text-[10px] text-gray-400 hover:text-red-500">Limpiar</button>
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            Búsquedas recientes
+          </p>
+          <button
+            (click)="limpiarTodasRecientes()"
+            class="text-[10px] text-gray-400 hover:text-red-500"
+          >
+            Limpiar
+          </button>
         </div>
         <ul class="flex flex-col gap-0.5">
-          <li *ngFor="let r of busquedasRecientes()" class="group flex items-center justify-between py-2 px-2 hover:bg-gray-50 rounded-lg">
+          <li
+            *ngFor="let r of busquedasRecientes()"
+            class="group flex items-center justify-between py-2 px-2 hover:bg-gray-50 rounded-lg"
+          >
             <button (click)="buscarRapido(r)" class="flex items-center gap-2 flex-1 text-left">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                class="w-4 h-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <span class="text-sm text-gray-700">{{ r }}</span>
             </button>
-            <button (click)="eliminarReciente($event, r)" class="p-1 text-gray-400 hover:text-red-500">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <button
+              (click)="eliminarReciente($event, r)"
+              class="p-1 text-gray-400 hover:text-red-500"
+            >
+              <svg
+                class="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -630,25 +757,67 @@
         <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Sugerencias</p>
         <ul class="flex flex-col gap-1">
           <li>
-            <a routerLink="/servicios" (click)="cerrarBusqueda()" class="flex items-center gap-3 py-3 px-2 rounded-lg hover:bg-gray-50">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            <a
+              routerLink="/servicios"
+              (click)="cerrarBusqueda()"
+              class="flex items-center gap-3 py-3 px-2 rounded-lg hover:bg-gray-50"
+            >
+              <svg
+                class="w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+                />
               </svg>
               <span class="text-sm text-gray-700">Servicios de arquitectura</span>
             </a>
           </li>
           <li>
-            <a routerLink="/proyectos" (click)="cerrarBusqueda()" class="flex items-center gap-3 py-3 px-2 rounded-lg hover:bg-gray-50">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            <a
+              routerLink="/proyectos"
+              (click)="cerrarBusqueda()"
+              class="flex items-center gap-3 py-3 px-2 rounded-lg hover:bg-gray-50"
+            >
+              <svg
+                class="w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+                />
               </svg>
               <span class="text-sm text-gray-700">Proyectos realizados</span>
             </a>
           </li>
           <li>
-            <a routerLink="/citas" (click)="cerrarBusqueda()" class="flex items-center gap-3 py-3 px-2 rounded-lg hover:bg-gray-50">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            <a
+              routerLink="/citas"
+              (click)="cerrarBusqueda()"
+              class="flex items-center gap-3 py-3 px-2 rounded-lg hover:bg-gray-50"
+            >
+              <svg
+                class="w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+                />
               </svg>
               <span class="text-sm text-gray-700">Agendar una cita</span>
             </a>
@@ -658,10 +827,15 @@
 
       <!-- Búsquedas populares funcionales -->
       <div class="px-4 py-4">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Búsquedas populares</p>
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+          Búsquedas populares
+        </p>
         <div class="flex flex-wrap gap-2">
-          <button *ngFor="let p of busquedasPopulares" (click)="buscarRapido(p)"
-                  class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 rounded-full text-gray-700 transition-colors">
+          <button
+            *ngFor="let p of busquedasPopulares"
+            (click)="buscarRapido(p)"
+            class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 rounded-full text-gray-700 transition-colors"
+          >
             {{ p }}
           </button>
         </div>
