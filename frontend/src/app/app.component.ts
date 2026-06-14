@@ -16,11 +16,12 @@ import { Title, Meta } from '@angular/platform-browser';
 import { ConfiguracionService } from './core/services/configuracion.service';
 import { LoadingBarComponent } from './shared/loading-bar/loading-bar.component'; // 👈 NUEVO
 import { DOCUMENT } from '@angular/common';
+import { SessionExpiredModalComponent } from './shared/session-expired-modal/session-expired-modal.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, NavbarComponent, FooterComponent, LoadingBarComponent],
+  imports: [CommonModule, RouterOutlet, NavbarComponent, FooterComponent, LoadingBarComponent,SessionExpiredModalComponent],
   templateUrl: './app.component.html',
 })
 export class AppComponent {
