@@ -13,9 +13,9 @@ export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
       // 401 = token inválido, sesión cerrada o expirada
       if (error.status === 401) {
         // Evitar loop infinito: si ya estamos en login, no hacer nada
-        if (!router.url.includes('/login')) {
+        if (!router.url.includes('/admin/login')) {
           authService.logout(); // limpia el token local
-          router.navigate(['/login'], {
+          router.navigate(['/admin/login'], {
             queryParams: { expired: 'true' },
           });
         }
