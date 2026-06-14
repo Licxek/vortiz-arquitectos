@@ -4,7 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfiguracionService, Configuracion } from '../../../core/services/configuracion.service';
-import { timeout, catchError } from 'rxjs/operators';
+import { timeout } from 'rxjs/operators';
+import { ActivatedRoute } from '@angular/router';
+import { signal, inject } from '@angular/core';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +21,9 @@ export class LoginComponent implements OnInit {
   mostrarPassword = false;
   cargando = false;
   errorMensaje = '';
+  // En la clase
+  mensajeSesion = signal<string>('');
+  private route = inject(ActivatedRoute);
 
   constructor(
     private authService: AuthService,
@@ -31,6 +36,13 @@ export class LoginComponent implements OnInit {
     this.configuracionService.getConfiguracion().subscribe({
       next: (data) => (this.configuracion = data),
     });
+    // Detectar redirect por sesión expirada/cerrada
+    const params = this.route.snapshot.queryParamMap;
+    if (params.get('expired') === 'true') {
+      this.mensajeSesion.set(
+        'Tu sesión fue cerrada desde otro dispositivo o expiró. Por favor inicia sesión de nuevo.',
+      );
+    }
   }
 
   togglePassword() {
