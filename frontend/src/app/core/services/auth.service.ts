@@ -96,4 +96,7 @@ export class AuthService {
       password,
     });
   }
+  logoutLocal() {
+    this.limpiarSesion();
+  }
 }
