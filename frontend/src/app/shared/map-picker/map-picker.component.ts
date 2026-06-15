@@ -81,7 +81,6 @@ export class MapPickerComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     // Carga dinámica para evitar SSR issues
     this.L = await import('leaflet');
-    await import('leaflet/dist/leaflet.css' as any).catch(() => {});
 
     // Fix iconos faltantes (problema clásico de Leaflet con bundlers)
     delete (this.L.Icon.Default.prototype as any)._getIconUrl;
