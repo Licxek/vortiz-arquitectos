@@ -128,7 +128,7 @@ export class MapPickerComponent implements AfterViewInit, OnChanges, OnDestroy {
         zoomControl: true,
       }).setView(centroDefault, 13);
 
-      this.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      this.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '© OpenStreetMap, © CARTO',
         subdomains: 'abcd',
         maxZoom: 20,
