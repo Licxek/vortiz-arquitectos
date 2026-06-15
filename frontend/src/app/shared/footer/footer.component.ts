@@ -1,10 +1,10 @@
-import { Component, OnInit, HostListener, ChangeDetectorRef, signal } from '@angular/core';
-import { CommonModule, NgOptimizedImage  } from '@angular/common';
+import { Component, OnInit, HostListener, ChangeDetectorRef, signal, inject } from '@angular/core';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ConfiguracionService, Configuracion } from '../../core/services/configuracion.service';
 import { RevealDirective } from '../../core/directives/reveal.directive';
 import { SkeletonComponent } from '../skeleton/skeleton.component';
-
 
 @Component({
   selector: 'app-footer',
@@ -17,6 +17,7 @@ export class FooterComponent implements OnInit {
   anio = new Date().getFullYear();
   mostrarArriba = false;
   cargando = signal(true);
+  private sanitizer = inject(DomSanitizer);
 
   navLinks = [
     { label: 'Inicio', path: '/home' },
@@ -29,6 +30,19 @@ export class FooterComponent implements OnInit {
     private configuracionService: ConfiguracionService,
     private cdr: ChangeDetectorRef,
   ) {}
+
+  /** URL del iframe de Google Maps embebido, basada en la dirección configurada */
+  get mapaUrl(): SafeResourceUrl {
+    const dir = this.configuracion?.direccion || 'Milpillas 101, La Forestal, Durango, Mexico';
+    const url = `https://maps.google.com/maps?q=${encodeURIComponent(dir)}&output=embed`;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
+  /** Link a Google Maps para "Ver en Google Maps" */
+  get mapaLink(): string {
+    const dir = this.configuracion?.direccion || 'Milpillas 101, La Forestal, Durango';
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dir)}`;
+  }
 
   @HostListener('window:scroll')
   onScroll() {
