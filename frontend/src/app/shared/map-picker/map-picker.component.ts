@@ -172,6 +172,8 @@ export class MapPickerComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private async buscarYMover() {
+    if (!this.mapa || !this.marcador) return;
+
     const query = [this.direccion, this.ciudad, this.estado, this.codigoPostal, 'México']
       .filter((p) => p?.trim())
       .join(', ');
@@ -185,7 +187,7 @@ export class MapPickerComponent implements AfterViewInit, OnChanges, OnDestroy {
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&accept-language=es`,
       );
       const data = await res.json();
-      if (data?.[0]) {
+      if (data?.[0] && this.mapa && this.marcador) {
         const lat = parseFloat(data[0].lat);
         const lng = parseFloat(data[0].lon);
         this.marcador.setLatLng([lat, lng]);
@@ -199,6 +201,8 @@ export class MapPickerComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private async reverseGeocode(lat: number, lng: number) {
+
+     if (!this.mapa || !this.marcador) return; // 👈 NUEVO
     this.cargando = true;
     try {
       const res = await fetch(
