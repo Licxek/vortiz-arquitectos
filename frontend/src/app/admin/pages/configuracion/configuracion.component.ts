@@ -10,6 +10,7 @@ import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { SafeUrlPipe } from '../../../shared/pipes/safe-url.pipe';
 
 interface DiaSemana {
   nombre: string;
@@ -35,7 +36,7 @@ interface RedSocial {
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent],
+  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent,SafeUrlPipe],
   templateUrl: './configuracion.component.html',
 })
 export class ConfiguracionComponent implements OnInit {
@@ -74,6 +75,7 @@ export class ConfiguracionComponent implements OnInit {
     estado: 'Dgo.',
     codigoPostal: '34217',
     rfc: 'VOR000000-001',
+    mapaUrl: '', // 👈 NUEVO
   };
 
   // =========== CONTACTO ===========
@@ -174,6 +176,7 @@ export class ConfiguracionComponent implements OnInit {
       'Firma de arquitectura en Durango especializada en proyectos residenciales, comerciales e industriales. Diseñamos espacios, construimos confianza.',
     keywords: 'arquitectos durango, diseño residencial, proyectos comerciales, construcción',
     ogImageUrl: '/assets/img/og-image.png',
+    siteUrl: 'https://vortizarquitectos.com.mx', // 👈 NUEVO
   };
 
   mantenimiento = {
@@ -495,6 +498,7 @@ export class ConfiguracionComponent implements OnInit {
           estado: 'Dgo.',
           codigoPostal: '34217',
           rfc: 'VOR000000-001',
+          mapaUrl: '', // 👈 NUEVO
         };
         break;
       case 'Contacto':
@@ -591,6 +595,7 @@ export class ConfiguracionComponent implements OnInit {
             'Firma de arquitectura en Durango especializada en proyectos residenciales, comerciales e industriales. Diseñamos espacios, construimos confianza.',
           keywords: 'arquitectos durango, diseño residencial, proyectos comerciales, construcción',
           ogImageUrl: '/assets/img/og-image.png',
+          siteUrl: 'https://vortizarquitectos.com.mx', // 👈 NUEVO
         };
         break;
     }

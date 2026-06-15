@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Bloquear el panel admin (no debe indexarse)
+Disallow: /admin/
+
+# Sitemap
+Sitemap: https://vortizarquitectos.com.mx/sitemap.xml
