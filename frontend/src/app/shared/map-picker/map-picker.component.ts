@@ -79,47 +79,59 @@ export class MapPickerComponent implements AfterViewInit, OnChanges, OnDestroy {
   async ngAfterViewInit() {
     if (!isPlatformBrowser(this.platformId)) return;
 
-    // Carga dinámica para evitar SSR issues
-    this.L = await import('leaflet');
+    try {
+      // 👇 FIX: acceder correctamente al módulo
+      const mod: any = await import('leaflet');
+      this.L = mod.default || mod;
 
-    // Fix iconos faltantes (problema clásico de Leaflet con bundlers)
-    delete (this.L.Icon.Default.prototype as any)._getIconUrl;
-    this.L.Icon.Default.mergeOptions({
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    });
+      if (!this.L?.map) {
+        console.error('[map-picker] Leaflet no expuso .map(). Modulo:', mod);
+        return;
+      }
 
-    // Centro inicial: Durango como fallback
-    const centroDefault: [number, number] = [24.0277, -104.6532];
+      // Fix iconos (Leaflet busca PNGs relativos por default)
+      delete (this.L.Icon.Default.prototype as any)._getIconUrl;
+      this.L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      });
 
-    this.mapa = this.L.map(this.mapaEl.nativeElement, {
-      attributionControl: true,
-      zoomControl: true,
-    }).setView(centroDefault, 13);
+      const centroDefault: [number, number] = [24.0277, -104.6532]; // Durango
 
-    this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap',
-      maxZoom: 19,
-    }).addTo(this.mapa);
+      this.mapa = this.L.map(this.mapaEl.nativeElement, {
+        attributionControl: true,
+        zoomControl: true,
+      }).setView(centroDefault, 13);
 
-    this.marcador = this.L.marker(centroDefault, { draggable: true }).addTo(this.mapa);
+      this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap',
+        maxZoom: 19,
+      }).addTo(this.mapa);
 
-    this.marcador.on('dragend', () => {
-      const pos = this.marcador.getLatLng();
-      this.reverseGeocode(pos.lat, pos.lng);
-    });
+      this.marcador = this.L.marker(centroDefault, { draggable: true }).addTo(this.mapa);
 
-    // Buscar dirección inicial si hay
-    if (this.direccion || this.ciudad) {
-      this.buscarYMover();
+      this.marcador.on('dragend', () => {
+        const pos = this.marcador.getLatLng();
+        this.reverseGeocode(pos.lat, pos.lng);
+      });
+
+      // 👇 FIX CRÍTICO: forzar recalcular tamaño del mapa
+      // (Leaflet a veces calcula 0px de alto al inicializar en contenedores dinámicos)
+      setTimeout(() => {
+        this.mapa?.invalidateSize();
+        if (this.direccion || this.ciudad) {
+          this.buscarYMover();
+        }
+      }, 200);
+    } catch (err) {
+      console.error('[map-picker] Error inicializando Leaflet:', err);
     }
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (!this.mapa) return;
 
-    // Debounce: si el usuario está escribiendo, no buscamos cada tecla
     if (
       changes['direccion'] ||
       changes['ciudad'] ||
@@ -136,7 +148,6 @@ export class MapPickerComponent implements AfterViewInit, OnChanges, OnDestroy {
     if (this.mapa) this.mapa.remove();
   }
 
-  /** Geocoding directo: dirección textual → coordenadas */
   private async buscarYMover() {
     const query = [this.direccion, this.ciudad, this.estado, this.codigoPostal, 'México']
       .filter((p) => p?.trim())
@@ -158,13 +169,12 @@ export class MapPickerComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.mapa.setView([lat, lng], 16);
       }
     } catch (err) {
-      console.warn('Geocoding falló:', err);
+      console.warn('[map-picker] Geocoding falló:', err);
     } finally {
       this.cargando = false;
     }
   }
 
-  /** Geocoding inverso: coordenadas → dirección textual */
   private async reverseGeocode(lat: number, lng: number) {
     this.cargando = true;
     try {
@@ -197,7 +207,7 @@ export class MapPickerComponent implements AfterViewInit, OnChanges, OnDestroy {
 
       this.ubicacionCambio.emit(resultado);
     } catch (err) {
-      console.warn('Reverse geocoding falló:', err);
+      console.warn('[map-picker] Reverse geocoding falló:', err);
     } finally {
       this.cargando = false;
     }
