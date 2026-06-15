@@ -11,6 +11,7 @@ import { combineLatest } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { SafeUrlPipe } from '../../../shared/pipes/safe-url.pipe';
+import { MapPickerComponent, DireccionGeo } from '../../../shared/map-picker/map-picker.component';
 
 interface DiaSemana {
   nombre: string;
@@ -36,7 +37,7 @@ interface RedSocial {
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent, SafeUrlPipe],
+  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent, SafeUrlPipe, MapPickerComponent],
   templateUrl: './configuracion.component.html',
 })
 export class ConfiguracionComponent implements OnInit {
@@ -923,5 +924,13 @@ export class ConfiguracionComponent implements OnInit {
   /** ¿Hay suficiente dirección como para generar el mapa? */
   get direccionCompleta(): boolean {
     return !!(this.negocio.direccion?.trim() && this.negocio.ciudad?.trim());
+  }
+  onUbicacionCambio(geo: DireccionGeo) {
+    // Solo actualizar campos que no estén vacíos en el resultado
+    if (geo.direccion) this.negocio.direccion = geo.direccion;
+    if (geo.ciudad) this.negocio.ciudad = geo.ciudad;
+    if (geo.estado) this.negocio.estado = geo.estado;
+    if (geo.codigoPostal) this.negocio.codigoPostal = geo.codigoPostal;
+    this.cdr.markForCheck();
   }
 }
