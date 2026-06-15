@@ -10,7 +10,6 @@ import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { SafeUrlPipe } from '../../../shared/pipes/safe-url.pipe';
 import { MapPickerComponent, DireccionGeo } from '../../../shared/map-picker/map-picker.component';
 
 interface DiaSemana {
@@ -37,7 +36,7 @@ interface RedSocial {
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent, SafeUrlPipe, MapPickerComponent],
+  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent, MapPickerComponent],
   templateUrl: './configuracion.component.html',
 })
 export class ConfiguracionComponent implements OnInit {
