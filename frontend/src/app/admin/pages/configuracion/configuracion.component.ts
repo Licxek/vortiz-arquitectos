@@ -170,7 +170,7 @@ export class ConfiguracionComponent implements OnInit {
 
   // =========== SEO ===========
   seo = {
-    metaTitle: 'Vortiz Arquitectos - Diseño y construcción profesional en Durango',
+    metaTitle: 'Vortiz Arquitectos | Diseño y Construcción en Durango',
     metaDescription:
       'Firma de arquitectura en Durango especializada en proyectos residenciales, comerciales e industriales. Diseñamos espacios, construimos confianza.',
     keywords: 'arquitectos durango, diseño residencial, proyectos comerciales, construcción',
@@ -578,7 +578,7 @@ export class ConfiguracionComponent implements OnInit {
         break;
       case 'SEO':
         this.seo = {
-          metaTitle: 'Vortiz Arquitectos - Diseño y construcción profesional en Durango',
+          metaTitle: 'Vortiz Arquitectos | Diseño y Construcción en Durango',
           metaDescription:
             'Firma de arquitectura en Durango especializada en proyectos residenciales, comerciales e industriales. Diseñamos espacios, construimos confianza.',
           keywords: 'arquitectos durango, diseño residencial, proyectos comerciales, construcción',
