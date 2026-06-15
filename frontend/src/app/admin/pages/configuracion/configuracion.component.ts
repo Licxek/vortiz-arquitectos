@@ -58,7 +58,7 @@ export class ConfiguracionComponent implements OnInit {
     | 'mantenimiento' = 'negocio';
 
   // Mensaje de éxito flotante
-  mensajeExito = '';
+  mensaje = signal<{ tipo: 'exito' | 'error'; texto: string } | null>(null);
   guardando = false;
   cargando = signal(true);
   confirmacionAbierta = false;
@@ -174,7 +174,7 @@ export class ConfiguracionComponent implements OnInit {
     metaDescription:
       'Firma de arquitectura en Durango especializada en proyectos residenciales, comerciales e industriales. Diseñamos espacios, construimos confianza.',
     keywords: 'arquitectos durango, diseño residencial, proyectos comerciales, construcción',
-    ogImageUrl: '/assets/img/og-image.png',
+    ogImageUrl: '',
     siteUrl: 'https://vortizarquitectos.com.mx', // 👈 NUEVO
   };
 
@@ -350,21 +350,11 @@ export class ConfiguracionComponent implements OnInit {
           Mantenimiento: 'mantenimiento',
         };
         if (mapInverso[seccion]) this.capturarSnapshot(mapInverso[seccion]);
-        this.mensajeExito = `Cambios de "${seccion}" guardados correctamente`;
-        this.cdr.markForCheck();
-        setTimeout(() => {
-          this.mensajeExito = '';
-          this.cdr.markForCheck();
-        }, 3000);
+        this.mostrarMensaje('exito', `Cambios de "${seccion}" guardados correctamente`);
       },
       error: () => {
         this.guardando = false;
-        this.mensajeExito = 'Error al guardar. Intenta de nuevo.';
-        this.cdr.markForCheck();
-        setTimeout(() => {
-          this.mensajeExito = '';
-          this.cdr.markForCheck();
-        }, 3000);
+        this.mostrarMensaje('error', 'Error al guardar. Intenta de nuevo.');
       },
     });
   }
@@ -592,7 +582,7 @@ export class ConfiguracionComponent implements OnInit {
           metaDescription:
             'Firma de arquitectura en Durango especializada en proyectos residenciales, comerciales e industriales. Diseñamos espacios, construimos confianza.',
           keywords: 'arquitectos durango, diseño residencial, proyectos comerciales, construcción',
-          ogImageUrl: '/assets/img/og-image.png',
+          ogImageUrl: '',
           siteUrl: 'https://vortizarquitectos.com.mx', // 👈 NUEVO
         };
         break;
@@ -619,23 +609,14 @@ export class ConfiguracionComponent implements OnInit {
         this.capturarSnapshot('mantenimiento');
         this.configuracionService.cargarPublica();
         this.guardando = false;
-        this.mensajeExito = nuevoEstado
-          ? '🛠️ Modo mantenimiento ACTIVADO'
-          : '✅ Sitio público restaurado';
-        this.cdr.markForCheck();
-        setTimeout(() => {
-          this.mensajeExito = '';
-          this.cdr.markForCheck();
-        }, 3000);
+        this.mostrarMensaje(
+          'exito',
+          nuevoEstado ? '🛠️ Modo mantenimiento ACTIVADO' : '✅ Sitio público restaurado',
+        );
       },
       error: (err) => {
         this.guardando = false;
-        this.mensajeExito = 'Error al cambiar el modo. Intenta de nuevo.';
-        this.cdr.markForCheck();
-        setTimeout(() => {
-          this.mensajeExito = '';
-          this.cdr.markForCheck();
-        }, 3000);
+        this.mostrarMensaje('error', 'Error al cambiar el modo. Intenta de nuevo.');
       },
     });
   }
@@ -931,5 +912,13 @@ export class ConfiguracionComponent implements OnInit {
     if (geo.estado) this.negocio.estado = geo.estado;
     if (geo.codigoPostal) this.negocio.codigoPostal = geo.codigoPostal;
     this.cdr.markForCheck();
+  }
+  private mostrarMensaje(tipo: 'exito' | 'error', texto: string) {
+    this.mensaje.set({ tipo, texto });
+    this.cdr.markForCheck();
+    setTimeout(() => {
+      this.mensaje.set(null);
+      this.cdr.markForCheck();
+    }, 3000);
   }
 }

@@ -62,6 +62,7 @@ export class SeoDto {
   @IsOptional() @IsString() @MaxLength(160) metaDescription?: string;
   @IsOptional() @IsString() @MaxLength(200) keywords?: string;
   @IsOptional() @IsString() ogImageUrl?: string;
+  @IsOptional() @IsString() @MaxLength(300) siteUrl?: string;  // 👈 AGREGAR
 }
 
 // ========== MANTENIMIENTO ==========

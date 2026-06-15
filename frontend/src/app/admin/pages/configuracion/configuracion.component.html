@@ -66,13 +66,21 @@
     </div>
   </div>
 
-  <!-- Mensaje de éxito flotante -->
+  <!-- Mensaje flotante de éxito/error -->
   <div
-    *ngIf="mensajeExito"
-    class="fixed top-20 right-4 left-4 sm:top-6 sm:right-6 sm:left-auto z-50 bg-white border border-green-200 rounded-xl shadow-2xl p-4 flex items-center gap-3 animate-[fadeIn_0.3s_ease-out]"
+    *ngIf="mensaje() as msg"
+    class="fixed top-20 right-4 left-4 sm:top-6 sm:right-6 sm:left-auto z-50 bg-white border rounded-xl shadow-2xl p-4 flex items-center gap-3 animate-[fadeIn_0.3s_ease-out]"
+    [class.border-green-200]="msg.tipo === 'exito'"
+    [class.border-red-200]="msg.tipo === 'error'"
   >
-    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
+    <div
+      class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+      [class.bg-green-100]="msg.tipo === 'exito'"
+      [class.bg-red-100]="msg.tipo === 'error'"
+    >
+      <!-- Palomita verde -->
       <svg
+        *ngIf="msg.tipo === 'exito'"
         class="w-5 h-5 text-green-600"
         fill="none"
         stroke="currentColor"
@@ -81,8 +89,19 @@
       >
         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
       </svg>
+      <!-- Tacha roja -->
+      <svg
+        *ngIf="msg.tipo === 'error'"
+        class="w-5 h-5 text-red-600"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
     </div>
-    <span class="text-sm font-medium text-gray-700">{{ mensajeExito }}</span>
+    <span class="text-sm font-medium text-gray-700">{{ msg.texto }}</span>
   </div>
 
   <!-- Modal de confirmación de restauración -->
