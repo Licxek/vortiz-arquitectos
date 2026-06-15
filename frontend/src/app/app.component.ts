@@ -21,7 +21,14 @@ import { SessionExpiredModalComponent } from './shared/session-expired-modal/ses
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, NavbarComponent, FooterComponent, LoadingBarComponent,SessionExpiredModalComponent],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    NavbarComponent,
+    FooterComponent,
+    LoadingBarComponent,
+    SessionExpiredModalComponent,
+  ],
   templateUrl: './app.component.html',
 })
 export class AppComponent {
@@ -69,6 +76,22 @@ export class AppComponent {
       this.title.setTitle(c.meta_title);
       this.meta.updateTag({ name: 'description', content: c.meta_description });
       this.meta.updateTag({ name: 'keywords', content: c.meta_keywords });
+
+      // 👇 NUEVO: Open Graph (Facebook, WhatsApp, LinkedIn)
+      this.meta.updateTag({ property: 'og:title', content: c.meta_title });
+      this.meta.updateTag({ property: 'og:description', content: c.meta_description });
+      this.meta.updateTag({ property: 'og:type', content: 'website' });
+      if (c.og_image_url) {
+        this.meta.updateTag({ property: 'og:image', content: c.og_image_url });
+      }
+
+      // 👇 NUEVO: Twitter Card
+      this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
+      this.meta.updateTag({ name: 'twitter:title', content: c.meta_title });
+      this.meta.updateTag({ name: 'twitter:description', content: c.meta_description });
+      if (c.og_image_url) {
+        this.meta.updateTag({ name: 'twitter:image', content: c.og_image_url });
+      }
 
       if (c?.favicon_url) {
         this.actualizarFavicon(c.favicon_url);

@@ -532,86 +532,107 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Mapa para footer -->
-<div id="mapa-footer" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
-  <h3 class="text-base font-semibold text-gray-900 mb-1">Mapa de ubicación</h3>
-  <p class="text-xs text-gray-500 mb-5">
-    El mapa que aparece en el footer del sitio público
-  </p>
+      <!-- ✨ Vista previa del mapa basada en la dirección -->
+      <div class="mt-6 pt-6 border-t border-gray-100">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <p class="text-sm font-semibold text-gray-900">Vista previa en Google Maps</p>
+            <p class="text-xs text-gray-500 mt-0.5">Así verán tus clientes el mapa en el footer</p>
+          </div>
 
-  <div>
-    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-      >URL del mapa (Google Maps embebido)</label
-    >
-    <textarea
-      [(ngModel)]="negocio.mapaUrl"
-      rows="2"
-      placeholder="https://www.google.com/maps/embed?pb=..."
-      class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all font-mono text-xs resize-none"
-    ></textarea>
+          <a
+            *ngIf="direccionCompleta"
+            [href]="mapaUrlGenerado.replace('&output=embed', '')"
+            target="_blank"
+            rel="noopener"
+            class="text-xs font-semibold text-[#0a4d7a] hover:underline flex items-center gap-1"
+          >
+            Abrir en Maps
+            <svg
+              class="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
+            </svg>
+          </a>
+        </div>
 
-    <!-- Ayuda paso a paso -->
-    <div class="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-      <p class="text-xs font-semibold text-[#0a4d7a] mb-2 flex items-center gap-1.5">
-        <svg
-          class="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
+        <!-- Mapa cuando hay dirección -->
+        <div
+          *ngIf="direccionCompleta"
+          class="rounded-xl overflow-hidden border border-gray-200 aspect-video bg-gray-100"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        ¿Cómo obtener esta URL?
-      </p>
-      <ol class="text-xs text-gray-700 space-y-1 list-decimal list-inside">
-        <li>Ve a <a href="https://maps.google.com" target="_blank" rel="noopener" class="text-[#0a4d7a] font-semibold hover:underline">Google Maps</a> y busca tu dirección</li>
-        <li>Click en <strong>"Compartir"</strong> → pestaña <strong>"Insertar un mapa"</strong></li>
-        <li>Copia el código HTML completo del iframe</li>
-        <li>De ese código, copia <strong>solo el contenido entre <code class="bg-white px-1 rounded">src="..."</code></strong> y pégalo aquí</li>
-      </ol>
-    </div>
+          <iframe
+            [src]="mapaUrlGenerado | safeUrl"
+            width="100%"
+            height="100%"
+            style="border: 0"
+            allowfullscreen
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
 
-    <!-- Preview del mapa -->
-    <div *ngIf="negocio.mapaUrl" class="mt-4">
-      <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Vista previa</p>
-      <div class="rounded-xl overflow-hidden border border-gray-200 aspect-video bg-gray-100">
-        <iframe
-          [src]="negocio.mapaUrl | safeUrl"
-          width="100%"
-          height="100%"
-          style="border:0;"
-          allowfullscreen
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-        ></iframe>
+        <!-- Estado vacío cuando falta dirección -->
+        <div
+          *ngIf="!direccionCompleta"
+          class="p-8 bg-gray-50 rounded-xl border border-dashed border-gray-300 text-center"
+        >
+          <svg
+            class="w-10 h-10 text-gray-300 mx-auto mb-2"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+          <p class="text-xs text-gray-500">Completa los campos de dirección para ver el mapa</p>
+        </div>
+
+        <!-- Tip útil -->
+        <div
+          *ngIf="direccionCompleta"
+          class="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-2"
+        >
+          <svg
+            class="w-4 h-4 text-[#0a4d7a] shrink-0 mt-0.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <p class="text-xs text-gray-700">
+            ¿El mapa no apunta al lugar correcto?
+            <strong>Ajusta la dirección, ciudad o código postal</strong> arriba y el mapa se
+            actualizará automáticamente.
+          </p>
+        </div>
       </div>
     </div>
-
-    <div *ngIf="!negocio.mapaUrl" class="mt-4 p-6 bg-gray-50 rounded-xl border border-dashed border-gray-300 text-center">
-      <svg
-        class="w-10 h-10 text-gray-300 mx-auto mb-2"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m-6 3l6-3"
-        />
-      </svg>
-      <p class="text-xs text-gray-500">Pega la URL del mapa para ver la vista previa</p>
-    </div>
-  </div>
-</div>
 
     <!-- Datos fiscales -->
     <div
@@ -2049,34 +2070,34 @@
 
     <div class="space-y-4">
       <div>
-  <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
-    URL del sitio (dominio)
-  </label>
-  <div class="relative">
-    <svg
-      class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      viewBox="0 0 24 24"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0zM3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18 15 15 0 010-18z"
-      />
-    </svg>
-    <input
-      type="url"
-      [(ngModel)]="seo.siteUrl"
-      placeholder="https://vortizarquitectos.com.mx"
-      class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
-    />
-  </div>
-  <p class="text-xs text-gray-500 mt-1.5">
-    Dominio principal del sitio (incluye https://). Se usa para SEO y redes sociales.
-  </p>
-</div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+          URL del sitio (dominio)
+        </label>
+        <div class="relative">
+          <svg
+            class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0zM3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18 15 15 0 010-18z"
+            />
+          </svg>
+          <input
+            type="url"
+            [(ngModel)]="seo.siteUrl"
+            placeholder="https://vortizarquitectos.com.mx"
+            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+          />
+        </div>
+        <p class="text-xs text-gray-500 mt-1.5">
+          Dominio principal del sitio (incluye https://). Se usa para SEO y redes sociales.
+        </p>
+      </div>
       <div>
         <div class="flex items-center justify-between mb-2">
           <label class="text-xs font-semibold uppercase tracking-wider text-gray-500"
@@ -2133,8 +2154,10 @@
 
     <div class="bg-white border border-gray-200 rounded-xl p-4 max-w-2xl">
       <p class="text-xs text-gray-700 mb-1">
-  {{ (seo.siteUrl || 'https://tudominio.com').replace('https://', '').replace('http://', '') }}
-</p>
+        {{
+          (seo.siteUrl || 'https://tudominio.com').replace('https://', '').replace('http://', '')
+        }}
+      </p>
       <h4 class="text-lg text-blue-700 hover:underline cursor-pointer mb-1">{{ seo.metaTitle }}</h4>
       <p class="text-sm text-gray-600">{{ seo.metaDescription }}</p>
     </div>

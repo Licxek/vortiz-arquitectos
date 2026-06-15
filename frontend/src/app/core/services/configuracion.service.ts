@@ -28,6 +28,7 @@ export interface Configuracion {
   meta_title: string;
   meta_description: string;
   meta_keywords: string;
+  og_image_url?: string;  //
   nombre: string;
   eslogan: string;
   mantenimiento?: MantenimientoConfig;

@@ -36,7 +36,7 @@ interface RedSocial {
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent,SafeUrlPipe],
+  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent, SafeUrlPipe],
   templateUrl: './configuracion.component.html',
 })
 export class ConfiguracionComponent implements OnInit {
@@ -75,7 +75,6 @@ export class ConfiguracionComponent implements OnInit {
     estado: 'Dgo.',
     codigoPostal: '34217',
     rfc: 'VOR000000-001',
-    mapaUrl: '', // 👈 NUEVO
   };
 
   // =========== CONTACTO ===========
@@ -498,7 +497,6 @@ export class ConfiguracionComponent implements OnInit {
           estado: 'Dgo.',
           codigoPostal: '34217',
           rfc: 'VOR000000-001',
-          mapaUrl: '', // 👈 NUEVO
         };
         break;
       case 'Contacto':
@@ -906,5 +904,24 @@ export class ConfiguracionComponent implements OnInit {
       this.tabActiva = this.tabPendiente;
       this.tabPendiente = null;
     }
+  }
+  /** Genera la URL del mapa de Google a partir de la dirección textual */
+  get mapaUrlGenerado(): string {
+    const partes = [
+      this.negocio.direccion,
+      this.negocio.ciudad,
+      this.negocio.estado,
+      this.negocio.codigoPostal,
+    ]
+      .filter((p) => p && p.trim().length > 0)
+      .join(', ');
+
+    if (!partes) return '';
+    return `https://maps.google.com/maps?q=${encodeURIComponent(partes)}&output=embed`;
+  }
+
+  /** ¿Hay suficiente dirección como para generar el mapa? */
+  get direccionCompleta(): boolean {
+    return !!(this.negocio.direccion?.trim() && this.negocio.ciudad?.trim());
   }
 }

@@ -180,6 +180,7 @@ export class ConfiguracionService {
       meta_title: c.seo?.metaTitle || 'Vortiz Arquitectos',
       meta_description: c.seo?.metaDescription || '',
       meta_keywords: c.seo?.keywords || '',
+      og_image_url: c.seo?.ogImageUrl || '',
       nombre: c.negocio?.nombre || 'Vortiz Arquitectos',
       eslogan:
         c.negocio?.eslogan || 'Diseñamos espacios, construimos confianza.',
