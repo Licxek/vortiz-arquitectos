@@ -241,10 +241,4 @@ export class RecordatoriosService {
       `,
     );
   }
-
-  /** 🧪 TEST TEMPORAL — quitar después de verificar */
-  @Cron('* * * * *')
-  async testCron() {
-    this.logger.log('🔍 TEST CRON ejecutado a las ' + new Date().toISOString());
-  }
 }
