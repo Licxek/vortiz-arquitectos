@@ -22,14 +22,13 @@ RUN npm run build
 FROM alpine:latest AS production
 WORKDIR /app
 
-# Crear directorio para los archivos estáticos
-RUN mkdir -p /app/dist
+# 👇 CAMBIO 1: Crear directorio CON ownership del backend (vortiz:nodejs = 100:101)
+RUN mkdir -p /app/dist && chown 100:101 /app/dist
 
-# 👇 CAMBIO 1: Copiar con ownership UID 1000:1000
-# (mismo UID que el user `node` del backend, así puede escribir index.html)
-COPY --from=builder --chown=1000:1000 /app/dist/Vortiz_Arquitectos/browser /app/dist
+# 👇 CAMBIO 2: Copiar con ownership 100:101 (mismo UID que el backend)
+COPY --from=builder --chown=100:101 /app/dist/Vortiz_Arquitectos/browser /app/dist
 
-# 👇 CAMBIO 2: Permisos 775 (dueño/grupo escriben, otros leen)
+# 👇 CAMBIO 3: Permisos 775
 RUN chmod -R 775 /app/dist
 
 # El contenedor solo expone el dist via volumen compartido con nginx
