@@ -104,28 +104,45 @@ export class RecordatoriosService {
     }
   }
 
-  private async enviarRecordatorio(cita: Cita, canal: string, tipo: '24h' | '1h') {
+  private async enviarRecordatorio(
+    cita: Cita,
+    canal: string,
+    tipo: '24h' | '1h',
+  ) {
     const usarEmail = canal === 'email' || canal === 'ambos';
     const usarWhatsapp = canal === 'whatsapp' || canal === 'ambos';
 
     if (usarEmail) {
-      const html = tipo === '24h' ? this.htmlRecordatorio24h(cita) : this.htmlRecordatorio1h(cita);
-      const asunto = tipo === '24h'
-        ? '⏰ Tu cita es mañana — Vortiz Arquitectos'
-        : '🔔 Tu cita es en 1 hora — Vortiz Arquitectos';
+      const html =
+        tipo === '24h'
+          ? this.htmlRecordatorio24h(cita)
+          : this.htmlRecordatorio1h(cita);
+      const asunto =
+        tipo === '24h'
+          ? '⏰ Tu cita es mañana — Vortiz Arquitectos'
+          : '🔔 Tu cita es en 1 hora — Vortiz Arquitectos';
 
-      await this.mailService.enviar(cita.correo, asunto, html).catch((err) =>
-        this.logger.error(`Error enviando recordatorio ${tipo} a ${cita.correo}: ${err.message}`),
-      );
+      await this.mailService
+        .enviar(cita.correo, asunto, html)
+        .catch((err) =>
+          this.logger.error(
+            `Error enviando recordatorio ${tipo} a ${cita.correo}: ${err.message}`,
+          ),
+        );
     }
 
     if (usarWhatsapp && this.whatsappService.habilitado) {
-      const template = tipo === '24h' ? 'recordatorio_cita_24h' : 'recordatorio_cita_1h';
+      const template =
+        tipo === '24h' ? 'recordatorio_cita_24h' : 'recordatorio_cita_1h';
       const params = [
         cita.nombre.split(' ')[0],
         this.formatearFecha(cita.fecha, cita.hora),
       ];
-      await this.whatsappService.enviarTemplate(cita.telefono, template, params);
+      await this.whatsappService.enviarTemplate(
+        cita.telefono,
+        template,
+        params,
+      );
     }
   }
 
@@ -140,8 +157,29 @@ export class RecordatoriosService {
 
   private formatearFecha(fechaISO: string, hora: string): string {
     const d = new Date(fechaISO + 'T00:00:00');
-    const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const dias = [
+      'domingo',
+      'lunes',
+      'martes',
+      'miércoles',
+      'jueves',
+      'viernes',
+      'sábado',
+    ];
+    const meses = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
     return `${dias[d.getDay()]} ${d.getDate()} de ${meses[d.getMonth()]} · ${hora}`;
   }
 
@@ -202,5 +240,11 @@ export class RecordatoriosService {
       <p>¡Te esperamos!</p>
       `,
     );
+  }
+
+  /** 🧪 TEST TEMPORAL — quitar después de verificar */
+  @Cron('* * * * *')
+  async testCron() {
+    this.logger.log('🔍 TEST CRON ejecutado a las ' + new Date().toISOString());
   }
 }
