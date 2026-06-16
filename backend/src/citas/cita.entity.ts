@@ -40,16 +40,23 @@ export class Cita {
   motivo: string;
 
   @Column({ type: 'date' })
-  fecha: string; // YYYY-MM-DD
+  fecha: string;
 
   @Column({ type: 'varchar', length: 5 })
-  hora: string; // HH:MM
+  hora: string;
 
   @Column({ type: 'int', default: 60 })
   duracion: number;
 
   @Column({ type: 'varchar', length: 20, default: 'pendiente' })
   estado: EstadoCita;
+
+  // 👇 NUEVO: Tracking de recordatorios enviados
+  @Column({ name: 'recordatorio_24h_enviado', type: 'boolean', default: false })
+  recordatorio24hEnviado: boolean;
+
+  @Column({ name: 'recordatorio_1h_enviado', type: 'boolean', default: false })
+  recordatorio1hEnviado: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

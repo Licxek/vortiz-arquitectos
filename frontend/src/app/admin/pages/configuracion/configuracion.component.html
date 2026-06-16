@@ -2145,12 +2145,14 @@
       Aparece cuando alguien comparte tu sitio en redes sociales · Recomendado 1200 x 630 px
     </p>
 
-    <app-image-upload
-      [valor]="seo.ogImageUrl || ''"
-      (valorChange)="seo.ogImageUrl = $event"
-      carpeta="seo"
-      aspectRatio="wide"
-    ></app-image-upload>
+    <div class="max-w-md">
+      <app-image-upload
+        [valor]="seo.ogImageUrl || ''"
+        (valorChange)="seo.ogImageUrl = $event"
+        carpeta="seo"
+        aspectRatio="wide"
+      ></app-image-upload>
+    </div>
   </div>
 
   <div class="flex justify-end gap-3 pt-2">
