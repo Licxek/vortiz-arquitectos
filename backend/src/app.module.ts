@@ -22,6 +22,7 @@ import { HealthModule } from './health/health.module';
 import { ReportesModule } from './reportes/reportes.module';
 import { SesionesModule } from './sesiones/sesiones.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { WhatsAppModule } from './whatsapp/whatsapp.module';
 
 @Module({
   imports: [
@@ -108,6 +109,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     ReportesModule,
     SesionesModule,
     AnalyticsModule,
+    WhatsAppModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

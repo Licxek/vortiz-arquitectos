@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  Logger,
+  OnModuleInit,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
@@ -14,9 +19,10 @@ import {
   AgendaDto,
   RedSocialDto,
 } from './dto/secciones.dto';
+import * as fs from 'fs/promises';
 
 @Injectable()
-export class ConfiguracionService {
+export class ConfiguracionService implements OnModuleInit {
   private readonly secciones = [
     'negocio',
     'contacto',
@@ -68,6 +74,12 @@ export class ConfiguracionService {
     const config = await this.obtener();
     (config as any)[seccion] = datos;
     await this.repo.save(config);
+
+    // 👇 NUEVO: actualizar index.html cuando cambien meta tags
+    if (seccion === 'seo' || seccion === 'negocio') {
+      this.actualizarIndexHtml().catch(() => {});
+    }
+
     return { message: 'Guardado', [seccion]: datos };
   }
 
@@ -186,5 +198,64 @@ export class ConfiguracionService {
         c.negocio?.eslogan || 'Diseñamos espacios, construimos confianza.',
       mantenimiento: c.mantenimiento,
     };
+  }
+  private readonly INDEX_PATH = '/app/frontend-dist/index.html';
+  private readonly logger = new Logger('ConfiguracionService'); // si no lo tienes
+
+  /** Reescribe los meta tags del index.html con la config actual */
+  private async actualizarIndexHtml() {
+    try {
+      let html = await fs.readFile(this.INDEX_PATH, 'utf-8');
+      const config = await this.obtener();
+      const seo: any = config.seo || {};
+      const negocio: any = config.negocio || {};
+
+      const nombre = negocio.nombre || 'Vortiz Arquitectos';
+      const titulo = seo.metaTitle || nombre;
+      const descripcion = seo.metaDescription || '';
+      const imagen = seo.ogImageUrl || '';
+      const keywords = seo.keywords || '';
+
+      const reemplazos: Array<[string, 'name' | 'property', string]> = [
+        ['description', 'name', descripcion],
+        ['keywords', 'name', keywords],
+        ['og:title', 'property', titulo],
+        ['og:description', 'property', descripcion],
+        ['og:image', 'property', imagen],
+        ['og:site_name', 'property', nombre],
+        ['twitter:title', 'name', titulo],
+        ['twitter:description', 'name', descripcion],
+        ['twitter:image', 'name', imagen],
+      ];
+
+      for (const [prop, attr, value] of reemplazos) {
+        const escaped = this.escapeHtml(value);
+        const regex = new RegExp(
+          `<meta ${attr}="${prop}" content="[^"]*"`,
+          'g',
+        );
+        html = html.replace(
+          regex,
+          `<meta ${attr}="${prop}" content="${escaped}"`,
+        );
+      }
+
+      await fs.writeFile(this.INDEX_PATH, html, 'utf-8');
+      this.logger.log('✅ Meta tags del index.html actualizados');
+    } catch (err: any) {
+      this.logger.warn(`No se pudo actualizar index.html: ${err.message}`);
+    }
+  }
+
+  private escapeHtml(text: string): string {
+    return (text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+  async onModuleInit() {
+    // Reescribir index.html al startup
+    await this.actualizarIndexHtml().catch(() => {});
   }
 }
