@@ -47,6 +47,7 @@ services:
       - .env.production
     volumes:
       - vortiz_uploads:/app/uploads
+      - vortiz_frontend_dist:/app/frontend-dist:rw
     depends_on:
       database:
         condition: service_healthy

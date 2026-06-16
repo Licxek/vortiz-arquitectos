@@ -181,18 +181,35 @@ export class CitasService {
   private async notificarNuevaCita(cita: Cita) {
     const servicio = this.nombreServicio(cita);
 
-    // 1) Cliente: acuse de recibo
+    // 1) Cliente: SIEMPRE recibe acuse (no se desactiva)
     await this.mailService.enviar(
       cita.correo,
       'Recibimos tu solicitud de cita — Vortiz Arquitectos',
       this.htmlAcuseCliente(cita, servicio),
     );
 
-    // 2) Admin(s): aviso de nueva cita pendiente
-    await this.mailService.enviarAAdmins(
-      `Nueva cita pendiente — ${cita.nombre}`,
-      this.htmlAvisoAdmin(cita, servicio),
-    );
+    // 2) Admin: solo si el toggle está activo
+    const config = await this.configuracionService.obtener();
+    const notifActiva = config.notificaciones?.nuevaCita !== false;
+
+    if (notifActiva) {
+      const correoAdmin = config.contacto?.correoNotificaciones?.trim();
+
+      if (correoAdmin) {
+        // Usar el correo configurado en admin
+        await this.mailService.enviar(
+          correoAdmin,
+          `Nueva cita pendiente — ${cita.nombre}`,
+          this.htmlAvisoAdmin(cita, servicio),
+        );
+      } else {
+        // Fallback: enviar a todos los admins de BD
+        await this.mailService.enviarAAdmins(
+          `Nueva cita pendiente — ${cita.nombre}`,
+          this.htmlAvisoAdmin(cita, servicio),
+        );
+      }
+    }
   }
 
   private nombreServicio(cita: Cita): string {
