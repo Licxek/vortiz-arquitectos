@@ -2043,7 +2043,14 @@
           <label class="text-xs font-semibold uppercase tracking-wider text-gray-500"
             >Título de página</label
           >
-          <span class="text-xs text-gray-400">{{ seo.metaTitle.length }} / 60</span>
+          <span
+            class="text-xs font-semibold"
+            [class.text-gray-400]="seo.metaTitle.length < 50"
+            [class.text-amber-600]="seo.metaTitle.length >= 50 && seo.metaTitle.length < 60"
+            [class.text-red-600]="seo.metaTitle.length >= 60"
+          >
+            {{ seo.metaTitle.length }} / 60
+          </span>
         </div>
         <input
           type="text"
@@ -2052,6 +2059,25 @@
           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
         />
         <p class="text-xs text-gray-500 mt-1.5">Aparece como título en los resultados de Google</p>
+        <p
+          *ngIf="seo.metaTitle.length >= 60"
+          class="text-xs text-red-600 mt-1 flex items-center gap-1 animate-[fadeIn_0.2s_ease-out]"
+        >
+          <svg
+            class="w-3.5 h-3.5 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          Has alcanzado el límite. Acorta el título para mejor SEO.
+        </p>
       </div>
 
       <div>
@@ -2059,7 +2085,16 @@
           <label class="text-xs font-semibold uppercase tracking-wider text-gray-500"
             >Descripción</label
           >
-          <span class="text-xs text-gray-400">{{ seo.metaDescription.length }} / 160</span>
+          <span
+            class="text-xs font-semibold"
+            [class.text-gray-400]="seo.metaDescription.length < 140"
+            [class.text-amber-600]="
+              seo.metaDescription.length >= 140 && seo.metaDescription.length < 160
+            "
+            [class.text-red-600]="seo.metaDescription.length >= 160"
+          >
+            {{ seo.metaDescription.length }} / 160
+          </span>
         </div>
         <textarea
           [(ngModel)]="seo.metaDescription"
