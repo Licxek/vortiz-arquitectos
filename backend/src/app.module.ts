@@ -23,6 +23,7 @@ import { ReportesModule } from './reportes/reportes.module';
 import { SesionesModule } from './sesiones/sesiones.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
+import { ScheduleModule } from '@nestjs/schedule';  // 👈 AGREGAR import
 
 @Module({
   imports: [
@@ -110,6 +111,7 @@ import { WhatsAppModule } from './whatsapp/whatsapp.module';
     SesionesModule,
     AnalyticsModule,
     WhatsAppModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
