@@ -25,8 +25,12 @@ WORKDIR /app
 # Crear directorio para los archivos estáticos
 RUN mkdir -p /app/dist
 
-# 👇 OJO: copiar desde dist/Vortiz_Arquitectos/browser (Angular 21 builder)
-COPY --from=builder /app/dist/Vortiz_Arquitectos/browser /app/dist
+# 👇 CAMBIO 1: Copiar con ownership UID 1000:1000
+# (mismo UID que el user `node` del backend, así puede escribir index.html)
+COPY --from=builder --chown=1000:1000 /app/dist/Vortiz_Arquitectos/browser /app/dist
+
+# 👇 CAMBIO 2: Permisos 775 (dueño/grupo escriben, otros leen)
+RUN chmod -R 775 /app/dist
 
 # El contenedor solo expone el dist via volumen compartido con nginx
 CMD ["sh", "-c", "tail -f /dev/null"]
