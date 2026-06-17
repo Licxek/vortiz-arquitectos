@@ -23,7 +23,14 @@ interface FormCita {
 @Component({
   selector: 'app-citas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, FormatoTextoPipe, TelefonoInputComponent, SkeletonComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    FormatoTextoPipe,
+    TelefonoInputComponent,
+    SkeletonComponent,
+  ],
   templateUrl: './citas.component.html',
 })
 export class CitasComponent implements OnInit {
@@ -67,13 +74,71 @@ export class CitasComponent implements OnInit {
   mostrarSelectorServicio = signal(false);
 
   horasDisponibles = [
-    '09:00', '10:00', '11:00', '12:00', '13:00',
-    '15:00', '16:00', '17:00', '18:00',
+    '09:00',
+    '10:00',
+    '11:00',
+    '12:00',
+    '13:00',
+    '15:00',
+    '16:00',
+    '17:00',
+    '18:00',
   ];
 
   servicioSeleccionado = computed<Servicio | null>(() => {
     const id = this.form().servicioId;
-    return id ? this.servicios().find((s) => s.id === id) ?? null : null;
+    return id ? (this.servicios().find((s) => s.id === id) ?? null) : null;
+  });
+
+  /** Detecta si el cliente está en otra zona horaria distinta a México (UTC-6) */
+  clienteEsExtranjero = computed<boolean>(() => {
+    const tzCliente = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tzsMexico = [
+      'America/Mexico_City',
+      'America/Monterrey',
+      'America/Chihuahua',
+      'America/Bahia_Banderas',
+      'America/Hermosillo',
+      'America/Mazatlan',
+      'America/Cancun',
+      'America/Merida',
+      'America/Matamoros',
+      'America/Ojinaga',
+    ];
+    return !tzsMexico.includes(tzCliente);
+  });
+
+  /** Convierte la fecha+hora de Durango (UTC-6) a la TZ del cliente */
+  horaEnTuPais = computed<string>(() => {
+    const f = this.form();
+    if (!f.fecha || !f.hora || !this.clienteEsExtranjero()) return '';
+
+    try {
+      const tzCliente = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      // Asumimos UTC-6 (hora Durango). Si la cita está en hora de verano, usar -05:00
+      const fechaCita = new Date(`${f.fecha}T${f.hora}:00-06:00`);
+      return fechaCita.toLocaleString('es-MX', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: tzCliente,
+      });
+    } catch {
+      return '';
+    }
+  });
+
+  /** Devuelve la zona horaria del cliente en formato legible: "Madrid", "New York" */
+  tzClienteNombre = computed<string>(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    try {
+      return tz.split('/').pop()?.replace(/_/g, ' ') || tz;
+    } catch {
+      return tz;
+    }
   });
 
   fechaMinima = new Date().toISOString().split('T')[0];
@@ -142,8 +207,7 @@ export class CitasComponent implements OnInit {
       error: (err) => {
         this.enviando.set(false);
         this.errorEnvio.set(
-          err?.error?.message ||
-            'Hubo un problema al enviar tu solicitud. Inténtalo de nuevo.',
+          err?.error?.message || 'Hubo un problema al enviar tu solicitud. Inténtalo de nuevo.',
         );
       },
     });

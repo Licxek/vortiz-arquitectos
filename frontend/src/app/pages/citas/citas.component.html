@@ -624,6 +624,58 @@
                   </div>
                 </div>
               </div>
+
+              <!-- ============ AVISO DE ZONA HORARIA ============ -->
+              <div
+                *ngIf="form().fecha && form().hora"
+                class="mt-4 bg-blue-50 border border-blue-100 rounded-xl p-3 animate-[fadeIn_0.3s_ease-out]"
+              >
+                <!-- Para todos: aclaración de hora Durango -->
+                <div class="flex items-start gap-2">
+                  <svg
+                    class="w-4 h-4 text-[var(--color-primario)] shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <p class="text-xs text-gray-700 leading-relaxed">
+                    <strong>Horario de Durango, México</strong>
+                    <span class="text-gray-500">(GMT-6)</span>
+                  </p>
+                </div>
+
+                <!-- Si el cliente es extranjero: mostrar conversión -->
+                <div
+                  *ngIf="horaEnTuPais()"
+                  class="flex items-start gap-2 mt-2 pt-2 border-t border-blue-100"
+                >
+                  <svg
+                    class="w-4 h-4 text-blue-600 shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0zM3.6 9h16.8M3.6 15h16.8M12 3a9 9 0 010 18M12 3a9 9 0 000 18"
+                    />
+                  </svg>
+                  <p class="text-xs text-gray-700 leading-relaxed">
+                    <span class="text-gray-500">En tu zona horaria ({{ tzClienteNombre() }}):</span
+                    ><br />
+                    <strong>{{ horaEnTuPais() }}</strong>
+                  </p>
+                </div>
+              </div>
             </div>
 
             <!-- SUBMIT -->
