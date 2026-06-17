@@ -33,8 +33,9 @@
       <!-- ESTADO: ÉXITO -->
       <div
         *ngIf="enviado()"
-        class="max-w-2xl mx-auto text-center bg-white rounded-3xl shadow-xl p-10 md:p-14 animate-[fadeIn_0.4s_ease-out]"
+        class="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl p-8 md:p-12 animate-[fadeIn_0.4s_ease-out]"
       >
+        <!-- Icono de check -->
         <div
           class="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
         >
@@ -48,19 +49,102 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 class="text-3xl font-bold text-gray-900">¡Cita solicitada!</h2>
-        <p class="text-gray-600 mt-4 max-w-md mx-auto">
-          Recibimos tu solicitud. Te contactaremos a <strong>{{ form().correo }}</strong> en las
-          próximas 24 horas para confirmar tu cita del <strong>{{ form().fecha }}</strong> a las
-          <strong>{{ form().hora }}</strong
-          >.
+
+        <!-- Título -->
+        <h2 class="text-3xl font-bold text-gray-900 text-center">¡Cita solicitada!</h2>
+
+        <!-- Mensaje con tipo/servicio específico -->
+        <p class="text-gray-600 mt-4 max-w-md mx-auto text-center">
+          Recibimos tu solicitud de
+          <strong class="text-[var(--color-primario)]">{{ tipoLabel() }}</strong>
+          <ng-container *ngIf="form().tipo === 'proyecto' && servicioSeleccionado()">
+            para
+            <strong class="text-[var(--color-primario)]">{{
+              servicioSeleccionado()!.titulo
+            }}</strong>
+          </ng-container>
+          .
         </p>
-        <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mt-6 text-left">
+
+        <!-- Card con detalles de la cita -->
+        <div
+          class="bg-gray-50 border border-gray-100 rounded-2xl p-5 mt-6 max-w-md mx-auto space-y-4"
+        >
+          <!-- Fecha y hora -->
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 bg-[var(--color-primario)]/10 rounded-xl flex items-center justify-center shrink-0"
+            >
+              <svg
+                class="w-5 h-5 text-[var(--color-primario)]"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                Fecha y hora
+              </p>
+              <p class="text-sm font-semibold text-gray-900 mt-0.5 capitalize">
+                {{ fechaFormateadaExito() }} · {{ form().hora }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Correo de confirmación -->
+          <div class="flex items-center gap-3 pt-4 border-t border-gray-200">
+            <div
+              class="w-10 h-10 bg-[var(--color-primario)]/10 rounded-xl flex items-center justify-center shrink-0"
+            >
+              <svg
+                class="w-5 h-5 text-[var(--color-primario)]"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                Confirmación a
+              </p>
+              <p class="text-sm font-semibold text-gray-900 mt-0.5 break-all">
+                {{ form().correo }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Próximo paso -->
+        <p class="text-sm text-gray-600 mt-6 max-w-md mx-auto text-center">
+          Te contactaremos en las próximas
+          <strong class="text-gray-900">24 horas</strong> para confirmar.
+        </p>
+
+        <!-- Tip WhatsApp -->
+        <div
+          class="bg-blue-50 border border-blue-100 rounded-xl p-4 mt-6 text-left max-w-md mx-auto"
+        >
           <p class="text-xs font-bold uppercase tracking-widest text-[var(--color-primario)] mb-2">
             Mientras esperas
           </p>
           <p class="text-sm text-gray-600">
             Si necesitas algo urgente, puedes escribirnos por WhatsApp al
+
             <a
               href="https://wa.me/526180000000"
               class="text-[var(--color-primario)] font-semibold hover:underline"
@@ -68,6 +152,8 @@
             >.
           </p>
         </div>
+
+        <!-- Botones de acción -->
         <div class="flex flex-col sm:flex-row gap-2 mt-8 justify-center">
           <button
             (click)="agendarOtra()"
@@ -75,9 +161,10 @@
           >
             Agendar otra cita
           </button>
+
           <a
             routerLink="/"
-            class="px-6 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-semibold transition-all"
+            class="px-6 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-semibold transition-all text-center"
           >
             Volver al inicio
           </a>
