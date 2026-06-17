@@ -337,7 +337,7 @@ export class ResumenesService {
         </tbody>
       </table>
 
-      <a href="https://vortizarquitectos.com.mx/admin/reportes" style="display: inline-block; margin-top: 24px; padding: 12px 24px; background: #0a4d7a; color: white; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600;">
+      <a href="https://vortizarquitectos.com.mx/admin/inicio" style="display: inline-block; margin-top: 24px; padding: 12px 24px; background: #0a4d7a; color: white; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600;">
         Ver dashboard completo →
       </a>
       `,
