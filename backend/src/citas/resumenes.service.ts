@@ -17,7 +17,7 @@ export class ResumenesService {
   ) {}
 
   /** Resumen diario - todos los días 8AM hora México */
-  @Cron('* * * * *', { timeZone: 'America/Mexico_City' })
+  @Cron('0 8 * * *', { timeZone: 'America/Mexico_City' })
   async enviarResumenDiario() {
     const config = await this.configuracionService.obtener();
     if (!config.notificaciones?.resumenDiario) {
@@ -53,7 +53,7 @@ export class ResumenesService {
   }
 
   /** Resumen semanal - lunes 8AM hora México */
-  @Cron('0 8 * * 1', { timeZone: 'America/Mexico_City' })
+  @Cron('* * * * *', { timeZone: 'America/Mexico_City' })
   async enviarResumenSemanal() {
     const config = await this.configuracionService.obtener();
     if (!config.notificaciones?.resumenSemanal) {
