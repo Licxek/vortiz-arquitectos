@@ -69,7 +69,11 @@ RUN apk add --no-cache \
     fontconfig \
     ttf-dejavu \
     curl \
+    tzdata \
     && fc-cache -f
+
+# 👇 Zona horaria por defecto (puede ser override por docker-compose)
+ENV TZ=America/Mexico_City
 
 # Usuario no-root por seguridad
 RUN addgroup -S nodejs && adduser -S vortiz -G nodejs
