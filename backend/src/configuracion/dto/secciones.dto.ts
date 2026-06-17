@@ -48,7 +48,6 @@ export class AparienciaDto {
 // ========== NOTIFICACIONES ==========
 export class NotificacionesDto {
   @IsOptional() @IsBoolean() nuevaCita?: boolean;
-  @IsOptional() @IsBoolean() nuevaConsulta?: boolean;
   @IsOptional() @IsBoolean() resumenDiario?: boolean;
   @IsOptional() @IsBoolean() resumenSemanal?: boolean;
   @IsOptional() @IsBoolean() recordatorio24h?: boolean;
