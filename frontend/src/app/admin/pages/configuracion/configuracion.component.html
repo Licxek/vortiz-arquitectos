@@ -1799,24 +1799,6 @@
 
       <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
         <button
-          (click)="notificaciones.nuevaConsulta = !notificaciones.nuevaConsulta"
-          class="relative w-11 h-6 rounded-full transition-colors shrink-0"
-          [class.bg-green-500]="notificaciones.nuevaConsulta"
-          [class.bg-gray-300]="!notificaciones.nuevaConsulta"
-        >
-          <span
-            class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
-            [class.translate-x-5]="notificaciones.nuevaConsulta"
-          ></span>
-        </button>
-        <div class="flex-1">
-          <p class="text-sm font-semibold text-gray-900">Nueva consulta</p>
-          <p class="text-xs text-gray-500">Cuando llegue una consulta a través del formulario</p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-        <button
           (click)="notificaciones.resumenDiario = !notificaciones.resumenDiario"
           class="relative w-11 h-6 rounded-full transition-colors shrink-0"
           [class.bg-green-500]="notificaciones.resumenDiario"

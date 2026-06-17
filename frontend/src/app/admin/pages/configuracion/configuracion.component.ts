@@ -160,7 +160,6 @@ export class ConfiguracionComponent implements OnInit {
   // =========== NOTIFICACIONES ===========
   notificaciones = {
     nuevaCita: true,
-    nuevaConsulta: true,
     resumenDiario: false,
     resumenSemanal: true,
     recordatorio24h: true,
@@ -568,7 +567,6 @@ export class ConfiguracionComponent implements OnInit {
       case 'Notificaciones':
         this.notificaciones = {
           nuevaCita: true,
-          nuevaConsulta: true,
           resumenDiario: false,
           resumenSemanal: true,
           recordatorio24h: true,
