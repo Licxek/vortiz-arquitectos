@@ -605,23 +605,59 @@
                     class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2"
                     >Hora</label
                   >
-                  <div class="grid grid-cols-3 gap-2">
-                    <button
-                      *ngFor="let h of horasDisponibles"
-                      type="button"
-                      (click)="actualizarForm('hora', h)"
-                      class="px-1 sm:px-2 py-2 rounded-lg text-xs font-semibold border transition-all"
-                      [class.bg-[var(--color-primario)]]="form().hora === h"
-                      [class.text-white]="form().hora === h"
-                      [class.border-[#0a4d7a]]="form().hora === h"
-                      [class.bg-gray-50]="form().hora !== h"
-                      [class.text-gray-700]="form().hora !== h"
-                      [class.border-gray-200]="form().hora !== h"
-                      [class.hover:border-gray-400]="form().hora !== h"
+                  <div class="grid grid-cols-3 gap-2 relative">
+                    <!-- Loader sutil al cargar -->
+                    <div
+                      *ngIf="cargandoHoras()"
+                      class="absolute inset-0 bg-white/50 backdrop-blur-[1px] rounded-lg flex items-center justify-center z-10"
                     >
-                      {{ h }}
+                      <svg
+                        class="w-5 h-5 animate-spin text-[#0a4d7a]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                          class="opacity-25"
+                        ></circle>
+                        <path
+                          fill="currentColor"
+                          class="opacity-75"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        ></path>
+                      </svg>
+                    </div>
+
+                    <button
+                      *ngFor="let opt of horasDisponiblesConEstado()"
+                      type="button"
+                      (click)="!opt.ocupada && actualizarForm('hora', opt.hora)"
+                      [disabled]="opt.ocupada"
+                      [title]="opt.ocupada ? 'Hora no disponible' : ''"
+                      class="px-1 sm:px-2 py-2 rounded-lg text-xs font-semibold border transition-all relative"
+                      [class.bg-[var(--color-primario)]]="form().hora === opt.hora && !opt.ocupada"
+                      [class.text-white]="form().hora === opt.hora && !opt.ocupada"
+                      [class.border-[#0a4d7a]]="form().hora === opt.hora && !opt.ocupada"
+                      [class.bg-gray-50]="form().hora !== opt.hora && !opt.ocupada"
+                      [class.text-gray-700]="form().hora !== opt.hora && !opt.ocupada"
+                      [class.border-gray-200]="form().hora !== opt.hora && !opt.ocupada"
+                      [class.hover:border-gray-400]="form().hora !== opt.hora && !opt.ocupada"
+                      [class.bg-gray-100]="opt.ocupada"
+                      [class.text-gray-400]="opt.ocupada"
+                      [class.border-gray-200]="opt.ocupada"
+                      [class.cursor-not-allowed]="opt.ocupada"
+                      [class.line-through]="opt.ocupada"
+                    >
+                      {{ opt.hora }}
                     </button>
                   </div>
+                  <p *ngIf="horasOcupadas().length > 0" class="text-xs text-gray-500 mt-2">
+                    ⚠️ Las horas tachadas ya están reservadas
+                  </p>
                 </div>
               </div>
 
