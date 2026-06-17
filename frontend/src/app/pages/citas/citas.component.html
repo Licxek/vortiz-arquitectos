@@ -28,7 +28,7 @@
   </section>
 
   <!-- ============ FORM ============ -->
-  <section class="py-16 md:py-20 bg-gray-50">
+  <section class="py-16 md:py-20 pb-32 md:pb-20 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4">
       <!-- ESTADO: ÉXITO -->
       <div
@@ -969,4 +969,49 @@
       </div>
     </div>
   </section>
+  <!-- ============ STICKY SUBMIT (solo móvil) ============ -->
+  <div
+    *ngIf="!enviado() && formValido() && !enviando()"
+    class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-gray-100 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)]"
+    style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom))"
+  >
+    <button
+      type="button"
+      (click)="enviarFormulario()"
+      class="w-full px-6 py-3.5 bg-gradient-to-r from-[#0a4d7a] to-[#0a5d8f] hover:shadow-2xl text-white rounded-xl text-base font-bold shadow-md transition-all flex items-center justify-center gap-2"
+    >
+      <span>Agendar mi cita</span>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Indicador de carga en sticky (cuando enviando) -->
+  <div
+    *ngIf="!enviado() && enviando()"
+    class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-gray-100 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
+    style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom))"
+  >
+    <div
+      class="w-full px-6 py-3.5 bg-gray-100 text-gray-500 rounded-xl text-base font-bold flex items-center justify-center gap-2"
+    >
+      <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+          class="opacity-25"
+        ></circle>
+        <path
+          fill="currentColor"
+          class="opacity-75"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+        ></path>
+      </svg>
+      Enviando...
+    </div>
+  </div>
 </div>
