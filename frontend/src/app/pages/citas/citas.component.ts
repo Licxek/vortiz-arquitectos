@@ -162,6 +162,11 @@ export class CitasComponent implements OnInit {
 
   actualizarForm<K extends keyof FormCita>(campo: K, valor: FormCita[K]) {
     this.form.update((f) => ({ ...f, [campo]: valor }));
+
+    // 👇 NUEVO: si cambia la fecha, recargar horas ocupadas
+    if (campo === 'fecha') {
+      this.cargarHorasOcupadas(valor as string);
+    }
   }
 
   seleccionarTipo(tipo: 'consulta' | 'proyecto') {
@@ -245,5 +250,41 @@ export class CitasComponent implements OnInit {
     this.horarioLunVie = this.contenidoService.getCampo('citas', 'horarios', 'lunVie');
     this.horarioSabado = this.contenidoService.getCampo('citas', 'horarios', 'sabado');
     this.horarioDomingo = this.contenidoService.getCampo('citas', 'horarios', 'domingo');
+  }
+
+  // Al inicio de la clase, junto a los otros signals
+  horasOcupadas = signal<string[]>([]);
+  cargandoHoras = signal(false);
+
+  // Computed que combina las horas disponibles con las ocupadas
+  horasDisponiblesConEstado = computed(() => {
+    const ocupadas = this.horasOcupadas();
+    return this.horasDisponibles.map((h) => ({
+      hora: h,
+      ocupada: ocupadas.includes(h),
+    }));
+  });
+
+  // Método para cargar horas ocupadas cuando cambia la fecha
+  private cargarHorasOcupadas(fecha: string) {
+    if (!fecha) {
+      this.horasOcupadas.set([]);
+      return;
+    }
+    this.cargandoHoras.set(true);
+    this.citas.obtenerHorariosOcupados(fecha).subscribe({
+      next: (ocupadas) => {
+        this.horasOcupadas.set(ocupadas);
+        this.cargandoHoras.set(false);
+        // Si la hora seleccionada está ahora ocupada, deseleccionarla
+        if (this.form().hora && ocupadas.includes(this.form().hora)) {
+          this.actualizarForm('hora', '');
+        }
+      },
+      error: () => {
+        this.cargandoHoras.set(false);
+        this.horasOcupadas.set([]);
+      },
+    });
   }
 }

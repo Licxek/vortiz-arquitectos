@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable,map  } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export type TipoCita = 'consulta' | 'proyecto';
@@ -14,7 +14,7 @@ export interface CrearCitaDto {
   servicioId?: number | null;
   motivo?: string;
   fecha: string; // YYYY-MM-DD
-  hora: string;  // HH:MM
+  hora: string; // HH:MM
   duracion?: number; // 👈 NUEVO
   estado?: EstadoCita; // 👈 NUEVO: admin puede mandar 'confirmada'
 }
@@ -46,6 +46,15 @@ export class CitasService {
     return this.http.post<Cita>(this.base, data);
   }
 
+   // 👇 NUEVO - PÚBLICO
+  obtenerHorariosOcupados(fecha: string): Observable<string[]> {
+    return this.http
+      .get<{ ocupadas: string[] }>(`${this.base}/horarios-ocupados`, {  // 👈 this.base, no this.apiUrl
+        params: { fecha },
+      })
+      .pipe(map((r) => r.ocupadas));
+  }
+
   // Admin (los siguientes los usaremos en la etapa 3)
   listar(): Observable<Cita[]> {
     return this.http.get<Cita[]>(this.base);
@@ -62,4 +71,5 @@ export class CitasService {
   eliminar(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
+
 }

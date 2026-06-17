@@ -10,6 +10,7 @@ import { Cita, EstadoCita } from './cita.entity';
 import { MailService } from '../mail/mail.service'; // ⚠️ ajusta la ruta
 import { CrearCitaDto } from './dto/crear-cita.dto';
 import { ConfiguracionService } from '../configuracion/configuracion.service'; // 👈 NUEVO
+import { In } from 'typeorm';
 
 const ESTADOS_VALIDOS: EstadoCita[] = [
   'pendiente',
@@ -396,5 +397,17 @@ export class CitasService {
     <p>Estaremos encantados de encontrar otra fecha que te funcione.</p>
     `,
     );
+  }
+
+  // Dentro de la clase CitasService
+  async getHorariosOcupados(fecha: string): Promise<string[]> {
+    const citas = await this.repo.find({
+      where: {
+        fecha,
+        estado: In(['pendiente', 'confirmada']),
+      },
+      select: ['hora'],
+    });
+    return citas.map((c) => c.hora);
   }
 }

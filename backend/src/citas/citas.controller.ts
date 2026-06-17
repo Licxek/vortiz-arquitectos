@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CitasService } from './citas.service';
@@ -27,6 +28,17 @@ export class CitasController {
     return this.servicio.crear(data);
   }
 
+
+  // 👇 ENDPOINT PÚBLICO — debe ir ANTES de @Get(':id')
+  @Get('horarios-ocupados')
+  async getHorariosOcupados(@Query('fecha') fecha: string) {
+    if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      return { ocupadas: [] };
+    }
+    const ocupadas = await this.servicio.getHorariosOcupados(fecha);  // 👈 this.servicio, no this.citasService
+    return { ocupadas };
+  }
+  
   // PROTEGIDOS — admin (JWT + throttle global 60/min ya protegen)
   @UseGuards(JwtAuthGuard)
   @Get()
