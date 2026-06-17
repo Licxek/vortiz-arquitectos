@@ -90,6 +90,38 @@ export class CitasComponent implements OnInit {
     return id ? (this.servicios().find((s) => s.id === id) ?? null) : null;
   });
 
+  /** Etiqueta legible del tipo de cita */
+  tipoLabel = computed<string>(() => {
+    return this.form().tipo === 'proyecto' ? 'proyecto específico' : 'consulta inicial';
+  });
+
+  /** Fecha formateada para el estado de éxito (ej: "sábado 21 de junio") */
+  fechaFormateadaExito = computed<string>(() => {
+    const f = this.form().fecha;
+    if (!f) return '';
+    try {
+      const d = new Date(f + 'T00:00:00');
+      const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+      const meses = [
+        'enero',
+        'febrero',
+        'marzo',
+        'abril',
+        'mayo',
+        'junio',
+        'julio',
+        'agosto',
+        'septiembre',
+        'octubre',
+        'noviembre',
+        'diciembre',
+      ];
+      return `${dias[d.getDay()]} ${d.getDate()} de ${meses[d.getMonth()]}`;
+    } catch {
+      return f;
+    }
+  });
+
   /** Detecta si el cliente está en otra zona horaria distinta a México (UTC-6) */
   clienteEsExtranjero = computed<boolean>(() => {
     const tzCliente = Intl.DateTimeFormat().resolvedOptions().timeZone;
