@@ -319,4 +319,24 @@ export class CitasComponent implements OnInit {
       },
     });
   }
+
+  /** Email tiene formato válido */
+  emailValido = computed<boolean>(() => {
+    const correo = this.form().correo.trim();
+    if (!correo) return false; // vacío = no mostrar nada
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+  });
+
+  /** Email tiene contenido pero NO es válido (mostrar tacha roja) */
+  emailInvalido = computed<boolean>(() => {
+    const correo = this.form().correo.trim();
+    return correo.length > 0 && !this.emailValido();
+  });
+
+  /** Clase del borde del input según estado del email */
+  emailBorderClass = computed<string>(() => {
+    if (this.emailValido()) return 'border-green-300 focus:border-green-500';
+    if (this.emailInvalido()) return 'border-red-300 focus:border-red-500';
+    return 'border-gray-200 focus:border-[#0a4d7a]';
+  });
 }
