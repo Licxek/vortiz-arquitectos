@@ -43,6 +43,8 @@ services:
       target: production
     container_name: vortiz_backend_prod
     restart: unless-stopped
+    environment:
+      - TZ=America/Mexico_City
     env_file:
       - .env.production
     volumes:
