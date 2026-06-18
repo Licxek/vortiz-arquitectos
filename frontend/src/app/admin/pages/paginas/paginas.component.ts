@@ -63,9 +63,10 @@ interface Plantilla {
 type ItemTemplate = {
   [key: string]: {
     label: string;
-    tipo: 'texto' | 'textarea';
+    tipo: 'texto' | 'textarea' | 'icono';
     placeholder?: string;
     maxLength?: number;
+    catalogoIconos?: 'valores' | 'servicios';
   };
 };
 
@@ -638,17 +639,14 @@ export class PaginasComponent implements OnInit {
             itemTemplate: {
               icono: {
                 label: 'Ícono',
-                tipo: 'texto',
-                placeholder:
-                  'shield-check | hard-hat | leaf | document-check | handshake | lightning',
+                tipo: 'icono',
+                catalogoIconos: 'valores',
               },
               titulo: { label: 'Título', tipo: 'texto' },
               descripcion: { label: 'Descripción', tipo: 'textarea' },
             },
             itemLabelKey: 'titulo',
             maxItems: 12,
-            ayuda:
-              'Íconos disponibles: shield-check, hard-hat, leaf, document-check, handshake, lightning',
           },
         ],
       },
@@ -2318,5 +2316,49 @@ export class PaginasComponent implements OnInit {
     if (horas < 24) return `hace ${horas} h`;
     const dias = Math.floor(horas / 24);
     return dias === 1 ? 'ayer' : `hace ${dias} días`;
+  }
+
+  /** Catálogos de íconos disponibles para el selector visual */
+  catalogosIconos: Record<string, { id: string; label: string; uso: string }[]> = {
+    valores: [
+      { id: 'handshake', label: 'Apretón de manos', uso: 'Confianza, acuerdos' },
+      { id: 'document-check', label: 'Documento verificado', uso: 'Claridad, cumplimiento' },
+      { id: 'shield-check', label: 'Escudo', uso: 'Compromiso, seguridad' },
+      { id: 'hard-hat', label: 'Casco de obra', uso: 'Construcción, resultados' },
+      { id: 'leaf', label: 'Hoja', uso: 'Sustentabilidad, naturaleza' },
+      { id: 'lightning', label: 'Rayo', uso: 'Eficiencia, rapidez' },
+    ],
+    servicios: [
+      { id: 'document', label: 'Documento', uso: 'Trámites, gestión' },
+      { id: 'badge', label: 'Insignia', uso: 'Permisos, certificados' },
+      { id: 'users', label: 'Equipo', uso: 'Gerencia, personas' },
+      { id: 'eye', label: 'Ojo', uso: 'Supervisión, observación' },
+      { id: 'cube', label: 'Cubo 3D', uso: 'Modelado, BIM' },
+      { id: 'map', label: 'Mapa', uso: 'Topografía, ubicación' },
+      { id: 'structure', label: 'Estructura', uso: 'Edificios, obra' },
+      { id: 'leaf', label: 'Hoja', uso: 'Áreas verdes, jardines' },
+      { id: 'water', label: 'Gota', uso: 'Hidráulica, agua' },
+      { id: 'bulb', label: 'Foco', uso: 'Eléctrica, instalaciones' },
+      { id: 'home', label: 'Casa', uso: 'Residencial' },
+      { id: 'factory', label: 'Fábrica', uso: 'Industrial, naves' },
+      { id: 'chat', label: 'Chat', uso: 'Asesoría, consulta' },
+      { id: 'calculator', label: 'Calculadora', uso: 'Cotización, presupuesto' },
+    ],
+  };
+
+  /** Helper para obtener el label amigable de un ícono */
+  labelDeIcono(catalogo: 'valores' | 'servicios', id: string): string {
+    return this.catalogosIconos[catalogo]?.find((i) => i.id === id)?.label || id;
+  }
+
+  /** Previsualizar desde el modal de Nueva/Editar página */
+  previsualizarDesdeNueva() {
+    if (!this.paginaEditandoId) return;
+
+    // Buscar la página actual en el array
+    const pagina = this.paginasDinamicas.find((p) => p.id === this.paginaEditandoId);
+    if (pagina) {
+      this.previsualizarPagina(pagina);
+    }
   }
 }
