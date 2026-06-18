@@ -688,16 +688,19 @@
         </button>
       </div>
 
-      <!-- Toggle Historial -->
+      <!-- ============ HISTORIAL PRO ============ -->
       <div id="historial" class="mt-6 pt-6 border-t-2 border-dashed border-gray-200">
+        <!-- Toggle principal -->
         <button
           (click)="toggleHistorial()"
           class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
         >
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-gray-200 rounded-lg flex items-center justify-center">
+            <div
+              class="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center"
+            >
               <svg
-                class="w-4 h-4 text-gray-600"
+                class="w-5 h-5 text-gray-700"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
@@ -706,13 +709,16 @@
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
                 />
               </svg>
             </div>
             <div class="text-left">
-              <p class="text-sm font-semibold text-gray-900">Historial y canceladas</p>
-              <p class="text-xs text-gray-500">{{ citasPasadas.length }} citas archivadas</p>
+              <p class="text-sm font-bold text-gray-900">Historial</p>
+              <p class="text-xs text-gray-500">
+                {{ statsHistorial.total }}
+                {{ statsHistorial.total === 1 ? 'cita archivada' : 'citas archivadas' }}
+              </p>
             </div>
           </div>
           <svg
@@ -727,62 +733,236 @@
           </svg>
         </button>
 
-        <div *ngIf="mostrarHistorial" class="mt-4 space-y-2 animate-[fadeIn_0.2s_ease-out]">
-          <div
-            *ngFor="let cita of citasPasadasFiltradas; trackBy: trackByCitaId"
-            (click)="abrirDetalle(cita)"
-            class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 hover:shadow-md hover:opacity-100 opacity-80 transition-all flex items-center gap-3 cursor-pointer"
-          >
-            <div
-              class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
-              [style.background]="estiloAvatar(cita.cliente)"
+        <!-- Contenido del historial -->
+        <div *ngIf="mostrarHistorial" class="mt-4 space-y-4 animate-[fadeIn_0.2s_ease-out]">
+          <!-- Stats / Tabs de filtro -->
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <!-- Todas -->
+            <button
+              (click)="cambiarFiltroHistorial('todas')"
+              class="text-left p-3 rounded-xl border-2 transition-all"
+              [class.border-[#0a4d7a]]="filtroHistorial() === 'todas'"
+              [class.bg-blue-50]="filtroHistorial() === 'todas'"
+              [class.border-gray-200]="filtroHistorial() !== 'todas'"
+              [class.hover:border-gray-300]="filtroHistorial() !== 'todas'"
+              [class.bg-white]="filtroHistorial() !== 'todas'"
             >
-              {{ iniciales(cita.cliente) }}
-            </div>
-            <div
-              class="flex flex-col items-center justify-center w-12 h-12 bg-gray-50 rounded-xl shrink-0"
-            >
-              <span class="text-xs font-bold text-gray-700">{{ cita.hora }}</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-gray-700 truncate">{{ cita.cliente }}</p>
-              <p class="text-xs text-gray-500 truncate">
-                {{ cita.servicio }} · {{ cita.fecha | date: 'd MMM y' }}
+              <p class="text-2xl font-bold text-gray-900">{{ statsHistorial.total }}</p>
+              <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mt-0.5">
+                Todas
               </p>
-            </div>
-            <span
-              class="text-xs font-semibold px-3 py-1 rounded-full shrink-0"
-              [class.bg-green-50]="cita.estado === 'confirmada'"
-              [class.text-green-700]="cita.estado === 'confirmada'"
-              [class.bg-orange-50]="cita.estado === 'pendiente'"
-              [class.text-orange-700]="cita.estado === 'pendiente'"
-              [class.bg-red-50]="cita.estado === 'cancelada'"
-              [class.text-red-700]="cita.estado === 'cancelada'"
-              [class.bg-gray-100]="cita.estado === 'completada'"
-              [class.text-gray-700]="cita.estado === 'completada'"
-              [class.bg-amber-50]="cita.estado === 'no_asistio'"
-              [class.text-amber-700]="cita.estado === 'no_asistio'"
+            </button>
+
+            <!-- Completadas -->
+            <button
+              (click)="cambiarFiltroHistorial('completada')"
+              class="text-left p-3 rounded-xl border-2 transition-all"
+              [class.border-blue-500]="filtroHistorial() === 'completada'"
+              [class.bg-blue-50]="filtroHistorial() === 'completada'"
+              [class.border-gray-200]="filtroHistorial() !== 'completada'"
+              [class.hover:border-gray-300]="filtroHistorial() !== 'completada'"
+              [class.bg-white]="filtroHistorial() !== 'completada'"
             >
-              {{ cita.estado === 'no_asistio' ? 'No asistió' : (cita.estado | titlecase) }}
-            </span>
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                <p class="text-2xl font-bold text-gray-900">{{ statsHistorial.completadas }}</p>
+              </div>
+              <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mt-0.5">
+                Completadas
+              </p>
+            </button>
+
+            <!-- Canceladas -->
+            <button
+              (click)="cambiarFiltroHistorial('cancelada')"
+              class="text-left p-3 rounded-xl border-2 transition-all"
+              [class.border-red-500]="filtroHistorial() === 'cancelada'"
+              [class.bg-red-50]="filtroHistorial() === 'cancelada'"
+              [class.border-gray-200]="filtroHistorial() !== 'cancelada'"
+              [class.hover:border-gray-300]="filtroHistorial() !== 'cancelada'"
+              [class.bg-white]="filtroHistorial() !== 'cancelada'"
+            >
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                <p class="text-2xl font-bold text-gray-900">{{ statsHistorial.canceladas }}</p>
+              </div>
+              <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mt-0.5">
+                Canceladas
+              </p>
+            </button>
+
+            <!-- No asistió -->
+            <button
+              (click)="cambiarFiltroHistorial('no_asistio')"
+              class="text-left p-3 rounded-xl border-2 transition-all"
+              [class.border-amber-500]="filtroHistorial() === 'no_asistio'"
+              [class.bg-amber-50]="filtroHistorial() === 'no_asistio'"
+              [class.border-gray-200]="filtroHistorial() !== 'no_asistio'"
+              [class.hover:border-gray-300]="filtroHistorial() !== 'no_asistio'"
+              [class.bg-white]="filtroHistorial() !== 'no_asistio'"
+            >
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+                <p class="text-2xl font-bold text-gray-900">{{ statsHistorial.noAsistio }}</p>
+              </div>
+              <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mt-0.5">
+                No asistió
+              </p>
+            </button>
+
+            <!-- Pasadas sin marcar -->
+            <button
+              (click)="cambiarFiltroHistorial('pasada')"
+              class="text-left p-3 rounded-xl border-2 transition-all"
+              [class.border-gray-500]="filtroHistorial() === 'pasada'"
+              [class.bg-gray-100]="filtroHistorial() === 'pasada'"
+              [class.border-gray-200]="filtroHistorial() !== 'pasada'"
+              [class.hover:border-gray-300]="filtroHistorial() !== 'pasada'"
+              [class.bg-white]="filtroHistorial() !== 'pasada'"
+            >
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 bg-gray-500 rounded-full"></span>
+                <p class="text-2xl font-bold text-gray-900">{{ statsHistorial.pasadas }}</p>
+              </div>
+              <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mt-0.5">
+                Pasadas
+              </p>
+            </button>
           </div>
 
-          <!-- Sin búsqueda y sin citas pasadas → mensaje genérico -->
-          <p
-            *ngIf="!busqueda.trim() && citasPasadasFiltradas.length === 0"
-            class="text-center text-sm text-gray-500 py-6"
-          >
-            Aún no hay citas en el historial
-          </p>
+          <!-- Lista agrupada por mes -->
+          <div *ngIf="citasHistorialFiltradas.length > 0" class="space-y-5">
+            <div
+              *ngFor="let grupo of citasHistorialPorMes; trackBy: trackByGrupoMes"
+              class="animate-[fadeIn_0.2s_ease-out]"
+            >
+              <!-- Header del mes -->
+              <div class="flex items-center gap-3 mb-2">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500">
+                  {{ grupo.mesAnio }}
+                </h3>
+                <div class="flex-1 h-px bg-gray-200"></div>
+                <span class="text-xs text-gray-400 font-semibold">
+                  {{ grupo.citas.length }} {{ grupo.citas.length === 1 ? 'cita' : 'citas' }}
+                </span>
+              </div>
 
-          <!-- Con búsqueda activa pero sin resultados → mensaje contextual -->
-          <p
-            *ngIf="busqueda.trim() && citasPasadasFiltradas.length === 0"
-            class="text-center text-sm text-gray-500 py-6"
+              <!-- Items -->
+              <div class="space-y-2">
+                <div
+                  *ngFor="let cita of grupo.citas; trackBy: trackByCitaId"
+                  (click)="abrirDetalle(cita)"
+                  class="bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 hover:shadow-md rounded-xl p-3 md:p-4 flex items-center gap-3 cursor-pointer transition-all group"
+                >
+                  <!-- Avatar -->
+                  <div
+                    class="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0 opacity-90"
+                    [style.background]="estiloAvatar(cita.cliente)"
+                  >
+                    {{ iniciales(cita.cliente) }}
+                  </div>
+
+                  <!-- Fecha mini-card -->
+                  <div class="flex flex-col items-center justify-center w-12 shrink-0">
+                    <span
+                      class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold leading-none"
+                    >
+                      {{ fechaRelativaCorta(cita.fecha) }}
+                    </span>
+                    <span class="text-sm font-bold text-gray-700 mt-0.5">
+                      {{ cita.hora }}
+                    </span>
+                  </div>
+
+                  <!-- Info principal -->
+                  <div class="flex-1 min-w-0">
+                    <p
+                      class="text-sm font-semibold text-gray-900 truncate group-hover:text-[#0a4d7a] transition-colors"
+                    >
+                      {{ cita.cliente }}
+                    </p>
+                    <p class="text-xs text-gray-500 truncate mt-0.5">
+                      {{ cita.servicio }}
+                    </p>
+                  </div>
+
+                  <!-- Badge de estado -->
+                  <span
+                    class="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 uppercase tracking-wider"
+                    [class]="estadoBadgeClass(cita.estado)"
+                  >
+                    {{ estadoLabel(cita.estado) }}
+                  </span>
+
+                  <!-- Chevron -->
+                  <svg
+                    class="w-4 h-4 text-gray-300 group-hover:text-[#0a4d7a] group-hover:translate-x-0.5 transition-all shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty states específicos según filtro -->
+          <div
+            *ngIf="citasHistorialFiltradas.length === 0"
+            class="text-center py-12 bg-white rounded-2xl border border-gray-100"
           >
-            Sin resultados en historial para "<strong>{{ busqueda }}</strong
-            >"
-          </p>
+            <ng-container [ngSwitch]="filtroHistorial()">
+              <!-- Búsqueda activa sin resultados -->
+              <ng-container *ngIf="busqueda.trim()">
+                <div class="text-5xl mb-3">🔍</div>
+                <h3 class="text-base font-bold text-gray-900">Sin resultados</h3>
+                <p class="text-sm text-gray-500 mt-1">
+                  No hay citas en historial para "<strong>{{ busqueda }}</strong
+                  >"
+                </p>
+              </ng-container>
+
+              <!-- Sin búsqueda → mensaje por filtro -->
+              <ng-container *ngIf="!busqueda.trim()">
+                <ng-container *ngSwitchCase="'cancelada'">
+                  <div class="text-5xl mb-3">✨</div>
+                  <h3 class="text-base font-bold text-gray-900">Sin cancelaciones</h3>
+                  <p class="text-sm text-gray-500 mt-1">
+                    Ninguna cita ha sido cancelada. ¡Excelente!
+                  </p>
+                </ng-container>
+
+                <ng-container *ngSwitchCase="'completada'">
+                  <div class="text-5xl mb-3">📋</div>
+                  <h3 class="text-base font-bold text-gray-900">Sin completadas aún</h3>
+                  <p class="text-sm text-gray-500 mt-1">
+                    Las citas que marques como completadas aparecerán aquí
+                  </p>
+                </ng-container>
+
+                <ng-container *ngSwitchCase="'no_asistio'">
+                  <div class="text-5xl mb-3">👏</div>
+                  <h3 class="text-base font-bold text-gray-900">Todos asistieron</h3>
+                  <p class="text-sm text-gray-500 mt-1">No tienes registros de inasistencia</p>
+                </ng-container>
+
+                <ng-container *ngSwitchCase="'pasada'">
+                  <div class="text-5xl mb-3">✅</div>
+                  <h3 class="text-base font-bold text-gray-900">Todo al día</h3>
+                  <p class="text-sm text-gray-500 mt-1">No hay citas pasadas sin marcar</p>
+                </ng-container>
+
+                <ng-container *ngSwitchDefault>
+                  <div class="text-5xl mb-3">📭</div>
+                  <h3 class="text-base font-bold text-gray-900">Historial vacío</h3>
+                  <p class="text-sm text-gray-500 mt-1">Aún no hay citas en el historial</p>
+                </ng-container>
+              </ng-container>
+            </ng-container>
+          </div>
         </div>
       </div>
     </ng-container>

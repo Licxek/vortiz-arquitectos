@@ -1513,4 +1513,127 @@ export class CitasComponent implements OnInit {
       (a, b) => b.fecha.getTime() - a.fecha.getTime() || b.hora.localeCompare(a.hora),
     );
   }
+
+  // ====== HISTORIAL MEJORADO ======
+
+  /** Filtro del historial */
+  filtroHistorial = signal<'todas' | 'completada' | 'cancelada' | 'no_asistio' | 'pasada'>('todas');
+
+  cambiarFiltroHistorial(filtro: 'todas' | 'completada' | 'cancelada' | 'no_asistio' | 'pasada') {
+    this.filtroHistorial.set(filtro);
+  }
+
+  /** Una cita está "archivada" si: canceladas/completadas/no_asistio O fecha pasada */
+  esCitaArchivada(cita: Cita): boolean {
+    return (
+      this.esCitaPasada(cita) ||
+      cita.estado === 'cancelada' ||
+      cita.estado === 'completada' ||
+      cita.estado === 'no_asistio'
+    );
+  }
+
+  /** Todas las citas del historial (sin filtros aplicados) */
+  get citasHistorial(): Cita[] {
+    return this.citas().filter((c) => this.esCitaArchivada(c));
+  }
+
+  /** Stats del historial */
+  get statsHistorial() {
+    const h = this.citasHistorial;
+    return {
+      total: h.length,
+      completadas: h.filter((c) => c.estado === 'completada').length,
+      canceladas: h.filter((c) => c.estado === 'cancelada').length,
+      noAsistio: h.filter((c) => c.estado === 'no_asistio').length,
+      pasadas: h.filter(
+        (c) => this.esCitaPasada(c) && (c.estado === 'confirmada' || c.estado === 'pendiente'),
+      ).length,
+    };
+  }
+
+  /** Citas del historial filtradas por búsqueda y filtro */
+  get citasHistorialFiltradas(): Cita[] {
+    let resultado = this.citasHistorial;
+
+    // Filtro por tipo
+    const filtro = this.filtroHistorial();
+    if (filtro !== 'todas') {
+      if (filtro === 'pasada') {
+        resultado = resultado.filter(
+          (c) => this.esCitaPasada(c) && (c.estado === 'confirmada' || c.estado === 'pendiente'),
+        );
+      } else {
+        resultado = resultado.filter((c) => c.estado === filtro);
+      }
+    }
+
+    // Búsqueda
+    if (this.busqueda.trim()) {
+      const q = this.busqueda.toLowerCase();
+      resultado = resultado.filter(
+        (c) =>
+          c.cliente.toLowerCase().includes(q) ||
+          c.servicio?.toLowerCase().includes(q) ||
+          c.correo?.toLowerCase().includes(q) ||
+          c.telefono?.replace(/\s/g, '').includes(q.replace(/\s/g, '')) ||
+          c.notas?.toLowerCase().includes(q),
+      );
+    }
+
+    // Más recientes primero
+    return resultado.sort(
+      (a, b) => b.fecha.getTime() - a.fecha.getTime() || b.hora.localeCompare(a.hora),
+    );
+  }
+
+  /** Citas del historial agrupadas por mes-año */
+  get citasHistorialPorMes(): { mesAnio: string; citas: Cita[] }[] {
+    const grupos = new Map<string, Cita[]>();
+
+    for (const cita of this.citasHistorialFiltradas) {
+      const mes = this.meses[cita.fecha.getMonth()];
+      const anio = cita.fecha.getFullYear();
+      const key = `${mes} ${anio}`;
+
+      if (!grupos.has(key)) grupos.set(key, []);
+      grupos.get(key)!.push(cita);
+    }
+
+    return Array.from(grupos.entries()).map(([mesAnio, citas]) => ({ mesAnio, citas }));
+  }
+
+  /** Fecha relativa corta */
+  fechaRelativaCorta(fecha: Date): string {
+    const hoy = this.fechaHoy();
+    const f = new Date(fecha);
+    f.setHours(0, 0, 0, 0);
+    const diffDias = Math.floor((hoy.getTime() - f.getTime()) / 86400000);
+
+    if (diffDias === 0) return 'Hoy';
+    if (diffDias === 1) return 'Ayer';
+    if (diffDias === -1) return 'Mañana';
+    if (diffDias > 1 && diffDias < 7) return `Hace ${diffDias} días`;
+    if (diffDias < -1 && diffDias > -7) return `En ${-diffDias} días`;
+    if (diffDias >= 7 && diffDias < 14) return 'Hace 1 sem';
+    if (diffDias >= 14 && diffDias < 30) return `Hace ${Math.floor(diffDias / 7)} sem`;
+
+    const mesesCortos = [
+      'ene',
+      'feb',
+      'mar',
+      'abr',
+      'may',
+      'jun',
+      'jul',
+      'ago',
+      'sep',
+      'oct',
+      'nov',
+      'dic',
+    ];
+    return `${f.getDate()} ${mesesCortos[f.getMonth()]}`;
+  }
+
+  trackByGrupoMes = (_: number, g: { mesAnio: string; citas: Cita[] }) => g.mesAnio;
 }
