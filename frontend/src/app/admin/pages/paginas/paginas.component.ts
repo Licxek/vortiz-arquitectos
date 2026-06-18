@@ -336,6 +336,7 @@ export class PaginasComponent implements OnInit {
       visibilidad: 'publica' as 'publica' | 'registrados' | 'contrasena',
       permitirComentarios: true,
       plantillaLayout: 'default',
+      notasInternas: '',
     };
   }
 
@@ -1176,6 +1177,7 @@ export class PaginasComponent implements OnInit {
       }),
       seo: this.formNuevaPagina.seo,
       permitirComentarios: this.formNuevaPagina.permitirComentarios,
+      notasInternas: this.formNuevaPagina.notasInternas || '',
     };
 
     this.guardandoServicio = true;
@@ -1331,6 +1333,7 @@ export class PaginasComponent implements OnInit {
             visibilidad: data.visibilidad,
             permitirComentarios: data.permitirComentarios,
             plantillaLayout: 'default',
+            notasInternas: data.notasInternas || '',
           };
           // Saltar la selección de plantilla cuando editamos
           this.plantillaSeleccionada = 'blanco';
@@ -2542,5 +2545,50 @@ export class PaginasComponent implements OnInit {
     if (horas < 24) return `en ${horas} ${horas === 1 ? 'hora' : 'horas'}`;
     const dias = Math.floor(horas / 24);
     return `en ${dias} ${dias === 1 ? 'día' : 'días'}`;
+  }
+
+  /** Duplica una página personalizada como borrador */
+  duplicarPagina(pagina: Pagina) {
+    this.menuAbiertoId = null;
+    if (pagina.tipo !== 'personalizada') return;
+
+    this.paginasService.getAdminPorId(pagina.id).subscribe({
+      next: (data) => {
+        const sufijo = Date.now().toString(36).slice(-4);
+        const payload: Partial<PaginaBackend> = {
+          titulo: `Copia de ${data.titulo}`,
+          slug: `${data.slug}-copia-${sufijo}`,
+          descripcion: data.descripcion,
+          imagenDestacada: data.imagenDestacada,
+          categoria: data.categoria,
+          estado: 'borrador', // siempre como borrador
+          visibilidad: data.visibilidad,
+          mostrarEnMenu: false, // no mostrar en menú por defecto
+          visible: true,
+          bloques: (data.bloques || []).map((b) => {
+            const { id, ...resto } = b as any; // descartar IDs originales
+            return resto;
+          }),
+          seo: data.seo,
+          permitirComentarios: data.permitirComentarios,
+          notasInternas: data.notasInternas || '',
+        };
+
+        this.paginasService.crear(payload).subscribe({
+          next: (nueva) => {
+            const mapeada = this.mapearBackend(nueva);
+            this.paginasDinamicas.push(mapeada);
+            this.cdr.markForCheck();
+            this.flashMensaje(`"${payload.titulo}" creada como borrador`);
+          },
+          error: () => {
+            this.flashMensaje('Error al duplicar la página', 'info');
+          },
+        });
+      },
+      error: () => {
+        this.flashMensaje('No se pudo cargar la página origen', 'info');
+      },
+    });
   }
 }

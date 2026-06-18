@@ -47,6 +47,7 @@ export interface Pagina {
   permitirComentarios: boolean;
   icono: string;
   color: string;
+  notasInternas?: string;
   fechaPublicacion?: string | null;
   createdAt?: string;
   updatedAt?: string;

@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export type EstadoPagina = 'borrador' | 'publicada' | 'programada';
 export type VisibilidadPagina = 'publica' | 'registrados' | 'contrasena';
@@ -11,7 +17,17 @@ export interface SeoPagina {
 
 export interface BloquePagina {
   id: number;
-  tipo: 'hero' | 'texto' | 'imagen' | 'galeria' | 'cita' | 'cta' | 'estadisticas' | 'servicios' | 'contacto' | 'mapa';
+  tipo:
+    | 'hero'
+    | 'texto'
+    | 'imagen'
+    | 'galeria'
+    | 'cita'
+    | 'cta'
+    | 'estadisticas'
+    | 'servicios'
+    | 'contacto'
+    | 'mapa';
   titulo?: string;
   subtitulo?: string;
   contenido?: string;
@@ -37,7 +53,12 @@ export class Pagina {
   @Column({ type: 'text', default: '' })
   descripcion: string;
 
-  @Column({ type: 'varchar', length: 500, name: 'imagen_destacada', default: '' })
+  @Column({
+    type: 'varchar',
+    length: 500,
+    name: 'imagen_destacada',
+    default: '',
+  })
   imagenDestacada: string;
 
   @Column({ type: 'varchar', length: 50, default: 'standard' })
@@ -64,7 +85,11 @@ export class Pagina {
   @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
   bloques: BloquePagina[];
 
-  @Column({ type: 'jsonb', default: () => `'{"metaTitle":"","metaDescription":"","keywords":""}'::jsonb` })
+  @Column({
+    type: 'jsonb',
+    default: () =>
+      `'{"metaTitle":"","metaDescription":"","keywords":""}'::jsonb`,
+  })
   seo: SeoPagina;
 
   @Column({ type: 'boolean', name: 'permitir_comentarios', default: false })
@@ -75,6 +100,10 @@ export class Pagina {
 
   @Column({ type: 'varchar', length: 20, default: 'gray' })
   color: string;
+
+  // 👇 NUEVO
+  @Column({ type: 'text', name: 'notas_internas', default: '' })
+  notasInternas: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
