@@ -53,7 +53,7 @@ export class CitasComponent implements OnInit {
   private router = inject(Router);
   private configuracionService = inject(ConfiguracionService);
 
-  vista: 'lista' | 'calendario' = 'lista';
+  vista: 'lista' | 'calendario' | 'historial' = 'lista';
   filtroEstado: 'todas' | 'confirmada' | 'pendiente' | 'cancelada' = 'todas';
   busqueda = '';
   menuAbiertoId: number | null = null;
@@ -135,8 +135,6 @@ export class CitasComponent implements OnInit {
   // Confirmación de cancelación
   mostrarConfirmarCancelar = false;
   citaACancelar: Cita | null = null;
-
-  mostrarHistorial = false;
 
   // Catálogo real (señal del CatalogoService — antes era una lista hardcodeada)
   serviciosDisponibles = this.catalogo.servicios;
@@ -727,6 +725,13 @@ export class CitasComponent implements OnInit {
       return;
     }
 
+    // H → vista historial
+    if (k === 'h') {
+      event.preventDefault();
+      this.vista = 'historial';
+      return;
+    }
+
     // 1/2/3 → modo del calendario (cambia a calendario si no estás ahí)
     if (k === '1') {
       event.preventDefault();
@@ -939,11 +944,6 @@ export class CitasComponent implements OnInit {
     this.citaAConfirmar = null;
   }
 
-  // ====== Historial ======
-  toggleHistorial() {
-    this.mostrarHistorial = !this.mostrarHistorial;
-  }
-
   esCitaPasada(cita: Cita): boolean {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
@@ -1029,15 +1029,7 @@ export class CitasComponent implements OnInit {
         this.cdr.detectChanges(); // 👈 fuerza CD
       }, 400); // aumentado de 200 a 400
     } else if (accion === 'historial') {
-      this.mostrarHistorial = true;
-      setTimeout(() => {
-        const el = document.getElementById('historial');
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          el.classList.add('vortiz-highlight-flash');
-          setTimeout(() => el.classList.remove('vortiz-highlight-flash'), 2000);
-        }
-      }, 400);
+      this.vista = 'historial';
     }
 
     //this.cdr.markForCheck();
@@ -1486,32 +1478,6 @@ export class CitasComponent implements OnInit {
   cerrarDiaSeguro() {
     if (this.citaSeleccionada) return; // Hay detalle abierto, no cerrar el día
     this.cerrarDia();
-  }
-
-  /** Citas pasadas filtradas por búsqueda y filtro de estado (para vista de historial) */
-  get citasPasadasFiltradas(): Cita[] {
-    let resultado = this.citas().filter((c) => this.esCitaPasada(c));
-
-    if (this.busqueda.trim()) {
-      const q = this.busqueda.toLowerCase();
-      resultado = resultado.filter(
-        (c) =>
-          c.cliente.toLowerCase().includes(q) ||
-          c.servicio?.toLowerCase().includes(q) ||
-          c.correo?.toLowerCase().includes(q) ||
-          c.telefono?.replace(/\s/g, '').includes(q.replace(/\s/g, '')) ||
-          c.notas?.toLowerCase().includes(q),
-      );
-    }
-
-    if (this.filtroEstado !== 'todas') {
-      resultado = resultado.filter((c) => c.estado === this.filtroEstado);
-    }
-
-    // Más recientes primero
-    return resultado.sort(
-      (a, b) => b.fecha.getTime() - a.fecha.getTime() || b.hora.localeCompare(a.hora),
-    );
   }
 
   // ====== HISTORIAL MEJORADO ======
