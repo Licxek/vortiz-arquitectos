@@ -339,4 +339,14 @@ export class CitasComponent implements OnInit {
     if (this.emailInvalido()) return 'border-red-300 focus:border-red-500';
     return 'border-gray-200 focus:border-[#0a4d7a]';
   });
+
+  /** Formatea minutos a texto legible: 30→"30 min", 60→"1 hora", 90→"1h 30min" */
+  formatearDuracion(min: number | null | undefined): string {
+    if (!min || min < 1) return '';
+    if (min < 60) return `${min} min`;
+    const horas = Math.floor(min / 60);
+    const restoMin = min % 60;
+    if (restoMin === 0) return horas === 1 ? '1 hora' : `${horas} horas`;
+    return `${horas}h ${restoMin}min`;
+  }
 }

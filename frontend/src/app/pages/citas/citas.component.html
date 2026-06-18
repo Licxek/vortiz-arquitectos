@@ -127,6 +127,38 @@
               </p>
             </div>
           </div>
+
+          <!-- Servicio + duración (solo proyectos) -->
+          <div
+            *ngIf="form().tipo === 'proyecto' && servicioSeleccionado() as s"
+            class="flex items-center gap-3 pt-4 border-t border-gray-200"
+          >
+            <div
+              class="w-10 h-10 bg-[var(--color-primario)]/10 rounded-xl flex items-center justify-center shrink-0"
+            >
+              <svg
+                class="w-5 h-5 text-[var(--color-primario)]"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                Duración estimada
+              </p>
+              <p class="text-sm font-semibold text-gray-900 mt-0.5">
+                {{ formatearDuracion(s.duracion) || '60 min' }}
+              </p>
+            </div>
+          </div>
         </div>
 
         <!-- Próximo paso -->
@@ -429,9 +461,30 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <div class="min-w-0">
+                    <div class="min-w-0 flex-1">
                       <p class="text-sm font-semibold text-gray-900 truncate">{{ s.titulo }}</p>
-                      <p class="text-xs text-gray-500">{{ etiquetaCategoria(s.categoria) }}</p>
+                      <p class="text-xs text-gray-500 flex items-center gap-1.5 flex-wrap mt-0.5">
+                        <span>{{ etiquetaCategoria(s.categoria) }}</span>
+                        <ng-container *ngIf="formatearDuracion(s.duracion)">
+                          <span class="text-gray-300">·</span>
+                          <span class="flex items-center gap-1">
+                            <svg
+                              class="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            {{ formatearDuracion(s.duracion) }}
+                          </span>
+                        </ng-container>
+                      </p>
                     </div>
                   </div>
                   <span *ngIf="!servicioSeleccionado()" class="text-sm text-gray-400"
@@ -670,7 +723,28 @@
                     </div>
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-semibold text-gray-900 truncate">{{ s.titulo }}</p>
-                      <p class="text-xs text-gray-500">{{ etiquetaCategoria(s.categoria) }}</p>
+                      <p class="text-xs text-gray-500 flex items-center gap-1.5 flex-wrap mt-0.5">
+                        <span>{{ etiquetaCategoria(s.categoria) }}</span>
+                        <ng-container *ngIf="formatearDuracion(s.duracion)">
+                          <span class="text-gray-300">·</span>
+                          <span class="flex items-center gap-1">
+                            <svg
+                              class="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            {{ formatearDuracion(s.duracion) }}
+                          </span>
+                        </ng-container>
+                      </p>
                     </div>
                     <svg
                       *ngIf="form().servicioId === s.id"
