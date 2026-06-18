@@ -1123,12 +1123,15 @@
               <button
                 *ngFor="let s of secciones; let i = index"
                 (click)="irASeccion(s.id)"
-                class="shrink-0 md:w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+                [title]="razonBloqueoSeccion(s.id)"
+                [disabled]="!puedeAccederSeccion(s.id) && seccionActiva !== s.id"
+                class="shrink-0 md:w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
                 [class.bg-[#0a4d7a]]="seccionActiva === s.id"
                 [class.text-white]="seccionActiva === s.id"
                 [class.shadow-md]="seccionActiva === s.id"
-                [class.text-gray-600]="seccionActiva !== s.id"
-                [class.hover:bg-white]="seccionActiva !== s.id"
+                [class.text-gray-600]="seccionActiva !== s.id && puedeAccederSeccion(s.id)"
+                [class.hover:bg-white]="seccionActiva !== s.id && puedeAccederSeccion(s.id)"
+                [class.text-gray-400]="seccionActiva !== s.id && !puedeAccederSeccion(s.id)"
               >
                 <span
                   class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
@@ -1137,7 +1140,24 @@
                   [class.bg-gray-200]="seccionActiva !== s.id"
                   [class.text-gray-600]="seccionActiva !== s.id"
                 >
-                  {{ i + 1 }}
+                  <!-- Candado si bloqueado, número si accesible -->
+                  <svg
+                    *ngIf="seccionActiva !== s.id && !puedeAccederSeccion(s.id)"
+                    class="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                  <ng-container *ngIf="seccionActiva === s.id || puedeAccederSeccion(s.id)">
+                    {{ i + 1 }}
+                  </ng-container>
                 </span>
                 {{ s.label }}
               </button>
@@ -2076,13 +2096,14 @@
             <!-- SECCIÓN 5: CONFIGURACIÓN -->
             <div *ngIf="seccionActiva === 'config'" class="p-4 md:p-8 max-w-3xl">
               <div class="mb-6">
-                <h3 class="text-2xl font-bold text-gray-900">Configuración avanzada</h3>
+                <h3 class="text-2xl font-bold text-gray-900">Configuración de publicación</h3>
                 <p class="text-sm text-gray-500 mt-1">
-                  Controla cómo y cuándo se publica esta página
+                  Controla cuándo y dónde aparece esta página
                 </p>
               </div>
 
               <div class="space-y-6">
+                <!-- Estado de publicación -->
                 <div>
                   <label
                     class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3"
@@ -2122,6 +2143,7 @@
                   </div>
                 </div>
 
+                <!-- Fecha de programación con validación -->
                 <div *ngIf="formNuevaPagina.estado === 'programada'">
                   <label
                     class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
@@ -2130,61 +2152,41 @@
                   <input
                     type="datetime-local"
                     [(ngModel)]="formNuevaPagina.fechaPublicacion"
-                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                    [min]="fechaMinimaProgramacion"
+                    class="w-full px-4 py-2.5 bg-gray-50 border-2 rounded-lg text-sm outline-none focus:bg-white transition-all"
+                    [class.border-gray-200]="fechaProgramacionValida"
+                    [class.focus:border-[#0a4d7a]]="fechaProgramacionValida"
+                    [class.border-red-300]="!fechaProgramacionValida"
+                    [class.focus:border-red-500]="!fechaProgramacionValida"
                   />
-                </div>
-
-                <div>
-                  <label
-                    class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3"
-                    >Visibilidad</label
+                  <p
+                    *ngIf="!fechaProgramacionValida && formNuevaPagina.fechaPublicacion"
+                    class="text-xs text-red-600 mt-1 flex items-center gap-1"
                   >
-                  <div class="space-y-2">
-                    <label
-                      class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer"
+                    <svg
+                      class="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      viewBox="0 0 24 24"
                     >
-                      <input
-                        type="radio"
-                        [(ngModel)]="formNuevaPagina.visibilidad"
-                        value="publica"
-                        class="accent-[#0a4d7a]"
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
                       />
-                      <div>
-                        <p class="text-sm font-semibold text-gray-900">Pública</p>
-                        <p class="text-xs text-gray-500">Cualquier persona puede acceder</p>
-                      </div>
-                    </label>
-                    <label
-                      class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        [(ngModel)]="formNuevaPagina.visibilidad"
-                        value="registrados"
-                        class="accent-[#0a4d7a]"
-                      />
-                      <div>
-                        <p class="text-sm font-semibold text-gray-900">Solo registrados</p>
-                        <p class="text-xs text-gray-500">Requiere iniciar sesión</p>
-                      </div>
-                    </label>
-                    <label
-                      class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        [(ngModel)]="formNuevaPagina.visibilidad"
-                        value="contrasena"
-                        class="accent-[#0a4d7a]"
-                      />
-                      <div>
-                        <p class="text-sm font-semibold text-gray-900">Con contraseña</p>
-                        <p class="text-xs text-gray-500">Requiere contraseña para ver</p>
-                      </div>
-                    </label>
-                  </div>
+                    </svg>
+                    La fecha debe ser futura
+                  </p>
+                  <p
+                    *ngIf="fechaProgramacionValida && formNuevaPagina.fechaPublicacion"
+                    class="text-xs text-gray-500 mt-1"
+                  >
+                    Se publicará automáticamente {{ tiempoHastaPublicacion }}
+                  </p>
                 </div>
 
+                <!-- Mostrar en menú principal -->
                 <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                   <button
                     (click)="formNuevaPagina.mostrarEnMenu = !formNuevaPagina.mostrarEnMenu"
@@ -2203,23 +2205,26 @@
                   </div>
                 </div>
 
-                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <button
-                    (click)="
-                      formNuevaPagina.permitirComentarios = !formNuevaPagina.permitirComentarios
-                    "
-                    class="relative w-11 h-6 rounded-full transition-colors shrink-0"
-                    [class.bg-green-500]="formNuevaPagina.permitirComentarios"
-                    [class.bg-gray-300]="!formNuevaPagina.permitirComentarios"
+                <!-- Posición en el menú (solo si está en menú) -->
+                <div
+                  *ngIf="formNuevaPagina.mostrarEnMenu"
+                  class="ml-4 pl-4 border-l-2 border-green-200 animate-[fadeIn_0.2s_ease-out]"
+                >
+                  <label
+                    class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+                    >Posición en el menú</label
                   >
-                    <span
-                      class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
-                      [class.translate-x-5]="formNuevaPagina.permitirComentarios"
-                    ></span>
-                  </button>
-                  <div class="flex-1">
-                    <p class="text-sm font-semibold text-gray-900">Permitir comentarios</p>
-                    <p class="text-xs text-gray-500">Los visitantes podrán dejar comentarios</p>
+                  <div class="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      [(ngModel)]="formNuevaPagina.posicionMenu"
+                      class="w-24 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-center font-semibold outline-none focus:border-[#0a4d7a] focus:bg-white"
+                    />
+                    <p class="text-xs text-gray-500">
+                      1 = primero, los números más bajos aparecen antes en el navbar
+                    </p>
                   </div>
                 </div>
               </div>
@@ -2248,7 +2253,9 @@
             <button
               (click)="irSiguiente()"
               *ngIf="seccionActiva !== 'config'"
-              class="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap"
+              [disabled]="!puedeAvanzar"
+              [title]="puedeAvanzar ? '' : razonBloqueoSiguiente"
+              class="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100"
             >
               Siguiente →
             </button>
@@ -3509,29 +3516,33 @@
               </div>
               <!-- ============ VISTA PREVIA DE LA SECCIÓN COMPLETA ============ -->
               <div class="mt-8 pt-6 border-t-2 border-gray-100">
-                <p
-                  class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3 flex items-center gap-2"
-                >
-                  <svg
-                    class="w-4 h-4 text-[#0a4d7a]"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
+                <div class="mb-3">
+                  <p
+                    class="text-xs font-bold uppercase tracking-widest text-gray-500 flex items-center gap-2"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                  </svg>
-                  Cómo se verá en el sitio
-                </p>
+                    <svg
+                      class="w-4 h-4 text-[#0a4d7a]"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Resumen del contenido
+                  </p>
+                  <p class="text-[11px] text-gray-400 mt-1 leading-snug">
+                    💡 Esto es solo una
+                    <span class="font-semibold">referencia visual de lo que escribiste</span>. El
+                    diseño final en el sitio varía según la sección. Usa el botón
+                    <span class="font-semibold text-[#0a4d7a]">Previsualizar</span> arriba para ver
+                    el resultado real.
+                  </p>
+                </div>
 
                 <div
                   class="bg-gradient-to-br from-[#0a1f3d] via-[#0a4d7a] to-[#0a4d7a]/80 rounded-2xl p-6 md:p-8 text-white shadow-xl overflow-hidden relative"

@@ -1128,12 +1128,23 @@ export class PaginasComponent implements OnInit {
   }
 
   irASeccion(s: 'plantilla' | 'info' | 'contenido' | 'seo' | 'config') {
+    if (!this.puedeAccederSeccion(s)) {
+      this.flashMensaje(this.razonBloqueoSeccion(s), 'info');
+      return;
+    }
     this.seccionActiva = s;
   }
 
   irSiguiente() {
     const idx = this.secciones.findIndex((s) => s.id === this.seccionActiva);
-    if (idx < this.secciones.length - 1) this.seccionActiva = this.secciones[idx + 1].id;
+    if (idx >= this.secciones.length - 1) return;
+
+    const siguiente = this.secciones[idx + 1].id;
+    if (!this.puedeAccederSeccion(siguiente)) {
+      this.flashMensaje(this.razonBloqueoSeccion(siguiente), 'info');
+      return;
+    }
+    this.seccionActiva = siguiente;
   }
 
   irAnterior() {
@@ -1460,7 +1471,6 @@ export class PaginasComponent implements OnInit {
     'textoBoton',
     'lista',
   ];
-
 
   private _emptyArray: any[] = [];
 
@@ -2464,5 +2474,73 @@ export class PaginasComponent implements OnInit {
     if (pagina) {
       this.previsualizarPagina(pagina);
     }
+  }
+
+  /**
+   * Determina si el usuario puede acceder a una sección del wizard.
+   * Reglas:
+   * - plantilla: siempre accesible
+   * - info: requiere plantilla seleccionada
+   * - contenido / seo / config: requieren plantilla + título mínimo
+   */
+  puedeAccederSeccion(seccionId: string): boolean {
+    if (seccionId === 'plantilla') return true;
+    if (seccionId === 'info') return !!this.plantillaSeleccionada;
+    // contenido, seo, config
+    return !!this.plantillaSeleccionada && !!this.formNuevaPagina.titulo.trim();
+  }
+
+  /**
+   * Devuelve la razón por la que no se puede acceder (para tooltip)
+   */
+  razonBloqueoSeccion(seccionId: string): string {
+    if (this.puedeAccederSeccion(seccionId)) return '';
+    if (!this.plantillaSeleccionada) return 'Selecciona una plantilla primero';
+    if (!this.formNuevaPagina.titulo.trim()) return 'Agrega un título a la página primero';
+    return 'Completa los pasos anteriores';
+  }
+
+  /** ¿Se puede avanzar al siguiente paso? */
+  get puedeAvanzar(): boolean {
+    const idx = this.secciones.findIndex((s) => s.id === this.seccionActiva);
+    if (idx >= this.secciones.length - 1) return false;
+    return this.puedeAccederSeccion(this.secciones[idx + 1].id);
+  }
+
+  /** Razón por la que no se puede avanzar */
+  get razonBloqueoSiguiente(): string {
+    const idx = this.secciones.findIndex((s) => s.id === this.seccionActiva);
+    if (idx >= this.secciones.length - 1) return '';
+    return this.razonBloqueoSeccion(this.secciones[idx + 1].id);
+  }
+
+  /** Fecha mínima para programación (ahora + 5 min, en formato datetime-local) */
+  get fechaMinimaProgramacion(): string {
+    const ahora = new Date();
+    ahora.setMinutes(ahora.getMinutes() + 5);
+    return ahora.toISOString().slice(0, 16);
+  }
+
+  /** Valida que la fecha de programación sea futura */
+  get fechaProgramacionValida(): boolean {
+    if (this.formNuevaPagina.estado !== 'programada') return true;
+    if (!this.formNuevaPagina.fechaPublicacion) return true; // aún no llenó
+    const fecha = new Date(this.formNuevaPagina.fechaPublicacion).getTime();
+    return fecha > Date.now();
+  }
+
+  /** Texto descriptivo del tiempo hasta la publicación */
+  get tiempoHastaPublicacion(): string {
+    if (!this.formNuevaPagina.fechaPublicacion) return '';
+    const fecha = new Date(this.formNuevaPagina.fechaPublicacion).getTime();
+    const diff = fecha - Date.now();
+    if (diff <= 0) return '';
+
+    const minutos = Math.floor(diff / 60000);
+    if (minutos < 60) return `en ${minutos} ${minutos === 1 ? 'minuto' : 'minutos'}`;
+    const horas = Math.floor(minutos / 60);
+    if (horas < 24) return `en ${horas} ${horas === 1 ? 'hora' : 'horas'}`;
+    const dias = Math.floor(horas / 24);
+    return `en ${dias} ${dias === 1 ? 'día' : 'días'}`;
   }
 }
