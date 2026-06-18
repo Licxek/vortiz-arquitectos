@@ -34,7 +34,7 @@ export class AdminLayoutComponent implements OnInit {
     { label: 'Páginas', icon: 'pages', path: '/admin/paginas' },
     { label: 'Perfil', icon: 'user', path: '/admin/perfil' },
     { label: 'Citas', icon: 'calendar', path: '/admin/citas' },
-    { label: 'Historial', icon: 'history', path: '/admin/reportes/historial' },
+    { label: 'Reportes', icon: 'history', path: '/admin/reportes' },
   ];
 
   confirmModal = {

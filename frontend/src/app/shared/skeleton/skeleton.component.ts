@@ -2,6 +2,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 type SkeletonVariant = 'text' | 'rect' | 'circle';
+type SkeletonTheme = 'light' | 'dark';
 
 @Component({
   selector: 'app-skeleton',
@@ -11,6 +12,7 @@ type SkeletonVariant = 'text' | 'rect' | 'circle';
   template: `
     <div
       class="skeleton-shimmer"
+      [class.skeleton-dark]="theme === 'dark'"
       [class.rounded-full]="variant === 'circle'"
       [class.rounded-xl]="variant === 'rect'"
       [class.rounded]="variant === 'text'"
@@ -38,6 +40,17 @@ type SkeletonVariant = 'text' | 'rect' | 'circle';
         background-size: 200% 100%;
         animation: skeleton-shimmer 1.5s ease-in-out infinite;
       }
+
+      /* Variante oscura para usar sobre fondos oscuros (header admin, etc.) */
+      .skeleton-shimmer.skeleton-dark {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.06) 0%,
+          rgba(255, 255, 255, 0.15) 50%,
+          rgba(255, 255, 255, 0.06) 100%
+        );
+        background-size: 200% 100%;
+      }
     `,
   ],
 })
@@ -50,4 +63,7 @@ export class SkeletonComponent {
 
   /** Alto. Acepta cualquier valor CSS: '1rem', '80px', etc. */
   @Input() height: string = '1rem';
+
+  /** Tema: 'light' (default, fondo claro) o 'dark' (fondo oscuro como el header) */
+  @Input() theme: SkeletonTheme = 'light';
 }
