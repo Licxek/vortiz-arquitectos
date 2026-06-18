@@ -58,6 +58,7 @@ interface Plantilla {
   nombre: string;
   descripcion: string;
   bloquesIniciales: string[];
+  icono: string;
 }
 
 type ItemTemplate = {
@@ -141,6 +142,7 @@ export class PaginasComponent implements OnInit {
   tiempoUltimoGuardado = '';
   borradorPendiente: BorradorLocal | null = null;
   private readonly STORAGE_BORRADOR = 'vortiz_paginas_borrador_local';
+  private readonly TTL_BORRADOR_MS = 14 * 24 * 60 * 60 * 1000; // 14 días
   private autoSaveTimer: any = null;
   private actualizadorTiempoTimer: any = null;
   private paginasFijas: Pagina[] = [
@@ -235,36 +237,42 @@ export class PaginasComponent implements OnInit {
       nombre: 'En blanco',
       descripcion: 'Empieza desde cero con total libertad',
       bloquesIniciales: [],
+      icono: 'plus',
     },
     {
       id: 'servicio',
       nombre: 'Página de Servicio',
       descripcion: 'Ideal para presentar un servicio específico',
       bloquesIniciales: ['hero', 'texto', 'estadisticas', 'cta'],
+      icono: 'briefcase',
     },
     {
       id: 'nosotros',
       nombre: 'Nosotros / About',
       descripcion: 'Cuenta la historia de tu empresa',
       bloquesIniciales: ['hero', 'texto', 'imagen', 'estadisticas'],
+      icono: 'users',
     },
     {
       id: 'landing',
       nombre: 'Landing Page',
       descripcion: 'Página de aterrizaje con CTA fuerte',
       bloquesIniciales: ['hero', 'estadisticas', 'servicios', 'cta', 'contacto'],
+      icono: 'rocket',
     },
     {
       id: 'blog',
       nombre: 'Artículo de Blog',
       descripcion: 'Para publicaciones y artículos',
       bloquesIniciales: ['hero', 'texto', 'imagen', 'texto', 'cita'],
+      icono: 'pencil',
     },
     {
       id: 'portfolio',
       nombre: 'Portafolio',
       descripcion: 'Muestra tus proyectos destacados',
       bloquesIniciales: ['hero', 'galeria', 'cta'],
+      icono: 'grid',
     },
   ];
 
@@ -1016,6 +1024,16 @@ export class PaginasComponent implements OnInit {
     if (borradorRaw) {
       try {
         const borrador: BorradorLocal = JSON.parse(borradorRaw);
+
+        // 👇 NUEVO: descartar si está caducado (más de 14 días)
+        const edadMs = Date.now() - (borrador.timestamp || 0);
+        if (edadMs > this.TTL_BORRADOR_MS) {
+          console.log('Borrador caducado, descartando...');
+          localStorage.removeItem(this.STORAGE_BORRADOR);
+          this.iniciarNuevaPaginaLimpia();
+          return;
+        }
+
         // Solo ofrecer restaurar si hay título mínimo
         if (borrador.formNuevaPagina?.titulo?.trim()) {
           this.borradorPendiente = borrador;
@@ -1423,6 +1441,108 @@ export class PaginasComponent implements OnInit {
     const key = this.slugASchema[this.paginaEditando.slug];
     return this.contenidoPaginas[key]?.[this.seccionEditandoActiva] || {};
   }
+
+  /** Lista de campos comunes que el preview ya renderiza explícitamente */
+  private readonly CAMPOS_CONOCIDOS = [
+    'badge',
+    'titulo',
+    'nombre',
+    'descripcion',
+    'biografia',
+    'biografia2',
+    'parrafo1',
+    'parrafo2',
+    'imagen',
+    'imagenFondo',
+    'foto',
+    'cta1',
+    'cta2',
+    'textoBoton',
+    'lista',
+  ];
+
+
+  private _emptyArray: any[] = [];
+
+  // Getters individuales (devuelven primitivos, evitan problemas con strict templates)
+  get previewBadge(): string {
+    return String(this.contenidoSeccionActual['badge'] || '');
+  }
+  get previewTitulo(): string {
+    return String(this.contenidoSeccionActual['titulo'] || '');
+  }
+  get previewNombre(): string {
+    return String(this.contenidoSeccionActual['nombre'] || '');
+  }
+  get previewDescripcion(): string {
+    return String(this.contenidoSeccionActual['descripcion'] || '');
+  }
+  get previewBiografia(): string {
+    return String(this.contenidoSeccionActual['biografia'] || '');
+  }
+  get previewBiografia2(): string {
+    return String(this.contenidoSeccionActual['biografia2'] || '');
+  }
+  get previewParrafo1(): string {
+    return String(this.contenidoSeccionActual['parrafo1'] || '');
+  }
+  get previewParrafo2(): string {
+    return String(this.contenidoSeccionActual['parrafo2'] || '');
+  }
+  get previewImagen(): string {
+    return String(this.contenidoSeccionActual['imagen'] || '');
+  }
+  get previewImagenFondo(): string {
+    return String(this.contenidoSeccionActual['imagenFondo'] || '');
+  }
+  get previewFoto(): string {
+    return String(this.contenidoSeccionActual['foto'] || '');
+  }
+  get previewCta1(): string {
+    return String(this.contenidoSeccionActual['cta1'] || '');
+  }
+  get previewCta2(): string {
+    return String(this.contenidoSeccionActual['cta2'] || '');
+  }
+  get previewTextoBoton(): string {
+    return String(this.contenidoSeccionActual['textoBoton'] || '');
+  }
+
+  get previewLista(): any[] {
+    const l = this.contenidoSeccionActual['lista'];
+    return Array.isArray(l) ? l : this._emptyArray;
+  }
+
+  get previewBgImagenStyle(): string {
+    return this.previewImagenFondo ? `url(${this.previewImagenFondo})` : '';
+  }
+
+  /** Devuelve true si la sección actual tiene al menos un campo con contenido */
+  get hayContenidoEnSeccion(): boolean {
+    const c = this.contenidoSeccionActual;
+    return Object.keys(c).some((k) => {
+      const v = c[k];
+      if (Array.isArray(v)) return v.length > 0;
+      return typeof v === 'string' && v.trim().length > 0;
+    });
+  }
+
+  /** Devuelve campos no estándar (para mostrar genéricamente) */
+  get camposExtraSeccion(): string[] {
+    const c = this.contenidoSeccionActual;
+    return Object.keys(c).filter((k) => {
+      if (this.CAMPOS_CONOCIDOS.includes(k)) return false;
+      const v = c[k];
+      if (Array.isArray(v)) return false;
+      return typeof v === 'string' && v.trim().length > 0;
+    });
+  }
+
+  /** trackBy para el ngFor de campos extra (estable) */
+  trackCampoExtra = (_: number, key: string) => key;
+
+  /** trackBy para items de lista (estable por índice) */
+  trackListaPreview = (i: number, _: any) => i;
 
   actualizarCampo(campoKey: string, valor: any) {
     if (!this.paginaEditando) return;
