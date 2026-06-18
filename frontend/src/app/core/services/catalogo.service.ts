@@ -11,6 +11,7 @@ export interface Servicio {
   categoria: string;
   icono: string;
   orden?: number;
+  duracion?: number;  // 👈 AGREGAR
 }
 
 export interface Proyecto {

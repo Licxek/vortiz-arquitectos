@@ -436,6 +436,9 @@
               [class.bg-red-500]="requiereCompletarUrgente(cita)"
               [class.bg-green-500]="cita.estado === 'confirmada' && !requiereCompletarUrgente(cita)"
               [class.bg-orange-500]="cita.estado === 'pendiente'"
+              [class.bg-gray-400]="cita.estado === 'cancelada'"
+              [class.bg-blue-500]="cita.estado === 'completada'"
+              [class.bg-amber-500]="cita.estado === 'no_asistio'"
             ></div>
 
             <!-- Contenido principal -->
@@ -510,14 +513,21 @@
               </div>
 
               <!-- Estado pill -->
+              <!-- Estado pill -->
               <span
                 class="text-xs font-semibold px-3 py-1 rounded-full self-start sm:self-center shrink-0"
                 [class.bg-green-50]="cita.estado === 'confirmada'"
                 [class.text-green-700]="cita.estado === 'confirmada'"
                 [class.bg-orange-50]="cita.estado === 'pendiente'"
                 [class.text-orange-700]="cita.estado === 'pendiente'"
+                [class.bg-red-50]="cita.estado === 'cancelada'"
+                [class.text-red-700]="cita.estado === 'cancelada'"
+                [class.bg-blue-50]="cita.estado === 'completada'"
+                [class.text-blue-700]="cita.estado === 'completada'"
+                [class.bg-amber-50]="cita.estado === 'no_asistio'"
+                [class.text-amber-700]="cita.estado === 'no_asistio'"
               >
-                {{ cita.estado === 'confirmada' ? 'Confirmada' : 'Pendiente' }}
+                {{ estadoLabel(cita.estado) }}
               </span>
 
               <!-- Menu acciones -->

@@ -1386,16 +1386,34 @@ export class CitasComponent implements OnInit {
   }
 
   /** Otras citas del mismo cliente (por email o teléfono) */
+  /** Normaliza un string para comparación: lowercase, sin acentos, sin espacios extras */
+  private normalizar(s: string | null | undefined): string {
+    if (!s) return '';
+    return s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // quitar acentos
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /** Otras citas del mismo cliente (match estricto por nombre Y correo) */
   get otrasCitasDelCliente(): Cita[] {
     if (!this.citaSeleccionada) return [];
     const actual = this.citaSeleccionada;
+    const nombreActual = this.normalizar(actual.cliente);
+    const correoActual = this.normalizar(actual.correo);
+
+    // Si falta alguno, no podemos relacionar con certeza
+    if (!nombreActual || !correoActual) return [];
+
     return this.citas()
-      .filter(
-        (c) =>
-          c.id !== actual.id &&
-          ((c.correo && c.correo === actual.correo) ||
-            (c.telefono && c.telefono === actual.telefono)),
-      )
+      .filter((c) => {
+        if (c.id === actual.id) return false;
+        return (
+          this.normalizar(c.cliente) === nombreActual && this.normalizar(c.correo) === correoActual
+        );
+      })
       .sort((a, b) => b.fecha.getTime() - a.fecha.getTime())
       .slice(0, 4);
   }

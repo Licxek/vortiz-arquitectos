@@ -34,4 +34,7 @@ export class Servicio {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @Column({ type: 'int', default: 60 })
+  duracion: number;
 }
