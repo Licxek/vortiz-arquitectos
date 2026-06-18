@@ -1589,22 +1589,6 @@ export class PaginasComponent implements OnInit {
     { value: 'construccion', label: 'Construcción' },
     { value: 'especiales', label: 'Proyectos Especiales' },
   ];
-  iconosServicio = [
-    'document',
-    'badge',
-    'users',
-    'eye',
-    'cube',
-    'map',
-    'structure',
-    'leaf',
-    'water',
-    'bulb',
-    'home',
-    'factory',
-    'chat',
-    'calculator',
-  ];
 
   servicioFormAbierto = false;
   servicioEditandoId: number | null = null;
