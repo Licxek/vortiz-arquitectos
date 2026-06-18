@@ -7,10 +7,16 @@
       <a routerLink="/admin/inicio" class="flex items-center gap-3">
         <!-- Skeleton del logo -->
         <ng-container *ngIf="cargando()">
-          <app-skeleton variant="rect" width="56px" height="56px" />
+          <app-skeleton variant="rect" width="56px" height="56px" theme="dark" />
           <div class="space-y-1.5">
-            <app-skeleton variant="text" width="180px" height="1.125rem" />
-            <app-skeleton variant="text" width="220px" height="0.75rem" class="hidden md:block" />
+            <app-skeleton variant="text" width="180px" height="1.125rem" theme="dark" />
+            <app-skeleton
+              variant="text"
+              width="220px"
+              height="0.75rem"
+              theme="dark"
+              class="hidden md:block"
+            />
           </div>
         </ng-container>
         <ng-container *ngIf="!cargando()">
@@ -67,7 +73,7 @@
       <div class="flex items-center gap-3">
         <!-- Skeleton del saludo -->
         <ng-container *ngIf="cargando()">
-          <app-skeleton variant="text" width="180px" height="1.75rem" />
+          <app-skeleton variant="text" width="180px" height="1.75rem" theme="dark" />
         </ng-container>
 
         <span *ngIf="!cargando()" class="text-lg md:text-xl lg:text-2xl font-bold">

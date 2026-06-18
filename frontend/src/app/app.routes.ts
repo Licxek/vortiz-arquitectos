@@ -67,6 +67,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'reportes',
+        redirectTo: 'reportes/historial',
+        pathMatch: 'full',
+      },
+      {
         path: 'reportes/historial',
         loadComponent: () =>
           import('./admin/pages/historial-reportes/historial-reportes.component').then(
