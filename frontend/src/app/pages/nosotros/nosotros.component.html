@@ -508,9 +508,10 @@
     </div>
 
     <div class="relative max-w-4xl mx-auto px-4 text-center">
-      <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight px-2">
-        {{ ctaTitulo }}
-      </h2>
+      <h2
+        class="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight px-2"
+        [innerHTML]="ctaTitulo | formatoTexto"
+      ></h2>
       <p class="text-base md:text-lg text-gray-200 mt-4 max-w-2xl mx-auto">
         {{ ctaDescripcion }}
       </p>
