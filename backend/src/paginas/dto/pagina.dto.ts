@@ -1,8 +1,21 @@
 import {
-  IsArray, IsBoolean, IsInt, IsOptional, IsString, IsIn, Length, ValidateNested, IsObject,
+  IsArray,
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsIn,
+  Length,
+  ValidateNested,
+  IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import type { BloquePagina, EstadoPagina, SeoPagina, VisibilidadPagina } from '../pagina.entity';
+import type {
+  BloquePagina,
+  EstadoPagina,
+  SeoPagina,
+  VisibilidadPagina,
+} from '../pagina.entity';
 import { PartialType } from '@nestjs/mapped-types';
 
 class SeoDto implements SeoPagina {
@@ -82,6 +95,12 @@ export class CrearPaginaDto {
   @IsOptional()
   @IsString()
   color?: string;
+
+  // 👇 NUEVO
+  @IsOptional()
+  @IsString()
+  @Length(0, 5000)
+  notasInternas?: string;
 }
 
 export class ActualizarPaginaDto extends PartialType(CrearPaginaDto) {}
