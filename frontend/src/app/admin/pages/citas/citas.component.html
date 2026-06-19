@@ -946,12 +946,7 @@
               [class.opacity-50]="esCitaPasada(cita)"
               [class.grayscale]="esCitaPasada(cita)"
               class="md:hidden text-[8px] truncate px-1 py-0.5 rounded font-bold leading-tight text-center"
-              [class.bg-green-100]="cita.estado === 'confirmada'"
-              [class.text-green-700]="cita.estado === 'confirmada'"
-              [class.bg-orange-100]="cita.estado === 'pendiente'"
-              [class.text-orange-700]="cita.estado === 'pendiente'"
-              [class.bg-red-100]="cita.estado === 'cancelada'"
-              [class.text-red-700]="cita.estado === 'cancelada'"
+              [ngClass]="clasesPillCita(cita)"
             >
               {{ cita.hora }}
             </div>
@@ -962,12 +957,7 @@
               [class.opacity-50]="esCitaPasada(cita)"
               [class.grayscale]="esCitaPasada(cita)"
               class="hidden md:block text-[10px] truncate px-1.5 py-0.5 rounded font-medium"
-              [class.bg-green-100]="cita.estado === 'confirmada'"
-              [class.text-green-700]="cita.estado === 'confirmada'"
-              [class.bg-orange-100]="cita.estado === 'pendiente'"
-              [class.text-orange-700]="cita.estado === 'pendiente'"
-              [class.bg-red-100]="cita.estado === 'cancelada'"
-              [class.text-red-700]="cita.estado === 'cancelada'"
+              [ngClass]="clasesPillCita(cita)"
             >
               {{ cita.hora }} {{ cita.cliente.split(' ')[0] }}
             </div>
@@ -1067,19 +1057,9 @@
               class="absolute left-1 right-1 rounded-lg p-1.5 cursor-pointer hover:shadow-md transition-all overflow-hidden border-l-4"
               [style.top.px]="calcularTop(cita.hora)"
               [style.height.px]="calcularAltura(cita.duracion)"
-              [class.bg-green-50]="cita.estado === 'confirmada'"
-              [class.border-green-500]="cita.estado === 'confirmada'"
-              [class.bg-orange-50]="cita.estado === 'pendiente'"
-              [class.border-orange-500]="cita.estado === 'pendiente'"
-              [class.bg-red-50]="cita.estado === 'cancelada'"
-              [class.border-red-500]="cita.estado === 'cancelada'"
+              [ngClass]="clasesBannerCita(cita)"
             >
-              <p
-                class="text-[10px] font-bold truncate"
-                [class.text-green-700]="cita.estado === 'confirmada'"
-                [class.text-orange-700]="cita.estado === 'pendiente'"
-                [class.text-red-700]="cita.estado === 'cancelada'"
-              >
+              <p class="text-[10px] font-bold truncate" [ngClass]="claseTextoCita(cita)">
                 {{ cita.hora }} - {{ cita.cliente.split(' ')[0] }}
               </p>
               <p class="text-[9px] text-gray-600 truncate" *ngIf="cita.duracion >= 60">
@@ -1164,20 +1144,10 @@
               class="absolute left-2 right-2 rounded-lg p-3 cursor-pointer hover:shadow-md transition-all border-l-4 z-10"
               [style.top.px]="calcularTopDia(cita.hora)"
               [style.height.px]="calcularAlturaDia(cita.duracion)"
-              [class.bg-green-50]="cita.estado === 'confirmada'"
-              [class.border-green-500]="cita.estado === 'confirmada'"
-              [class.bg-orange-50]="cita.estado === 'pendiente'"
-              [class.border-orange-500]="cita.estado === 'pendiente'"
-              [class.bg-red-50]="cita.estado === 'cancelada'"
-              [class.border-red-500]="cita.estado === 'cancelada'"
+              [ngClass]="clasesBannerCita(cita)"
             >
               <div class="flex items-center justify-between gap-2">
-                <p
-                  class="font-semibold text-sm truncate"
-                  [class.text-green-700]="cita.estado === 'confirmada'"
-                  [class.text-orange-700]="cita.estado === 'pendiente'"
-                  [class.text-red-700]="cita.estado === 'cancelada'"
-                >
+                <p class="font-semibold text-sm truncate" [ngClass]="claseTextoCita(cita)">
                   {{ cita.cliente }}
                 </p>
                 <span class="text-xs font-semibold text-gray-600 shrink-0"
@@ -1909,16 +1879,9 @@
           <!-- Hora -->
           <div
             class="flex flex-col items-center justify-center w-14 h-14 rounded-xl shrink-0"
-            [class.bg-green-100]="cita.estado === 'confirmada'"
-            [class.bg-orange-100]="cita.estado === 'pendiente'"
-            [class.bg-red-100]="cita.estado === 'cancelada'"
+            [ngClass]="clasesPillCita(cita)"
           >
-            <span
-              class="text-sm font-bold"
-              [class.text-green-700]="cita.estado === 'confirmada'"
-              [class.text-orange-700]="cita.estado === 'pendiente'"
-              [class.text-red-700]="cita.estado === 'cancelada'"
-            >
+            <span class="text-sm font-bold">
               {{ cita.hora }}
             </span>
           </div>
