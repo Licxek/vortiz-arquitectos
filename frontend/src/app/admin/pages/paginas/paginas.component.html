@@ -1765,6 +1765,85 @@
                     </button>
                   </div>
 
+                  <!-- Colores guardados del admin -->
+                  <div *ngIf="coloresGuardados.length > 0" class="mb-3">
+                    <p
+                      class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-1.5"
+                    >
+                      <svg
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                        />
+                      </svg>
+                      Tus colores guardados
+                      <span class="text-gray-400 normal-case font-normal"
+                        >({{ coloresGuardados.length }})</span
+                      >
+                    </p>
+                    <div class="grid grid-cols-6 sm:grid-cols-12 gap-2">
+                      <div
+                        *ngFor="let hex of coloresGuardados; trackBy: trackByHex"
+                        class="group relative"
+                      >
+                        <button
+                          type="button"
+                          (click)="seleccionarColorCustom(hex)"
+                          [title]="hex"
+                          class="w-full aspect-square rounded-lg border-2 transition-all hover:-translate-y-0.5 hover:shadow-md flex items-center justify-center"
+                          [class.border-[#0a4d7a]]="formNuevaPagina.color === hex"
+                          [class.ring-2]="formNuevaPagina.color === hex"
+                          [class.ring-blue-200]="formNuevaPagina.color === hex"
+                          [class.border-white]="formNuevaPagina.color !== hex"
+                          [style.background]="gradientePagina(hex)"
+                        >
+                          <svg
+                            *ngIf="formNuevaPagina.color === hex"
+                            class="w-4 h-4 text-white drop-shadow"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="3"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        </button>
+                        <!-- Botón eliminar (aparece al hover) -->
+                        <button
+                          type="button"
+                          (click)="eliminarColorGuardado(hex, $event)"
+                          class="absolute -top-1 -right-1 w-4 h-4 bg-white border border-gray-300 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:border-red-500 hover:text-white shadow-sm"
+                          title="Eliminar este color"
+                        >
+                          <svg
+                            class="w-2.5 h-2.5"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="3"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
                   <!-- Color personalizado -->
                   <p
                     class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5"

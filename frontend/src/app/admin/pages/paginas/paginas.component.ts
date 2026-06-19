@@ -862,6 +862,7 @@ export class PaginasComponent implements OnInit {
   ngOnInit() {
     this.cargarPaginasDinamicas();
     this.cargarPreferenciaVista(); // 👈 NUEVO
+    this.cargarColoresGuardados();
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(() => this.aplicarParamsDeUrl());
@@ -1195,6 +1196,11 @@ export class PaginasComponent implements OnInit {
       next: (data) => {
         this.guardandoServicio = false;
         const mapeada = this.mapearBackend(data);
+
+        // 👇 NUEVO: si era custom, guardarlo en la paleta
+        if (this.esColorCustom(this.formNuevaPagina.color)) {
+          this.guardarColorPersonalizado(this.formNuevaPagina.color);
+        }
 
         if (this.paginaEditandoId) {
           const idx = this.paginasDinamicas.findIndex((p) => p.id === this.paginaEditandoId);
@@ -2691,5 +2697,61 @@ export class PaginasComponent implements OnInit {
     b = Math.max(0, Math.floor(b * factor));
 
     return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+  }
+
+  /** Storage key para colores personalizados guardados */
+  private readonly STORAGE_COLORES = 'vortiz_paginas_colores_guardados';
+
+  /** Colores custom que el admin ha usado antes */
+  coloresGuardados: string[] = [];
+
+  /** trackBy para el ngFor de colores guardados */
+  trackByHex = (_: number, hex: string) => hex;
+
+  /** Carga colores guardados desde localStorage */
+  private cargarColoresGuardados() {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_COLORES);
+      if (stored) {
+        const arr = JSON.parse(stored);
+        if (Array.isArray(arr)) {
+          this.coloresGuardados = arr.filter(
+            (c) => typeof c === 'string' && c.startsWith('#') && c.length === 7,
+          );
+        }
+      }
+    } catch {
+      this.coloresGuardados = [];
+    }
+  }
+
+  /** Guarda un color custom en la lista (se llama al guardar página) */
+  private guardarColorPersonalizado(hex: string) {
+    if (!hex || !hex.startsWith('#')) return;
+
+    // Quitar si ya existe (para moverlo al frente)
+    this.coloresGuardados = this.coloresGuardados.filter(
+      (c) => c.toLowerCase() !== hex.toLowerCase(),
+    );
+
+    // Agregar al inicio
+    this.coloresGuardados.unshift(hex);
+
+    // Limitar a 12 más recientes
+    this.coloresGuardados = this.coloresGuardados.slice(0, 12);
+
+    // Persistir
+    try {
+      localStorage.setItem(this.STORAGE_COLORES, JSON.stringify(this.coloresGuardados));
+    } catch {}
+  }
+
+  /** Elimina un color guardado */
+  eliminarColorGuardado(hex: string, event: Event) {
+    event.stopPropagation();
+    this.coloresGuardados = this.coloresGuardados.filter((c) => c !== hex);
+    try {
+      localStorage.setItem(this.STORAGE_COLORES, JSON.stringify(this.coloresGuardados));
+    } catch {}
   }
 }
