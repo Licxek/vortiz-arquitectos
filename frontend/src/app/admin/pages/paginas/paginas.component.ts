@@ -1341,6 +1341,12 @@ export class PaginasComponent implements OnInit {
             color: data.color || 'blue',
             icono: data.icono || 'document',
           };
+          // 👇 NUEVO: si el color es custom, cargarlo en el picker
+          if (this.esColorCustom(this.formNuevaPagina.color)) {
+            this.colorCustomTemp = this.formNuevaPagina.color;
+          } else {
+            this.colorCustomTemp = '#0a4d7a'; // default
+          }
           // Saltar la selección de plantilla cuando editamos
           this.plantillaSeleccionada = 'blanco';
           this.seccionActiva = 'info';
@@ -2424,6 +2430,7 @@ export class PaginasComponent implements OnInit {
     this.seccionActiva = 'plantilla';
     this.plantillaSeleccionada = '';
     this.formNuevaPagina = this.crearFormVacio();
+    this.colorCustomTemp = '#0a4d7a'; // 👈 NUEVO
     this.estadoAutoSave = 'oculto';
     this.ultimoGuardado = null;
   }
@@ -2627,4 +2634,62 @@ export class PaginasComponent implements OnInit {
     { id: 'info', label: 'Info', uso: 'FAQ, información' },
     { id: 'lock', label: 'Candado', uso: 'Legal, privacidad' },
   ];
+
+  /** Mapa de colores predefinidos a su gradient HEX */
+  readonly COLOR_PRESETS: Record<string, { from: string; to: string }> = {
+    blue: { from: '#60A5FA', to: '#2563EB' },
+    green: { from: '#4ADE80', to: '#16A34A' },
+    orange: { from: '#FB923C', to: '#EA580C' },
+    purple: { from: '#A78BFA', to: '#7C3AED' },
+    pink: { from: '#F472B6', to: '#DB2777' },
+    gray: { from: '#9CA3AF', to: '#4B5563' },
+  };
+
+  /** Temporal para el input type=color */
+  colorCustomTemp = '#0a4d7a';
+
+  /** Devuelve el gradient CSS para un color (preset o custom hex) */
+  gradientePagina(color: string): string {
+    if (!color) color = 'blue';
+
+    // Custom: empieza con #
+    if (color.startsWith('#')) {
+      const oscuro = this.oscurecerHex(color, 25);
+      return `linear-gradient(135deg, ${color}, ${oscuro})`;
+    }
+
+    // Preset
+    const preset = this.COLOR_PRESETS[color] || this.COLOR_PRESETS['blue'];
+    return `linear-gradient(135deg, ${preset.from}, ${preset.to})`;
+  }
+
+  /** Detecta si un color es custom (HEX) o preset */
+  esColorCustom(color: string): boolean {
+    return !!color && color.startsWith('#');
+  }
+
+  /** Selecciona un color custom (desde el color picker) */
+  seleccionarColorCustom(hex: string) {
+    this.colorCustomTemp = hex;
+    this.formNuevaPagina.color = hex;
+  }
+
+  /** Oscurece un hex en X% (para generar el gradient automáticamente) */
+  private oscurecerHex(hex: string, porcentaje: number): string {
+    const sanitized = hex.replace('#', '');
+    if (sanitized.length !== 6) return hex;
+
+    const num = parseInt(sanitized, 16);
+    const factor = 1 - porcentaje / 100;
+
+    let r = (num >> 16) & 0xff;
+    let g = (num >> 8) & 0xff;
+    let b = num & 0xff;
+
+    r = Math.max(0, Math.floor(r * factor));
+    g = Math.max(0, Math.floor(g * factor));
+    b = Math.max(0, Math.floor(b * factor));
+
+    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+  }
 }
