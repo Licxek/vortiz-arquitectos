@@ -231,7 +231,8 @@ export class CitasComponent implements OnInit {
 
     // ⚠️ Si hay búsqueda, mostramos TODAS las citas (incluso pasadas/canceladas/completadas)
     // Si NO hay búsqueda, excluimos las que ya no necesitan atención
-    if (!hayBusqueda) {
+    // Solo aplica el filtro default si no hay búsqueda Y el filtro está en "todas"
+    if (!hayBusqueda && this.filtroEstado === 'todas') {
       resultado = resultado.filter(
         (c) =>
           !this.esCitaPasada(c) &&
@@ -391,7 +392,9 @@ export class CitasComponent implements OnInit {
   }
 
   get citasConfirmadas(): number {
-    return this.citas().filter((c) => c.estado === 'confirmada').length;
+    return this.citas().filter(
+      (c) => c.estado === 'confirmada' && !this.requiereCompletarUrgente(c),
+    ).length;
   }
 
   // ====== Calendario (sin cambios) ======
@@ -1427,8 +1430,6 @@ export class CitasComponent implements OnInit {
   }
 
   reagendarCita(cita: Cita) {
-    if (this.numPorCompletar > 0) return;
-
     this.nuevaCita = {
       cliente: cita.cliente,
       correo: cita.correo ?? '',
