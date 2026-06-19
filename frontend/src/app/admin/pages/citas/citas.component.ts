@@ -36,7 +36,6 @@ interface GrupoCitas {
   key: string;
   titulo: string;
   subtitulo: string;
-  icono: string;
   citas: Cita[];
 }
 
@@ -279,7 +278,6 @@ export class CitasComponent implements OnInit {
           key: 'resultados',
           titulo: 'Resultados de búsqueda',
           subtitulo: `${resultados.length} cita${resultados.length > 1 ? 's' : ''} con "${this.busqueda}"`,
-          icono: '🔍',
           citas: resultados,
         },
       ];
@@ -320,7 +318,6 @@ export class CitasComponent implements OnInit {
         key: 'urgentes',
         titulo: 'Acción requerida',
         subtitulo: `${urgentes.length} cita${urgentes.length > 1 ? 's' : ''} sin marcar como completada${urgentes.length > 1 ? 's' : ''}`,
-        icono: '⚠️',
         citas: urgentes,
       });
     }
@@ -330,7 +327,6 @@ export class CitasComponent implements OnInit {
         key: 'hoy',
         titulo: 'Hoy',
         subtitulo: this.subtituloFecha(hoy),
-        icono: '🔴',
         citas: buckets.hoy,
       });
 
@@ -339,7 +335,6 @@ export class CitasComponent implements OnInit {
         key: 'manana',
         titulo: 'Mañana',
         subtitulo: this.subtituloFecha(manana),
-        icono: '📅',
         citas: buckets.manana,
       });
 
@@ -348,7 +343,6 @@ export class CitasComponent implements OnInit {
         key: 'semana',
         titulo: 'Esta semana',
         subtitulo: 'Próximos 7 días',
-        icono: '📆',
         citas: buckets.semana,
       });
 
@@ -357,7 +351,6 @@ export class CitasComponent implements OnInit {
         key: 'proxSemana',
         titulo: 'Próxima semana',
         subtitulo: 'En 1–2 semanas',
-        icono: '🗓️',
         citas: buckets.proxSemana,
       });
 
@@ -366,7 +359,6 @@ export class CitasComponent implements OnInit {
         key: 'futuro',
         titulo: 'Más adelante',
         subtitulo: 'Citas a futuro',
-        icono: '⏳',
         citas: buckets.futuro,
       });
 
