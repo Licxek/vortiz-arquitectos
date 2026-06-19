@@ -423,26 +423,23 @@
       <div
         *ngFor="let grupo of citasAgrupadas; trackBy: trackByGrupoKey"
         class="animate-[fadeIn_0.3s_ease-out]"
-        [class.bg-red-50]="grupo.key === 'urgentes'"
-        [class.border]="grupo.key === 'urgentes'"
-        [class.border-red-200]="grupo.key === 'urgentes'"
-        [class.rounded-2xl]="grupo.key === 'urgentes'"
-        [class.p-4]="grupo.key === 'urgentes'"
+        [class.border-t-2]="grupo.key === 'urgentes'"
+        [class.border-red-400]="grupo.key === 'urgentes'"
+        [class.pt-4]="grupo.key === 'urgentes'"
       >
         <div class="flex items-baseline justify-between mb-3">
           <div class="flex items-baseline gap-2">
             <h2
-              class="text-base font-bold flex items-center gap-2"
-              [class.text-red-900]="grupo.key === 'urgentes'"
+              class="text-base font-bold"
+              [class.text-red-700]="grupo.key === 'urgentes'"
               [class.text-gray-900]="grupo.key !== 'urgentes'"
             >
-              <span class="text-base">{{ grupo.icono }}</span>
               {{ grupo.titulo }}
             </h2>
             <span class="text-xs text-gray-400">·</span>
             <span
               class="text-xs capitalize"
-              [class.text-red-700]="grupo.key === 'urgentes'"
+              [class.text-red-600]="grupo.key === 'urgentes'"
               [class.text-gray-500]="grupo.key !== 'urgentes'"
             >
               {{ grupo.subtitulo }}
@@ -450,7 +447,7 @@
           </div>
           <span
             class="text-xs font-semibold"
-            [class.text-red-700]="grupo.key === 'urgentes'"
+            [class.text-red-600]="grupo.key === 'urgentes'"
             [class.text-gray-400]="grupo.key !== 'urgentes'"
           >
             {{ grupo.citas.length }} {{ grupo.citas.length === 1 ? 'cita' : 'citas' }}
