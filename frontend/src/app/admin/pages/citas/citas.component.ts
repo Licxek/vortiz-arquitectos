@@ -181,6 +181,7 @@ export class CitasComponent implements OnInit {
       next: (lista) => {
         this.citas.set(lista.map((c) => this.mapearCita(c))); // 👈 .set
         this.cargando.set(false);
+        this.autoCancelarPendientesVencidas();
       },
       error: () => {
         this.cargando.set(false);
@@ -878,8 +879,8 @@ export class CitasComponent implements OnInit {
       motivo: this.nuevaCita.notas?.trim() || '',
       fecha: this.nuevaCita.fecha,
       hora: this.nuevaCita.hora,
-      duracion: this.nuevaCita.duracion, // 👈 NUEVO: mandar la duración (puede venir de config)
-      estado: 'confirmada' as const,
+      duracion: this.nuevaCita.duracion,
+      estado: this.nuevaCita.estado, // 👈 usa el estado seleccionado
     };
     this.citasService.crear(payload).subscribe({
       next: (creada) => {
@@ -1711,5 +1712,42 @@ export class CitasComponent implements OnInit {
     this.cerrarDetalle();
     this.mostrarNuevaCita = true;
     this.cdr.detectChanges();
+  }
+
+  /** Detecta citas pendientes cuya hora ya pasó (con grace de 1h) */
+  private detectarPendientesVencidas(): Cita[] {
+    const ahora = new Date();
+    const GRACE_MINUTOS = 60; // tolerancia de 1 hora
+
+    return this.citas().filter((c) => {
+      if (c.estado !== 'pendiente') return false;
+
+      const fechaFin = new Date(c.fecha);
+      const [h, m] = (c.hora || '00:00').split(':').map(Number);
+      fechaFin.setHours(h, m, 0, 0);
+      fechaFin.setMinutes(fechaFin.getMinutes() + (c.duracion || 60) + GRACE_MINUTOS);
+
+      return ahora.getTime() > fechaFin.getTime();
+    });
+  }
+
+  /** Cancela automáticamente las citas pendientes vencidas */
+  private autoCancelarPendientesVencidas() {
+    const vencidas = this.detectarPendientesVencidas();
+    if (vencidas.length === 0) return;
+
+    console.log(`[Auto-cancelar] ${vencidas.length} cita(s) pendiente(s) vencida(s)`);
+
+    vencidas.forEach((cita) => {
+      this.citasService.cambiarEstado(cita.id, 'cancelada').subscribe({
+        next: () => {
+          cita.estado = 'cancelada';
+          this.refrescarVistas();
+        },
+        error: (err) => {
+          console.error(`[Auto-cancelar] Error al cancelar cita ${cita.id}`, err);
+        },
+      });
+    });
   }
 }
