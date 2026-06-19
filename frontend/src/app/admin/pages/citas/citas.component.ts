@@ -19,6 +19,7 @@ interface Cita {
   tipo: 'consulta' | 'proyecto';
   estado: 'confirmada' | 'pendiente' | 'cancelada' | 'completada' | 'no_asistio'; // 👈 actualizado
   servicio?: string;
+  servicioId?: number; // 👈 NUEVO
   notas?: string;
   telefono?: string;
   correo?: string;
@@ -201,6 +202,7 @@ export class CitasComponent implements OnInit {
       servicio:
         c.servicio?.titulo ||
         (c.tipo === 'consulta' ? 'Consulta general' : 'Proyecto sin servicio'),
+      servicioId: c.servicio?.id,
       notas: c.motivo,
     };
   }
@@ -1427,6 +1429,41 @@ export class CitasComponent implements OnInit {
       no_asistio: 'bg-amber-100 text-amber-700',
     };
     return map[estado] || 'bg-gray-100 text-gray-700';
+  }
+  /** Clases para mini-pills del calendario (mes mobile/desktop) — bg fuerte + texto */
+  clasesPillCita(cita: Cita) {
+    const e = cita.estado;
+    return {
+      'bg-green-100 text-green-700': e === 'confirmada',
+      'bg-orange-100 text-orange-700': e === 'pendiente',
+      'bg-red-100 text-red-700': e === 'cancelada',
+      'bg-blue-100 text-blue-700': e === 'completada',
+      'bg-amber-100 text-amber-700': e === 'no_asistio',
+    };
+  }
+
+  /** Clases para banners del calendario (semana/día) — bg suave + border lateral */
+  clasesBannerCita(cita: Cita) {
+    const e = cita.estado;
+    return {
+      'bg-green-50 border-green-500': e === 'confirmada',
+      'bg-orange-50 border-orange-500': e === 'pendiente',
+      'bg-red-50 border-red-500': e === 'cancelada',
+      'bg-blue-50 border-blue-500': e === 'completada',
+      'bg-amber-50 border-amber-500': e === 'no_asistio',
+    };
+  }
+
+  /** Clases solo de texto (para títulos dentro de los banners) */
+  claseTextoCita(cita: Cita) {
+    const e = cita.estado;
+    return {
+      'text-green-700': e === 'confirmada',
+      'text-orange-700': e === 'pendiente',
+      'text-red-700': e === 'cancelada',
+      'text-blue-700': e === 'completada',
+      'text-amber-700': e === 'no_asistio',
+    };
   }
 
   reagendarCita(cita: Cita) {
