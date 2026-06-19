@@ -1475,7 +1475,7 @@ export class CitasComponent implements OnInit {
       hora: '',
       duracion: cita.duracion || this.configAgenda?.duracionCita || 60,
       tipo: cita.tipo,
-      servicioId: (cita as any).servicioId ?? null,
+      servicioId: cita.servicioId ?? null,
       servicio: cita.servicio ?? '',
       notas: cita.notas ?? '',
       estado: 'confirmada' as EstadoCita, // 👈 AGREGAR ESTO
@@ -1632,4 +1632,84 @@ export class CitasComponent implements OnInit {
   }
 
   trackByGrupoMes = (_: number, g: { mesAnio: string; citas: Cita[] }) => g.mesAnio;
+
+  /** Lleva al admin a la lista de urgentes (scroll + cambio de vista) */
+  verUrgentes() {
+    if (this.numPorCompletar === 0) return;
+    this.vista = 'lista';
+    // Esperar render del DOM antes de hacer scroll
+    setTimeout(() => {
+      const el = document.getElementById('grupo-urgentes');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 150);
+  }
+
+  mostrarConfirmarCompletarTodas = false;
+  procesandoCompletarTodas = false;
+
+  solicitarCompletarTodas() {
+    if (this.numPorCompletar === 0) return;
+    this.mostrarConfirmarCompletarTodas = true;
+  }
+
+  cerrarConfirmarCompletarTodas() {
+    if (this.procesandoCompletarTodas) return; // No cerrar mientras procesa
+    this.mostrarConfirmarCompletarTodas = false;
+  }
+
+  aceptarCompletarTodas() {
+    const urgentes = this.citasPorCompletar;
+    if (urgentes.length === 0) {
+      this.cerrarConfirmarCompletarTodas();
+      return;
+    }
+
+    this.procesandoCompletarTodas = true;
+    let completadas = 0;
+    const total = urgentes.length;
+
+    const finalizar = () => {
+      completadas++;
+      if (completadas === total) {
+        this.procesandoCompletarTodas = false;
+        this.mostrarConfirmarCompletarTodas = false;
+        this.cargarCitas();
+      }
+    };
+
+    urgentes.forEach((c) => {
+      this.citasService.cambiarEstado(c.id, 'completada').subscribe({
+        next: finalizar,
+        error: finalizar,
+      });
+    });
+  }
+
+  /** Duplica una cita: copia cliente + tipo + servicio, deja fecha/hora/motivo vacíos */
+  duplicarCita(cita: Cita, event?: Event) {
+    if (event) event.stopPropagation();
+
+    this.nuevaCita = {
+      cliente: cita.cliente,
+      correo: cita.correo ?? '',
+      telefono: cita.telefono ?? '',
+      fecha: '',
+      hora: '',
+      duracion: cita.duracion || this.configAgenda?.duracionCita || 60,
+      tipo: cita.tipo,
+      servicioId: cita.servicioId ?? null,
+      servicio: cita.servicio ?? '',
+      notas: '', // ← vacío para nuevo motivo
+      estado: 'confirmada' as EstadoCita,
+    };
+
+    this.errorEmpalme = '';
+    this.advertenciaFecha = '';
+    this.menuAbiertoId = null;
+    this.cerrarDetalle();
+    this.mostrarNuevaCita = true;
+    this.cdr.detectChanges();
+  }
 }
