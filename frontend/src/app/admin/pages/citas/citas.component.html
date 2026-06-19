@@ -430,18 +430,25 @@
       <!-- Grupos de citas activas -->
       <div
         *ngFor="let grupo of citasAgrupadas; trackBy: trackByGrupoKey"
-        [attr.id]="grupo.key === 'urgentes' ? 'grupo-urgentes' : null"
+        [attr.id]="
+          grupo.key === 'urgentes'
+            ? 'grupo-urgentes'
+            : grupo.key === 'por_confirmar'
+              ? 'grupo-por-confirmar'
+              : null
+        "
         class="animate-[fadeIn_0.3s_ease-out]"
         [class.border-t-2]="grupo.key === 'urgentes'"
         [class.border-red-400]="grupo.key === 'urgentes'"
-        [class.pt-4]="grupo.key === 'urgentes'"
+        [class.pt-4]="grupo.key === 'urgentes' || grupo.key === 'por_confirmar'"
       >
         <div class="flex items-baseline justify-between mb-3">
           <div class="flex items-baseline gap-2">
             <h2
               class="text-base font-bold"
               [class.text-red-700]="grupo.key === 'urgentes'"
-              [class.text-gray-900]="grupo.key !== 'urgentes'"
+              [class.text-orange-700]="grupo.key === 'por_confirmar'"
+              [class.text-gray-900]="grupo.key !== 'urgentes' && grupo.key !== 'por_confirmar'"
             >
               {{ grupo.titulo }}
             </h2>
@@ -449,7 +456,8 @@
             <span
               class="text-xs capitalize"
               [class.text-red-600]="grupo.key === 'urgentes'"
-              [class.text-gray-500]="grupo.key !== 'urgentes'"
+              [class.text-orange-600]="grupo.key === 'por_confirmar'"
+              [class.text-gray-500]="grupo.key !== 'urgentes' && grupo.key !== 'por_confirmar'"
             >
               {{ grupo.subtitulo }}
             </span>
@@ -476,7 +484,8 @@
             <span
               class="text-xs font-semibold"
               [class.text-red-600]="grupo.key === 'urgentes'"
-              [class.text-gray-400]="grupo.key !== 'urgentes'"
+              [class.text-orange-600]="grupo.key === 'por_confirmar'"
+              [class.text-gray-400]="grupo.key !== 'urgentes' && grupo.key !== 'por_confirmar'"
             >
               {{ grupo.citas.length }} {{ grupo.citas.length === 1 ? 'cita' : 'citas' }}
             </span>

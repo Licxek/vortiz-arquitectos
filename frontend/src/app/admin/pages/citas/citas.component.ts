@@ -181,7 +181,6 @@ export class CitasComponent implements OnInit {
       next: (lista) => {
         this.citas.set(lista.map((c) => this.mapearCita(c))); // 👈 .set
         this.cargando.set(false);
-        this.autoCancelarPendientesVencidas();
       },
       error: () => {
         this.cargando.set(false);
@@ -303,7 +302,12 @@ export class CitasComponent implements OnInit {
       futuro: [] as Cita[],
     };
 
+    const idsPorConfirmar = new Set(this.citasPorConfirmar.map((c) => c.id));
+
     this.citasFiltradas.forEach((cita) => {
+      // Saltar las que ya están en "Por confirmar"
+      if (idsPorConfirmar.has(cita.id)) return;
+
       const f = new Date(cita.fecha);
       f.setHours(0, 0, 0, 0);
 
@@ -315,6 +319,17 @@ export class CitasComponent implements OnInit {
     });
 
     const grupos: GrupoCitas[] = [];
+
+    // 👇 NUEVO: Pendientes por confirmar (hoy/mañana o vencidas)
+    const porConfirmar = this.citasPorConfirmar;
+    if (porConfirmar.length > 0) {
+      grupos.push({
+        key: 'por_confirmar',
+        titulo: 'Por confirmar',
+        subtitulo: `${porConfirmar.length} cita${porConfirmar.length > 1 ? 's' : ''} pendiente${porConfirmar.length > 1 ? 's' : ''} de hoy/mañana`,
+        citas: porConfirmar,
+      });
+    }
 
     const urgentes = this.citasPorCompletar;
     if (urgentes.length > 0) {
@@ -1273,6 +1288,23 @@ export class CitasComponent implements OnInit {
   get citasPorCompletar(): Cita[] {
     return this.citas().filter((c) => this.requiereCompletarUrgente(c));
   }
+  /** Pendientes cuya fecha es hoy/mañana o ya pasó SIN confirmar */
+  get citasPorConfirmar(): Cita[] {
+    const hoy = this.fechaHoy();
+    const limite = new Date(hoy);
+    limite.setDate(limite.getDate() + 1); // hoy + mañana
+
+    return this.citas().filter((c) => {
+      if (c.estado !== 'pendiente') return false;
+      const fechaCita = new Date(c.fecha);
+      fechaCita.setHours(0, 0, 0, 0);
+      return fechaCita.getTime() <= limite.getTime();
+    });
+  }
+
+  get numPorConfirmar(): number {
+    return this.citasPorConfirmar.length;
+  }
 
   get numPorCompletar(): number {
     return this.citasPorCompletar.length;
@@ -1712,42 +1744,5 @@ export class CitasComponent implements OnInit {
     this.cerrarDetalle();
     this.mostrarNuevaCita = true;
     this.cdr.detectChanges();
-  }
-
-  /** Detecta citas pendientes cuya hora ya pasó (con grace de 1h) */
-  private detectarPendientesVencidas(): Cita[] {
-    const ahora = new Date();
-    const GRACE_MINUTOS = 60; // tolerancia de 1 hora
-
-    return this.citas().filter((c) => {
-      if (c.estado !== 'pendiente') return false;
-
-      const fechaFin = new Date(c.fecha);
-      const [h, m] = (c.hora || '00:00').split(':').map(Number);
-      fechaFin.setHours(h, m, 0, 0);
-      fechaFin.setMinutes(fechaFin.getMinutes() + (c.duracion || 60) + GRACE_MINUTOS);
-
-      return ahora.getTime() > fechaFin.getTime();
-    });
-  }
-
-  /** Cancela automáticamente las citas pendientes vencidas */
-  private autoCancelarPendientesVencidas() {
-    const vencidas = this.detectarPendientesVencidas();
-    if (vencidas.length === 0) return;
-
-    console.log(`[Auto-cancelar] ${vencidas.length} cita(s) pendiente(s) vencida(s)`);
-
-    vencidas.forEach((cita) => {
-      this.citasService.cambiarEstado(cita.id, 'cancelada').subscribe({
-        next: () => {
-          cita.estado = 'cancelada';
-          this.refrescarVistas();
-        },
-        error: (err) => {
-          console.error(`[Auto-cancelar] Error al cancelar cita ${cita.id}`, err);
-        },
-      });
-    });
   }
 }
