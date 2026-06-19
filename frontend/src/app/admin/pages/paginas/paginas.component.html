@@ -356,19 +356,7 @@
         <!-- Header con gradiente -->
         <div
           class="h-32 flex items-center justify-center relative overflow-hidden group-hover:brightness-110 transition-all duration-300"
-          [class.bg-gradient-to-br]="true"
-          [class.from-blue-400]="pagina.color === 'blue'"
-          [class.to-blue-600]="pagina.color === 'blue'"
-          [class.from-green-400]="pagina.color === 'green'"
-          [class.to-green-600]="pagina.color === 'green'"
-          [class.from-orange-400]="pagina.color === 'orange'"
-          [class.to-orange-600]="pagina.color === 'orange'"
-          [class.from-purple-400]="pagina.color === 'purple'"
-          [class.to-purple-600]="pagina.color === 'purple'"
-          [class.from-pink-400]="pagina.color === 'pink'"
-          [class.to-pink-600]="pagina.color === 'pink'"
-          [class.from-gray-400]="pagina.color === 'gray'"
-          [class.to-gray-600]="pagina.color === 'gray'"
+          [style.background]="gradientePagina(pagina.color)"
         >
           <!-- Patrón decorativo -->
           <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full"></div>
@@ -824,19 +812,8 @@
         >
           <!-- Icono con gradiente -->
           <div
-            class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white bg-gradient-to-br"
-            [class.from-blue-400]="pagina.color === 'blue'"
-            [class.to-blue-600]="pagina.color === 'blue'"
-            [class.from-green-400]="pagina.color === 'green'"
-            [class.to-green-600]="pagina.color === 'green'"
-            [class.from-orange-400]="pagina.color === 'orange'"
-            [class.to-orange-600]="pagina.color === 'orange'"
-            [class.from-purple-400]="pagina.color === 'purple'"
-            [class.to-purple-600]="pagina.color === 'purple'"
-            [class.from-pink-400]="pagina.color === 'pink'"
-            [class.to-pink-600]="pagina.color === 'pink'"
-            [class.from-gray-400]="pagina.color === 'gray'"
-            [class.to-gray-600]="pagina.color === 'gray'"
+            class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white"
+            [style.background]="gradientePagina(pagina.color)"
           >
             <ng-container [ngSwitch]="pagina.icono">
               <svg
@@ -1735,7 +1712,14 @@
                       >— se ve en la tarjeta del grid</span
                     >
                   </label>
-                  <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+
+                  <!-- Presets -->
+                  <p
+                    class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5"
+                  >
+                    Colores rápidos
+                  </p>
+                  <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
                     <button
                       *ngFor="let c of coloresDisponibles"
                       type="button"
@@ -1748,19 +1732,8 @@
                       [class.hover:border-gray-300]="formNuevaPagina.color !== c.id"
                     >
                       <div
-                        class="w-10 h-10 rounded-lg bg-gradient-to-br shadow-sm transition-all group-hover:shadow-md"
-                        [class.from-blue-400]="c.id === 'blue'"
-                        [class.to-blue-600]="c.id === 'blue'"
-                        [class.from-green-400]="c.id === 'green'"
-                        [class.to-green-600]="c.id === 'green'"
-                        [class.from-orange-400]="c.id === 'orange'"
-                        [class.to-orange-600]="c.id === 'orange'"
-                        [class.from-purple-400]="c.id === 'purple'"
-                        [class.to-purple-600]="c.id === 'purple'"
-                        [class.from-pink-400]="c.id === 'pink'"
-                        [class.to-pink-600]="c.id === 'pink'"
-                        [class.from-gray-400]="c.id === 'gray'"
-                        [class.to-gray-600]="c.id === 'gray'"
+                        class="w-10 h-10 rounded-lg shadow-sm transition-all group-hover:shadow-md"
+                        [style.background]="gradientePagina(c.id)"
                       >
                         <!-- Check si está seleccionado -->
                         <div
@@ -1789,6 +1762,105 @@
                       >
                         {{ c.label }}
                       </span>
+                    </button>
+                  </div>
+
+                  <!-- Color personalizado -->
+                  <p
+                    class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5"
+                  >
+                    O elige uno personalizado
+                  </p>
+                  <div
+                    class="flex items-center gap-3 p-3 rounded-xl border-2 transition-all"
+                    [class.border-[#0a4d7a]]="esColorCustom(formNuevaPagina.color)"
+                    [class.bg-blue-50]="esColorCustom(formNuevaPagina.color)"
+                    [class.border-gray-200]="!esColorCustom(formNuevaPagina.color)"
+                    [class.bg-gray-50]="!esColorCustom(formNuevaPagina.color)"
+                  >
+                    <label class="relative cursor-pointer shrink-0 group">
+                      <input
+                        type="color"
+                        [(ngModel)]="colorCustomTemp"
+                        (input)="seleccionarColorCustom(colorCustomTemp)"
+                        class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                        title="Elige cualquier color"
+                      />
+                      <div
+                        class="w-12 h-12 rounded-lg border-2 border-white shadow-md transition-all group-hover:scale-105"
+                        [style.background]="
+                          gradientePagina(
+                            esColorCustom(formNuevaPagina.color)
+                              ? formNuevaPagina.color
+                              : colorCustomTemp
+                          )
+                        "
+                      >
+                        <!-- Check si está activo el custom -->
+                        <div
+                          *ngIf="esColorCustom(formNuevaPagina.color)"
+                          class="w-full h-full flex items-center justify-center"
+                        >
+                          <svg
+                            class="w-5 h-5 text-white drop-shadow"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="3"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      <!-- Indicador "click para cambiar" -->
+                      <div
+                        class="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full border border-gray-200 flex items-center justify-center shadow-sm"
+                      >
+                        <svg
+                          class="w-3 h-3 text-gray-600"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                      </div>
+                    </label>
+
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-gray-900">
+                        {{
+                          esColorCustom(formNuevaPagina.color)
+                            ? 'Color personalizado activo'
+                            : 'Color personalizado'
+                        }}
+                      </p>
+                      <p class="text-xs text-gray-500 mt-0.5 font-mono uppercase">
+                        {{
+                          esColorCustom(formNuevaPagina.color)
+                            ? formNuevaPagina.color
+                            : 'Click el cuadro para elegir'
+                        }}
+                      </p>
+                    </div>
+
+                    <button
+                      *ngIf="esColorCustom(formNuevaPagina.color)"
+                      type="button"
+                      (click)="formNuevaPagina.color = 'blue'; colorCustomTemp = '#0a4d7a'"
+                      class="text-[11px] text-gray-500 hover:text-red-600 underline shrink-0 font-semibold"
+                      title="Volver a colores predefinidos"
+                    >
+                      Quitar
                     </button>
                   </div>
                 </div>
