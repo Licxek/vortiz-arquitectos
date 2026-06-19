@@ -124,13 +124,20 @@ export const routes: Routes = [
     canActivate: [mantenimientoGuard],
     loadComponent: () => import('./pages/citas/citas.component').then((m) => m.CitasComponent),
   },
+  // Páginas dinámicas - nueva URL
   {
-    path: 'p/:slug',
+    path: 'pagina/:slug',
     canActivate: [mantenimientoGuard],
     loadComponent: () =>
       import('./pages/pagina-dinamica/pagina-dinamica.component').then(
         (m) => m.PaginaDinamicaComponent,
       ),
+  },
+  // Redirect de la URL antigua a la nueva (por links viejos compartidos)
+  {
+    path: 'p/:slug',
+    redirectTo: 'pagina/:slug',
+    pathMatch: 'full',
   },
 
   // Default y wildcard ← AQUÍ ESTABA EL PROBLEMA

@@ -337,6 +337,8 @@ export class PaginasComponent implements OnInit {
       permitirComentarios: true,
       plantillaLayout: 'default',
       notasInternas: '',
+      color: 'blue',
+      icono: 'document',
     };
   }
 
@@ -886,7 +888,7 @@ export class PaginasComponent implements OnInit {
     return {
       id: p.id,
       titulo: p.titulo,
-      slug: `/p/${p.slug}`,
+      slug: `/pagina/${p.slug}`,
       tipo: 'personalizada',
       visible: p.visible,
       estado: p.estado, // 👈 NUEVO
@@ -1178,6 +1180,8 @@ export class PaginasComponent implements OnInit {
       seo: this.formNuevaPagina.seo,
       permitirComentarios: this.formNuevaPagina.permitirComentarios,
       notasInternas: this.formNuevaPagina.notasInternas || '',
+      color: this.formNuevaPagina.color || 'blue',
+      icono: this.formNuevaPagina.icono || 'document',
     };
 
     this.guardandoServicio = true;
@@ -1334,6 +1338,8 @@ export class PaginasComponent implements OnInit {
             permitirComentarios: data.permitirComentarios,
             plantillaLayout: 'default',
             notasInternas: data.notasInternas || '',
+            color: data.color || 'blue',
+            icono: data.icono || 'document',
           };
           // Saltar la selección de plantilla cuando editamos
           this.plantillaSeleccionada = 'blanco';
@@ -2572,6 +2578,8 @@ export class PaginasComponent implements OnInit {
           seo: data.seo,
           permitirComentarios: data.permitirComentarios,
           notasInternas: data.notasInternas || '',
+          color: data.color || 'blue',
+          icono: data.icono || 'document',
         };
 
         this.paginasService.crear(payload).subscribe({
@@ -2591,4 +2599,32 @@ export class PaginasComponent implements OnInit {
       },
     });
   }
+  /** Colores disponibles para portadas de páginas personalizadas */
+  coloresDisponibles = [
+    { id: 'blue', label: 'Azul', gradient: 'from-blue-400 to-blue-600' },
+    { id: 'green', label: 'Verde', gradient: 'from-green-400 to-green-600' },
+    { id: 'orange', label: 'Naranja', gradient: 'from-orange-400 to-orange-600' },
+    { id: 'purple', label: 'Morado', gradient: 'from-purple-400 to-purple-600' },
+    { id: 'pink', label: 'Rosa', gradient: 'from-pink-400 to-pink-600' },
+    { id: 'gray', label: 'Gris', gradient: 'from-gray-400 to-gray-600' },
+  ];
+
+  /** Íconos disponibles para portadas de páginas personalizadas */
+  iconosPaginasDisponibles = [
+    { id: 'document', label: 'Documento', uso: 'Página estándar' },
+    { id: 'home', label: 'Casa', uso: 'Residencial' },
+    { id: 'users', label: 'Equipo', uso: 'Nosotros, personas' },
+    { id: 'building', label: 'Edificio', uso: 'Corporativo' },
+    { id: 'briefcase', label: 'Maletín', uso: 'Servicio, trabajo' },
+    { id: 'calendar', label: 'Calendario', uso: 'Eventos, fechas' },
+    { id: 'chart', label: 'Gráfica', uso: 'Estadísticas, reportes' },
+    { id: 'trophy', label: 'Trofeo', uso: 'Casos de éxito' },
+    { id: 'pencil', label: 'Lápiz', uso: 'Blog, artículos' },
+    { id: 'tag', label: 'Etiqueta', uso: 'Promociones, ofertas' },
+    { id: 'star', label: 'Estrella', uso: 'Destacado, favorito' },
+    { id: 'phone', label: 'Teléfono', uso: 'Contacto' },
+    { id: 'map', label: 'Mapa', uso: 'Ubicación' },
+    { id: 'info', label: 'Info', uso: 'FAQ, información' },
+    { id: 'lock', label: 'Candado', uso: 'Legal, privacidad' },
+  ];
 }
