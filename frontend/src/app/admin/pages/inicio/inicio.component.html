@@ -179,48 +179,43 @@
     </div>
   </div>
 
-  <!-- Hero — minimal -->
-  <div class="bg-white border border-gray-100 rounded-2xl p-5 md:p-6 shadow-sm">
-    <div class="flex items-start justify-between gap-4">
-      <!-- Texto -->
-      <div class="min-w-0 flex-1">
-        <p class="text-[10px] uppercase tracking-widest text-[#0a4d7a] font-bold mb-1.5">
-          {{ saludo }}
-        </p>
-        <h1
-          class="text-2xl md:text-3xl font-bold text-gray-900 leading-tight flex items-center gap-2 mb-2"
-        >
-          {{ nombreCorto }}
-          <span class="text-xl opacity-70">👋</span>
-        </h1>
-        <p class="text-sm text-gray-600 leading-relaxed">{{ resumenDelDia }}</p>
-
-        <!-- Indicador En vivo -->
-        <div class="flex items-center gap-1.5 mt-3 text-[10px] text-gray-500">
-          <span
-            class="w-1.5 h-1.5 rounded-full"
-            [class.bg-green-500]="ultimaActualizacionTexto === 'En vivo'"
-            [class.animate-pulse]="ultimaActualizacionTexto === 'En vivo'"
-            [class.bg-gray-300]="ultimaActualizacionTexto !== 'En vivo'"
-          ></span>
-          <span class="font-semibold uppercase tracking-wider">
-            {{ ultimaActualizacionTexto }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Calendar block sutil -->
-      <div
-        class="hidden sm:flex flex-col items-center bg-gradient-to-br from-gray-50 to-white rounded-xl p-3 shrink-0 min-w-[72px] border border-gray-100"
+  <!-- Hero — sin card -->
+  <div class="flex items-start justify-between gap-4 pb-5 border-b border-gray-200">
+    <div class="min-w-0 flex-1">
+      <p class="text-[10px] uppercase tracking-widest text-[#0a4d7a] font-bold mb-1.5">
+        {{ saludo }}
+      </p>
+      <h1
+        class="text-2xl md:text-3xl font-bold text-gray-900 leading-tight flex items-center gap-2 mb-2"
       >
-        <p class="text-[9px] uppercase tracking-widest text-[#0a4d7a] font-bold">
-          {{ mesActualCorto }}
-        </p>
-        <p class="text-3xl font-bold leading-none my-0.5 text-gray-900">{{ diaActual }}</p>
-        <p class="text-[9px] uppercase tracking-widest text-gray-500 font-semibold">
-          {{ diaSemanaCorto }}
-        </p>
+        {{ nombreCorto }}
+        <span class="text-xl opacity-70">👋</span>
+      </h1>
+      <p class="text-sm text-gray-600 leading-relaxed">{{ resumenDelDia }}</p>
+
+      <div class="flex items-center gap-1.5 mt-2 text-[10px] text-gray-500">
+        <span
+          class="w-1.5 h-1.5 rounded-full"
+          [class.bg-green-500]="ultimaActualizacionTexto === 'En vivo'"
+          [class.animate-pulse]="ultimaActualizacionTexto === 'En vivo'"
+          [class.bg-gray-300]="ultimaActualizacionTexto !== 'En vivo'"
+        ></span>
+        <span class="font-semibold uppercase tracking-wider">
+          {{ ultimaActualizacionTexto }}
+        </span>
       </div>
+    </div>
+
+    <div
+      class="hidden sm:flex flex-col items-center bg-gray-50 rounded-xl p-3 shrink-0 min-w-[72px] border border-gray-100"
+    >
+      <p class="text-[9px] uppercase tracking-widest text-[#0a4d7a] font-bold">
+        {{ mesActualCorto }}
+      </p>
+      <p class="text-3xl font-bold leading-none my-0.5 text-gray-900">{{ diaActual }}</p>
+      <p class="text-[9px] uppercase tracking-widest text-gray-500 font-semibold">
+        {{ diaSemanaCorto }}
+      </p>
     </div>
   </div>
   <!-- Banner de acción sugerida -->
