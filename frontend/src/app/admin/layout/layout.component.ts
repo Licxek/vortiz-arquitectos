@@ -7,6 +7,7 @@ import { HostListener } from '@angular/core';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { BuscadorAdminComponent } from '../../shared/buscador-admin/buscador-admin.component';
 import { FormsModule } from '@angular/forms';
+import { NotificacionesBellComponent } from '../../shared/notificaciones-bell/notificaciones-bell.component';
 
 interface MenuItem {
   label: string;
@@ -17,7 +18,7 @@ interface MenuItem {
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, SkeletonComponent, BuscadorAdminComponent, FormsModule],
+  imports: [CommonModule, RouterModule, SkeletonComponent, BuscadorAdminComponent, FormsModule,NotificacionesBellComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css',
 })
