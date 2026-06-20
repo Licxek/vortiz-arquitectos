@@ -60,6 +60,20 @@ export const routes: Routes = [
           import('./admin/pages/citas/citas.component').then((m) => m.CitasComponent),
       },
       {
+        path: 'proyectos',
+        loadComponent: () =>
+          import('./admin/pages/proyectos/proyectos-lista.component').then(
+            (m) => m.ProyectosListaComponent,
+          ),
+      },
+      {
+        path: 'proyectos/:id',
+        loadComponent: () =>
+          import('./admin/pages/proyectos/proyectos-detalle.component').then(
+            (m) => m.ProyectosDetalleComponent,
+          ),
+      },
+      {
         path: 'configuracion',
         loadComponent: () =>
           import('./admin/pages/configuracion/configuracion.component').then(
