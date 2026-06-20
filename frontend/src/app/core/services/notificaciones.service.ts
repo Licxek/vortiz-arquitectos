@@ -44,16 +44,10 @@ export class NotificacionesService {
   // Conteos derivados
   noLeidas = computed(() => this._notificaciones().filter((n) => !n.leida).length);
   noLeidasCitas = computed(
-    () =>
-      this._notificaciones().filter(
-        (n) => !n.leida && n.tipo.startsWith('cita'),
-      ).length,
+    () => this._notificaciones().filter((n) => !n.leida && n.tipo.startsWith('cita')).length,
   );
   noLeidasConsultas = computed(
-    () =>
-      this._notificaciones().filter(
-        (n) => !n.leida && n.tipo.startsWith('consulta'),
-      ).length,
+    () => this._notificaciones().filter((n) => !n.leida && n.tipo.startsWith('consulta')).length,
   );
 
   // Estado de sonido
@@ -154,18 +148,18 @@ export class NotificacionesService {
         return {
           id,
           tipo,
-          titulo: c.cliente,
-          subtitulo:
+          titulo:
             c.estado === 'pendiente'
-              ? `Cita pendiente — ${this.formatoFecha(c.fecha)} · ${c.hora}`
-              : `Cita confirmada — ${this.formatoFecha(c.fecha)} · ${c.hora}`,
+              ? `Cita pendiente: ${c.nombre}`
+              : `Cita confirmada: ${c.nombre}`,
+          subtitulo: `${this.formatoFecha(c.fecha)} · ${c.hora || 'Sin hora'}`,
           detalle: c.servicio?.titulo || c.tipo || 'Sin servicio especificado',
-          fecha: new Date(c.fecha + 'T' + (c.hora || '00:00')),
+          fecha: new Date(c.createdAt || c.fecha || Date.now()),
           leida: this.idsLeidos.has(id),
           ruta: '/admin/citas',
           meta: {
             citaId: c.id,
-            cliente: c.cliente,
+            cliente: c.nombre,
             correo: c.correo,
             telefono: c.telefono,
             servicio: c.servicio?.titulo,
@@ -181,27 +175,23 @@ export class NotificacionesService {
       .map((c) => {
         const id = `consulta_${c.id}`;
         const conServicio = !!c.servicio_id || !!c.servicio;
-        const tipo: TipoNotificacion = conServicio
-          ? 'consulta_servicio'
-          : 'consulta_general';
+        const tipo: TipoNotificacion = conServicio ? 'consulta_servicio' : 'consulta_general';
         return {
           id,
           tipo,
-          titulo: c.nombre,
-          subtitulo: conServicio
-            ? `Consulta con servicio — ${c.servicio?.titulo || 'Servicio'}`
-            : 'Consulta general',
-          detalle: c.mensaje?.substring(0, 80) + (c.mensaje?.length > 80 ? '…' : ''),
+          titulo: `Nueva consulta de ${c.nombre}`,
+          subtitulo: c.motivo?.substring(0, 100) || c.servicio?.titulo || 'Mensaje sin descripción',
+          detalle: conServicio ? `Servicio: ${c.servicio?.titulo || 'Sin nombre'}` : undefined,
           fecha: new Date(c.createdAt || c.fecha || Date.now()),
           leida: this.idsLeidos.has(id),
-          ruta: '/admin/citas', // por ahora; en Fase 4 será /admin/consultas
+          ruta: '/admin/citas', // En Fase 4 será /admin/consultas
           meta: {
             consultaId: c.id,
             cliente: c.nombre,
             correo: c.correo,
             telefono: c.telefono,
             servicio: c.servicio?.titulo,
-            mensaje: c.mensaje,
+            mensaje: c.motivo,
           },
         };
       });
@@ -210,9 +200,7 @@ export class NotificacionesService {
   marcarLeida(id: string) {
     this.idsLeidos.add(id);
     this.guardarLeidos();
-    this._notificaciones.update((arr) =>
-      arr.map((n) => (n.id === id ? { ...n, leida: true } : n)),
-    );
+    this._notificaciones.update((arr) => arr.map((n) => (n.id === id ? { ...n, leida: true } : n)));
   }
 
   marcarTodasLeidas() {
