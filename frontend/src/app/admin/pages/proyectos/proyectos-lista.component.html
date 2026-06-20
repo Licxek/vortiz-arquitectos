@@ -1,0 +1,179 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+    <div>
+      <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
+        <a routerLink="/admin/inicio" class="hover:text-[#0a4d7a] transition-colors">Inicio</a>
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+        <span class="text-gray-700 font-medium">Proyectos</span>
+      </div>
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Proyectos</h1>
+      <p class="text-sm text-gray-500 mt-1">Gestiona todos los proyectos del estudio</p>
+    </div>
+
+    <button
+      (click)="nuevoProyecto()"
+      class="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all hover:-translate-y-0.5"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      Nuevo proyecto
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Total</p>
+      <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <p class="text-[10px] font-bold uppercase tracking-widest text-orange-600 mb-1">En diseño</p>
+      <p class="text-2xl font-bold text-gray-900">{{ stats.enDiseno }}</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <p class="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1">En proceso</p>
+      <p class="text-2xl font-bold text-gray-900">{{ stats.enProceso }}</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <p class="text-[10px] font-bold uppercase tracking-widest text-green-600 mb-1">Finalizados</p>
+      <p class="text-2xl font-bold text-gray-900">{{ stats.finalizados }}</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col md:flex-row gap-3">
+    <div class="relative flex-1">
+      <svg
+        class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+        fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input
+        type="text"
+        [(ngModel)]="busqueda"
+        placeholder="Buscar por nombre, cliente o ubicación..."
+        class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+      />
+    </div>
+    <select
+      [(ngModel)]="filtroEstado"
+      class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all cursor-pointer"
+    >
+      <option value="todos">Todos los estados</option>
+      <option *ngFor="let e of estadosProyecto" [value]="e">{{ e }}</option>
+    </select>
+    <select
+      [(ngModel)]="ordenamiento"
+      class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all cursor-pointer"
+    >
+      <option value="recientes">Más recientes</option>
+      <option value="antiguos">Más antiguos</option>
+      <option value="az">Nombre A-Z</option>
+    </select>
+  </div>
+
+  <!-- Grid de proyectos -->
+  <!-- Skeleton -->
+  <div *ngIf="cargando" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div *ngFor="let _ of [1,2,3,4,5,6,7,8]" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <app-skeleton variant="rect" height="180px" />
+      <div class="p-4 space-y-3">
+        <app-skeleton variant="text" width="80%" />
+        <app-skeleton variant="text" width="60%" />
+        <app-skeleton variant="rect" width="80px" height="24px" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty -->
+  <div *ngIf="!cargando && proyectosFiltrados.length === 0" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+    <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
+      <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      </svg>
+    </div>
+    <p class="text-sm font-semibold text-gray-800 mb-1">
+      {{ busqueda.trim() || filtroEstado !== 'todos' ? 'Sin coincidencias' : 'No hay proyectos' }}
+    </p>
+    <p class="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed mb-4">
+      {{ busqueda.trim() || filtroEstado !== 'todos'
+        ? 'Intenta cambiar los filtros para ver más resultados.'
+        : 'Crea el primer proyecto del estudio para empezar.' }}
+    </p>
+    <button
+      *ngIf="busqueda.trim() || filtroEstado !== 'todos'"
+      (click)="limpiarFiltros()"
+      class="text-xs font-semibold text-[#0a4d7a] hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+    >
+      Limpiar filtros
+    </button>
+    <button
+      *ngIf="!busqueda.trim() && filtroEstado === 'todos'"
+      (click)="nuevoProyecto()"
+      class="text-xs font-semibold text-white bg-[#0a4d7a] hover:bg-[#0a5d8f] px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-sm"
+    >
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      Crear primer proyecto
+    </button>
+  </div>
+
+  <!-- Grid real -->
+  <div *ngIf="!cargando && proyectosFiltrados.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div
+      *ngFor="let p of proyectosFiltrados"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden cursor-pointer group"
+      (click)="abrirProyecto(p)"
+    >
+      <div class="relative">
+        <app-image-carousel
+          [imagenes]="imagenesDeProyecto(p)"
+          [alt]="p.nombre"
+          aspectRatio="wide"
+          [clickable]="false"
+        ></app-image-carousel>
+        <span
+          *ngIf="p.estado === 'Finalizado'"
+          class="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 bg-green-500 text-white rounded-full uppercase tracking-wider z-10"
+        >
+          Finalizado
+        </span>
+      </div>
+      <div class="p-4">
+        <h3 class="text-sm font-semibold text-gray-900 truncate group-hover:text-[#0a4d7a] transition-colors">
+          {{ p.nombre }}
+        </h3>
+        <p class="text-xs text-gray-500 truncate mt-0.5">{{ p.cliente || 'Sin cliente' }}</p>
+        <p *ngIf="p.ubicacion" class="text-xs text-gray-400 truncate mt-0.5 flex items-center gap-1">
+          <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          {{ p.ubicacion }}
+        </p>
+        <div class="flex items-center justify-between mt-3">
+          <span
+            class="text-xs px-2 py-1 rounded-full font-medium"
+            [class.bg-blue-50]="p.estado === 'En proceso'"
+            [class.text-blue-700]="p.estado === 'En proceso'"
+            [class.bg-orange-50]="p.estado === 'En diseño' || p.estado === 'En revisión'"
+            [class.text-orange-700]="p.estado === 'En diseño' || p.estado === 'En revisión'"
+            [class.bg-green-50]="p.estado === 'Finalizado'"
+            [class.text-green-700]="p.estado === 'Finalizado'"
+            [class.bg-gray-100]="p.estado === 'Pausado'"
+            [class.text-gray-700]="p.estado === 'Pausado'"
+          >
+            {{ p.estado }}
+          </span>
+          <span class="text-xs text-gray-400">{{ p.fecha }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

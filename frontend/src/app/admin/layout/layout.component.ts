@@ -33,6 +33,7 @@ export class AdminLayoutComponent implements OnInit {
   menuItems: MenuItem[] = [
     { label: 'Inicio', icon: 'home', path: '/admin/inicio' },
     { label: 'Páginas', icon: 'pages', path: '/admin/paginas' },
+    { label: 'Proyectos', icon: 'folder', path: '/admin/proyectos' },
     { label: 'Perfil', icon: 'user', path: '/admin/perfil' },
     { label: 'Citas', icon: 'calendar', path: '/admin/citas' },
     { label: 'Reportes', icon: 'history', path: '/admin/reportes' },
