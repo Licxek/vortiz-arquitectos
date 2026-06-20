@@ -311,6 +311,7 @@ export class InicioComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
 
   ngOnInit() {
+    this.sonidoActivado = localStorage.getItem(this.STORAGE_SONIDO) === '1';
     const hoy = new Date();
     const meses = [
       'enero',
@@ -327,7 +328,8 @@ export class InicioComponent implements OnInit, OnDestroy {
       'diciembre',
     ];
     const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-    this.fechaHoy = `${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+    this.actualizarFechaHoy();
+    this.programarActualizacionFecha();
 
     this.analyticsService.estado().subscribe((estado) => {
       this.gaConectado = estado.configurado;
@@ -963,6 +965,14 @@ export class InicioComponent implements OnInit, OnDestroy {
         this.citasHoy = lista
           .filter((c) => c.estado === 'confirmada' || c.estado === 'pendiente')
           .map((c) => this.mapearCita(c));
+
+        // 👇 Detectar nuevas (después de primera carga)
+        if (!this.primeraCargaAgenda && lista.length > this.cantidadCitasAnterior) {
+          this.reproducirSonidoNuevo();
+        }
+        this.cantidadCitasAnterior = lista.length;
+        this.primeraCargaAgenda = false;
+
         this.cargandoAgenda = false;
         this.reconstruirNotificaciones();
         this.cdr.detectChanges();
@@ -981,8 +991,17 @@ export class InicioComponent implements OnInit, OnDestroy {
     this.cargandoConsultas = true;
     this.inicioService.obtenerConsultas().subscribe({
       next: (lista) => {
-        this.consultasRaw = lista;
-        this.consultasPendientes = lista.map((c) => this.mapearConsulta(c));
+        const vigentes = lista.filter((c) => this.esFechaVigente(c.fecha));
+        this.consultasRaw = vigentes;
+        this.consultasPendientes = vigentes.map((c) => this.mapearConsulta(c));
+
+        // 👇 Detectar nuevas (después de primera carga)
+        if (!this.primeraCargaConsultas && vigentes.length > this.cantidadConsultasAnterior) {
+          this.reproducirSonidoNuevo();
+        }
+        this.cantidadConsultasAnterior = vigentes.length;
+        this.primeraCargaConsultas = false;
+
         this.cargandoConsultas = false;
         this.reconstruirNotificaciones();
         this.cdr.detectChanges();
@@ -1457,6 +1476,12 @@ export class InicioComponent implements OnInit, OnDestroy {
 
     const key = event.key.toLowerCase();
 
+    if (key === 'r') {
+      event.preventDefault();
+      this.refrescarManual();
+      return;
+    }
+
     // N: nuevo proyecto (sin modificador, estilo Linear/Notion)
     if (key === 'n') {
       event.preventDefault();
@@ -1697,6 +1722,9 @@ export class InicioComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.intervaloTips) clearInterval(this.intervaloTips);
+    if (this.intervalRefresh) clearInterval(this.intervalRefresh);
+    if (this.intervalTexto) clearInterval(this.intervalTexto); // 👈 NUEVO
+    if (this.timeoutFecha) clearTimeout(this.timeoutFecha);
   }
 
   get tip(): Tip {
@@ -1720,5 +1748,135 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.tipActual = (this.tipActual + 1) % this.tips.length;
       this.cdr.detectChanges();
     }, 10000);
+  }
+
+  private intervalRefresh: any;
+  private intervalTexto: any;
+  ultimaActualizacion: Date | null = null;
+  ultimaActualizacionTexto = 'Cargando...';
+
+  private iniciarRefreshAutomatico() {
+    // Refrescar cada 30s si la pestaña está visible
+    this.intervalRefresh = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        this.refrescarDatos();
+      }
+    }, 30000); // 30 segundos
+
+    // Actualizar el texto "Hace Xs" cada 5s
+    this.intervalTexto = setInterval(() => {
+      this.actualizarTextoActualizacion();
+    }, 5000);
+  }
+
+  private refrescarDatos() {
+    this.cargarAgenda();
+    this.cargarConsultas();
+    this.cargarStats();
+    this.ultimaActualizacion = new Date();
+    this.actualizarTextoActualizacion();
+  }
+
+  private actualizarTextoActualizacion() {
+    if (!this.ultimaActualizacion) {
+      this.ultimaActualizacionTexto = 'Cargando...';
+      return;
+    }
+    const diffSeg = Math.floor((Date.now() - this.ultimaActualizacion.getTime()) / 1000);
+    if (diffSeg < 10) this.ultimaActualizacionTexto = 'En vivo';
+    else if (diffSeg < 60) this.ultimaActualizacionTexto = `Hace ${diffSeg}s`;
+    else this.ultimaActualizacionTexto = `Hace ${Math.floor(diffSeg / 60)}m`;
+    this.cdr.detectChanges();
+  }
+
+  sonidoActivado = false;
+  private primeraCargaAgenda = true;
+  private primeraCargaConsultas = true;
+  private cantidadCitasAnterior = 0;
+  private cantidadConsultasAnterior = 0;
+  private readonly STORAGE_SONIDO = 'vortiz_inicio_sonido';
+
+  toggleSonido() {
+    this.sonidoActivado = !this.sonidoActivado;
+    localStorage.setItem(this.STORAGE_SONIDO, this.sonidoActivado ? '1' : '0');
+    if (this.sonidoActivado) {
+      this.reproducirSonidoNuevo(); // sonido de prueba al activar
+    }
+  }
+
+  private reproducirSonidoNuevo() {
+    if (!this.sonidoActivado) return;
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      // Tono suave ascendente
+      oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+
+      gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.3);
+    } catch {}
+  }
+  refrescando = false;
+
+  refrescarManual() {
+    if (this.refrescando) return;
+    this.refrescando = true;
+    this.refrescarDatos();
+    setTimeout(() => {
+      this.refrescando = false;
+      this.cdr.detectChanges();
+    }, 800);
+  }
+  private timeoutFecha: any;
+
+  private actualizarFechaHoy() {
+    const hoy = new Date();
+    const meses = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
+    const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    this.fechaHoy = `${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+  }
+
+  private programarActualizacionFecha() {
+    const ahora = new Date();
+    const proximaMedianoche = new Date(ahora);
+    proximaMedianoche.setDate(proximaMedianoche.getDate() + 1);
+    proximaMedianoche.setHours(0, 0, 0, 0);
+    const msHastaMedianoche = proximaMedianoche.getTime() - ahora.getTime() + 1000; // +1s margen
+
+    this.timeoutFecha = setTimeout(() => {
+      this.actualizarFechaHoy();
+      this.cdr.detectChanges();
+      this.programarActualizacionFecha(); // re-programar para la siguiente medianoche
+    }, msHastaMedianoche);
+  }
+  /** Devuelve true si la fecha es hoy o futura */
+  private esFechaVigente(fechaCita: string): boolean {
+    if (!fechaCita) return false;
+    const cita = new Date(fechaCita + 'T00:00:00');
+    const ahora = new Date();
+    ahora.setHours(0, 0, 0, 0);
+    return cita.getTime() >= ahora.getTime();
   }
 }
