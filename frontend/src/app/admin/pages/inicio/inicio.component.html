@@ -179,64 +179,71 @@
     </div>
   </div>
 
-  <!-- Hero arquitectónico -->
-  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-    <!-- Línea de acento superior -->
-    <div class="h-1 bg-gradient-to-r from-transparent via-[#0a4d7a] to-transparent"></div>
+  <!-- Hero arquitectónico v2 -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+    <!-- Línea de acento horizontal sutil -->
+    <div
+      class="h-1 bg-gradient-to-r from-transparent via-[#0a4d7a] to-transparent rounded-t-2xl"
+    ></div>
 
-    <div class="p-5 md:p-6">
-      <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
-        <!-- Date block + greeting móvil -->
+    <div class="p-5 md:p-7">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-5">
+        <!-- Date block elegante -->
         <div class="flex items-center gap-4 shrink-0">
           <div
-            class="flex flex-col items-center justify-center w-16 h-16 bg-gradient-to-br from-[#0a1f3d] via-[#0a4d7a] to-[#0a5d8f] text-white rounded-xl shadow-md shrink-0"
+            class="relative flex flex-col items-center justify-center w-[72px] h-[72px] bg-[#0a1f3d] text-white rounded-xl shrink-0 overflow-hidden"
           >
-            <span class="text-[9px] uppercase tracking-widest font-bold text-blue-200">
+            <!-- Acento decorativo interno (línea técnica) -->
+            <div class="absolute top-0 left-3 right-3 h-0.5 bg-[#0a4d7a] rounded-b-full"></div>
+
+            <span class="text-[9px] uppercase tracking-[0.2em] font-bold text-blue-300 mt-1.5">
               {{ mesActualCorto }}
             </span>
-            <span class="text-2xl font-bold leading-none my-0.5">{{ diaActual }}</span>
-            <span class="text-[9px] uppercase tracking-widest font-bold text-blue-200">
+            <span class="text-[28px] font-bold leading-none">{{ diaActual }}</span>
+            <span class="text-[9px] uppercase tracking-[0.2em] font-semibold text-blue-300/70 mb-1">
               {{ diaSemanaCorto }}
             </span>
           </div>
 
-          <!-- Greeting en mobile (al lado del date block) -->
+          <!-- Greeting móvil -->
           <div class="sm:hidden min-w-0">
-            <p class="text-[10px] uppercase tracking-widest text-[#0a4d7a] font-bold">
+            <p class="text-[10px] uppercase tracking-[0.2em] text-[#0a4d7a] font-bold mb-0.5">
               {{ saludo }}
             </p>
-            <h1 class="text-xl font-bold text-gray-900 truncate">{{ nombreCorto }}</h1>
+            <h1 class="text-xl font-bold text-gray-900 truncate leading-tight">
+              {{ nombreCorto }}
+            </h1>
           </div>
         </div>
 
         <!-- Separador vertical -->
         <div class="hidden sm:block w-px self-stretch bg-gray-100"></div>
 
-        <!-- Greeting + summary en desktop -->
+        <!-- Greeting + summary desktop -->
         <div class="hidden sm:block flex-1 min-w-0">
-          <p class="text-[10px] uppercase tracking-widest text-[#0a4d7a] font-bold mb-0.5">
+          <p class="text-[10px] uppercase tracking-[0.2em] text-[#0a4d7a] font-bold mb-1">
             {{ saludo }}
           </p>
-          <h1 class="text-xl md:text-2xl font-bold text-gray-900 mb-1 leading-tight">
+          <h1
+            class="text-2xl md:text-[28px] font-bold text-gray-900 leading-none tracking-tight mb-2"
+          >
             {{ nombreCorto }}
           </h1>
-          <p class="text-sm text-gray-600 leading-relaxed">{{ resumenDelDia }}</p>
+          <p class="text-sm text-gray-600 leading-relaxed max-w-xl">{{ resumenDelDia }}</p>
         </div>
 
-        <!-- Summary en mobile (full width abajo) -->
+        <!-- Summary móvil -->
         <p class="text-sm text-gray-600 leading-relaxed sm:hidden">{{ resumenDelDia }}</p>
 
-        <!-- Pill En vivo -->
-        <div
-          class="inline-flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-full px-3 py-1.5 shrink-0 self-start sm:self-center"
-        >
+        <!-- Indicador En vivo más sutil -->
+        <div class="inline-flex items-center gap-1.5 shrink-0 self-start sm:self-center">
           <span
             class="w-1.5 h-1.5 rounded-full"
             [class.bg-green-500]="ultimaActualizacionTexto === 'En vivo'"
             [class.animate-pulse]="ultimaActualizacionTexto === 'En vivo'"
-            [class.bg-gray-400]="ultimaActualizacionTexto !== 'En vivo'"
+            [class.bg-gray-300]="ultimaActualizacionTexto !== 'En vivo'"
           ></span>
-          <span class="text-[10px] font-bold uppercase tracking-wider text-gray-700">
+          <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500">
             {{ ultimaActualizacionTexto }}
           </span>
         </div>
