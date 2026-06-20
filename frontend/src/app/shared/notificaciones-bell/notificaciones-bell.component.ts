@@ -1,9 +1,21 @@
-import { Component, ChangeDetectorRef, HostListener, inject, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  ChangeDetectorRef,
+  HostListener,
+  inject,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { NotificacionesService, Notificacion, TipoNotificacion } from '../../core/services/notificaciones.service';
+import {
+  NotificacionesService,
+  Notificacion,
+  TipoNotificacion,
+} from '../../core/services/notificaciones.service';
 
 type Filtro = 'todas' | 'citas' | 'consultas';
+type TipoVisual = 'cita' | 'consulta' | 'confirmacion' | 'cancelacion' | 'mensaje';
 
 @Component({
   selector: 'app-notificaciones-bell',
@@ -22,11 +34,7 @@ export class NotificacionesBellComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.notifService.inicializar();
-
-    // Refrescar los textos "Hace X min" cada 30s
-    this.intervalTiempo = setInterval(() => {
-      this.cdr.detectChanges();
-    }, 30000);
+    this.intervalTiempo = setInterval(() => this.cdr.detectChanges(), 30000);
   }
 
   ngOnDestroy() {
@@ -36,10 +44,6 @@ export class NotificacionesBellComponent implements OnInit, OnDestroy {
   toggle(event: Event) {
     event.stopPropagation();
     this.abierto = !this.abierto;
-  }
-
-  cerrar() {
-    this.abierto = false;
   }
 
   @HostListener('document:click')
@@ -54,10 +58,12 @@ export class NotificacionesBellComponent implements OnInit, OnDestroy {
     return all;
   }
 
-  get noLeidasFiltro(): number {
-    if (this.filtro === 'citas') return this.notifService.noLeidasCitas();
-    if (this.filtro === 'consultas') return this.notifService.noLeidasConsultas();
-    return this.notifService.noLeidas();
+  get conteoCitas(): number {
+    return this.notifService.notificaciones().filter((n) => n.tipo.startsWith('cita')).length;
+  }
+
+  get conteoConsultas(): number {
+    return this.notifService.notificaciones().filter((n) => n.tipo.startsWith('consulta')).length;
   }
 
   cambiarFiltro(f: Filtro, event: Event) {
@@ -65,13 +71,27 @@ export class NotificacionesBellComponent implements OnInit, OnDestroy {
     this.filtro = f;
   }
 
+  // Click en la card → marca como leída + navega
   abrirNotificacion(notif: Notificacion, event: Event) {
     event.stopPropagation();
     this.notifService.marcarLeida(notif.id);
     this.abierto = false;
-    if (notif.ruta) {
-      this.router.navigateByUrl(notif.ruta);
-    }
+    if (notif.ruta) this.router.navigateByUrl(notif.ruta);
+  }
+
+  // Botón "Marcar leída" sin navegar
+  marcarLeida(notif: Notificacion, event: Event) {
+    event.stopPropagation();
+    if (notif.leida) return;
+    this.notifService.marcarLeida(notif.id);
+  }
+
+  // Botón acción rápida
+  accionRapida(notif: Notificacion, event: Event) {
+    event.stopPropagation();
+    this.notifService.marcarLeida(notif.id);
+    this.abierto = false;
+    if (notif.ruta) this.router.navigateByUrl(notif.ruta);
   }
 
   marcarTodas(event: Event) {
@@ -89,33 +109,55 @@ export class NotificacionesBellComponent implements OnInit, OnDestroy {
     this.notifService.refrescarManual();
   }
 
-  iconoPorTipo(tipo: TipoNotificacion): string {
-    switch (tipo) {
-      case 'cita_nueva':
-      case 'cita_pendiente':
-        return 'calendar-warning';
-      case 'cita_confirmada':
-        return 'calendar-check';
-      case 'consulta_servicio':
-        return 'service';
-      case 'consulta_general':
-      default:
-        return 'message';
-    }
+  // Mapeo de tipos del servicio → tipo visual (igual que el inicio)
+  tipoVisual(tipo: TipoNotificacion): TipoVisual {
+    if (tipo === 'cita_pendiente' || tipo === 'cita_nueva') return 'cita';
+    if (tipo === 'cita_confirmada') return 'confirmacion';
+    if (tipo === 'consulta_general') return 'consulta';
+    if (tipo === 'consulta_servicio') return 'mensaje';
+    return 'cita';
   }
 
-  colorPorTipo(tipo: TipoNotificacion): { bg: string; text: string } {
-    switch (tipo) {
-      case 'cita_pendiente':
-        return { bg: 'bg-orange-100', text: 'text-orange-600' };
-      case 'cita_confirmada':
-        return { bg: 'bg-green-100', text: 'text-green-600' };
-      case 'consulta_servicio':
-        return { bg: 'bg-blue-100', text: 'text-blue-600' };
-      case 'consulta_general':
-        return { bg: 'bg-purple-100', text: 'text-purple-600' };
-      default:
-        return { bg: 'bg-gray-100', text: 'text-gray-600' };
+  // Iniciales del cliente
+  iniciales(nombre?: string): string {
+    if (!nombre) return '?';
+    const partes = nombre.trim().split(/\s+/);
+    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+  }
+
+  // Color avatar por hash del nombre (idéntico al inicio)
+  colorAvatar(nombre?: string): string {
+    if (!nombre) return 'bg-gray-400';
+    const colors = [
+      'bg-blue-500',
+      'bg-purple-500',
+      'bg-pink-500',
+      'bg-amber-500',
+      'bg-emerald-500',
+      'bg-indigo-500',
+      'bg-rose-500',
+      'bg-teal-500',
+      'bg-cyan-500',
+    ];
+    let hash = 0;
+    for (let i = 0; i < nombre.length; i++) {
+      hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
     }
+    return colors[Math.abs(hash) % colors.length];
+  }
+
+  textoAccionRapida(tipo: TipoNotificacion): string {
+    const vis = this.tipoVisual(tipo);
+    if (vis === 'consulta' || vis === 'mensaje') return 'Responder';
+    if (vis === 'cita') return 'Ver en calendario';
+    return 'Ver detalles';
+  }
+
+  colorAccionRapida(tipo: TipoNotificacion): string {
+    const vis = this.tipoVisual(tipo);
+    if (vis === 'consulta' || vis === 'mensaje') return 'bg-green-500 hover:bg-green-600';
+    if (vis === 'cita') return 'bg-blue-500 hover:bg-blue-600';
+    return 'bg-gray-500 hover:bg-gray-600';
   }
 }

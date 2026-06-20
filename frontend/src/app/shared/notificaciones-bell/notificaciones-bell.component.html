@@ -19,7 +19,6 @@
         d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
       />
     </svg>
-
     <!-- Badge -->
     <span
       *ngIf="notifService.noLeidas() > 0"
@@ -32,148 +31,183 @@
   <!-- Dropdown -->
   <div
     *ngIf="abierto"
-    class="absolute right-0 top-full mt-2 w-[380px] max-w-[95vw] bg-white text-gray-800 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/5 z-50 animate-[fadeIn_0.15s_ease-out]"
+    class="absolute right-0 top-full mt-2 w-[420px] max-w-[95vw] bg-white text-gray-800 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/5 z-50 animate-[fadeIn_0.15s_ease-out]"
   >
-    <!-- Header del dropdown -->
-    <div class="px-4 py-3 bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white">
-      <div class="flex items-center justify-between mb-3">
-        <div>
-          <h3 class="text-sm font-bold">Notificaciones</h3>
-          <p class="text-[11px] text-blue-200">
-            {{ notifService.noLeidas() }} sin leer · {{ notifService.notificaciones().length }} total
-          </p>
-        </div>
-        <div class="flex items-center gap-1">
-          <!-- Refrescar -->
-          <button
-            (click)="refrescar($event)"
-            class="p-1.5 rounded-md hover:bg-white/10 transition-colors"
-            title="Actualizar"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-          </button>
-          <!-- Sonido -->
-          <button
-            (click)="toggleSonido($event)"
-            class="p-1.5 rounded-md hover:bg-white/10 transition-colors"
-            [title]="notifService.sonidoActivado() ? 'Silenciar' : 'Activar sonido'"
-          >
-            <svg
-              *ngIf="notifService.sonidoActivado()"
-              class="w-4 h-4 text-green-300"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-              />
-            </svg>
-            <svg
-              *ngIf="!notifService.sonidoActivado()"
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Filtros -->
-      <div class="flex gap-1">
-        <button
-          (click)="cambiarFiltro('todas', $event)"
-          class="flex-1 px-2 py-1 text-[11px] font-semibold rounded-md transition-colors"
-          [class.bg-white]="filtro === 'todas'"
-          [class.text-[#0a1f3d]]="filtro === 'todas'"
-          [class.bg-white/10]="filtro !== 'todas'"
-          [class.text-white]="filtro !== 'todas'"
-          [class.hover:bg-white/20]="filtro !== 'todas'"
+    <!-- Header con título y acciones -->
+    <div
+      class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100"
+    >
+      <h2
+        class="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-2"
+      >
+        Actividad reciente
+        <span
+          *ngIf="notifService.noLeidas() > 0"
+          class="text-[10px] font-bold px-2 py-0.5 bg-red-500 text-white rounded-full"
         >
-          Todas ({{ notifService.notificaciones().length }})
+          {{ notifService.noLeidas() }}
+        </span>
+      </h2>
+      <div class="flex items-center gap-1">
+        <button
+          (click)="refrescar($event)"
+          class="p-1.5 rounded-md hover:bg-gray-200 transition-colors"
+          title="Actualizar"
+        >
+          <svg class="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
         </button>
         <button
-          (click)="cambiarFiltro('citas', $event)"
-          class="flex-1 px-2 py-1 text-[11px] font-semibold rounded-md transition-colors"
-          [class.bg-white]="filtro === 'citas'"
-          [class.text-[#0a1f3d]]="filtro === 'citas'"
-          [class.bg-white/10]="filtro !== 'citas'"
-          [class.text-white]="filtro !== 'citas'"
-          [class.hover:bg-white/20]="filtro !== 'citas'"
+          (click)="toggleSonido($event)"
+          class="p-1.5 rounded-md hover:bg-gray-200 transition-colors"
+          [title]="notifService.sonidoActivado() ? 'Silenciar' : 'Activar sonido'"
         >
-          Citas
+          <svg
+            *ngIf="notifService.sonidoActivado()"
+            class="w-3.5 h-3.5 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+            />
+          </svg>
+          <svg
+            *ngIf="!notifService.sonidoActivado()"
+            class="w-3.5 h-3.5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
+            />
+          </svg>
         </button>
         <button
-          (click)="cambiarFiltro('consultas', $event)"
-          class="flex-1 px-2 py-1 text-[11px] font-semibold rounded-md transition-colors"
-          [class.bg-white]="filtro === 'consultas'"
-          [class.text-[#0a1f3d]]="filtro === 'consultas'"
-          [class.bg-white/10]="filtro !== 'consultas'"
-          [class.text-white]="filtro !== 'consultas'"
-          [class.hover:bg-white/20]="filtro !== 'consultas'"
+          (click)="marcarTodas($event)"
+          [disabled]="notifService.noLeidas() === 0"
+          class="text-xs text-[#0a4d7a] hover:underline font-medium cursor-pointer disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed ml-1"
         >
-          Consultas
+          Marcar leídas
         </button>
       </div>
     </div>
 
-    <!-- Lista -->
-    <div class="max-h-[420px] overflow-y-auto">
-      <!-- Empty state -->
-      <div
-        *ngIf="notificacionesFiltradas.length === 0"
-        class="px-6 py-10 text-center"
+    <!-- Tabs de filtro -->
+    <div class="flex gap-1 px-3 py-2 border-b border-gray-100 bg-gray-50/50">
+      <button
+        (click)="cambiarFiltro('todas', $event)"
+        class="flex-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5"
+        [class.bg-white]="filtro === 'todas'"
+        [class.shadow-sm]="filtro === 'todas'"
+        [class.text-gray-900]="filtro === 'todas'"
+        [class.text-gray-500]="filtro !== 'todas'"
+        [class.hover:text-gray-700]="filtro !== 'todas'"
       >
-        <div class="w-14 h-14 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-          <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-            />
-          </svg>
-        </div>
-        <p class="text-sm font-semibold text-gray-700">Todo en orden</p>
-        <p class="text-xs text-gray-500 mt-1">No tienes notificaciones pendientes</p>
-      </div>
-
-      <!-- Items -->
-      <ng-container *ngFor="let notif of notificacionesFiltradas">
-        <button
-          (click)="abrirNotificacion(notif, $event)"
-          class="w-full px-4 py-3 flex items-start gap-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-0"
-          [class.bg-blue-50/50]="!notif.leida"
+        Todas
+        <span
+          class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+          [class.bg-gray-200]="filtro === 'todas'"
+          [class.text-gray-700]="filtro === 'todas'"
+          [class.bg-gray-100]="filtro !== 'todas'"
+          [class.text-gray-500]="filtro !== 'todas'"
         >
-          <!-- Icono -->
+          {{ notifService.notificaciones().length }}
+        </span>
+      </button>
+      <button
+        (click)="cambiarFiltro('citas', $event)"
+        class="flex-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5"
+        [class.bg-white]="filtro === 'citas'"
+        [class.shadow-sm]="filtro === 'citas'"
+        [class.text-gray-900]="filtro === 'citas'"
+        [class.text-gray-500]="filtro !== 'citas'"
+        [class.hover:text-gray-700]="filtro !== 'citas'"
+      >
+        Citas
+        <span
+          *ngIf="conteoCitas > 0"
+          class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+          [class.bg-blue-100]="filtro === 'citas'"
+          [class.text-blue-700]="filtro === 'citas'"
+          [class.bg-gray-100]="filtro !== 'citas'"
+          [class.text-gray-500]="filtro !== 'citas'"
+        >
+          {{ conteoCitas }}
+        </span>
+      </button>
+      <button
+        (click)="cambiarFiltro('consultas', $event)"
+        class="flex-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5"
+        [class.bg-white]="filtro === 'consultas'"
+        [class.shadow-sm]="filtro === 'consultas'"
+        [class.text-gray-900]="filtro === 'consultas'"
+        [class.text-gray-500]="filtro !== 'consultas'"
+        [class.hover:text-gray-700]="filtro !== 'consultas'"
+      >
+        Consultas
+        <span
+          *ngIf="conteoConsultas > 0"
+          class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+          [class.bg-green-100]="filtro === 'consultas'"
+          [class.text-green-700]="filtro === 'consultas'"
+          [class.bg-gray-100]="filtro !== 'consultas'"
+          [class.text-gray-500]="filtro !== 'consultas'"
+        >
+          {{ conteoConsultas }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Lista (IDÉNTICA a actividad reciente del inicio) -->
+    <div class="divide-y divide-gray-100 max-h-[420px] overflow-y-auto">
+      <div
+        *ngFor="let notif of notificacionesFiltradas"
+        (click)="abrirNotificacion(notif, $event)"
+        class="p-3 hover:bg-gray-50 transition-colors cursor-pointer flex gap-3 group relative"
+        [class.bg-blue-50/40]="!notif.leida"
+      >
+        <!-- Borde lateral si no leída -->
+        <div
+          *ngIf="!notif.leida"
+          class="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-500"
+        ></div>
+
+        <!-- Avatar con iniciales + badge -->
+        <div class="relative shrink-0">
           <div
-            class="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-            [ngClass]="colorPorTipo(notif.tipo).bg"
+            class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-bold"
+            [ngClass]="colorAvatar(notif.meta?.cliente || notif.titulo)"
           >
-            <ng-container [ngSwitch]="iconoPorTipo(notif.tipo)">
+            {{ iniciales(notif.meta?.cliente || notif.titulo) }}
+          </div>
+          <div
+            class="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg ring-2 ring-white flex items-center justify-center"
+            [class.bg-blue-500]="tipoVisual(notif.tipo) === 'cita'"
+            [class.bg-green-500]="tipoVisual(notif.tipo) === 'consulta' || tipoVisual(notif.tipo) === 'confirmacion'"
+            [class.bg-red-500]="tipoVisual(notif.tipo) === 'cancelacion'"
+            [class.bg-orange-500]="tipoVisual(notif.tipo) === 'mensaje'"
+          >
+            <ng-container [ngSwitch]="tipoVisual(notif.tipo)">
               <svg
-                *ngSwitchCase="'calendar-warning'"
-                class="w-4 h-4"
-                [ngClass]="colorPorTipo(notif.tipo).text"
+                *ngSwitchCase="'cita'"
+                class="w-2.5 h-2.5 text-white"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="2"
+                stroke-width="3"
                 viewBox="0 0 24 24"
               >
                 <path
@@ -183,39 +217,11 @@
                 />
               </svg>
               <svg
-                *ngSwitchCase="'calendar-check'"
-                class="w-4 h-4"
-                [ngClass]="colorPorTipo(notif.tipo).text"
+                *ngSwitchCase="'consulta'"
+                class="w-2.5 h-2.5 text-white"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              <svg
-                *ngSwitchCase="'service'"
-                class="w-4 h-4"
-                [ngClass]="colorPorTipo(notif.tipo).text"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <svg
-                *ngSwitchDefault
-                class="w-4 h-4"
-                [ngClass]="colorPorTipo(notif.tipo).text"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
+                stroke-width="3"
                 viewBox="0 0 24 24"
               >
                 <path
@@ -224,45 +230,113 @@
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                 />
               </svg>
+              <svg
+                *ngSwitchCase="'confirmacion'"
+                class="w-2.5 h-2.5 text-white"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <svg
+                *ngSwitchCase="'cancelacion'"
+                class="w-2.5 h-2.5 text-white"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <svg
+                *ngSwitchCase="'mensaje'"
+                class="w-2.5 h-2.5 text-white"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3 5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-5l-5 5v-5H5a2 2 0 01-2-2V5z"
+                />
+              </svg>
             </ng-container>
           </div>
+        </div>
 
-          <!-- Texto -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-start justify-between gap-2">
-              <p class="text-sm font-semibold text-gray-900 truncate">{{ notif.titulo }}</p>
-              <span class="text-[10px] text-gray-400 shrink-0 mt-0.5">
-                {{ notifService.tiempoTranscurrido(notif.fecha) }}
-              </span>
-            </div>
-            <p class="text-xs text-gray-600 truncate mt-0.5">{{ notif.subtitulo }}</p>
-            <p *ngIf="notif.detalle" class="text-[11px] text-gray-500 truncate mt-0.5">
-              {{ notif.detalle }}
+        <!-- Contenido -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-2">
+            <p
+              class="text-sm font-semibold text-gray-900 truncate"
+              [class.font-bold]="!notif.leida"
+            >
+              {{ notif.titulo }}
             </p>
+
+            <button
+              *ngIf="!notif.leida"
+              (click)="marcarLeida(notif, $event)"
+              class="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-[10px] font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2 py-0.5 rounded"
+              title="Marcar como leída"
+            >
+              ✓ Leída
+            </button>
           </div>
+          <p class="text-xs text-gray-500 line-clamp-2 mt-0.5">{{ notif.subtitulo }}</p>
 
-          <!-- Indicador no leído -->
-          <span
-            *ngIf="!notif.leida"
-            class="w-2 h-2 rounded-full bg-blue-500 mt-2 shrink-0"
-          ></span>
-        </button>
-      </ng-container>
-    </div>
+          <div class="flex items-center justify-between gap-2 mt-1.5">
+            <p class="text-[11px] text-gray-400">
+              {{ notifService.tiempoTranscurrido(notif.fecha) }}
+            </p>
 
-    <!-- Footer -->
-    <div
-      *ngIf="notificacionesFiltradas.length > 0"
-      class="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between"
-    >
-      <button
-        (click)="marcarTodas($event)"
-        [disabled]="notifService.noLeidas() === 0"
-        class="text-xs font-semibold text-[#0a4d7a] hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
-      >
-        Marcar todas leídas
-      </button>
-      <span class="text-[10px] text-gray-400">Se actualiza cada 30s</span>
+            <button
+              (click)="accionRapida(notif, $event)"
+              class="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-[10px] font-semibold text-white px-2.5 py-1 rounded-md shadow-sm"
+              [ngClass]="colorAccionRapida(notif.tipo)"
+            >
+              {{ textoAccionRapida(notif.tipo) }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="notificacionesFiltradas.length === 0" class="px-6 py-10 text-center">
+        <div
+          class="w-14 h-14 mx-auto mb-3 bg-gray-100 rounded-2xl flex items-center justify-center"
+        >
+          <svg
+            class="w-7 h-7 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
+        </div>
+        <p class="text-sm font-semibold text-gray-700 mb-1">
+          {{
+            filtro === 'citas'
+              ? 'Sin notificaciones de citas'
+              : filtro === 'consultas'
+                ? 'Sin notificaciones de consultas'
+                : 'Todo tranquilo'
+          }}
+        </p>
+        <p class="text-xs text-gray-500 max-w-xs mx-auto leading-relaxed">
+          Las notificaciones recientes aparecerán aquí.
+        </p>
+      </div>
     </div>
   </div>
 </div>

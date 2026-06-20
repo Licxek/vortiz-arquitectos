@@ -44,16 +44,6 @@ interface StatCard {
   color: string;
 }
 
-interface Notificacion {
-  id: number;
-  tipo: 'cita' | 'consulta' | 'confirmacion' | 'cancelacion' | 'mensaje';
-  titulo: string;
-  descripcion: string;
-  tiempo: string;
-  leida: boolean;
-  cliente?: string; // 👈 NUEVO
-}
-
 interface ConsultaPendiente {
   id: number;
   nombre: string;
@@ -138,9 +128,6 @@ export class InicioComponent implements OnInit, OnDestroy {
   // ============ FILTRO TEMPORAL Y STATS ============
   periodoActivo: 'hoy' | 'semana' | 'mes' | 'año' = 'mes';
 
-  // Detalle de notificación
-  notificacionSeleccionada: Notificacion | null = null;
-
   // Detalle de cita
   citaSeleccionada: Cita | null = null;
 
@@ -160,7 +147,6 @@ export class InicioComponent implements OnInit, OnDestroy {
 
   private agendaRaw: CitaBackend[] = [];
   private consultasRaw: CitaBackend[] = [];
-  private readonly STORAGE_LEIDAS = 'vortiz_notif_leidas';
   private route = inject(ActivatedRoute);
   // ============ ESTADOS DE LOADING ============
   cargandoStats = true;
@@ -265,7 +251,6 @@ export class InicioComponent implements OnInit, OnDestroy {
   citasHoy: Cita[] = [];
   consultasPendientes: ConsultaPendiente[] = [];
   // ============ NOTIFICACIONES ============
-  notificaciones: Notificacion[] = [];
 
   // ============ CONSULTAS: DATOS Y ESTADOS ============
 
@@ -353,10 +338,6 @@ export class InicioComponent implements OnInit, OnDestroy {
   }
 
   // ============ GETTERS ============
-
-  get notificacionesNoLeidas(): number {
-    return this.notificaciones.filter((n) => !n.leida).length;
-  }
 
   get totalConsultasPendientes(): number {
     return this.consultasPendientes.length;
@@ -473,13 +454,6 @@ export class InicioComponent implements OnInit, OnDestroy {
         color: 'blue',
       },
     ];
-  }
-
-  // ============ NOTIFICACIONES ============
-  marcarTodasLeidas() {
-    const ids = this.notificaciones.map((n) => n.id);
-    this.guardarLeidas([...new Set([...this.obtenerLeidas(), ...ids])]);
-    this.notificaciones.forEach((n) => (n.leida = true));
   }
 
   // ============ GRÁFICAS ============
@@ -896,22 +870,6 @@ export class InicioComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ============ NOTIFICACIÓN: DETALLE ============
-  abrirNotificacion(notif: Notificacion) {
-    if (!notif.leida) {
-      notif.leida = true;
-      const leidas = this.obtenerLeidas();
-      if (!leidas.includes(notif.id)) {
-        leidas.push(notif.id);
-        this.guardarLeidas(leidas);
-      }
-    }
-    this.notificacionSeleccionada = notif;
-  }
-  cerrarNotificacion() {
-    this.notificacionSeleccionada = null;
-  }
-
   // ============ AGENDA: DETALLE DE CITA ============
   abrirCita(cita: Cita) {
     this.citaSeleccionada = cita;
@@ -924,37 +882,6 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.citaSeleccionada.estado = 'confirmada';
       this.cerrarCita();
     }
-  }
-
-  // Helpers para clasificar tipos de notificación
-  esTipoCita(tipo: string): boolean {
-    return ['cita', 'confirmacion', 'cancelacion'].includes(tipo);
-  }
-
-  esTipoConsulta(tipo: string): boolean {
-    return ['consulta', 'mensaje'].includes(tipo);
-  }
-
-  tipoNotifLabel(tipo: string): string {
-    const map: Record<string, string> = {
-      cita: 'Cita agendada',
-      confirmacion: 'Cita confirmada',
-      cancelacion: 'Cita cancelada',
-      consulta: 'Nueva consulta',
-      mensaje: 'Nuevo mensaje',
-    };
-    return map[tipo] || tipo;
-  }
-
-  // Navegación desde el modal
-  irACitasDesdeNotif() {
-    this.notificacionSeleccionada = null;
-    this.irACitas();
-  }
-
-  verConsultasDesdeNotif() {
-    this.notificacionSeleccionada = null;
-    this.abrirTodasConsultas();
   }
 
   private cargarAgenda() {
@@ -974,14 +901,12 @@ export class InicioComponent implements OnInit, OnDestroy {
         this.primeraCargaAgenda = false;
 
         this.cargandoAgenda = false;
-        this.reconstruirNotificaciones();
         this.cdr.detectChanges();
       },
       error: () => {
         this.agendaRaw = [];
         this.citasHoy = [];
         this.cargandoAgenda = false;
-        this.reconstruirNotificaciones();
         this.cdr.detectChanges();
       },
     });
@@ -1003,85 +928,15 @@ export class InicioComponent implements OnInit, OnDestroy {
         this.primeraCargaConsultas = false;
 
         this.cargandoConsultas = false;
-        this.reconstruirNotificaciones();
         this.cdr.detectChanges();
       },
       error: () => {
         this.consultasRaw = [];
         this.consultasPendientes = [];
         this.cargandoConsultas = false;
-        this.reconstruirNotificaciones();
         this.cdr.detectChanges();
       },
     });
-  }
-
-  private reconstruirNotificaciones() {
-    const leidasIds = this.obtenerLeidas();
-    const items: (Notificacion & { _meta?: CitaBackend })[] = [];
-
-    // Consultas → tipo 'consulta'
-    for (const c of this.consultasRaw) {
-      const id = c.id * 10 + 2;
-      items.push({
-        id,
-        tipo: 'consulta',
-        titulo: `Nueva consulta de ${c.nombre}`,
-        descripcion: c.motivo?.slice(0, 100) || c.servicio?.titulo || 'Mensaje sin descripción',
-        tiempo: this.tiempoRelativo(c.createdAt),
-        leida: leidasIds.includes(id),
-        cliente: c.nombre, // 👈 NUEVO
-        _meta: c,
-      });
-    }
-
-    // Citas → tipo según estado
-    for (const c of this.agendaRaw) {
-      const id = c.id * 10 + 1;
-      let tipo: Notificacion['tipo'] = 'cita';
-      let titulo = `Nueva cita: ${c.nombre}`;
-      if (c.estado === 'confirmada') {
-        tipo = 'confirmacion';
-        titulo = `Cita confirmada: ${c.nombre}`;
-      } else if (c.estado === 'cancelada') {
-        tipo = 'cancelacion';
-        titulo = `Cita cancelada: ${c.nombre}`;
-      }
-      items.push({
-        id,
-        tipo,
-        titulo,
-        descripcion: `${c.hora || 'Sin hora'} · ${c.servicio?.titulo || 'Sin servicio'}`,
-        tiempo: this.tiempoRelativo(c.createdAt),
-        leida: leidasIds.includes(id),
-        cliente: c.nombre, // 👈 NUEVO
-        _meta: c,
-      });
-    }
-
-    // Ordenar por createdAt desc
-    items.sort((a, b) => {
-      const ta = new Date(a._meta?.createdAt || 0).getTime();
-      const tb = new Date(b._meta?.createdAt || 0).getTime();
-      return tb - ta;
-    });
-
-    this.notificaciones = items.slice(0, 10);
-  }
-
-  private obtenerLeidas(): number[] {
-    try {
-      const raw = localStorage.getItem(this.STORAGE_LEIDAS);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  private guardarLeidas(ids: number[]) {
-    try {
-      localStorage.setItem(this.STORAGE_LEIDAS, JSON.stringify(ids));
-    } catch {}
   }
 
   private mapearCita(c: CitaBackend): Cita {
@@ -1500,7 +1355,6 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.consultaSeleccionada ||
       this.mostrarRespuesta ||
       this.mostrarTodasConsultas ||
-      this.notificacionSeleccionada ||
       this.citaSeleccionada ||
       this.mostrarInfoGA
     );
@@ -1514,8 +1368,6 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.cerrarConsulta();
     } else if (this.mostrarInfoGA) {
       this.cerrarInfoGA();
-    } else if (this.notificacionSeleccionada) {
-      this.cerrarNotificacion();
     } else if (this.citaSeleccionada) {
       this.cerrarCita();
     } else if (this.mostrarConfirmarFinalizado) {
@@ -1535,117 +1387,6 @@ export class InicioComponent implements OnInit, OnDestroy {
     }
   }
 
-  filtroNotif: 'todas' | 'citas' | 'consultas' = 'todas';
-
-  get notificacionesFiltradas(): Notificacion[] {
-    if (this.filtroNotif === 'citas') {
-      return this.notificaciones.filter((n) =>
-        ['cita', 'confirmacion', 'cancelacion'].includes(n.tipo),
-      );
-    }
-    if (this.filtroNotif === 'consultas') {
-      return this.notificaciones.filter((n) => ['consulta', 'mensaje'].includes(n.tipo));
-    }
-    return this.notificaciones;
-  }
-
-  get conteoCitas(): number {
-    return this.notificaciones.filter((n) =>
-      ['cita', 'confirmacion', 'cancelacion'].includes(n.tipo),
-    ).length;
-  }
-
-  get conteoConsultas(): number {
-    return this.notificaciones.filter((n) => ['consulta', 'mensaje'].includes(n.tipo)).length;
-  }
-
-  iniciales(nombre?: string): string {
-    if (!nombre) return '?';
-    const partes = nombre.trim().split(/\s+/);
-    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
-    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
-  }
-
-  colorAvatar(nombre?: string): string {
-    if (!nombre) return 'bg-gray-400';
-    const colors = [
-      'bg-blue-500',
-      'bg-purple-500',
-      'bg-pink-500',
-      'bg-amber-500',
-      'bg-emerald-500',
-      'bg-indigo-500',
-      'bg-rose-500',
-      'bg-teal-500',
-      'bg-cyan-500',
-    ];
-    let hash = 0;
-    for (let i = 0; i < nombre.length; i++) {
-      hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return colors[Math.abs(hash) % colors.length];
-  }
-
-  marcarLeida(notif: Notificacion, event: Event) {
-    event.stopPropagation(); // 👈 evita abrir el detalle
-    if (notif.leida) return;
-    notif.leida = true;
-    const leidas = this.obtenerLeidas();
-    if (!leidas.includes(notif.id)) {
-      leidas.push(notif.id);
-      this.guardarLeidas(leidas);
-    }
-  }
-
-  /** Acción rápida según el tipo de notificación */
-  accionRapida(notif: Notificacion, event: Event) {
-    event.stopPropagation();
-    const meta = (notif as any)._meta as CitaBackend | undefined;
-
-    // Marcar como leída automáticamente
-    if (!notif.leida) {
-      notif.leida = true;
-      const leidas = this.obtenerLeidas();
-      if (!leidas.includes(notif.id)) {
-        leidas.push(notif.id);
-        this.guardarLeidas(leidas);
-      }
-    }
-
-    // Acción según tipo
-    if (notif.tipo === 'consulta' || notif.tipo === 'mensaje') {
-      // Buscar la consulta y abrir modal de respuesta directo
-      const consulta = this.consultasPendientes.find((c) => c.id === meta?.id);
-      if (consulta) {
-        this.responderConsulta(consulta);
-      } else {
-        // Si ya no está pendiente, abrir la lista completa
-        this.abrirTodasConsultas();
-      }
-    } else if (notif.tipo === 'cita') {
-      // Para citas nuevas: ir al calendario para confirmar
-      this.irACitas();
-    } else if (notif.tipo === 'confirmacion' || notif.tipo === 'cancelacion') {
-      // Ya están confirmadas o canceladas: ver en calendario
-      this.irACitas();
-    }
-  }
-
-  /** Texto del botón según tipo */
-  textoAccionRapida(tipo: Notificacion['tipo']): string {
-    if (tipo === 'consulta' || tipo === 'mensaje') return 'Responder';
-    if (tipo === 'cita') return 'Ver en calendario';
-    if (tipo === 'confirmacion') return 'Ver detalles';
-    if (tipo === 'cancelacion') return 'Ver detalles';
-    return 'Ver';
-  }
-
-  /** Color del botón según tipo */
-  colorAccionRapida(tipo: Notificacion['tipo']): string {
-    if (tipo === 'consulta' || tipo === 'mensaje') return 'bg-green-500 hover:bg-green-600';
-    if (tipo === 'cita') return 'bg-blue-500 hover:bg-blue-600';
-    return 'bg-gray-500 hover:bg-gray-600';
-  }
   get etiquetaPeriodo(): string {
     const map: Record<typeof this.periodoActivo, string> = {
       hoy: 'Hoy',
