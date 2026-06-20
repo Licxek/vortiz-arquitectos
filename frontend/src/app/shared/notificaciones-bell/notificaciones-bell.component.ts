@@ -160,4 +160,9 @@ export class NotificacionesBellComponent implements OnInit, OnDestroy {
     if (vis === 'cita') return 'bg-blue-500 hover:bg-blue-600';
     return 'bg-gray-500 hover:bg-gray-600';
   }
+
+  borrar(notif: Notificacion, event: Event) {
+    event.stopPropagation();
+    this.notifService.borrar(notif.id);
+  }
 }

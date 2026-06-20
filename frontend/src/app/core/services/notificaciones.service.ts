@@ -69,6 +69,12 @@ export class NotificacionesService {
       if (guardado) this.idsLeidos = new Set(JSON.parse(guardado));
     } catch {}
 
+    // Cargar IDs borrados del storage
+    try {
+      const borrados = localStorage.getItem(this.STORAGE_BORRADAS);
+      if (borrados) this.idsBorrados = new Set(JSON.parse(borrados));
+    } catch {}
+
     // Cargar preferencia de sonido
     this.sonidoActivado.set(localStorage.getItem(this.STORAGE_SONIDO) === '1');
 
@@ -100,7 +106,7 @@ export class NotificacionesService {
         const todas: Notificacion[] = [
           ...this.citasANotificaciones(citas),
           ...this.consultasANotificaciones(consultas),
-        ];
+        ].filter((n) => !this.idsBorrados.has(n.id));
 
         // Ordenar por fecha desc
         todas.sort((a, b) => b.fecha.getTime() - a.fecha.getTime());
@@ -273,5 +279,20 @@ export class NotificacionesService {
     if (horas < 24) return `Hace ${horas}h`;
     if (dias === 1) return 'Ayer';
     return `Hace ${dias}d`;
+  }
+
+  private readonly STORAGE_BORRADAS = 'vortiz_notif_borradas';
+  private idsBorrados = new Set<string>();
+
+  borrar(id: string) {
+    this.idsBorrados.add(id);
+    this.guardarBorrados();
+    this._notificaciones.update((arr) => arr.filter((n) => n.id !== id));
+  }
+
+  private guardarBorrados() {
+    try {
+      localStorage.setItem(this.STORAGE_BORRADAS, JSON.stringify(Array.from(this.idsBorrados)));
+    } catch {}
   }
 }

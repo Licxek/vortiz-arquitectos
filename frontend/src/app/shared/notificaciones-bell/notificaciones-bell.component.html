@@ -31,14 +31,17 @@
   <!-- Dropdown -->
   <div
     *ngIf="abierto"
-    class="absolute right-0 top-full mt-2 w-[420px] max-w-[95vw] bg-white text-gray-800 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/5 z-50 animate-[fadeIn_0.15s_ease-out]"
+    class="absolute right-0 top-full mt-2 w-[420px] max-w-[95vw] bg-white text-gray-800 rounded-2xl shadow-[0_20px_50px_-12px_rgba(10,31,61,0.35)] overflow-hidden ring-1 ring-slate-200 z-50 animate-[fadeIn_0.15s_ease-out]"
   >
     <!-- Header con título y acciones -->
     <div
-      class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100"
+      class="relative flex items-center justify-between px-4 py-3 bg-gradient-to-br from-slate-50 to-slate-100 border-b border-slate-200"
     >
+      <!-- Línea de acento izquierda -->
+      <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#0a4d7a]"></div>
+
       <h2
-        class="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-2"
+        class="text-xs font-semibold uppercase tracking-wider text-slate-700 flex items-center gap-2 ml-1"
       >
         Actividad reciente
         <span
@@ -51,10 +54,16 @@
       <div class="flex items-center gap-1">
         <button
           (click)="refrescar($event)"
-          class="p-1.5 rounded-md hover:bg-gray-200 transition-colors"
+          class="p-1.5 rounded-md hover:bg-white transition-colors"
           title="Actualizar"
         >
-          <svg class="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <svg
+            class="w-3.5 h-3.5 text-slate-600"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -64,7 +73,7 @@
         </button>
         <button
           (click)="toggleSonido($event)"
-          class="p-1.5 rounded-md hover:bg-gray-200 transition-colors"
+          class="p-1.5 rounded-md hover:bg-white transition-colors"
           [title]="notifService.sonidoActivado() ? 'Silenciar' : 'Activar sonido'"
         >
           <svg
@@ -83,7 +92,7 @@
           </svg>
           <svg
             *ngIf="!notifService.sonidoActivado()"
-            class="w-3.5 h-3.5 text-gray-400"
+            class="w-3.5 h-3.5 text-slate-400"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -99,7 +108,7 @@
         <button
           (click)="marcarTodas($event)"
           [disabled]="notifService.noLeidas() === 0"
-          class="text-xs text-[#0a4d7a] hover:underline font-medium cursor-pointer disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed ml-1"
+          class="text-xs text-[#0a4d7a] hover:underline font-medium cursor-pointer disabled:text-slate-400 disabled:no-underline disabled:cursor-not-allowed ml-1"
         >
           Marcar leídas
         </button>
@@ -181,10 +190,7 @@
         [class.bg-blue-50/40]="!notif.leida"
       >
         <!-- Borde lateral si no leída -->
-        <div
-          *ngIf="!notif.leida"
-          class="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-500"
-        ></div>
+        <div *ngIf="!notif.leida" class="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-500"></div>
 
         <!-- Avatar con iniciales + badge -->
         <div class="relative shrink-0">
@@ -197,7 +203,9 @@
           <div
             class="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg ring-2 ring-white flex items-center justify-center"
             [class.bg-blue-500]="tipoVisual(notif.tipo) === 'cita'"
-            [class.bg-green-500]="tipoVisual(notif.tipo) === 'consulta' || tipoVisual(notif.tipo) === 'confirmacion'"
+            [class.bg-green-500]="
+              tipoVisual(notif.tipo) === 'consulta' || tipoVisual(notif.tipo) === 'confirmacion'
+            "
             [class.bg-red-500]="tipoVisual(notif.tipo) === 'cancelacion'"
             [class.bg-orange-500]="tipoVisual(notif.tipo) === 'mensaje'"
           >
@@ -285,6 +293,21 @@
               title="Marcar como leída"
             >
               ✓ Leída
+            </button>
+            <button
+              (click)="borrar(notif, $event)"
+              class="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-all"
+              title="Borrar notificación"
+            >
+              <svg
+                class="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
           <p class="text-xs text-gray-500 line-clamp-2 mt-0.5">{{ notif.subtitulo }}</p>
