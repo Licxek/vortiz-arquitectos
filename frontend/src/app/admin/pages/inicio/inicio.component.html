@@ -179,43 +179,63 @@
     </div>
   </div>
 
-  <!-- Hero — sin card -->
-  <div class="flex items-start justify-between gap-4 pb-5 border-b border-gray-200">
-    <div class="min-w-0 flex-1">
-      <p class="text-[10px] uppercase tracking-widest text-[#0a4d7a] font-bold mb-1.5">
-        {{ saludo }}
-      </p>
-      <h1
-        class="text-2xl md:text-3xl font-bold text-gray-900 leading-tight flex items-center gap-2 mb-2"
-      >
-        {{ nombreCorto }}
-        <span class="text-xl opacity-70">👋</span>
-      </h1>
-      <p class="text-sm text-gray-600 leading-relaxed">{{ resumenDelDia }}</p>
+  <!-- Hero editorial -->
+  <div class="relative bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <!-- Línea de acento izquierda -->
+    <div class="absolute top-0 left-0 w-1 h-full bg-[#0a4d7a]"></div>
 
-      <div class="flex items-center gap-1.5 mt-2 text-[10px] text-gray-500">
-        <span
-          class="w-1.5 h-1.5 rounded-full"
-          [class.bg-green-500]="ultimaActualizacionTexto === 'En vivo'"
-          [class.animate-pulse]="ultimaActualizacionTexto === 'En vivo'"
-          [class.bg-gray-300]="ultimaActualizacionTexto !== 'En vivo'"
-        ></span>
-        <span class="font-semibold uppercase tracking-wider">
-          {{ ultimaActualizacionTexto }}
-        </span>
-      </div>
+    <!-- Etiqueta arquitectónica (solo desktop) -->
+    <div
+      class="hidden md:flex absolute top-5 right-6 items-center gap-2 text-[10px] font-mono tracking-[0.2em] text-gray-300"
+    >
+      <span class="w-3 h-px bg-gray-300"></span>
+      <span>INICIO · 01</span>
     </div>
 
-    <div
-      class="hidden sm:flex flex-col items-center bg-gray-50 rounded-xl p-3 shrink-0 min-w-[72px] border border-gray-100"
-    >
-      <p class="text-[9px] uppercase tracking-widest text-[#0a4d7a] font-bold">
-        {{ mesActualCorto }}
-      </p>
-      <p class="text-3xl font-bold leading-none my-0.5 text-gray-900">{{ diaActual }}</p>
-      <p class="text-[9px] uppercase tracking-widest text-gray-500 font-semibold">
-        {{ diaSemanaCorto }}
-      </p>
+    <div class="p-6 md:p-8 pl-7 md:pl-10 flex flex-col sm:flex-row items-start gap-5 sm:gap-7">
+      <!-- Bloque de fecha -->
+      <div class="flex sm:flex-col items-center sm:items-center gap-3 sm:gap-0 shrink-0 sm:pt-1">
+        <p class="text-[10px] uppercase tracking-[0.2em] text-[#0a4d7a] font-bold sm:mb-1">
+          {{ mesActualCorto }}
+        </p>
+        <p class="text-4xl sm:text-5xl font-bold leading-none text-gray-900">{{ diaActual }}</p>
+        <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-semibold sm:mt-1">
+          {{ diaSemanaCorto }}
+        </p>
+      </div>
+
+      <!-- Línea divisoria vertical (desktop) -->
+      <div class="hidden sm:block w-px bg-gray-100 self-stretch"></div>
+
+      <!-- Contenido principal -->
+      <div class="flex-1 min-w-0">
+        <p class="text-[10px] uppercase tracking-[0.2em] text-[#0a4d7a] font-bold mb-2">
+          {{ saludo }}
+        </p>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
+          {{ nombreCorto }}<span class="text-[#0a4d7a]">.</span>
+        </h1>
+
+        <!-- Línea decorativa -->
+        <div class="w-10 h-px bg-gray-200 my-4"></div>
+
+        <p class="text-sm text-gray-600 leading-relaxed max-w-xl">{{ resumenDelDia }}</p>
+
+        <!-- Pill "En vivo" -->
+        <div
+          class="inline-flex items-center gap-2 mt-4 bg-gray-50 border border-gray-100 rounded-full px-3 py-1.5"
+        >
+          <span
+            class="w-1.5 h-1.5 rounded-full"
+            [class.bg-green-500]="ultimaActualizacionTexto === 'En vivo'"
+            [class.animate-pulse]="ultimaActualizacionTexto === 'En vivo'"
+            [class.bg-gray-400]="ultimaActualizacionTexto !== 'En vivo'"
+          ></span>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-gray-700">
+            {{ ultimaActualizacionTexto }}
+          </span>
+        </div>
+      </div>
     </div>
   </div>
   <!-- Banner de acción sugerida -->
