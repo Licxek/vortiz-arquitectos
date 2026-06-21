@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   inject,
   ChangeDetectorRef,
   HostListener,
@@ -50,7 +51,7 @@ type Filtro = 'todas' | 'pendientes' | 'urgentes' | 'resueltas' | 'archivadas';
   imports: [CommonModule, FormsModule, RouterLink, SkeletonComponent],
   templateUrl: './consultas.component.html',
 })
-export class ConsultasComponent implements OnInit {
+export class ConsultasComponent implements OnInit, OnDestroy {
   private inicioService = inject(InicioService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -73,9 +74,17 @@ export class ConsultasComponent implements OnInit {
   private idsArchivados = new Set<number>();
   private chats: { [consultaId: number]: MensajeChat[] } = {};
 
+  private bodyOverflowAnterior = '';
+
   ngOnInit() {
+    this.bodyOverflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     this.cargarLocalStorage();
     this.cargar();
+  }
+
+  ngOnDestroy() {
+    document.body.style.overflow = this.bodyOverflowAnterior;
   }
 
   private cargarLocalStorage() {
