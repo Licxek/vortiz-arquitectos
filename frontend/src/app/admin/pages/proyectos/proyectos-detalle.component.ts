@@ -1,16 +1,8 @@
-import {
-  Component,
-  OnInit,
-  inject,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import {
-  InicioService,
-  ProyectoBackend,
-} from '../../../core/services/inicio.service';
+import { InicioService, ProyectoBackend } from '../../../core/services/inicio.service';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { ImageCarouselComponent } from '../../../shared/image-carousel/image-carousel.component';
 import { ImageGalleryInputComponent } from '../../../shared/image-gallery-input/image-gallery-input.component';
@@ -167,7 +159,9 @@ export class ProyectosDetalleComponent implements OnInit {
     // Si tienes endpoint eliminar:
     // this.inicioService.eliminarProyecto(this.proyecto.id).subscribe(...)
     // Por ahora marcar como pendiente al backend
-    alert('Función de eliminar pendiente de implementar en backend. Pásame el endpoint cuando lo tengas.');
+    alert(
+      'Función de eliminar pendiente de implementar en backend. Pásame el endpoint cuando lo tengas.',
+    );
     this.eliminando = false;
     this.mostrarConfirmarEliminar = false;
   }
@@ -201,11 +195,7 @@ export class ProyectosDetalleComponent implements OnInit {
 
   private mapearProyecto(p: ProyectoBackend): Proyecto {
     const imagenes =
-      Array.isArray(p.imagenes) && p.imagenes.length > 0
-        ? p.imagenes
-        : p.imagen
-          ? [p.imagen]
-          : [];
+      Array.isArray(p.imagenes) && p.imagenes.length > 0 ? p.imagenes : p.imagen ? [p.imagen] : [];
     return {
       id: p.id,
       nombre: p.nombre,
@@ -266,9 +256,31 @@ export class ProyectosDetalleComponent implements OnInit {
     const d = new Date(iso.includes('T') ? iso : iso + 'T00:00:00');
     if (isNaN(d.getTime())) return '—';
     const meses = [
-      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
     ];
     return `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  sugerirProgreso() {
+    if (!this.proyecto) return;
+    const sugerencias: Record<string, number> = {
+      'En diseño': 15,
+      'En proceso': 50,
+      'En revisión': 85,
+      Pausado: this.proyecto.progreso || 25,
+      Finalizado: 100,
+    };
+    this.proyecto.progreso = sugerencias[this.proyecto.estado] ?? 0;
   }
 }
