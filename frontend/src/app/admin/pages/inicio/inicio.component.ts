@@ -10,7 +10,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { InicioService, CitaBackend, ProyectoBackend } from '../../../core/services/inicio.service'; // ⚠️ ajusta la ruta
-import { ImageUploadComponent } from '../../../shared/image-upload/image-upload.component';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import {
   ReportesService,
@@ -31,7 +30,6 @@ import { AuthService } from '../../../core/services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { AnalyticsService } from '../../../core/services/analytics.service';
 import { ImageCarouselComponent } from '../../../shared/image-carousel/image-carousel.component';
-import { ImageGalleryInputComponent } from '../../../shared/image-gallery-input/image-gallery-input.component';
 
 // ============ INTERFACES ============
 interface StatCard {
@@ -110,14 +108,12 @@ interface Tip {
   imports: [
     CommonModule,
     FormsModule,
-    ImageUploadComponent,
     SkeletonComponent,
     GraficaDashboardComponent,
     HeatmapHorariosComponent,
     FunnelConversionComponent,
     RouterLink,
     ImageCarouselComponent, // 👈 AGREGAR
-    ImageGalleryInputComponent,
   ],
   templateUrl: './inicio.component.html',
 })
@@ -153,7 +149,6 @@ export class InicioComponent implements OnInit, OnDestroy {
   cargandoAgenda = true;
   cargandoConsultas = true;
   cargandoProyectosRecientes = true;
-  cargandoTodosProyectos = false; // arranca false; se activa al abrir el modal
 
   private readonly placeholderImagen =
     'data:image/svg+xml;utf8,' +
@@ -170,16 +165,6 @@ export class InicioComponent implements OnInit, OnDestroy {
     );
 
   // ============ PROYECTOS: DATOS ============
-  estadosProyecto = ['En diseño', 'En proceso', 'En revisión', 'Pausado', 'Finalizado'];
-  categoriasProyecto = [
-    'corporativo',
-    'industrial',
-    'comercial',
-    'residencial',
-    'infraestructura',
-    'institucional',
-  ];
-
   // En la clase:
   tips: Tip[] = [
     {
@@ -207,45 +192,6 @@ export class InicioComponent implements OnInit, OnDestroy {
   private intervaloTips: any;
 
   proyectosRecientes: Proyecto[] = [];
-  todosLosProyectos: Proyecto[] = [];
-
-  proyectosPublicos: any[] = [];
-
-  // ============ PROYECTOS: FILTROS Y ESTADOS ============
-  busquedaProyectos = '';
-  filtroEstadoProyectos:
-    | 'todos'
-    | 'En diseño'
-    | 'En proceso'
-    | 'En revisión'
-    | 'Pausado'
-    | 'Finalizado' = 'todos';
-
-  proyectoSeleccionado: Proyecto | null = null;
-  mostrarTodosProyectos = false;
-  mostrarEditarProyecto = false;
-  proyectoEditando: Proyecto | null = null;
-  estadoOriginal = '';
-  esNuevoProyecto = false;
-  mostrarConfirmarFinalizado = false;
-  mostrarAgregarPublico = false;
-
-  formPublico = {
-    titulo: '',
-    descripcion: '',
-    imagenUrl: '', // logo
-    categoria: 'residencial',
-    imagenesPublicas: [] as string[], // 👈 NUEVO
-    videoUrl: '', // 👈 NUEVO
-    cliente: '', // 👈 NUEVO
-  };
-
-  // Navegación entre modales de proyectos
-  volverATodos = false;
-  volverATodosDesdeEditar = false;
-  volverADetalleDesdeEditar = false;
-  volverATodosDespuesDeDetalle = false;
-  proyectoDetalleAnterior: Proyecto | null = null;
 
   // ============ AGENDA: CITAS DE HOY ============
   citasHoy: Cita[] = [];
@@ -341,23 +287,6 @@ export class InicioComponent implements OnInit, OnDestroy {
 
   get totalConsultasPendientes(): number {
     return this.consultasPendientes.length;
-  }
-
-  get proyectosFiltrados() {
-    let resultado = this.todosLosProyectos;
-    if (this.filtroEstadoProyectos !== 'todos') {
-      resultado = resultado.filter((p) => p.estado === this.filtroEstadoProyectos);
-    }
-    if (this.busquedaProyectos.trim()) {
-      const q = this.busquedaProyectos.toLowerCase();
-      resultado = resultado.filter(
-        (p) =>
-          p.nombre.toLowerCase().includes(q) ||
-          p.cliente?.toLowerCase().includes(q) ||
-          p.ubicacion?.toLowerCase().includes(q),
-      );
-    }
-    return resultado;
   }
 
   // ============ NAVEGACIÓN GENERAL ============
@@ -557,221 +486,20 @@ export class InicioComponent implements OnInit, OnDestroy {
 
   // ============ PROYECTOS: DETALLE ============
   abrirProyecto(proyecto: Proyecto) {
-    this.proyectoSeleccionado = proyecto;
+    this.router.navigate(['/admin/proyectos', proyecto.id]);
   }
 
-  abrirProyectoDesdeTodos(proyecto: Proyecto) {
-    this.proyectoSeleccionado = proyecto;
-    this.mostrarTodosProyectos = false;
-    this.volverATodos = true;
-  }
-
-  cerrarProyecto() {
-    this.proyectoSeleccionado = null;
-    if (this.volverATodos) {
-      this.mostrarTodosProyectos = true;
-      this.volverATodos = false;
-    }
-  }
 
   // ============ PROYECTOS: VER TODOS ============
   abrirTodosProyectos() {
-    this.mostrarTodosProyectos = true;
-    this.cargarTodosProyectos(); // 👈 nuevo
-  }
-
-  cerrarTodosProyectos() {
-    this.mostrarTodosProyectos = false;
+    this.router.navigate(['/admin/proyectos']);
   }
 
   // ============ PROYECTOS: NUEVO Y EDITAR ============
   nuevoProyecto() {
-    this.proyectoEditando = {
-      id: 0, // se asigna al crear
-      nombre: '',
-      estado: 'En diseño',
-      fecha: '',
-      imagen: '',
-      imagenes: [],
-      cliente: '',
-      ubicacion: '',
-      superficie: '',
-      descripcion: '',
-      fechaEntrega: '',
-      progreso: 0,
-    };
-    this.estadoOriginal = '';
-    this.esNuevoProyecto = true;
-    this.mostrarEditarProyecto = true;
+    this.router.navigate(['/admin/proyectos', 'nuevo']);
   }
 
-  abrirNuevoDesdeTodos() {
-    this.mostrarTodosProyectos = false;
-    this.volverATodosDesdeEditar = true;
-    this.nuevoProyecto();
-  }
-
-  abrirEditarProyecto(proyecto: Proyecto) {
-    this.proyectoDetalleAnterior = { ...proyecto };
-    this.proyectoEditando = { ...proyecto };
-    this.estadoOriginal = proyecto.estado;
-    this.esNuevoProyecto = false;
-    this.mostrarEditarProyecto = true;
-    this.volverADetalleDesdeEditar = true;
-    this.volverATodosDespuesDeDetalle = this.volverATodos;
-    this.volverATodos = false;
-    this.proyectoSeleccionado = null;
-  }
-
-  abrirEditarProyectoDesdeTodos(proyecto: Proyecto) {
-    this.proyectoEditando = { ...proyecto };
-    this.estadoOriginal = proyecto.estado;
-    this.esNuevoProyecto = false;
-    this.mostrarEditarProyecto = true;
-    this.mostrarTodosProyectos = false;
-    this.volverATodosDesdeEditar = true;
-  }
-
-  cerrarEditarProyecto() {
-    this.mostrarEditarProyecto = false;
-    this.proyectoEditando = null;
-    this.esNuevoProyecto = false;
-
-    if (this.volverATodosDesdeEditar) {
-      this.mostrarTodosProyectos = true;
-      this.volverATodosDesdeEditar = false;
-      this.proyectoDetalleAnterior = null;
-      this.volverATodosDespuesDeDetalle = false;
-    } else if (this.volverADetalleDesdeEditar && this.proyectoDetalleAnterior) {
-      this.proyectoSeleccionado = this.proyectoDetalleAnterior;
-      this.volverADetalleDesdeEditar = false;
-      this.proyectoDetalleAnterior = null;
-      this.volverATodos = this.volverATodosDespuesDeDetalle;
-      this.volverATodosDespuesDeDetalle = false;
-    }
-  }
-
-  guardarEdicion() {
-    if (!this.proyectoEditando) return;
-    const payload = this.armarPayloadBackend(this.proyectoEditando);
-
-    if (this.esNuevoProyecto) {
-      this.inicioService.crearProyecto(payload).subscribe({
-        next: (creado) => {
-          const mapeado = this.mapearProyecto(creado);
-          this.todosLosProyectos.unshift(mapeado);
-          this.proyectosRecientes.unshift(mapeado);
-          if (this.proyectosRecientes.length > 4) this.proyectosRecientes.pop();
-          this.cerrarEditarProyecto();
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          console.error('Error al crear proyecto', err);
-          this.cdr.detectChanges();
-        },
-      });
-    } else {
-      this.inicioService.actualizarProyecto(this.proyectoEditando.id, payload).subscribe({
-        next: (actualizado) => {
-          const mapeado = this.mapearProyecto(actualizado);
-          this.actualizarEnArreglos(mapeado);
-
-          if (this.volverADetalleDesdeEditar) {
-            this.proyectoDetalleAnterior = mapeado;
-          }
-
-          // Si pasó a Finalizado, abrir modal de confirmación para publicar
-          if (mapeado.estado === 'Finalizado' && this.estadoOriginal !== 'Finalizado') {
-            this.proyectoEditando = mapeado;
-            this.mostrarConfirmarFinalizado = true;
-            this.volverATodosDesdeEditar = false;
-            this.volverADetalleDesdeEditar = false;
-            this.proyectoDetalleAnterior = null;
-          } else {
-            this.cerrarEditarProyecto();
-          }
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          console.error('Error al actualizar proyecto', err);
-          this.cdr.detectChanges();
-        },
-      });
-    }
-  }
-
-  // ============ PROYECTOS: FINALIZAR Y PUBLICAR ============
-  terminarProyecto(proyecto: Proyecto) {
-    this.inicioService
-      .actualizarProyecto(proyecto.id, { estado: 'finalizado', progreso: 100 })
-      .subscribe({
-        next: (actualizado) => {
-          const mapeado = this.mapearProyecto(actualizado);
-          this.actualizarEnArreglos(mapeado);
-
-          this.proyectoEditando = mapeado;
-          this.estadoOriginal = 'En proceso';
-          this.mostrarConfirmarFinalizado = true;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          console.error('Error al finalizar proyecto', err);
-          this.cdr.detectChanges();
-        },
-      });
-  }
-
-  confirmarFinalizado(agregarAPublico: boolean) {
-    this.mostrarConfirmarFinalizado = false;
-
-    if (agregarAPublico && this.proyectoEditando) {
-      this.formPublico = {
-        titulo: this.proyectoEditando.nombre,
-        descripcion: this.proyectoEditando.descripcion || '',
-        imagenUrl: '',
-        categoria: 'residencial',
-        imagenesPublicas: [...(this.proyectoEditando.imagenes || [])], // 👈 pre-llenar
-        videoUrl: '',
-        cliente: this.proyectoEditando.cliente || '', // 👈 pre-llenar
-      };
-      this.mostrarAgregarPublico = true;
-    } else {
-      this.cerrarEditarProyecto();
-    }
-  }
-
-  guardarProyectoPublico() {
-    if (!this.formPublico.titulo.trim() || !this.proyectoEditando) return;
-
-    const payload: Partial<ProyectoBackend> = {
-      nombre: this.formPublico.titulo.trim(),
-      descripcion: this.formPublico.descripcion.trim(),
-      logoUrl: this.formPublico.imagenUrl.trim(),
-      categoria: this.formPublico.categoria,
-      cliente: this.formPublico.cliente.trim(),
-      imagenesPublicas: this.formPublico.imagenesPublicas,
-      videoUrl: this.formPublico.videoUrl.trim(),
-      publicado: true,
-    };
-
-    this.inicioService.actualizarProyecto(this.proyectoEditando.id, payload).subscribe({
-      next: (actualizado) => {
-        const mapeado = this.mapearProyecto(actualizado);
-        this.actualizarEnArreglos(mapeado);
-        this.cerrarAgregarPublico();
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Error al publicar proyecto', err);
-        this.cdr.detectChanges();
-      },
-    });
-  }
-
-  cerrarAgregarPublico() {
-    this.mostrarAgregarPublico = false;
-    this.cerrarEditarProyecto();
-  }
 
   // ============ CONSULTAS: DETALLE ============
   abrirConsulta(consulta: ConsultaPendiente) {
@@ -1027,22 +755,6 @@ export class InicioComponent implements OnInit, OnDestroy {
     });
   }
 
-  private cargarTodosProyectos() {
-    this.cargandoTodosProyectos = true;
-    this.inicioService.obtenerProyectosAdmin().subscribe({
-      next: (lista) => {
-        this.todosLosProyectos = lista.map((p) => this.mapearProyecto(p));
-        this.cargandoTodosProyectos = false;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.todosLosProyectos = [];
-        this.cargandoTodosProyectos = false;
-        this.cdr.detectChanges();
-      },
-    });
-  }
-
   private mapearProyecto(p: ProyectoBackend): Proyecto {
     // Si llega array, usar array; si llega solo imagen single, convertir a array
     const imagenes =
@@ -1096,54 +808,6 @@ export class InicioComponent implements OnInit, OnDestroy {
     return `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
   }
 
-  etiquetaCategoria(cat: string): string {
-    const map: Record<string, string> = {
-      corporativo: 'Corporativo',
-      industrial: 'Industrial',
-      comercial: 'Comercial',
-      residencial: 'Residencial',
-      infraestructura: 'Infraestructura',
-      institucional: 'Institucional',
-    };
-    return map[cat] || cat;
-  }
-
-  private estadoBackend(label: string): string {
-    const map: Record<string, string> = {
-      'En diseño': 'en_diseno',
-      'En proceso': 'en_proceso',
-      'En revisión': 'en_revision',
-      Pausado: 'pausado',
-      Finalizado: 'finalizado',
-    };
-    return map[label] || 'en_diseno';
-  }
-
-  private armarPayloadBackend(p: Proyecto): Partial<ProyectoBackend> {
-    const imagenes = (p.imagenes || []).filter((x) => !!x && x.trim().length > 0);
-    return {
-      nombre: (p.nombre || '').trim(),
-      estado: this.estadoBackend(p.estado),
-      cliente: (p.cliente || '').trim(),
-      ubicacion: (p.ubicacion || '').trim(),
-      superficie: (p.superficie || '').trim(),
-      descripcion: (p.descripcion || '').trim(),
-      progreso: Number(p.progreso) || 0,
-      fechaInicio: (p as any).fechaInicio || null,
-      fechaEntrega: (p as any).fechaEntrega || null,
-      imagen: (p.imagen || '').trim(),
-      imagenes,
-    };
-  }
-
-  private actualizarEnArreglos(mapeado: Proyecto) {
-    const idx1 = this.todosLosProyectos.findIndex((p) => p.id === mapeado.id);
-    if (idx1 >= 0) this.todosLosProyectos[idx1] = mapeado;
-
-    const idx2 = this.proyectosRecientes.findIndex((p) => p.id === mapeado.id);
-    if (idx2 >= 0) this.proyectosRecientes[idx2] = mapeado;
-  }
-
   imagenDeProyecto(p: Proyecto): string {
     return p.imagen || this.placeholderImagen;
   }
@@ -1172,10 +836,7 @@ export class InicioComponent implements OnInit, OnDestroy {
   private aplicarParamsDeUrl() {
     const accion = this.route.snapshot.queryParamMap.get('accion');
     if (accion === 'nuevo-proyecto') {
-      setTimeout(() => {
-        this.nuevoProyecto(); // 👈 antes era abrirNuevoProyecto
-        this.cdr.detectChanges();
-      }, 400);
+      this.router.navigate(['/admin/proyectos', 'nuevo']);
     }
   }
   /** Banner inteligente: evalúa el estado actual y sugiere acciones prioritarias */
@@ -1347,11 +1008,6 @@ export class InicioComponent implements OnInit, OnDestroy {
 
   private hayModalAbierto(): boolean {
     return !!(
-      this.proyectoSeleccionado ||
-      this.mostrarTodosProyectos ||
-      this.mostrarEditarProyecto ||
-      this.mostrarConfirmarFinalizado ||
-      this.mostrarAgregarPublico ||
       this.consultaSeleccionada ||
       this.mostrarRespuesta ||
       this.mostrarTodasConsultas ||
@@ -1361,7 +1017,6 @@ export class InicioComponent implements OnInit, OnDestroy {
   }
 
   private cerrarModalActivo() {
-    // Cerrar en orden de prioridad: el más interno primero
     if (this.mostrarRespuesta) {
       this.cerrarRespuesta();
     } else if (this.consultaSeleccionada) {
@@ -1370,20 +1025,8 @@ export class InicioComponent implements OnInit, OnDestroy {
       this.cerrarInfoGA();
     } else if (this.citaSeleccionada) {
       this.cerrarCita();
-    } else if (this.mostrarConfirmarFinalizado) {
-      this.mostrarConfirmarFinalizado = false;
-    } else if (this.mostrarAgregarPublico) {
-      this.cerrarAgregarPublico();
-    } else if (this.mostrarEditarProyecto) {
-      this.cerrarEditarProyecto();
-    } else if (this.proyectoSeleccionado) {
-      this.cerrarProyecto();
     } else if (this.mostrarTodasConsultas) {
       this.cerrarTodasConsultas();
-    } else if (this.mostrarTodosProyectos) {
-      this.cerrarTodosProyectos();
-    } else if (this.mostrarInfoGA) {
-      this.cerrarInfoGA();
     }
   }
 

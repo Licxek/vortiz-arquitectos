@@ -781,118 +781,189 @@
     </div>
   </div>
 
-  <!-- DOS COLUMNAS: Proyectos Recientes + Actividad -->
-  <div
-    class="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fadeInUp"
-    style="animation-delay: 880ms"
-  >
-    <!-- Proyectos Recientes (2 columnas) -->
-    <div class="lg:col-span-2">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">
-          Proyectos Recientes
-        </h2>
-        <a
-          (click)="abrirTodosProyectos()"
-          class="text-xs text-[#0a4d7a] hover:underline font-medium cursor-pointer"
-          >Ver todos</a
+<!-- Proyectos Recientes -->
+<div class="animate-fadeInUp" style="animation-delay: 880ms">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">
+      Proyectos recientes
+    </h2>
+
+    <a  (click)="abrirTodosProyectos()"
+      class="text-xs text-[#0a4d7a] hover:underline font-medium cursor-pointer flex items-center gap-1"
+    >
+      Ver todos
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+      </svg>
+    </a>
+  </div>
+
+  <!-- Grid 1/2/3/4 cols -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <!-- Skeleton -->
+    <ng-container *ngIf="cargandoProyectosRecientes">
+      <div
+        *ngFor="let _ of [1, 2, 3, 4]"
+        class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+      >
+        <app-skeleton variant="rect" height="160px" />
+        <div class="p-4 space-y-2">
+          <app-skeleton variant="text" width="80%" />
+          <app-skeleton variant="text" width="60%" />
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Cards rediseñadas -->
+    <ng-container *ngIf="!cargandoProyectosRecientes">
+      <div
+        *ngFor="let proyecto of proyectosRecientes"
+        (click)="abrirProyecto(proyecto)"
+        class="group cursor-pointer bg-white rounded-2xl border border-gray-100 hover:border-[#0a4d7a]/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+      >
+        <!-- Imagen con overlay -->
+        <div
+          class="relative aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden"
         >
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- Skeleton -->
-        <ng-container *ngIf="cargandoProyectosRecientes">
+          <img
+            *ngIf="proyecto.imagen"
+            [src]="proyecto.imagen"
+            [alt]="proyecto.nombre"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
           <div
-            *ngFor="let _ of [1, 2, 3, 4]"
-            class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col"
+            *ngIf="!proyecto.imagen"
+            class="absolute inset-0 flex items-center justify-center"
           >
-            <app-skeleton variant="rect" height="160px" />
-            <div class="p-4 flex-1 space-y-3">
-              <app-skeleton variant="text" width="85%" />
-              <div class="flex items-center justify-between">
-                <app-skeleton variant="rect" width="80px" height="24px" />
-                <app-skeleton variant="text" width="60px" />
-              </div>
-              <app-skeleton variant="rect" height="32px" />
-            </div>
+            <svg
+              class="w-16 h-16 text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
           </div>
-        </ng-container>
-        <ng-container *ngIf="!cargandoProyectosRecientes">
+
+          <!-- Overlay gradient sutil -->
           <div
-            *ngFor="let proyecto of proyectosRecientes"
-            class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden group flex flex-col"
+            class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/5 group-hover:from-black/40 transition-colors"
+          ></div>
+
+          <!-- Estado badge -->
+          <span
+            class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-md backdrop-blur-sm"
+            [class.bg-blue-500/95]="proyecto.estado === 'En proceso'"
+            [class.text-white]="proyecto.estado !== 'Pausado'"
+            [class.bg-orange-500/95]="
+              proyecto.estado === 'En diseño' || proyecto.estado === 'En revisión'
+            "
+            [class.bg-green-500/95]="proyecto.estado === 'Finalizado'"
+            [class.bg-white/95]="proyecto.estado === 'Pausado'"
+            [class.text-gray-700]="proyecto.estado === 'Pausado'"
           >
-            <app-image-carousel
-              [imagenes]="imagenesDeProyecto(proyecto)"
-              [alt]="proyecto.nombre"
-              aspectRatio="wide"
-              (imageClick)="abrirProyecto(proyecto)"
-            ></app-image-carousel>
-            <div class="p-4 flex-1 flex flex-col">
-              <h3
-                class="text-sm font-semibold text-gray-900 truncate cursor-pointer"
-                (click)="abrirProyecto(proyecto)"
-              >
-                {{ proyecto.nombre }}
-              </h3>
-              <div class="flex items-center justify-between mt-2">
-                <span
-                  class="text-xs px-2 py-1 rounded-full font-medium"
-                  [class.bg-blue-50]="proyecto.estado === 'En proceso'"
-                  [class.text-blue-700]="proyecto.estado === 'En proceso'"
-                  [class.bg-orange-50]="
-                    proyecto.estado === 'En diseño' || proyecto.estado === 'En revisión'
-                  "
-                  [class.text-orange-700]="
-                    proyecto.estado === 'En diseño' || proyecto.estado === 'En revisión'
-                  "
-                  [class.bg-green-50]="proyecto.estado === 'Finalizado'"
-                  [class.text-green-700]="proyecto.estado === 'Finalizado'"
-                  [class.bg-gray-100]="proyecto.estado === 'Pausado'"
-                  [class.text-gray-700]="proyecto.estado === 'Pausado'"
-                >
-                  {{ proyecto.estado }}
-                </span>
-                <span class="text-xs text-gray-500">{{ proyecto.fecha }}</span>
-              </div>
+            {{ proyecto.estado }}
+          </span>
 
-              <button
-                *ngIf="proyecto.estado !== 'Finalizado'"
-                (click)="terminarProyecto(proyecto)"
-                class="mt-3 w-full px-3 py-1.5 text-xs font-semibold bg-green-50 hover:bg-green-500 hover:text-white text-green-700 rounded-lg transition-all flex items-center justify-center gap-1.5"
-              >
-                <svg
-                  class="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                Marcar como terminado
-              </button>
+          <!-- Fecha bottom-right -->
+          <span
+            class="absolute bottom-3 right-3 text-[10px] font-semibold text-white bg-black/40 backdrop-blur-sm px-2 py-1 rounded-md"
+          >
+            {{ proyecto.fecha }}
+          </span>
+        </div>
 
+        <!-- Info -->
+        <div class="p-4">
+          <h3
+            class="text-sm font-bold text-gray-900 truncate group-hover:text-[#0a4d7a] transition-colors leading-tight"
+          >
+            {{ proyecto.nombre }}
+          </h3>
+          <p class="text-xs text-gray-500 truncate mt-1 flex items-center gap-1.5">
+            <svg
+              class="w-3 h-3 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+            {{ proyecto.cliente || 'Sin cliente' }}
+          </p>
+
+          <!-- Mini barra de progreso -->
+          <div
+            *ngIf="
+              proyecto.progreso !== undefined &&
+              proyecto.progreso !== null &&
+              proyecto.progreso > 0
+            "
+            class="mt-3"
+          >
+            <div class="flex items-center justify-between text-[10px] mb-1">
+              <span class="font-semibold text-gray-500">Progreso</span>
+              <span class="font-bold text-[#0a4d7a]">{{ proyecto.progreso }}%</span>
+            </div>
+            <div class="h-1 bg-gray-100 rounded-full overflow-hidden">
               <div
-                *ngIf="proyecto.estado === 'Finalizado'"
-                class="mt-3 w-full px-3 py-1.5 text-xs font-semibold bg-green-100 text-green-700 rounded-lg flex items-center justify-center gap-1.5"
-              >
-                <svg
-                  class="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                Proyecto finalizado
-              </div>
+                class="h-full bg-gradient-to-r from-blue-400 to-[#0a4d7a] rounded-full transition-all"
+                [style.width.%]="proyecto.progreso"
+              ></div>
             </div>
           </div>
-        </ng-container>
+        </div>
       </div>
+    </ng-container>
+
+    <!-- Empty state si no hay proyectos -->
+    <div
+      *ngIf="!cargandoProyectosRecientes && proyectosRecientes.length === 0"
+      class="col-span-full bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center"
+    >
+      <div
+        class="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center"
+      >
+        <svg
+          class="w-8 h-8 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+          />
+        </svg>
+      </div>
+      <p class="text-sm font-semibold text-gray-800 mb-1">Aún no hay proyectos</p>
+      <p class="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed mb-4">
+        Crea el primer proyecto del estudio para empezar a gestionar tu cartera.
+      </p>
+      <button
+        (click)="nuevoProyecto()"
+        class="text-xs font-semibold text-white bg-[#0a4d7a] hover:bg-[#0a5d8f] px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-sm"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        Crear primer proyecto
+      </button>
     </div>
   </div>
+</div>
 
   <!-- DOS COLUMNAS: Consultas Pendientes + Agenda -->
   <div
@@ -1297,688 +1368,6 @@
         <p class="text-sm font-semibold text-gray-900">Nueva Página</p>
         <p class="text-xs text-gray-500 mt-0.5">Agregar al sitio</p>
       </button>
-    </div>
-  </div>
-
-  <!-- ============ MODAL: Detalle de proyecto ============ -->
-  <div
-    *ngIf="proyectoSeleccionado"
-    (click)="cerrarProyecto()"
-    class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
-  >
-    <div
-      (click)="$event.stopPropagation()"
-      class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-    >
-      <div class="relative">
-        <app-image-carousel
-          [imagenes]="imagenesDeProyecto(proyectoSeleccionado)"
-          [alt]="proyectoSeleccionado.nombre"
-          aspectRatio="wide"
-          [clickable]="false"
-        ></app-image-carousel>
-        <button
-          (click)="cerrarProyecto()"
-          class="absolute top-4 right-4 w-9 h-9 bg-white/90 hover:bg-white rounded-lg flex items-center justify-center shadow-md z-10"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <span
-          class="absolute top-4 left-4 px-3 py-1 bg-white/90 rounded-full text-xs font-semibold text-gray-800 z-10"
-        >
-          {{ proyectoSeleccionado.estado }}
-        </span>
-      </div>
-      <div class="p-6 space-y-5">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900">{{ proyectoSeleccionado.nombre }}</h2>
-          <p class="text-sm text-gray-500 mt-1">{{ proyectoSeleccionado.descripcion }}</p>
-        </div>
-
-        <div *ngIf="proyectoSeleccionado.progreso !== undefined">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-semibold uppercase tracking-wider text-gray-500"
-              >Progreso</span
-            >
-            <span class="text-sm font-bold text-[#0a4d7a]"
-              >{{ proyectoSeleccionado.progreso }}%</span
-            >
-          </div>
-          <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              class="h-full bg-gradient-to-r from-blue-400 to-[#0a4d7a] rounded-full"
-              [style.width.%]="proyectoSeleccionado.progreso"
-            ></div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Cliente</p>
-            <p class="text-sm font-medium text-gray-900">{{ proyectoSeleccionado.cliente }}</p>
-          </div>
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
-              Ubicación
-            </p>
-            <p class="text-sm font-medium text-gray-900">{{ proyectoSeleccionado.ubicacion }}</p>
-          </div>
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
-              Superficie
-            </p>
-            <p class="text-sm font-medium text-gray-900">{{ proyectoSeleccionado.superficie }}</p>
-          </div>
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
-              Fecha de entrega
-            </p>
-            <p class="text-sm font-medium text-gray-900">
-              {{ formatearFechaCorta(proyectoSeleccionado.fechaEntrega) }}
-            </p>
-          </div>
-        </div>
-
-        <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
-          <button
-            (click)="abrirEditarProyecto(proyectoSeleccionado)"
-            class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all"
-          >
-            Editar proyecto
-          </button>
-          <button
-            (click)="cerrarProyecto()"
-            class="flex-1 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
-          >
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ MODAL: Todos los proyectos ============ -->
-  <!-- MODAL: Todos los proyectos -->
-  <div
-    *ngIf="mostrarTodosProyectos"
-    (click)="cerrarTodosProyectos()"
-    class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
-  >
-    <div
-      (click)="$event.stopPropagation()"
-      class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
-    >
-      <!-- Header -->
-      <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 relative shrink-0">
-        <button
-          (click)="cerrarTodosProyectos()"
-          class="absolute top-4 right-4 w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <h2 class="text-2xl font-bold">Todos los Proyectos</h2>
-        <p class="text-sm text-gray-300 mt-1">
-          {{ todosLosProyectos.length }} proyectos en total ·
-          {{ proyectosPublicos.length }} publicados
-        </p>
-      </div>
-
-      <!-- Filtros y buscador -->
-      <div class="bg-gray-50 border-b border-gray-200 p-4 flex flex-col md:flex-row gap-3 shrink-0">
-        <div class="relative flex-1">
-          <svg
-            class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-            />
-          </svg>
-          <input
-            type="text"
-            [(ngModel)]="busquedaProyectos"
-            placeholder="Buscar por nombre, cliente o ubicación..."
-            class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] transition-all"
-          />
-        </div>
-        <select
-          [(ngModel)]="filtroEstadoProyectos"
-          class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] transition-all cursor-pointer"
-        >
-          <option value="todos">Todos los estados</option>
-          <option value="En diseño">En diseño</option>
-          <option value="En proceso">En proceso</option>
-          <option value="En revisión">En revisión</option>
-          <option value="Pausado">Pausado</option>
-          <option value="Finalizado">Finalizado</option>
-        </select>
-        <button
-          (click)="abrirNuevoDesdeTodos()"
-          class="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all whitespace-nowrap"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Nuevo proyecto
-        </button>
-      </div>
-
-      <!-- Lista -->
-      <div class="overflow-y-auto p-6">
-        <!-- Skeleton -->
-        <div
-          *ngIf="cargandoTodosProyectos"
-          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-        >
-          <div
-            *ngFor="let _ of [1, 2, 3, 4, 5, 6]"
-            class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
-          >
-            <app-skeleton variant="rect" height="180px" />
-            <div class="p-4 space-y-3">
-              <app-skeleton variant="text" width="75%" />
-              <app-skeleton variant="text" width="50%" />
-              <div class="flex items-center justify-between">
-                <app-skeleton variant="rect" width="80px" height="24px" />
-                <app-skeleton variant="rect" width="50px" height="24px" />
-              </div>
-              <app-skeleton variant="rect" height="32px" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Vacío real -->
-        <div
-          *ngIf="!cargandoTodosProyectos && proyectosFiltrados.length === 0"
-          class="text-center py-12"
-        >
-          <div
-            class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center"
-          >
-            <svg
-              class="w-10 h-10 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-          <p class="text-sm font-semibold text-gray-800 mb-1">
-            {{ busquedaProyectos.trim() ? 'Sin coincidencias' : 'No hay proyectos' }}
-          </p>
-          <p class="text-xs text-gray-500 max-w-xs mx-auto leading-relaxed mb-4">
-            <ng-container *ngIf="busquedaProyectos.trim(); else sinFiltro">
-              No se encontraron proyectos para
-              <strong class="text-gray-700">"{{ busquedaProyectos }}"</strong>. Intenta con otra
-              búsqueda.
-            </ng-container>
-            <ng-template #sinFiltro>
-              No tienes proyectos en este estado todavía. Crea uno nuevo para empezar.
-            </ng-template>
-          </p>
-          <button
-            *ngIf="!busquedaProyectos.trim()"
-            (click)="abrirNuevoDesdeTodos()"
-            class="text-xs font-semibold text-white bg-[#0a4d7a] hover:bg-[#0a5d8f] px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-sm"
-          >
-            <svg
-              class="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            Crear nuevo proyecto
-          </button>
-        </div>
-
-        <div
-          *ngIf="!cargandoTodosProyectos && proyectosFiltrados.length > 0"
-          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-        >
-          <div
-            *ngFor="let proyecto of proyectosFiltrados"
-            class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden group"
-          >
-            <div class="relative">
-              <app-image-carousel
-                [imagenes]="imagenesDeProyecto(proyecto)"
-                [alt]="proyecto.nombre"
-                aspectRatio="wide"
-                (imageClick)="abrirProyectoDesdeTodos(proyecto)"
-              ></app-image-carousel>
-              <span
-                *ngIf="proyecto.estado === 'Finalizado'"
-                class="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 bg-green-500 text-white rounded-full uppercase tracking-wider z-10"
-              >
-                Finalizado
-              </span>
-            </div>
-
-            <div class="p-4">
-              <h3 class="text-sm font-semibold text-gray-900 truncate">{{ proyecto.nombre }}</h3>
-              <p class="text-xs text-gray-500 truncate mt-0.5">{{ proyecto.cliente }}</p>
-              <div class="flex items-center justify-between mt-3">
-                <span
-                  class="text-xs px-2 py-1 rounded-full font-medium"
-                  [class.bg-blue-50]="proyecto.estado === 'En proceso'"
-                  [class.text-blue-700]="proyecto.estado === 'En proceso'"
-                  [class.bg-orange-50]="
-                    proyecto.estado === 'En diseño' || proyecto.estado === 'En revisión'
-                  "
-                  [class.text-orange-700]="
-                    proyecto.estado === 'En diseño' || proyecto.estado === 'En revisión'
-                  "
-                  [class.bg-green-50]="proyecto.estado === 'Finalizado'"
-                  [class.text-green-700]="proyecto.estado === 'Finalizado'"
-                  [class.bg-gray-100]="proyecto.estado === 'Pausado'"
-                  [class.text-gray-700]="proyecto.estado === 'Pausado'"
-                >
-                  {{ proyecto.estado }}
-                </span>
-                <button
-                  (click)="abrirEditarProyectoDesdeTodos(proyecto)"
-                  class="text-xs px-3 py-1 text-[#0a4d7a] hover:bg-blue-50 rounded-lg font-medium transition-colors"
-                >
-                  Editar
-                </button>
-              </div>
-
-              <button
-                *ngIf="proyecto.estado !== 'Finalizado'"
-                (click)="cerrarTodosProyectos(); terminarProyecto(proyecto)"
-                class="mt-3 w-full px-3 py-1.5 text-xs font-semibold bg-green-50 hover:bg-green-500 hover:text-white text-green-700 rounded-lg transition-all flex items-center justify-center gap-1.5"
-              >
-                <svg
-                  class="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                Marcar como terminado
-              </button>
-
-              <div
-                *ngIf="proyecto.estado === 'Finalizado'"
-                class="mt-3 w-full px-3 py-1.5 text-xs font-semibold bg-green-100 text-green-700 rounded-lg flex items-center justify-center gap-1.5"
-              >
-                <svg
-                  class="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                Proyecto finalizado
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Editar/Crear proyecto -->
-  <div
-    *ngIf="mostrarEditarProyecto && proyectoEditando"
-    (click)="cerrarEditarProyecto()"
-    class="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
-  >
-    <div
-      (click)="$event.stopPropagation()"
-      class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-    >
-      <div
-        class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl relative"
-      >
-        <button
-          (click)="cerrarEditarProyecto()"
-          class="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <h2 class="text-2xl font-bold">
-          {{ esNuevoProyecto ? 'Nuevo proyecto' : 'Editar proyecto' }}
-        </h2>
-        <p class="text-sm text-gray-300 mt-1">
-          {{
-            esNuevoProyecto
-              ? 'Crea un nuevo proyecto en el sistema'
-              : 'Modifica los datos del proyecto'
-          }}
-        </p>
-      </div>
-
-      <div class="p-6 space-y-4">
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-            >Nombre del proyecto</label
-          >
-          <input
-            type="text"
-            [(ngModel)]="proyectoEditando.nombre"
-            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
-          />
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-              >Cliente</label
-            >
-            <input
-              type="text"
-              [(ngModel)]="proyectoEditando.cliente"
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
-            />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-              >Ubicación</label
-            >
-            <input
-              type="text"
-              [(ngModel)]="proyectoEditando.ubicacion"
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
-            />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-              >Superficie</label
-            >
-            <input
-              type="text"
-              [(ngModel)]="proyectoEditando.superficie"
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
-            />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-              >Estado</label
-            >
-            <select
-              [(ngModel)]="proyectoEditando.estado"
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all cursor-pointer"
-            >
-              <option *ngFor="let estado of estadosProyecto" [value]="estado">{{ estado }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-              >Fecha de entrega</label
-            >
-            <input
-              type="date"
-              [(ngModel)]="proyectoEditando.fechaEntrega"
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
-            />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-              >Progreso (%)</label
-            >
-            <input
-              type="number"
-              min="0"
-              max="100"
-              [(ngModel)]="proyectoEditando.progreso"
-              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-            >Descripción</label
-          >
-          <textarea
-            [(ngModel)]="proyectoEditando.descripcion"
-            rows="3"
-            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"
-          ></textarea>
-        </div>
-
-        <div>
-          <app-image-gallery-input
-            label="Imágenes del proyecto"
-            [imagenes]="proyectoEditando.imagenes || []"
-            (imagenesChange)="proyectoEditando.imagenes = $event"
-            carpeta="proyectos"
-            aspectRatio="wide"
-            [maximo]="10"
-          ></app-image-gallery-input>
-        </div>
-
-        <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
-          <button
-            type="button"
-            (click)="guardarEdicion()"
-            class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all"
-          >
-            Guardar cambios
-          </button>
-          <button
-            type="button"
-            (click)="cerrarEditarProyecto()"
-            class="flex-1 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
-          >
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Confirmar Finalizado -->
-  <div
-    *ngIf="mostrarConfirmarFinalizado"
-    class="fixed inset-0 z-[110] bg-black/60 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
-  >
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-      <div
-        class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
-      >
-        <svg
-          class="w-8 h-8 text-green-600"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          viewBox="0 0 24 24"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-      </div>
-
-      <h3 class="text-xl font-bold text-gray-900 text-center mb-2">¡Proyecto finalizado!</h3>
-      <p class="text-sm text-gray-600 text-center mb-6">
-        ¿Quieres agregar este proyecto a la página pública de <strong>Proyectos</strong> para
-        mostrarlo en tu sitio web?
-      </p>
-
-      <div class="flex flex-col sm:flex-row gap-2">
-        <button
-          (click)="confirmarFinalizado(true)"
-          class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all"
-        >
-          Sí, agregar al sitio
-        </button>
-        <button
-          (click)="confirmarFinalizado(false)"
-          class="flex-1 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
-        >
-          Solo finalizar
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Agregar a Proyectos Públicos -->
-  <div
-    *ngIf="mostrarAgregarPublico"
-    class="fixed inset-0 z-[110] bg-black/60 flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
-  >
-    <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
-      <div class="bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white p-6 rounded-t-2xl">
-        <h2 class="text-2xl font-bold">Publicar proyecto</h2>
-        <p class="text-sm text-gray-300 mt-1">
-          Configura cómo aparecerá en tu página pública de Proyectos
-        </p>
-      </div>
-
-      <div class="p-6 space-y-4">
-        <app-image-upload
-          label="Imagen / Logo del proyecto"
-          [valor]="formPublico.imagenUrl || ''"
-          (valorChange)="formPublico.imagenUrl = $event"
-          carpeta="proyectos"
-          aspectRatio="wide"
-        ></app-image-upload>
-
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-            >Título público</label
-          >
-          <input
-            type="text"
-            [(ngModel)]="formPublico.titulo"
-            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
-          />
-          <p class="text-xs text-gray-500 mt-1.5">
-            Este es el nombre que verán los visitantes del sitio
-          </p>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-            >Categoría</label
-          >
-          <select
-            [(ngModel)]="formPublico.categoria"
-            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all cursor-pointer"
-          >
-            <option *ngFor="let cat of categoriasProyecto" [value]="cat">
-              {{ etiquetaCategoria(cat) }}
-            </option>
-          </select>
-        </div>
-        <!-- Cliente (nuevo) -->
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
-            Cliente <span class="text-gray-400 font-normal normal-case">(opcional)</span>
-          </label>
-          <input
-            type="text"
-            [(ngModel)]="formPublico.cliente"
-            placeholder="Nombre del cliente"
-            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
-          />
-        </div>
-
-        <!-- Imágenes del showcase -->
-        <div>
-          <app-image-gallery-input
-            label="Imágenes del showcase público"
-            hint="Pre-llenadas con las imágenes del proyecto. Edita libremente para curar lo que verá el cliente."
-            [imagenes]="formPublico.imagenesPublicas"
-            (imagenesChange)="formPublico.imagenesPublicas = $event"
-            carpeta="proyectos"
-            aspectRatio="wide"
-            [maximo]="12"
-          ></app-image-gallery-input>
-        </div>
-
-        <!-- Video opcional -->
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
-            Video del proyecto <span class="text-gray-400 font-normal normal-case">(opcional)</span>
-          </label>
-          <input
-            type="text"
-            [(ngModel)]="formPublico.videoUrl"
-            placeholder="https://www.youtube.com/watch?v=... o https://vimeo.com/..."
-            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
-          />
-          <p class="text-xs text-gray-500 mt-1.5">
-            💡 Pega el link de YouTube o Vimeo si el proyecto tiene video
-          </p>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-            >Descripción</label
-          >
-          <textarea
-            [(ngModel)]="formPublico.descripcion"
-            rows="4"
-            placeholder="Describe el proyecto para que aparezca en tu portafolio público..."
-            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"
-          ></textarea>
-        </div>
-
-        <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
-          <button
-            (click)="guardarProyectoPublico()"
-            [disabled]="!formPublico.titulo.trim()"
-            class="flex-1 px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            Publicar en sitio
-          </button>
-          <button
-            (click)="cerrarAgregarPublico()"
-            class="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
-          >
-            Cancelar
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 
