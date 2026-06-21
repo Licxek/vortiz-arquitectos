@@ -15,14 +15,12 @@ import {
   ReportesService,
   HeatmapData,
   HeatmapSerie,
-  FunnelData,
 } from '../../../core/services/reportes.service';
 import {
   GraficaDashboardComponent,
   PuntoGrafica,
 } from '../../../shared/grafica-dashboard/grafica-dashboard.component';
 import { HeatmapHorariosComponent } from '../../../shared/heatmap-horarios/heatmap-horarios.component';
-import { FunnelConversionComponent } from '../../../shared/funnel-conversion/funnel-conversion.component';
 import { RouterLink } from '@angular/router';
 import { ActivatedRoute, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -111,7 +109,6 @@ interface Tip {
     SkeletonComponent,
     GraficaDashboardComponent,
     HeatmapHorariosComponent,
-    FunnelConversionComponent,
     RouterLink,
     ImageCarouselComponent, // 👈 AGREGAR
   ],
@@ -218,8 +215,6 @@ export class InicioComponent implements OnInit, OnDestroy {
   heatmapHorarios: HeatmapSerie[] = [];
   heatmapInsights: HeatmapData['insights'] | null = null;
   cargandoHeatmap = true;
-  funnelData: FunnelData | null = null;
-  cargandoFunnel = true;
 
   cargandoCitasPorMes = true;
   cargandoCategorias = true;
@@ -384,7 +379,6 @@ export class InicioComponent implements OnInit, OnDestroy {
     this.cargarActividadSemanal();
     this.cargarVisitasPorMes();
     this.cargarHeatmapHorarios();
-    this.cargarFunnelConversion();
   }
 
   private cargarHeatmapHorarios() {
@@ -714,21 +708,6 @@ export class InicioComponent implements OnInit, OnDestroy {
     if (p.imagenes && p.imagenes.length > 0) return p.imagenes;
     if (p.imagen) return [p.imagen];
     return [];
-  }
-  private cargarFunnelConversion() {
-    this.cargandoFunnel = true;
-    this.reportesService.obtenerFunnelConversion().subscribe({
-      next: (data) => {
-        this.funnelData = data;
-        this.cargandoFunnel = false;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.funnelData = null;
-        this.cargandoFunnel = false;
-        this.cdr.detectChanges();
-      },
-    });
   }
 
   private aplicarParamsDeUrl() {
