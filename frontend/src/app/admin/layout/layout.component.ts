@@ -36,6 +36,7 @@ export class AdminLayoutComponent implements OnInit {
     { label: 'Proyectos', icon: 'folder', path: '/admin/proyectos' },
     { label: 'Perfil', icon: 'user', path: '/admin/perfil' },
     { label: 'Citas', icon: 'calendar', path: '/admin/citas' },
+    { label: 'Consultas', icon: 'message', path: '/admin/consultas' },
     { label: 'Reportes', icon: 'history', path: '/admin/reportes' },
   ];
 

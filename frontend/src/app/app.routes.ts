@@ -74,6 +74,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'consultas',
+        loadComponent: () =>
+          import('./admin/pages/consultas/consultas.component').then((m) => m.ConsultasComponent),
+      },
+      {
         path: 'configuracion',
         loadComponent: () =>
           import('./admin/pages/configuracion/configuracion.component').then(
