@@ -648,68 +648,113 @@
         ></app-grafica-dashboard>
       </div>
     </div>
-    <!-- Heatmap de horarios populares (Fase 4) -->
-    <div class="mt-10">
+    <!-- Análisis y tendencias (Heatmap + Funnel) -->
+    <div class="mt-6">
       <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-        Cuándo prefieren agendar
+        Análisis y tendencias
       </h2>
-      <div class="animate-fadeInUp" style="animation-delay: 640ms">
-        <app-heatmap-horarios
-          titulo="Horarios populares"
-          subtitulo="Distribución de citas por día y hora (últimos 30 días)"
-          [data]="heatmapHorarios"
-          [cargando]="cargandoHeatmap"
-        ></app-heatmap-horarios>
-      </div>
-      <!-- Insights del heatmap -->
-      <div
-        *ngIf="!cargandoHeatmap && heatmapInsights && heatmapInsights.totalCitas > 0"
-        class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 animate-fadeInUp"
-        style="animation-delay: 720ms"
-      >
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
-            🗓️ Día más popular
-          </p>
-          <p class="text-2xl font-bold text-gray-900">{{ heatmapInsights.mejorDia.dia }}</p>
-          <p class="text-xs text-gray-500 mt-1">
-            {{ heatmapInsights.mejorDia.valor }} citas en total
-          </p>
+
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <!-- Heatmap + Insights compactos -->
+        <div class="animate-fadeInUp" style="animation-delay: 640ms">
+          <app-heatmap-horarios
+            titulo="Horarios populares"
+            subtitulo="Cuándo prefieren agendar (últimos 30 días)"
+            [data]="heatmapHorarios"
+            [cargando]="cargandoHeatmap"
+          ></app-heatmap-horarios>
+
+          <!-- Insights compactos en fila -->
+          <div
+            *ngIf="!cargandoHeatmap && heatmapInsights && heatmapInsights.totalCitas > 0"
+            class="grid grid-cols-3 gap-2 mt-3"
+          >
+            <div class="bg-white rounded-xl px-3 py-2.5 shadow-sm border border-gray-100">
+              <div class="flex items-center gap-1.5 mb-1">
+                <svg
+                  class="w-3 h-3 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <p class="text-[9px] font-bold uppercase tracking-wider text-gray-400">
+                  Día popular
+                </p>
+              </div>
+              <p class="text-sm font-bold text-gray-900 truncate">
+                {{ heatmapInsights.mejorDia.dia }}
+              </p>
+              <p class="text-[10px] text-gray-500">{{ heatmapInsights.mejorDia.valor }} citas</p>
+            </div>
+
+            <div class="bg-white rounded-xl px-3 py-2.5 shadow-sm border border-gray-100">
+              <div class="flex items-center gap-1.5 mb-1">
+                <svg
+                  class="w-3 h-3 text-orange-600"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <p class="text-[9px] font-bold uppercase tracking-wider text-gray-400">
+                  Hora popular
+                </p>
+              </div>
+              <p class="text-sm font-bold text-gray-900 truncate">
+                {{ heatmapInsights.mejorHora.hora }}
+              </p>
+              <p class="text-[10px] text-gray-500">{{ heatmapInsights.mejorHora.valor }} citas</p>
+            </div>
+
+            <div class="bg-white rounded-xl px-3 py-2.5 shadow-sm border border-gray-100">
+              <div class="flex items-center gap-1.5 mb-1">
+                <svg
+                  class="w-3 h-3 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
+                <p class="text-[9px] font-bold uppercase tracking-wider text-gray-400">
+                  Mejor combo
+                </p>
+              </div>
+              <p class="text-sm font-bold text-gray-900 truncate">
+                {{ heatmapInsights.mejorCombo.dia }} {{ heatmapInsights.mejorCombo.hora }}
+              </p>
+              <p class="text-[10px] text-gray-500">{{ heatmapInsights.mejorCombo.valor }} citas</p>
+            </div>
+          </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
-            ⏰ Hora más solicitada
-          </p>
-          <p class="text-2xl font-bold text-gray-900">{{ heatmapInsights.mejorHora.hora }}</p>
-          <p class="text-xs text-gray-500 mt-1">
-            {{ heatmapInsights.mejorHora.valor }} citas en este horario
-          </p>
+        <!-- Funnel -->
+        <div class="animate-fadeInUp" style="animation-delay: 720ms">
+          <app-funnel-conversion
+            titulo="Etapas de tus citas"
+            subtitulo="De agendadas a completadas (últimos 30 días)"
+            [data]="funnelData"
+            [cargando]="cargandoFunnel"
+          ></app-funnel-conversion>
         </div>
-
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
-            🎯 Mejor combinación
-          </p>
-          <p class="text-2xl font-bold text-gray-900">
-            {{ heatmapInsights.mejorCombo.dia }} {{ heatmapInsights.mejorCombo.hora }}
-          </p>
-          <p class="text-xs text-gray-500 mt-1">{{ heatmapInsights.mejorCombo.valor }} citas</p>
-        </div>
-      </div>
-    </div>
-    <!-- Funnel de Conversión (Fase 4) -->
-    <div class="mt-10">
-      <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-        Cómo avanzan tus citas
-      </h2>
-      <div class="animate-fadeInUp" style="animation-delay: 800ms">
-        <app-funnel-conversion
-          titulo="Etapas de tus citas"
-          subtitulo="Cuántas se agendan, cuántas se confirman y cuántas se completan (últimos 30 días)"
-          [data]="funnelData"
-          [cargando]="cargandoFunnel"
-        ></app-funnel-conversion>
       </div>
     </div>
   </div>
