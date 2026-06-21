@@ -86,27 +86,49 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    setTimeout(() => this.ajustarAlturaCard(), 50);
+    setTimeout(() => {
+      this.bloquearScrollsAncestros();
+      this.ajustarAlturaCard();
+    }, 50);
     window.addEventListener('resize', this.ajustarAlturaCard);
+  }
+
+  private bloquearScrollsAncestros() {
+    if (!this.cardContainer?.nativeElement) return;
+    let parent = this.cardContainer.nativeElement.parentElement;
+    while (parent && parent !== document.body) {
+      const computed = window.getComputedStyle(parent);
+      if (computed.overflowY === 'auto' || computed.overflowY === 'scroll') {
+        this.elementosScrollBloqueados.push({
+          el: parent,
+          originalOverflow: parent.style.overflowY,
+        });
+        parent.style.overflowY = 'hidden';
+      }
+      parent = parent.parentElement;
+    }
   }
 
   private ajustarAlturaCard = () => {
     if (!this.cardContainer?.nativeElement) return;
     const el = this.cardContainer.nativeElement;
-    // Reset temporal para medir el top real sin influencia de altura previa
     el.style.height = 'auto';
-    const top = el.getBoundingClientRect().top;
-    const viewport = window.innerHeight;
-    const espacio = viewport - top - 16; // 16px de buffer al final
-    if (espacio > 400) {
-      el.style.height = `${espacio}px`;
-    } else {
-      el.style.height = '400px'; // mínimo razonable
-    }
+    requestAnimationFrame(() => {
+      if (!this.cardContainer?.nativeElement) return;
+      const el2 = this.cardContainer.nativeElement;
+      const top = el2.getBoundingClientRect().top;
+      const viewport = window.innerHeight;
+      const espacio = viewport - top - 24;
+      el2.style.height = `${Math.max(espacio, 400)}px`;
+    });
   };
 
   ngOnDestroy() {
     document.body.style.overflow = this.bodyOverflowAnterior;
+    this.elementosScrollBloqueados.forEach(({ el, originalOverflow }) => {
+      el.style.overflowY = originalOverflow;
+    });
+    this.elementosScrollBloqueados = [];
     window.removeEventListener('resize', this.ajustarAlturaCard);
   }
 
@@ -482,4 +504,5 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
 
   enviando = false;
 
+  private elementosScrollBloqueados: { el: HTMLElement; originalOverflow: string }[] = [];
 }
