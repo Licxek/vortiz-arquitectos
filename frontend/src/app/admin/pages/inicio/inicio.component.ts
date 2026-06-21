@@ -198,16 +198,8 @@ export class InicioComponent implements OnInit, OnDestroy {
   consultasPendientes: ConsultaPendiente[] = [];
   // ============ NOTIFICACIONES ============
 
-  // ============ CONSULTAS: DATOS Y ESTADOS ============
-
-  consultaSeleccionada: ConsultaPendiente | null = null;
-  mostrarRespuesta = false;
-  mostrarTodasConsultas = false;
-  respuestaTexto = '';
-
   // Navegación entre modales de consultas
   volverATodasDesdeConsulta = false;
-  volverATodasDesdeRespuesta = false;
   volverADetalleDesdeRespuesta = false;
   volverATodasDespuesDeRespuesta = false;
 
@@ -489,7 +481,6 @@ export class InicioComponent implements OnInit, OnDestroy {
     this.router.navigate(['/admin/proyectos', proyecto.id]);
   }
 
-
   // ============ PROYECTOS: VER TODOS ============
   abrirTodosProyectos() {
     this.router.navigate(['/admin/proyectos']);
@@ -500,102 +491,9 @@ export class InicioComponent implements OnInit, OnDestroy {
     this.router.navigate(['/admin/proyectos', 'nuevo']);
   }
 
-
-  // ============ CONSULTAS: DETALLE ============
-  abrirConsulta(consulta: ConsultaPendiente) {
-    this.consultaSeleccionada = consulta;
-  }
-
-  abrirConsultaDesdeTodas(consulta: ConsultaPendiente) {
-    this.consultaSeleccionada = consulta;
-    this.mostrarTodasConsultas = false;
-    this.volverATodasDesdeConsulta = true;
-  }
-
-  cerrarConsulta() {
-    this.consultaSeleccionada = null;
-    if (this.volverATodasDesdeConsulta) {
-      this.mostrarTodasConsultas = true;
-      this.volverATodasDesdeConsulta = false;
-    }
-  }
-
   // ============ CONSULTAS: VER TODAS ============
   abrirTodasConsultas() {
-    this.mostrarTodasConsultas = true;
-  }
-
-  cerrarTodasConsultas() {
-    this.mostrarTodasConsultas = false;
-  }
-
-  // ============ CONSULTAS: RESPONDER ============
-  responderConsulta(consulta: ConsultaPendiente) {
-    this.consultaSeleccionada = consulta;
-    this.mostrarRespuesta = true;
-    this.respuestaTexto = '';
-
-    // Limpiar todos los flags porque viene del dashboard (sin contexto previo)
-    this.volverADetalleDesdeRespuesta = false;
-    this.volverATodasDesdeRespuesta = false;
-    this.volverATodasDespuesDeRespuesta = false;
-    this.volverATodasDesdeConsulta = false;
-  }
-
-  responderDesdeDetalle() {
-    if (!this.consultaSeleccionada) return;
-    this.mostrarRespuesta = true;
-    this.respuestaTexto = '';
-    this.volverADetalleDesdeRespuesta = true;
-    this.volverATodasDespuesDeRespuesta = this.volverATodasDesdeConsulta;
-    this.volverATodasDesdeConsulta = false;
-  }
-
-  responderConsultaDesdeTodas(consulta: ConsultaPendiente) {
-    this.consultaSeleccionada = consulta;
-    this.mostrarRespuesta = true;
-    this.respuestaTexto = '';
-    this.mostrarTodasConsultas = false;
-    this.volverATodasDesdeRespuesta = true;
-  }
-
-  enviarRespuesta() {
-    if (!this.respuestaTexto.trim()) return;
-
-    this.consultasPendientes = this.consultasPendientes.filter(
-      (c) => c.id !== this.consultaSeleccionada?.id,
-    );
-
-    const reabrirTodas = this.volverATodasDesdeRespuesta || this.volverATodasDespuesDeRespuesta;
-
-    this.mostrarRespuesta = false;
-    this.consultaSeleccionada = null;
-    this.respuestaTexto = '';
-    this.volverADetalleDesdeRespuesta = false;
-    this.volverATodasDesdeRespuesta = false;
-    this.volverATodasDesdeConsulta = false;
-    this.volverATodasDespuesDeRespuesta = false;
-
-    if (reabrirTodas) {
-      this.mostrarTodasConsultas = true;
-    }
-  }
-
-  cerrarRespuesta() {
-    this.mostrarRespuesta = false;
-    this.respuestaTexto = '';
-
-    if (this.volverATodasDesdeRespuesta) {
-      this.consultaSeleccionada = null;
-      this.mostrarTodasConsultas = true;
-      this.volverATodasDesdeRespuesta = false;
-    } else if (this.volverADetalleDesdeRespuesta) {
-      this.volverADetalleDesdeRespuesta = false;
-      this.volverATodasDesdeConsulta = this.volverATodasDespuesDeRespuesta;
-      this.volverATodasDespuesDeRespuesta = false;
-    } else {
-      this.consultaSeleccionada = null;
-    }
+    this.router.navigate(['/admin/consultas']);
   }
 
   // ============ AGENDA: DETALLE DE CITA ============
@@ -1007,26 +905,14 @@ export class InicioComponent implements OnInit, OnDestroy {
   }
 
   private hayModalAbierto(): boolean {
-    return !!(
-      this.consultaSeleccionada ||
-      this.mostrarRespuesta ||
-      this.mostrarTodasConsultas ||
-      this.citaSeleccionada ||
-      this.mostrarInfoGA
-    );
+    return !!(this.citaSeleccionada || this.mostrarInfoGA);
   }
 
   private cerrarModalActivo() {
-    if (this.mostrarRespuesta) {
-      this.cerrarRespuesta();
-    } else if (this.consultaSeleccionada) {
-      this.cerrarConsulta();
-    } else if (this.mostrarInfoGA) {
+    if (this.mostrarInfoGA) {
       this.cerrarInfoGA();
     } else if (this.citaSeleccionada) {
       this.cerrarCita();
-    } else if (this.mostrarTodasConsultas) {
-      this.cerrarTodasConsultas();
     }
   }
 

@@ -190,7 +190,7 @@ export class NotificacionesService {
           detalle: conServicio ? `Servicio: ${c.servicio?.titulo || 'Sin nombre'}` : undefined,
           fecha: new Date(c.createdAt || c.fecha || Date.now()),
           leida: this.idsLeidos.has(id),
-          ruta: '/admin/citas', // En Fase 4 será /admin/consultas
+          ruta: '/admin/consultas', // En Fase 4 será /admin/consultas
           meta: {
             consultaId: c.id,
             cliente: c.nombre,
