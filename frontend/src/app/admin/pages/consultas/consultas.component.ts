@@ -2,6 +2,7 @@ import {
   Component,
   OnInit,
   OnDestroy,
+  AfterViewInit,
   inject,
   ChangeDetectorRef,
   HostListener,
@@ -51,12 +52,13 @@ type Filtro = 'todas' | 'pendientes' | 'urgentes' | 'resueltas' | 'archivadas';
   imports: [CommonModule, FormsModule, RouterLink, SkeletonComponent],
   templateUrl: './consultas.component.html',
 })
-export class ConsultasComponent implements OnInit, OnDestroy {
+export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
   private inicioService = inject(InicioService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
   @ViewChild('chatContainer') chatContainer?: ElementRef<HTMLDivElement>;
+  @ViewChild('cardContainer') cardContainer?: ElementRef<HTMLDivElement>;
 
   consultas: Consulta[] = [];
   consultaSeleccionada: Consulta | null = null;
@@ -83,8 +85,29 @@ export class ConsultasComponent implements OnInit, OnDestroy {
     this.cargar();
   }
 
+  ngAfterViewInit() {
+    setTimeout(() => this.ajustarAlturaCard(), 50);
+    window.addEventListener('resize', this.ajustarAlturaCard);
+  }
+
+  private ajustarAlturaCard = () => {
+    if (!this.cardContainer?.nativeElement) return;
+    const el = this.cardContainer.nativeElement;
+    // Reset temporal para medir el top real sin influencia de altura previa
+    el.style.height = 'auto';
+    const top = el.getBoundingClientRect().top;
+    const viewport = window.innerHeight;
+    const espacio = viewport - top - 16; // 16px de buffer al final
+    if (espacio > 400) {
+      el.style.height = `${espacio}px`;
+    } else {
+      el.style.height = '400px'; // mínimo razonable
+    }
+  };
+
   ngOnDestroy() {
     document.body.style.overflow = this.bodyOverflowAnterior;
+    window.removeEventListener('resize', this.ajustarAlturaCard);
   }
 
   private cargarLocalStorage() {
@@ -458,4 +481,5 @@ export class ConsultasComponent implements OnInit, OnDestroy {
   }
 
   enviando = false;
+
 }
