@@ -102,4 +102,53 @@ export class MailService implements OnModuleInit {
   estaConfigurado(): boolean {
     return this.transporter !== null;
   }
+
+  async enviarRespuestaConsulta(opciones: {
+    destinatario: string;
+    nombreCliente: string;
+    mensajeOriginal: string;
+    respuesta: string;
+    servicio?: string;
+  }) {
+    const {
+      destinatario,
+      nombreCliente,
+      mensajeOriginal,
+      respuesta,
+      servicio,
+    } = opciones;
+
+    const html = `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f9fafb;">
+      <div style="background: linear-gradient(135deg, #0a4d7a 0%, #0a1f3d 100%); color: white; padding: 30px 20px; text-align: center;">
+        <h1 style="margin: 0; font-size: 24px; letter-spacing: 1px;">Vortiz Arquitectos</h1>
+        <p style="margin: 8px 0 0; font-size: 13px; opacity: 0.85;">Respuesta a tu consulta</p>
+      </div>
+      <div style="background: white; padding: 30px 25px;">
+        <p style="font-size: 16px; color: #111827; margin: 0 0 12px;">Hola ${nombreCliente},</p>
+        <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin: 0 0 20px;">
+          Gracias por contactarnos. Aquí tienes nuestra respuesta a tu consulta:
+        </p>
+        ${
+          servicio
+            ? `<p style="font-size: 13px; color: #6b7280; margin: 0 0 16px;"><strong style="color: #0a4d7a;">Servicio:</strong> ${servicio}</p>`
+            : ''
+        }
+        <div style="background: #f0f7fc; border-left: 4px solid #0a4d7a; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+          <p style="font-size: 14px; color: #1f2937; line-height: 1.7; margin: 0; white-space: pre-line;">${respuesta}</p>
+        </div>
+        <p style="font-size: 12px; color: #9ca3af; margin: 24px 0 4px;"><strong>Tu consulta original:</strong></p>
+        <p style="font-size: 12px; color: #9ca3af; font-style: italic; line-height: 1.5; margin: 0; padding: 10px; background: #f9fafb; border-radius: 4px;">
+          ${mensajeOriginal}
+        </p>
+      </div>
+      <div style="background: #0a1f3d; color: white; padding: 18px 20px; text-align: center; font-size: 11px;">
+        <p style="margin: 0 0 4px; opacity: 0.9;">Vortiz Arquitectos · Diseñamos espacios que viven contigo</p>
+        <p style="margin: 0; opacity: 0.7;">Si tienes más preguntas, responde a este correo.</p>
+      </div>
+    </div>
+  `;
+
+    await this.enviar(destinatario, 'Respuesta de Vortiz Arquitectos', html);
+  }
 }

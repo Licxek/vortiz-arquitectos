@@ -410,4 +410,24 @@ export class CitasService {
     });
     return citas.map((c) => c.hora);
   }
+
+  async responderConsulta(id: number, mensaje: string) {
+    const consulta = await this.repo.findOne({
+      where: { id },
+      relations: ['servicio'],
+    });
+    if (!consulta) {
+      throw new NotFoundException('Consulta no encontrada');
+    }
+
+    await this.mailService.enviarRespuestaConsulta({
+      destinatario: consulta.correo,
+      nombreCliente: consulta.nombre,
+      mensajeOriginal: consulta.motivo || '',
+      respuesta: mensaje,
+      servicio: consulta.servicio?.titulo,
+    });
+
+    return { success: true, mensaje: 'Respuesta enviada correctamente' };
+  }
 }

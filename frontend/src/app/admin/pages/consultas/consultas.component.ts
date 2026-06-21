@@ -182,31 +182,50 @@ export class ConsultasComponent implements OnInit {
     this.consultaSeleccionada = null;
   }
 
-  enviarPorEmail() {
+  enviarRespuesta() {
+    if (!this.consultaSeleccionada || !this.respuestaTexto.trim() || this.enviando) return;
+
     const texto = this.respuestaTexto.trim();
-    if (texto) {
-      this.guardarMensajeAdmin('email', texto);
-      this.respuestaTexto = '';
-    }
-    this.abrirEmail(texto);
-    this.scrollAlFondo();
+    const consultaId = this.consultaSeleccionada.id;
+
+    this.enviando = true;
+    this.inicioService.responderConsulta(consultaId, texto).subscribe({
+      next: () => {
+        this.guardarMensajeAdmin('email', texto);
+        this.respuestaTexto = '';
+        this.enviando = false;
+        this.scrollAlFondo();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error enviando respuesta:', err);
+        alert(
+          'No se pudo enviar el mensaje. Verifica tu conexión o que el backend tenga el endpoint configurado.',
+        );
+        this.enviando = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   enviarPorWhatsApp() {
+    if (!this.consultaSeleccionada) return;
+    const c = this.consultaSeleccionada;
+    const tel = (c.telefono || '').replace(/\D/g, '');
+    if (!tel) {
+      alert('Esta consulta no tiene teléfono registrado.');
+      return;
+    }
     const texto = this.respuestaTexto.trim();
     if (texto) {
       this.guardarMensajeAdmin('whatsapp', texto);
       this.respuestaTexto = '';
     }
-    this.abrirWhatsApp(texto);
-    this.scrollAlFondo();
-  }
-
-  guardarSolamente() {
-    const texto = this.respuestaTexto.trim();
-    if (!texto) return;
-    this.guardarMensajeAdmin('guardado', texto);
-    this.respuestaTexto = '';
+    const mensaje = encodeURIComponent(
+      texto ||
+        `Hola ${c.nombre.split(' ')[0]}, te contacto de Vortiz Arquitectos en respuesta a tu consulta.`,
+    );
+    window.open(`https://wa.me/${tel}?text=${mensaje}`, '_blank');
     this.scrollAlFondo();
   }
 
@@ -227,17 +246,6 @@ export class ConsultasComponent implements OnInit {
     try {
       localStorage.setItem(this.STORAGE_CHAT, JSON.stringify(this.chats));
     } catch {}
-  }
-
-  private abrirEmail(texto: string) {
-    if (!this.consultaSeleccionada) return;
-    const c = this.consultaSeleccionada;
-    const asunto = encodeURIComponent(`Re: ${c.asunto}`);
-    const cuerpo = encodeURIComponent(
-      texto ||
-        `Hola ${c.nombre.split(' ')[0]},\n\nGracias por contactarnos en Vortiz Arquitectos.\n\n`,
-    );
-    window.location.href = `mailto:${c.correo}?subject=${asunto}&body=${cuerpo}`;
   }
 
   private abrirWhatsApp(texto: string) {
@@ -439,4 +447,6 @@ export class ConsultasComponent implements OnInit {
     target.style.height = 'auto';
     target.style.height = target.scrollHeight + 'px';
   }
+
+  enviando = false;
 }
