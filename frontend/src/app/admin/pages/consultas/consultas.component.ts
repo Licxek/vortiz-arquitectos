@@ -4,14 +4,13 @@ import {
   inject,
   ChangeDetectorRef,
   HostListener,
+  ViewChild,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import {
-  InicioService,
-  CitaBackend,
-} from '../../../core/services/inicio.service';
+import { InicioService, CitaBackend } from '../../../core/services/inicio.service';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 
 interface Consulta {
@@ -36,6 +35,13 @@ interface Consulta {
   colorAvatar: string;
 }
 
+interface MensajeChat {
+  texto: string;
+  fecha: string;
+  autor: 'cliente' | 'admin';
+  metodo?: 'email' | 'whatsapp' | 'guardado';
+}
+
 type Filtro = 'todas' | 'pendientes' | 'urgentes' | 'resueltas' | 'archivadas';
 
 @Component({
@@ -49,6 +55,8 @@ export class ConsultasComponent implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
+  @ViewChild('chatContainer') chatContainer?: ElementRef<HTMLDivElement>;
+
   consultas: Consulta[] = [];
   consultaSeleccionada: Consulta | null = null;
 
@@ -56,11 +64,14 @@ export class ConsultasComponent implements OnInit {
   busqueda = '';
   filtro: Filtro = 'pendientes';
   respuestaTexto = '';
+  numeroCopiado = false;
 
   private readonly STORAGE_RESUELTAS = 'vortiz_consultas_resueltas';
   private readonly STORAGE_ARCHIVADAS = 'vortiz_consultas_archivadas';
+  private readonly STORAGE_CHAT = 'vortiz_consultas_chat';
   private idsResueltos = new Set<number>();
   private idsArchivados = new Set<number>();
+  private chats: { [consultaId: number]: MensajeChat[] } = {};
 
   ngOnInit() {
     this.cargarLocalStorage();
@@ -73,6 +84,8 @@ export class ConsultasComponent implements OnInit {
       if (r) this.idsResueltos = new Set(JSON.parse(r));
       const a = localStorage.getItem(this.STORAGE_ARCHIVADAS);
       if (a) this.idsArchivados = new Set(JSON.parse(a));
+      const c = localStorage.getItem(this.STORAGE_CHAT);
+      if (c) this.chats = JSON.parse(c);
     } catch {}
   }
 
@@ -95,7 +108,6 @@ export class ConsultasComponent implements OnInit {
   get consultasFiltradas(): Consulta[] {
     let resultado = this.consultas;
 
-    // Filtro principal
     if (this.filtro === 'pendientes') {
       resultado = resultado.filter((c) => !c.resuelta && !c.archivada);
     } else if (this.filtro === 'urgentes') {
@@ -106,7 +118,6 @@ export class ConsultasComponent implements OnInit {
       resultado = resultado.filter((c) => c.archivada);
     }
 
-    // Búsqueda
     if (this.busqueda.trim()) {
       const q = this.busqueda.toLowerCase();
       resultado = resultado.filter(
@@ -118,7 +129,6 @@ export class ConsultasComponent implements OnInit {
       );
     }
 
-    // Ordenar: urgentes primero, luego por fecha de creación desc
     resultado = [...resultado].sort((a, b) => {
       if (a.urgente !== b.urgente) return a.urgente ? -1 : 1;
       return new Date(b.fechaCreacionRaw).getTime() - new Date(a.fechaCreacionRaw).getTime();
@@ -143,9 +153,24 @@ export class ConsultasComponent implements OnInit {
     return this.consultas.filter((c) => c.archivada).length;
   }
 
+  get mensajesChat(): MensajeChat[] {
+    if (!this.consultaSeleccionada) return [];
+    const c = this.consultaSeleccionada;
+    const respuestasAdmin = this.chats[c.id] || [];
+    const mensajeCliente: MensajeChat = {
+      texto: c.mensaje,
+      fecha: c.fechaCreacionRaw,
+      autor: 'cliente',
+    };
+    return [mensajeCliente, ...respuestasAdmin].sort(
+      (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime(),
+    );
+  }
+
   seleccionar(c: Consulta) {
     this.consultaSeleccionada = c;
     this.respuestaTexto = '';
+    this.scrollAlFondo();
   }
 
   volverALista() {
@@ -155,6 +180,96 @@ export class ConsultasComponent implements OnInit {
   cambiarFiltro(f: Filtro) {
     this.filtro = f;
     this.consultaSeleccionada = null;
+  }
+
+  enviarPorEmail() {
+    const texto = this.respuestaTexto.trim();
+    if (texto) {
+      this.guardarMensajeAdmin('email', texto);
+      this.respuestaTexto = '';
+    }
+    this.abrirEmail(texto);
+    this.scrollAlFondo();
+  }
+
+  enviarPorWhatsApp() {
+    const texto = this.respuestaTexto.trim();
+    if (texto) {
+      this.guardarMensajeAdmin('whatsapp', texto);
+      this.respuestaTexto = '';
+    }
+    this.abrirWhatsApp(texto);
+    this.scrollAlFondo();
+  }
+
+  guardarSolamente() {
+    const texto = this.respuestaTexto.trim();
+    if (!texto) return;
+    this.guardarMensajeAdmin('guardado', texto);
+    this.respuestaTexto = '';
+    this.scrollAlFondo();
+  }
+
+  private guardarMensajeAdmin(metodo: 'email' | 'whatsapp' | 'guardado', texto: string) {
+    if (!this.consultaSeleccionada) return;
+    const id = this.consultaSeleccionada.id;
+    if (!this.chats[id]) this.chats[id] = [];
+    this.chats[id].push({
+      texto,
+      fecha: new Date().toISOString(),
+      autor: 'admin',
+      metodo,
+    });
+    this.guardarChats();
+  }
+
+  private guardarChats() {
+    try {
+      localStorage.setItem(this.STORAGE_CHAT, JSON.stringify(this.chats));
+    } catch {}
+  }
+
+  private abrirEmail(texto: string) {
+    if (!this.consultaSeleccionada) return;
+    const c = this.consultaSeleccionada;
+    const asunto = encodeURIComponent(`Re: ${c.asunto}`);
+    const cuerpo = encodeURIComponent(
+      texto ||
+        `Hola ${c.nombre.split(' ')[0]},\n\nGracias por contactarnos en Vortiz Arquitectos.\n\n`,
+    );
+    window.location.href = `mailto:${c.correo}?subject=${asunto}&body=${cuerpo}`;
+  }
+
+  private abrirWhatsApp(texto: string) {
+    if (!this.consultaSeleccionada) return;
+    const c = this.consultaSeleccionada;
+    const tel = (c.telefono || '').replace(/\D/g, '');
+    if (!tel) {
+      alert('Esta consulta no tiene teléfono registrado.');
+      return;
+    }
+    const mensaje = encodeURIComponent(
+      texto ||
+        `Hola ${c.nombre.split(' ')[0]}, te contacto de Vortiz Arquitectos en respuesta a tu consulta.`,
+    );
+    window.open(`https://wa.me/${tel}?text=${mensaje}`, '_blank');
+  }
+
+  copiarNumero() {
+    if (!this.consultaSeleccionada?.telefono) return;
+    navigator.clipboard
+      .writeText(this.consultaSeleccionada.telefono)
+      .then(() => {
+        this.numeroCopiado = true;
+        setTimeout(() => {
+          this.numeroCopiado = false;
+          this.cdr.detectChanges();
+        }, 2000);
+        this.cdr.detectChanges();
+      })
+      .catch(() => {
+        alert('No se pudo copiar el número');
+      });
   }
 
   marcarResuelta() {
@@ -168,7 +283,6 @@ export class ConsultasComponent implements OnInit {
       this.consultaSeleccionada.resuelta = true;
     }
     this.guardar(this.STORAGE_RESUELTAS, this.idsResueltos);
-    // Actualizar en la lista
     const idx = this.consultas.findIndex((c) => c.id === id);
     if (idx >= 0) this.consultas[idx] = { ...this.consultaSeleccionada };
   }
@@ -194,40 +308,18 @@ export class ConsultasComponent implements OnInit {
     if (idx >= 0) this.consultas[idx] = { ...this.consultaSeleccionada };
   }
 
-  responderPorEmail() {
-    if (!this.consultaSeleccionada) return;
-    const c = this.consultaSeleccionada;
-    const asunto = encodeURIComponent(`Re: ${c.asunto}`);
-    const cuerpo = encodeURIComponent(
-      this.respuestaTexto.trim() ||
-        `Hola ${c.nombre.split(' ')[0]},\n\nGracias por contactarnos en Vortiz Arquitectos.\n\n`,
-    );
-    window.location.href = `mailto:${c.correo}?subject=${asunto}&body=${cuerpo}`;
-  }
-
-  responderPorWhatsApp() {
-    if (!this.consultaSeleccionada) return;
-    const c = this.consultaSeleccionada;
-    const tel = (c.telefono || '').replace(/\D/g, '');
-    if (!tel) {
-      alert('Esta consulta no tiene teléfono registrado.');
-      return;
-    }
-    const mensaje = encodeURIComponent(
-      this.respuestaTexto.trim() ||
-        `Hola ${c.nombre.split(' ')[0]}, te contacto de Vortiz Arquitectos en respuesta a tu consulta.`,
-    );
-    window.open(`https://wa.me/${tel}?text=${mensaje}`, '_blank');
-  }
-
   irACrearCita() {
     if (!this.consultaSeleccionada) return;
     this.router.navigate(['/admin/citas']);
   }
 
-  llamar() {
-    if (!this.consultaSeleccionada?.telefono) return;
-    window.location.href = `tel:${this.consultaSeleccionada.telefono}`;
+  private scrollAlFondo() {
+    setTimeout(() => {
+      if (this.chatContainer) {
+        const el = this.chatContainer.nativeElement;
+        el.scrollTop = el.scrollHeight;
+      }
+    }, 80);
   }
 
   private guardar(key: string, set: Set<number>) {
@@ -262,14 +354,14 @@ export class ConsultasComponent implements OnInit {
     };
   }
 
-  private iniciales(nombre: string): string {
+  iniciales(nombre: string): string {
     if (!nombre) return '?';
     const partes = nombre.trim().split(/\s+/);
     if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
     return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
   }
 
-  private colorAvatar(nombre: string): string {
+  colorAvatar(nombre: string): string {
     if (!nombre) return 'bg-gray-400';
     const colors = [
       'bg-blue-500',
@@ -289,18 +381,7 @@ export class ConsultasComponent implements OnInit {
     return colors[Math.abs(hash) % colors.length];
   }
 
-  private formatearFechaLarga(iso: string): string {
-    if (!iso) return '—';
-    const d = new Date(iso + 'T00:00:00');
-    const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    const meses = [
-      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
-    ];
-    return `${dias[d.getDay()]} ${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
-  }
-
-  private tiempoRelativo(iso: string): string {
+  tiempoRelativo(iso: string): string {
     if (!iso) return '—';
     const ahora = Date.now();
     const fecha = new Date(iso).getTime();
@@ -317,6 +398,27 @@ export class ConsultasComponent implements OnInit {
     return new Date(iso).toLocaleDateString('es-MX');
   }
 
+  private formatearFechaLarga(iso: string): string {
+    if (!iso) return '—';
+    const d = new Date(iso + 'T00:00:00');
+    const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const meses = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
+    return `${dias[d.getDay()]} ${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+  }
+
   private esCitaUrgente(fecha: string): boolean {
     if (!fecha) return false;
     const cita = new Date(fecha + 'T00:00:00');
@@ -329,5 +431,12 @@ export class ConsultasComponent implements OnInit {
   @HostListener('document:keydown.escape')
   onEscape() {
     if (this.consultaSeleccionada) this.consultaSeleccionada = null;
+  }
+
+  autoExpandTextarea(event: Event) {
+    const target = event.target as HTMLTextAreaElement;
+    if (!target) return;
+    target.style.height = 'auto';
+    target.style.height = target.scrollHeight + 'px';
   }
 }
