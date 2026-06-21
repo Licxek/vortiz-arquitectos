@@ -40,10 +40,10 @@ export interface ProyectoBackend {
   fechaInicio: string | null;
   fechaEntrega: string | null;
   imagen: string;
-  imagenes?: string[];  // 👈 AGREGAR
+  imagenes?: string[]; // 👈 AGREGAR
   createdAt: string;
   updatedAt: string;
-  imagenesPublicas?: string[];  // 👈 AGREGAR
+  imagenesPublicas?: string[]; // 👈 AGREGAR
   videoUrl?: string;
 }
 
@@ -87,5 +87,15 @@ export class InicioService {
 
   actualizarProyecto(id: number, datos: Partial<ProyectoBackend>): Observable<ProyectoBackend> {
     return this.http.put<ProyectoBackend>(`${environment.apiUrl}/proyectos/${id}`, datos);
+  }
+
+  responderConsulta(
+    id: number,
+    mensaje: string,
+  ): Observable<{ success: boolean; mensaje: string }> {
+    return this.http.post<{ success: boolean; mensaje: string }>(
+      `${environment.apiUrl}/citas/${id}/responder`,
+      { mensaje },
+    );
   }
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -28,17 +29,16 @@ export class CitasController {
     return this.servicio.crear(data);
   }
 
-
   // 👇 ENDPOINT PÚBLICO — debe ir ANTES de @Get(':id')
   @Get('horarios-ocupados')
   async getHorariosOcupados(@Query('fecha') fecha: string) {
     if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
       return { ocupadas: [] };
     }
-    const ocupadas = await this.servicio.getHorariosOcupados(fecha);  // 👈 this.servicio, no this.citasService
+    const ocupadas = await this.servicio.getHorariosOcupados(fecha); // 👈 this.servicio, no this.citasService
     return { ocupadas };
   }
-  
+
   // PROTEGIDOS — admin (JWT + throttle global 60/min ya protegen)
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -65,5 +65,17 @@ export class CitasController {
   @Delete(':id')
   eliminar(@Param('id', ParseIntPipe) id: number) {
     return this.servicio.eliminar(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/responder')
+  async responder(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { mensaje: string },
+  ) {
+    if (!body.mensaje?.trim()) {
+      throw new BadRequestException('El mensaje no puede estar vacío');
+    }
+    return this.servicio.responderConsulta(id, body.mensaje);
   }
 }
