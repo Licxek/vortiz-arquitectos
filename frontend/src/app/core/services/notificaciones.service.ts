@@ -136,7 +136,7 @@ export class NotificacionesService {
 
   private cargarConsultas(): Promise<any[]> {
     return new Promise((resolve) => {
-      this.http.get<any[]>(`${this.API}/consultas`).subscribe({
+      this.http.get<any[]>(`${this.API}/inicio/consultas-pendientes`).subscribe({
         next: (data) => resolve(data || []),
         error: () => resolve([]),
       });
