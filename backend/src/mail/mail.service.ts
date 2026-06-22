@@ -109,6 +109,7 @@ export class MailService implements OnModuleInit {
     mensajeOriginal: string;
     respuesta: string;
     servicio?: string;
+    consultaId?: number;
   }) {
     const {
       destinatario,
@@ -116,6 +117,7 @@ export class MailService implements OnModuleInit {
       mensajeOriginal,
       respuesta,
       servicio,
+      consultaId,
     } = opciones;
 
     const html = `
@@ -141,6 +143,9 @@ export class MailService implements OnModuleInit {
         <p style="font-size: 12px; color: #9ca3af; font-style: italic; line-height: 1.5; margin: 0; padding: 10px; background: #f9fafb; border-radius: 4px;">
           ${mensajeOriginal}
         </p>
+        <p style="font-size: 11px; color: #9ca3af; margin-top: 20px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
+          💬 Puedes responder directamente a este correo para continuar la conversación.
+        </p>
       </div>
       <div style="background: #0a1f3d; color: white; padding: 18px 20px; text-align: center; font-size: 11px;">
         <p style="margin: 0 0 4px; opacity: 0.9;">Vortiz Arquitectos · Diseñamos espacios que viven contigo</p>
@@ -149,6 +154,46 @@ export class MailService implements OnModuleInit {
     </div>
   `;
 
-    await this.enviar(destinatario, 'Respuesta de Vortiz Arquitectos', html);
+    // Subject con identificador visible
+    const subject = consultaId
+      ? `[Vortiz #${consultaId}] Respuesta a tu consulta`
+      : 'Respuesta de Vortiz Arquitectos';
+
+    if (!this.transporter) {
+      this.logger.log(
+        `[SMTP no configurado] Correo a ${destinatario}: "${subject}" (consultaId: ${consultaId})`,
+      );
+      return;
+    }
+
+    // Reply-To con subaddressing (consultas+ID@dominio)
+    const replyTo = consultaId
+      ? `consultas+${consultaId}@vortizarquitectos.com.mx`
+      : undefined;
+
+    // X-Header personalizado para identificación programática (la opción más robusta)
+    const headers: Record<string, string> = {};
+    if (consultaId) {
+      headers['X-Vortiz-Consulta-Id'] = consultaId.toString();
+    }
+
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to: destinatario,
+        subject,
+        html,
+        replyTo,
+        headers,
+      });
+      this.logger.log(
+        `Respuesta enviada a ${destinatario} — consultaId: ${consultaId}`,
+      );
+    } catch (err: any) {
+      this.logger.error(
+        `Error enviando respuesta a ${destinatario}: ${err.message}`,
+      );
+      throw err;
+    }
   }
 }
