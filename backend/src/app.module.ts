@@ -27,6 +27,7 @@ import { ScheduleModule } from '@nestjs/schedule';  // 👈 AGREGAR import
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
