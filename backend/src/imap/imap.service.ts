@@ -125,32 +125,55 @@ export class ImapService implements OnModuleInit {
       const lock = await client.getMailboxLock('INBOX');
 
       try {
-        // 1. Buscar UIDs sin leer (search explícito requerido por Hostinger)
+        // 1. Buscar SOLO respuestas a consultas Vortiz sin leer (filtro server-side)
         const searchResult = await client.search(
-          { seen: false },
+          {
+            seen: false,
+            subject: '[Vortiz #',
+          },
           { uid: true },
         );
 
         if (!Array.isArray(searchResult) || searchResult.length === 0) {
-          this.logger.log(`📨 Búsqueda IMAP: 0 emails sin leer en INBOX`);
+          this.logger.log(
+            `📨 Búsqueda IMAP: 0 respuestas de consultas sin leer`,
+          );
           return { procesados: 0, identificados: 0 };
         }
 
         this.logger.log(
-          `📨 Búsqueda IMAP: ${searchResult.length} emails sin leer en INBOX`,
+          `📨 Búsqueda IMAP: ${searchResult.length} respuestas de consultas sin leer`,
         );
 
-        // 2. Fetch por UIDs específicos
-        const messages = client.fetch(
-          searchResult,
-          { source: true, uid: true, envelope: true },
-          { uid: true },
-        );
+        // 2. Procesar máximo 5 por polling, uno por uno con timeout individual
+        const uidsAProcesar = searchResult.slice(0, 5);
 
-        for await (const message of messages) {
-          procesados++;
-          const result = await this.procesarMensaje(client, message);
-          if (result.identificado) identificados++;
+        for (const uid of uidsAProcesar) {
+          try {
+            const message = await Promise.race([
+              client.fetchOne(
+                String(uid),
+                { source: true, uid: true, envelope: true },
+                { uid: true },
+              ),
+              new Promise<null>((_, reject) =>
+                setTimeout(
+                  () => reject(new Error(`fetch timeout (UID ${uid})`)),
+                  15000,
+                ),
+              ),
+            ]);
+
+            if (message) {
+              procesados++;
+              const result = await this.procesarMensaje(client, message as any);
+              if (result.identificado) identificados++;
+            }
+          } catch (err: any) {
+            this.logger.warn(
+              `⚠️  No se pudo procesar UID ${uid}: ${err.message}`,
+            );
+          }
         }
       } finally {
         lock.release();
