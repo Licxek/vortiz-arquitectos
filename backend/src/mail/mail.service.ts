@@ -166,11 +166,6 @@ export class MailService implements OnModuleInit {
       return;
     }
 
-    // Reply-To con subaddressing (consultas+ID@dominio)
-    const replyTo = consultaId
-      ? `consultas+${consultaId}@vortizarquitectos.com.mx`
-      : undefined;
-
     // X-Header personalizado para identificación programática (la opción más robusta)
     const headers: Record<string, string> = {};
     if (consultaId) {
@@ -183,7 +178,6 @@ export class MailService implements OnModuleInit {
         to: destinatario,
         subject,
         html,
-        replyTo,
         headers,
       });
       this.logger.log(
