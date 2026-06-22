@@ -110,23 +110,21 @@ export class ImapService implements OnModuleInit {
         pass: this.password,
       },
       logger: false,
-      // Timeouts para que no se cuelgue
-      socketTimeout: 30000, // 30s sin actividad → corta
-      greetingTimeout: 15000, // 15s para handshake inicial
+      socketTimeout: 20000,
+      greetingTimeout: 10000,
+      disableAutoIdle: true,
     });
 
     let procesados = 0;
     let identificados = 0;
+    let connected = false;
 
     try {
-      this.logger.debug('🔄 Conectando a IMAP...');
       await client.connect();
-      this.logger.debug('✅ Conectado, abriendo INBOX...');
+      connected = true;
       const lock = await client.getMailboxLock('INBOX');
-      this.logger.debug('✅ INBOX abierto, buscando emails sin leer...');
 
       try {
-        // Solo emails no leídos
         const messages = client.fetch(
           { seen: false },
           { source: true, uid: true, envelope: true },
@@ -141,16 +139,31 @@ export class ImapService implements OnModuleInit {
         lock.release();
       }
     } finally {
-      try {
-        await client.logout();
-      } catch {
-        // ignorar errores al cerrar
+      // Cierre garantizado incluso si el logout se cuelga
+      if (connected) {
+        try {
+          await Promise.race([
+            client.logout(),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('logout timeout')), 5000),
+            ),
+          ]);
+        } catch (err: any) {
+          this.logger.warn(
+            `Logout IMAP falló (forzando cierre): ${err.message}`,
+          );
+          try {
+            client.close();
+          } catch {
+            // ya cerrado
+          }
+        }
       }
     }
 
     if (procesados > 0) {
       this.logger.log(
-        `📬 Polling: ${procesados} emails revisados, ${identificados} identificados como respuestas a consultas`,
+        `📬 Polling: ${procesados} emails revisados, ${identificados} identificados`,
       );
     }
 
