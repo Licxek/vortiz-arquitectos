@@ -63,12 +63,36 @@ export class ImapService implements OnModuleInit {
     }
 
     this.isProcesando = true;
+
+    // Salvavidas: si pasa 90s, fuerza el reset del lock
+    const lockTimeout = setTimeout(() => {
+      if (this.isProcesando) {
+        this.logger.error(
+          '⏰ Lock de polling forzado a liberarse (timeout de seguridad 90s)',
+        );
+        this.isProcesando = false;
+      }
+    }, 90000);
+
     try {
-      return await this.procesarBuzon();
+      // Race entre el polling y un timeout de 60s
+      const result = await Promise.race([
+        this.procesarBuzon(),
+        new Promise<{ procesados: number; identificados: number }>(
+          (_, reject) =>
+            setTimeout(
+              () =>
+                reject(new Error('Polling timeout (60s) — IMAP no respondió')),
+              60000,
+            ),
+        ),
+      ]);
+      return result;
     } catch (err: any) {
-      this.logger.error(`Error en polling IMAP: ${err.message}`, err.stack);
+      this.logger.error(`Error en polling IMAP: ${err.message}`);
       return { procesados: 0, identificados: 0 };
     } finally {
+      clearTimeout(lockTimeout);
       this.isProcesando = false;
     }
   }
@@ -86,14 +110,20 @@ export class ImapService implements OnModuleInit {
         pass: this.password,
       },
       logger: false,
+      // Timeouts para que no se cuelgue
+      socketTimeout: 30000, // 30s sin actividad → corta
+      greetingTimeout: 15000, // 15s para handshake inicial
     });
 
     let procesados = 0;
     let identificados = 0;
 
     try {
+      this.logger.debug('🔄 Conectando a IMAP...');
       await client.connect();
+      this.logger.debug('✅ Conectado, abriendo INBOX...');
       const lock = await client.getMailboxLock('INBOX');
+      this.logger.debug('✅ INBOX abierto, buscando emails sin leer...');
 
       try {
         // Solo emails no leídos
