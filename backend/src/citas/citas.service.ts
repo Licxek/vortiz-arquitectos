@@ -429,6 +429,7 @@ export class CitasService {
       mensajeOriginal: consulta.motivo || '',
       respuesta: mensaje,
       servicio: consulta.servicio?.titulo,
+      consultaId: consulta.id,
     });
 
     // 2. Guardar mensaje en BD (no crítico si falla — el email ya se envió)
