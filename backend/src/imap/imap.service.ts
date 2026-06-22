@@ -125,9 +125,26 @@ export class ImapService implements OnModuleInit {
       const lock = await client.getMailboxLock('INBOX');
 
       try {
-        const messages = client.fetch(
+        // 1. Buscar UIDs de emails sin leer
+        const searchResult = await client.search(
           { seen: false },
+          { uid: true },
+        );
+
+        if (!Array.isArray(searchResult) || searchResult.length === 0) {
+          this.logger.log(`📨 Búsqueda IMAP: 0 emails sin leer en INBOX`);
+          return { procesados: 0, identificados: 0 };
+        }
+
+        this.logger.log(
+          `📨 Búsqueda IMAP: ${searchResult.length} emails sin leer en INBOX`,
+        );
+
+        // 2. Fetch solo esos UIDs específicos
+        const messages = client.fetch(
+          searchResult,
           { source: true, uid: true, envelope: true },
+          { uid: true },
         );
 
         for await (const message of messages) {
