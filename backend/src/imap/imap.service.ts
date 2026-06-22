@@ -333,7 +333,7 @@ export class ImapService implements OnModuleInit {
 
       // Detectar inicio de respuesta citada (varios idiomas)
       if (
-        /^(El\s|On\s|Le\s|Am\s|Il\s).{0,80}(escribió|wrote|a écrit|schrieb|ha scritto):?\s*$/i.test(
+        /^(El\s|On\s|Le\s|Am\s|Il\s).*(escribió|wrote|a écrit|schrieb|ha scritto)\s*:?\s*$/i.test(
           trimmed,
         )
       ) {
