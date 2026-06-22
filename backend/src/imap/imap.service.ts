@@ -330,4 +330,79 @@ export class ImapService implements OnModuleInit {
       );
     }
   }
+
+  async debugInbox(): Promise<any> {
+    const client = new ImapFlow({
+      host: this.host,
+      port: this.port,
+      secure: true,
+      auth: { user: this.user, pass: this.password },
+      logger: false,
+      socketTimeout: 20000,
+      greetingTimeout: 10000,
+      disableAutoIdle: true,
+    });
+
+    try {
+      await client.connect();
+
+      // Listar todas las carpetas
+      const mailboxes = await client.list();
+      const folders = mailboxes.map((mb) => mb.path);
+
+      // Status del INBOX
+      const status = await client.status('INBOX', {
+        messages: true,
+        unseen: true,
+        recent: true,
+      });
+
+      // Últimos 10 mensajes del INBOX
+      const lock = await client.getMailboxLock('INBOX');
+      const lastMessages: any[] = [];
+
+      try {
+        const total = status.messages || 0;
+        const startSeq = Math.max(1, total - 9);
+
+        const fetchStream = client.fetch(`${startSeq}:*`, {
+          envelope: true,
+          flags: true,
+          uid: true,
+        });
+
+        for await (const msg of fetchStream) {
+          lastMessages.push({
+            uid: msg.uid,
+            from: msg.envelope?.from?.[0]?.address || '?',
+            subject: msg.envelope?.subject || '(sin asunto)',
+            date: msg.envelope?.date,
+            seen: msg.flags ? msg.flags.has('\\Seen') : false,
+            flags: msg.flags ? Array.from(msg.flags) : [],
+          });
+        }
+      } finally {
+        lock.release();
+      }
+
+      try {
+        await client.logout();
+      } catch {}
+
+      return {
+        folders,
+        inbox: {
+          total: status.messages || 0,
+          unseen: status.unseen || 0,
+          recent: status.recent || 0,
+        },
+        lastMessages: lastMessages.reverse(),
+      };
+    } catch (err: any) {
+      try {
+        await client.logout();
+      } catch {}
+      return { error: err.message, code: err.code };
+    }
+  }
 }

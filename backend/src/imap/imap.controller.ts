@@ -1,6 +1,7 @@
 import { Controller, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ImapService } from './imap.service';
+import {Get} from '@nestjs/common';
 
 @Controller('admin/imap')
 @UseGuards(JwtAuthGuard)
@@ -16,5 +17,10 @@ export class ImapController {
       mensaje: 'Polling ejecutado',
       ...result,
     };
+  }
+
+  @Get('debug-inbox')
+  async debugInbox() {
+    return this.imapService.debugInbox();
   }
 }
