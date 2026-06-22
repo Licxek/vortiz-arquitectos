@@ -110,9 +110,9 @@ export class ImapService implements OnModuleInit {
         pass: this.password,
       },
       logger: false,
-      socketTimeout: 20000,
-      greetingTimeout: 10000,
-      disableAutoIdle: true, // ← evita conexión zombie
+      socketTimeout: 20000, // ← 20s max sin actividad
+      greetingTimeout: 10000, // ← 10s max para handshake
+      disableAutoIdle: true, // ← evita conexión IDLE eterna
     });
 
     let procesados = 0;
@@ -125,7 +125,7 @@ export class ImapService implements OnModuleInit {
       const lock = await client.getMailboxLock('INBOX');
 
       try {
-        // 1. Buscar UIDs de emails sin leer (Hostinger requiere search() explícito)
+        // 1. Buscar UIDs sin leer (search explícito requerido por Hostinger)
         const searchResult = await client.search(
           { seen: false },
           { uid: true },
@@ -140,7 +140,7 @@ export class ImapService implements OnModuleInit {
           `📨 Búsqueda IMAP: ${searchResult.length} emails sin leer en INBOX`,
         );
 
-        // 2. Fetch solo esos UIDs específicos
+        // 2. Fetch por UIDs específicos
         const messages = client.fetch(
           searchResult,
           { source: true, uid: true, envelope: true },
@@ -156,7 +156,7 @@ export class ImapService implements OnModuleInit {
         lock.release();
       }
     } finally {
-      // Cierre garantizado incluso si el logout se cuelga (5s timeout)
+      // Cierre garantizado con timeout — NUNCA se cuelga aquí
       if (connected) {
         try {
           await Promise.race([
