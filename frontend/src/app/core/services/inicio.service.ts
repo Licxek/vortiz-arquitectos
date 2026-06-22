@@ -55,6 +55,15 @@ export interface StatsResponse {
   visitas: { valor: number };
 }
 
+export interface MensajeConsultaBackend {
+  id: number;
+  citaId: number;
+  autor: 'cliente' | 'admin';
+  texto: string;
+  metodo: 'email' | 'whatsapp' | 'guardado' | 'inbound' | null;
+  createdAt: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class InicioService {
   private http = inject(HttpClient);
@@ -96,6 +105,22 @@ export class InicioService {
     return this.http.post<{ success: boolean; mensaje: string }>(
       `${environment.apiUrl}/citas/${id}/responder`,
       { mensaje },
+    );
+  }
+
+  obtenerMensajesConsulta(citaId: number): Observable<MensajeConsultaBackend[]> {
+    return this.http.get<MensajeConsultaBackend[]>(
+      `${environment.apiUrl}/citas/${citaId}/mensajes`,
+    );
+  }
+
+  crearMensajeConsulta(
+    citaId: number,
+    data: { autor: 'cliente' | 'admin'; texto: string; metodo?: string },
+  ): Observable<MensajeConsultaBackend> {
+    return this.http.post<MensajeConsultaBackend>(
+      `${environment.apiUrl}/citas/${citaId}/mensajes`,
+      data,
     );
   }
 }
