@@ -112,7 +112,7 @@ export class ImapService implements OnModuleInit {
       logger: false,
       socketTimeout: 20000,
       greetingTimeout: 10000,
-      disableAutoIdle: true,
+      disableAutoIdle: true, // ← evita conexión zombie
     });
 
     let procesados = 0;
@@ -125,7 +125,7 @@ export class ImapService implements OnModuleInit {
       const lock = await client.getMailboxLock('INBOX');
 
       try {
-        // 1. Buscar UIDs de emails sin leer
+        // 1. Buscar UIDs de emails sin leer (Hostinger requiere search() explícito)
         const searchResult = await client.search(
           { seen: false },
           { uid: true },
@@ -156,7 +156,7 @@ export class ImapService implements OnModuleInit {
         lock.release();
       }
     } finally {
-      // Cierre garantizado incluso si el logout se cuelga
+      // Cierre garantizado incluso si el logout se cuelga (5s timeout)
       if (connected) {
         try {
           await Promise.race([
@@ -180,7 +180,7 @@ export class ImapService implements OnModuleInit {
 
     if (procesados > 0) {
       this.logger.log(
-        `📬 Polling: ${procesados} emails revisados, ${identificados} identificados`,
+        `📬 Polling: ${procesados} revisados, ${identificados} identificados`,
       );
     }
 
