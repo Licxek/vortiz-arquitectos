@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Cron} from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ImapFlow } from 'imapflow';
@@ -24,18 +24,28 @@ export class ImapService implements OnModuleInit {
     this.enabled = process.env.IMAP_POLLING_ENABLED === 'true';
     this.host = process.env.IMAP_HOST || 'imap.hostinger.com';
     this.port = parseInt(process.env.IMAP_PORT || '993', 10);
-    this.user = process.env.MAIL_USER || '';
-    this.password = process.env.MAIL_PASS || '';
+    this.user = process.env.SMTP_USER || '';
+    this.password = process.env.SMTP_PASS || '';
   }
 
   onModuleInit() {
-    if (this.enabled) {
-      this.logger.log(
-        `🔌 IMAP polling HABILITADO — ${this.user}@${this.host}:${this.port} cada 2 min`,
-      );
-    } else {
+    if (!this.enabled) {
       this.logger.warn(
         '⚠️  IMAP polling DESHABILITADO. Para activar: IMAP_POLLING_ENABLED=true',
+      );
+      return;
+    }
+
+    const userOk = this.user ? '✅' : '❌';
+    const passOk = this.password ? '✅' : '❌';
+    this.logger.log(
+      `🔌 IMAP polling HABILITADO — ${this.user || '(usuario vacío)'} @ ${this.host}:${this.port} cada 2 min`,
+    );
+    this.logger.log(`   Credenciales: user ${userOk} | password ${passOk}`);
+
+    if (!this.user || !this.password) {
+      this.logger.error(
+        '⚠️  Credenciales IMAP vacías. Verifica SMTP_USER / SMTP_PASS en .env.production',
       );
     }
   }
