@@ -1,0 +1,280 @@
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Cron} from '@nestjs/schedule';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ImapFlow } from 'imapflow';
+import { simpleParser } from 'mailparser';
+import { Cita } from '../citas/cita.entity';
+import { MensajesConsultaService } from '../citas/mensajes-consulta.service';
+
+@Injectable()
+export class ImapService implements OnModuleInit {
+  private readonly logger = new Logger(ImapService.name);
+  private readonly enabled: boolean;
+  private readonly host: string;
+  private readonly port: number;
+  private readonly user: string;
+  private readonly password: string;
+  private isProcesando = false;
+
+  constructor(
+    private mensajesService: MensajesConsultaService,
+    @InjectRepository(Cita) private citaRepo: Repository<Cita>,
+  ) {
+    this.enabled = process.env.IMAP_POLLING_ENABLED === 'true';
+    this.host = process.env.IMAP_HOST || 'imap.hostinger.com';
+    this.port = parseInt(process.env.IMAP_PORT || '993', 10);
+    this.user = process.env.MAIL_USER || '';
+    this.password = process.env.MAIL_PASS || '';
+  }
+
+  onModuleInit() {
+    if (this.enabled) {
+      this.logger.log(
+        `🔌 IMAP polling HABILITADO — ${this.user}@${this.host}:${this.port} cada 2 min`,
+      );
+    } else {
+      this.logger.warn(
+        '⚠️  IMAP polling DESHABILITADO. Para activar: IMAP_POLLING_ENABLED=true',
+      );
+    }
+  }
+
+  /** Cron job: cada 2 minutos revisa el buzón */
+  @Cron('*/2 * * * *', { name: 'imap-polling' })
+  async pollInbox(): Promise<{ procesados: number; identificados: number }> {
+    if (!this.enabled) {
+      return { procesados: 0, identificados: 0 };
+    }
+
+    if (this.isProcesando) {
+      this.logger.warn('Polling anterior aún en curso — saltando este ciclo');
+      return { procesados: 0, identificados: 0 };
+    }
+
+    this.isProcesando = true;
+    try {
+      return await this.procesarBuzon();
+    } catch (err: any) {
+      this.logger.error(`Error en polling IMAP: ${err.message}`, err.stack);
+      return { procesados: 0, identificados: 0 };
+    } finally {
+      this.isProcesando = false;
+    }
+  }
+
+  private async procesarBuzon(): Promise<{
+    procesados: number;
+    identificados: number;
+  }> {
+    const client = new ImapFlow({
+      host: this.host,
+      port: this.port,
+      secure: true,
+      auth: {
+        user: this.user,
+        pass: this.password,
+      },
+      logger: false,
+    });
+
+    let procesados = 0;
+    let identificados = 0;
+
+    try {
+      await client.connect();
+      const lock = await client.getMailboxLock('INBOX');
+
+      try {
+        // Solo emails no leídos
+        const messages = client.fetch(
+          { seen: false },
+          { source: true, uid: true, envelope: true },
+        );
+
+        for await (const message of messages) {
+          procesados++;
+          const result = await this.procesarMensaje(client, message);
+          if (result.identificado) identificados++;
+        }
+      } finally {
+        lock.release();
+      }
+    } finally {
+      try {
+        await client.logout();
+      } catch {
+        // ignorar errores al cerrar
+      }
+    }
+
+    if (procesados > 0) {
+      this.logger.log(
+        `📬 Polling: ${procesados} emails revisados, ${identificados} identificados como respuestas a consultas`,
+      );
+    }
+
+    return { procesados, identificados };
+  }
+
+  private async procesarMensaje(
+    client: ImapFlow,
+    message: any,
+  ): Promise<{ identificado: boolean }> {
+    const uid = message.uid;
+    try {
+      const parsed = await simpleParser(message.source);
+
+      // 1. Ignorar si el remitente es el mismo admin (evitar self-replies)
+      const fromEmail = parsed.from?.value?.[0]?.address?.toLowerCase() || '';
+      if (
+        fromEmail === this.user.toLowerCase() ||
+        fromEmail.endsWith('@vortizarquitectos.com.mx')
+      ) {
+        this.logger.debug(
+          `UID ${uid} ignorado (remitente es interno: ${fromEmail})`,
+        );
+        await this.marcarComoLeido(client, uid);
+        return { identificado: false };
+      }
+
+      // 2. Buscar identificador de consulta
+      const consultaId = this.extraerConsultaId(parsed);
+      if (!consultaId) {
+        this.logger.debug(
+          `UID ${uid} de ${fromEmail} ignorado (sin identificador Vortiz)`,
+        );
+        // NO marcar como leído — podría ser otro email del propio Vortiz
+        return { identificado: false };
+      }
+
+      // 3. Verificar que la consulta existe
+      const consulta = await this.citaRepo.findOne({
+        where: { id: consultaId },
+      });
+      if (!consulta) {
+        this.logger.warn(
+          `UID ${uid} apunta a consulta #${consultaId} que no existe — marcando como leído`,
+        );
+        await this.marcarComoLeido(client, uid);
+        return { identificado: false };
+      }
+
+      // 4. Extraer texto del email
+      let texto = (parsed.text || '').trim();
+      if (!texto && parsed.html) {
+        texto = String(parsed.html)
+          .replace(/<style[^>]*>.*?<\/style>/gis, '')
+          .replace(/<script[^>]*>.*?<\/script>/gis, '')
+          .replace(/<[^>]*>/g, '')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .trim();
+      }
+
+      // 5. Limpiar firmas y respuestas anidadas
+      texto = this.limpiarTextoEmail(texto);
+
+      if (!texto) {
+        this.logger.warn(
+          `UID ${uid} para consulta #${consultaId} sin texto utilizable`,
+        );
+        await this.marcarComoLeido(client, uid);
+        return { identificado: false };
+      }
+
+      // 6. Guardar mensaje en BD
+      await this.mensajesService.crear(consultaId, {
+        autor: 'cliente',
+        texto,
+        metodo: 'inbound',
+      });
+
+      this.logger.log(
+        `✉️  Mensaje guardado: consulta #${consultaId} de ${fromEmail} (UID ${uid})`,
+      );
+
+      // 7. Marcar como leído
+      await this.marcarComoLeido(client, uid);
+
+      return { identificado: true };
+    } catch (err: any) {
+      this.logger.error(`Error procesando UID ${uid}: ${err.message}`);
+      return { identificado: false };
+    }
+  }
+
+  /** Extrae el ID de la consulta del email (header preferido > subject) */
+  private extraerConsultaId(parsed: any): number | null {
+    // 1. Buscar X-Vortiz-Consulta-Id header (preferido)
+    const xHeader = parsed.headers?.get('x-vortiz-consulta-id');
+    if (xHeader) {
+      const valor = Array.isArray(xHeader) ? xHeader[0] : String(xHeader);
+      const id = parseInt(valor, 10);
+      if (!isNaN(id)) return id;
+    }
+
+    // 2. Fallback: buscar [Vortiz #X] en subject
+    if (parsed.subject) {
+      const match = String(parsed.subject).match(/\[Vortiz\s*#(\d+)\]/i);
+      if (match) {
+        const id = parseInt(match[1], 10);
+        if (!isNaN(id)) return id;
+      }
+    }
+
+    return null;
+  }
+
+  /** Quita líneas citadas, firmas y respuestas anidadas */
+  private limpiarTextoEmail(texto: string): string {
+    if (!texto) return '';
+
+    const lineas = texto.split(/\r?\n/);
+    const resultado: string[] = [];
+
+    for (const linea of lineas) {
+      const trimmed = linea.trim();
+
+      // Detectar inicio de respuesta citada (varios idiomas)
+      if (
+        /^(El\s|On\s|Le\s|Am\s|Il\s).{0,80}(escribió|wrote|a écrit|schrieb|ha scritto):?\s*$/i.test(
+          trimmed,
+        )
+      ) {
+        break;
+      }
+
+      // Líneas tipo "From: ... Sent: ..." (Outlook)
+      if (/^(De|From):\s/i.test(trimmed)) {
+        break;
+      }
+
+      // Líneas citadas con >
+      if (/^>/.test(trimmed)) {
+        continue;
+      }
+
+      // Separador de firma "--"
+      if (/^--\s*$/.test(trimmed)) {
+        break;
+      }
+
+      resultado.push(linea);
+    }
+
+    return resultado.join('\n').trim();
+  }
+
+  private async marcarComoLeido(client: ImapFlow, uid: number): Promise<void> {
+    try {
+      await client.messageFlagsAdd(uid, ['\\Seen'], { uid: true });
+    } catch (err: any) {
+      this.logger.warn(
+        `No se pudo marcar UID ${uid} como leído: ${err.message}`,
+      );
+    }
+  }
+}

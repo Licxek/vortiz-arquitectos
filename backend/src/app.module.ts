@@ -24,10 +24,10 @@ import { SesionesModule } from './sesiones/sesiones.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 import { ScheduleModule } from '@nestjs/schedule';  // 👈 AGREGAR import
+import { ImapModule } from './imap/imap.module';
 
 @Module({
   imports: [
-    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -113,6 +113,7 @@ import { ScheduleModule } from '@nestjs/schedule';  // 👈 AGREGAR import
     AnalyticsModule,
     WhatsAppModule,
     ScheduleModule.forRoot(),
+    ImapModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
