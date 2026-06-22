@@ -101,11 +101,16 @@ export class InicioService {
   responderConsulta(
     id: number,
     mensaje: string,
-  ): Observable<{ success: boolean; mensaje: string }> {
-    return this.http.post<{ success: boolean; mensaje: string }>(
-      `${environment.apiUrl}/citas/${id}/responder`,
-      { mensaje },
-    );
+  ): Observable<{
+    success: boolean;
+    mensaje: string;
+    mensajeGuardado?: MensajeConsultaBackend;
+  }> {
+    return this.http.post<{
+      success: boolean;
+      mensaje: string;
+      mensajeGuardado?: MensajeConsultaBackend;
+    }>(`${environment.apiUrl}/citas/${id}/responder`, { mensaje });
   }
 
   obtenerMensajesConsulta(citaId: number): Observable<MensajeConsultaBackend[]> {

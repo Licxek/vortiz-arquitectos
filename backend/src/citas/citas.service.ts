@@ -11,6 +11,7 @@ import { MailService } from '../mail/mail.service'; // ⚠️ ajusta la ruta
 import { CrearCitaDto } from './dto/crear-cita.dto';
 import { ConfiguracionService } from '../configuracion/configuracion.service'; // 👈 NUEVO
 import { In } from 'typeorm';
+import { MensajesConsultaService } from './mensajes-consulta.service';
 
 const ESTADOS_VALIDOS: EstadoCita[] = [
   'pendiente',
@@ -28,6 +29,7 @@ export class CitasService {
     @InjectRepository(Cita) private repo: Repository<Cita>,
     private mailService: MailService,
     private configuracionService: ConfiguracionService,
+    private mensajesService: MensajesConsultaService,
   ) {}
 
   findAll() {
@@ -420,6 +422,7 @@ export class CitasService {
       throw new NotFoundException('Consulta no encontrada');
     }
 
+    // 1. Enviar email primero (lo más importante)
     await this.mailService.enviarRespuestaConsulta({
       destinatario: consulta.correo,
       nombreCliente: consulta.nombre,
@@ -428,6 +431,22 @@ export class CitasService {
       servicio: consulta.servicio?.titulo,
     });
 
-    return { success: true, mensaje: 'Respuesta enviada correctamente' };
+    // 2. Guardar mensaje en BD (no crítico si falla — el email ya se envió)
+    let mensajeGuardado;
+    try {
+      mensajeGuardado = await this.mensajesService.crear(id, {
+        autor: 'admin',
+        texto: mensaje,
+        metodo: 'email',
+      });
+    } catch (err: any) {
+      this.logger.error(`Error guardando mensaje en BD: ${err.message}`);
+    }
+
+    return {
+      success: true,
+      mensaje: 'Respuesta enviada correctamente',
+      mensajeGuardado,
+    };
   }
 }
