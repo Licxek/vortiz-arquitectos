@@ -248,14 +248,20 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.enviando = true;
     this.inicioService.responderConsulta(consultaId, texto).subscribe({
-      next: () => {
-        // Guardar también en la tabla de mensajes para que aparezca en el chat
-        this.guardarMensajeAdmin('email', texto).then(() => {
-          this.respuestaTexto = '';
-          this.enviando = false;
-          this.scrollAlFondo();
-          this.cdr.detectChanges();
-        });
+      next: (response) => {
+        // El backend ya envió el email Y guardó en BD. Solo agregamos al chat local.
+        if (response.mensajeGuardado) {
+          this.mensajesActuales.push({
+            texto: response.mensajeGuardado.texto,
+            fecha: response.mensajeGuardado.createdAt,
+            autor: response.mensajeGuardado.autor,
+            metodo: response.mensajeGuardado.metodo || undefined,
+          });
+        }
+        this.respuestaTexto = '';
+        this.enviando = false;
+        this.scrollAlFondo();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error enviando respuesta:', err);
