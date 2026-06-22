@@ -41,7 +41,7 @@ interface MensajeChat {
   texto: string;
   fecha: string;
   autor: 'cliente' | 'admin';
-  metodo?: 'email' | 'whatsapp' | 'guardado';
+  metodo?: 'email' | 'whatsapp' | 'guardado' | 'inbound';
 }
 
 type Filtro = 'todas' | 'pendientes' | 'urgentes' | 'resueltas' | 'archivadas';
@@ -71,10 +71,11 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private readonly STORAGE_RESUELTAS = 'vortiz_consultas_resueltas';
   private readonly STORAGE_ARCHIVADAS = 'vortiz_consultas_archivadas';
-  private readonly STORAGE_CHAT = 'vortiz_consultas_chat';
   private idsResueltos = new Set<number>();
   private idsArchivados = new Set<number>();
-  private chats: { [consultaId: number]: MensajeChat[] } = {};
+  mensajesActuales: MensajeChat[] = [];
+  cargandoMensajes = false;
+  private intervalPolling: any = null;
 
   private bodyOverflowAnterior = '';
 
@@ -130,6 +131,7 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     });
     this.elementosScrollBloqueados = [];
     window.removeEventListener('resize', this.ajustarAlturaCard);
+    this.detenerPolling();
   }
 
   private cargarLocalStorage() {
@@ -138,8 +140,6 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
       if (r) this.idsResueltos = new Set(JSON.parse(r));
       const a = localStorage.getItem(this.STORAGE_ARCHIVADAS);
       if (a) this.idsArchivados = new Set(JSON.parse(a));
-      const c = localStorage.getItem(this.STORAGE_CHAT);
-      if (c) this.chats = JSON.parse(c);
     } catch {}
   }
 
@@ -210,13 +210,13 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
   get mensajesChat(): MensajeChat[] {
     if (!this.consultaSeleccionada) return [];
     const c = this.consultaSeleccionada;
-    const respuestasAdmin = this.chats[c.id] || [];
+    // Primer mensaje siempre es el motivo original de la cita
     const mensajeCliente: MensajeChat = {
       texto: c.mensaje,
       fecha: c.fechaCreacionRaw,
       autor: 'cliente',
     };
-    return [mensajeCliente, ...respuestasAdmin].sort(
+    return [mensajeCliente, ...this.mensajesActuales].sort(
       (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime(),
     );
   }
@@ -224,11 +224,16 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
   seleccionar(c: Consulta) {
     this.consultaSeleccionada = c;
     this.respuestaTexto = '';
+    this.mensajesActuales = [];
+    this.cargarMensajesConsulta(c.id);
+    this.iniciarPolling();
     this.scrollAlFondo();
   }
 
   volverALista() {
     this.consultaSeleccionada = null;
+    this.mensajesActuales = [];
+    this.detenerPolling();
   }
 
   cambiarFiltro(f: Filtro) {
@@ -238,24 +243,23 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
 
   enviarRespuesta() {
     if (!this.consultaSeleccionada || !this.respuestaTexto.trim() || this.enviando) return;
-
     const texto = this.respuestaTexto.trim();
     const consultaId = this.consultaSeleccionada.id;
 
     this.enviando = true;
     this.inicioService.responderConsulta(consultaId, texto).subscribe({
       next: () => {
-        this.guardarMensajeAdmin('email', texto);
-        this.respuestaTexto = '';
-        this.enviando = false;
-        this.scrollAlFondo();
-        this.cdr.detectChanges();
+        // Guardar también en la tabla de mensajes para que aparezca en el chat
+        this.guardarMensajeAdmin('email', texto).then(() => {
+          this.respuestaTexto = '';
+          this.enviando = false;
+          this.scrollAlFondo();
+          this.cdr.detectChanges();
+        });
       },
       error: (err) => {
         console.error('Error enviando respuesta:', err);
-        alert(
-          'No se pudo enviar el mensaje. Verifica tu conexión o que el backend tenga el endpoint configurado.',
-        );
+        alert('No se pudo enviar el mensaje. Verifica tu conexión.');
         this.enviando = false;
         this.cdr.detectChanges();
       },
@@ -272,49 +276,57 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     const texto = this.respuestaTexto.trim();
     if (texto) {
-      this.guardarMensajeAdmin('whatsapp', texto);
+      this.guardarMensajeAdmin('whatsapp', texto).then(() => {
+        this.respuestaTexto = '';
+        this.scrollAlFondo();
+      });
+    }
+    const mensaje = encodeURIComponent(
+      texto ||
+        `Hola ${c.nombre.split(' ')[0]}, te contacto de Vortiz Arquitectos en respuesta a tu consulta.`,
+    );
+    window.open(`https://wa.me/${tel}?text=${mensaje}`, '_blank');
+  }
+
+  guardarSolamente() {
+    const texto = this.respuestaTexto.trim();
+    if (!texto) return;
+    this.guardarMensajeAdmin('guardado', texto).then(() => {
       this.respuestaTexto = '';
-    }
-    const mensaje = encodeURIComponent(
-      texto ||
-        `Hola ${c.nombre.split(' ')[0]}, te contacto de Vortiz Arquitectos en respuesta a tu consulta.`,
-    );
-    window.open(`https://wa.me/${tel}?text=${mensaje}`, '_blank');
-    this.scrollAlFondo();
-  }
-
-  private guardarMensajeAdmin(metodo: 'email' | 'whatsapp' | 'guardado', texto: string) {
-    if (!this.consultaSeleccionada) return;
-    const id = this.consultaSeleccionada.id;
-    if (!this.chats[id]) this.chats[id] = [];
-    this.chats[id].push({
-      texto,
-      fecha: new Date().toISOString(),
-      autor: 'admin',
-      metodo,
+      this.scrollAlFondo();
+      this.cdr.detectChanges();
     });
-    this.guardarChats();
   }
 
-  private guardarChats() {
-    try {
-      localStorage.setItem(this.STORAGE_CHAT, JSON.stringify(this.chats));
-    } catch {}
-  }
-
-  private abrirWhatsApp(texto: string) {
-    if (!this.consultaSeleccionada) return;
-    const c = this.consultaSeleccionada;
-    const tel = (c.telefono || '').replace(/\D/g, '');
-    if (!tel) {
-      alert('Esta consulta no tiene teléfono registrado.');
-      return;
-    }
-    const mensaje = encodeURIComponent(
-      texto ||
-        `Hola ${c.nombre.split(' ')[0]}, te contacto de Vortiz Arquitectos en respuesta a tu consulta.`,
-    );
-    window.open(`https://wa.me/${tel}?text=${mensaje}`, '_blank');
+  private guardarMensajeAdmin(
+    metodo: 'email' | 'whatsapp' | 'guardado',
+    texto: string,
+  ): Promise<void> {
+    return new Promise((resolve) => {
+      if (!this.consultaSeleccionada) return resolve();
+      this.inicioService
+        .crearMensajeConsulta(this.consultaSeleccionada.id, {
+          autor: 'admin',
+          texto,
+          metodo,
+        })
+        .subscribe({
+          next: (mensaje) => {
+            this.mensajesActuales.push({
+              texto: mensaje.texto,
+              fecha: mensaje.createdAt,
+              autor: mensaje.autor,
+              metodo: mensaje.metodo || undefined,
+            });
+            this.cdr.detectChanges();
+            resolve();
+          },
+          error: (err) => {
+            console.error('Error guardando mensaje:', err);
+            resolve();
+          },
+        });
+    });
   }
 
   copiarNumero() {
@@ -505,4 +517,43 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
   enviando = false;
 
   private elementosScrollBloqueados: { el: HTMLElement; originalOverflow: string }[] = [];
+
+  private cargarMensajesConsulta(citaId: number) {
+    this.cargandoMensajes = true;
+    this.inicioService.obtenerMensajesConsulta(citaId).subscribe({
+      next: (mensajes) => {
+        this.mensajesActuales = mensajes.map((m) => ({
+          texto: m.texto,
+          fecha: m.createdAt,
+          autor: m.autor,
+          metodo: m.metodo || undefined,
+        }));
+        this.cargandoMensajes = false;
+        this.scrollAlFondo();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error cargando mensajes:', err);
+        this.mensajesActuales = [];
+        this.cargandoMensajes = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private iniciarPolling() {
+    this.detenerPolling();
+    this.intervalPolling = setInterval(() => {
+      if (this.consultaSeleccionada && document.visibilityState === 'visible') {
+        this.cargarMensajesConsulta(this.consultaSeleccionada.id);
+      }
+    }, 30000); // cada 30s — preparado para webhook futuro
+  }
+
+  private detenerPolling() {
+    if (this.intervalPolling) {
+      clearInterval(this.intervalPolling);
+      this.intervalPolling = null;
+    }
+  }
 }
