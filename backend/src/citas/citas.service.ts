@@ -32,11 +32,34 @@ export class CitasService {
     private mensajesService: MensajesConsultaService,
   ) {}
 
-  findAll() {
-    return this.repo.find({
+  async findAll() {
+    const citas = await this.repo.find({
       relations: ['servicio'],
       order: { fecha: 'ASC', hora: 'ASC' },
     });
+
+    if (citas.length === 0) return citas;
+
+    // Último mensaje de cada cita (subquery con DISTINCT ON)
+    const ids = citas.map((c) => c.id);
+    const ultimos = await this.repo.manager.query(
+      `
+    SELECT DISTINCT ON ("citaId") 
+      "citaId", id, texto, autor, metodo, "createdAt"
+    FROM mensajes_consulta
+    WHERE "citaId" = ANY($1)
+    ORDER BY "citaId", "createdAt" DESC
+    `,
+      [ids],
+    );
+
+    const mapa = new Map<number, any>();
+    ultimos.forEach((m: any) => mapa.set(m.citaId, m));
+
+    return citas.map((cita) => ({
+      ...cita,
+      ultimoMensaje: mapa.get(cita.id) || null,
+    })) as any;
   }
 
   findOne(id: number) {

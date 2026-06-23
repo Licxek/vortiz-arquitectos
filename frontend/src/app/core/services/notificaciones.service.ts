@@ -6,8 +6,10 @@ export type TipoNotificacion =
   | 'cita_nueva'
   | 'cita_pendiente'
   | 'cita_confirmada'
+  | 'cita_por_evaluar' // ← NUEVO
   | 'consulta_general'
-  | 'consulta_servicio';
+  | 'consulta_servicio'
+  | 'mensaje_nuevo'; // ← NUEVO
 
 export interface Notificacion {
   id: string;
@@ -100,18 +102,17 @@ export class NotificacionesService {
   }
 
   cargar() {
-    // Cargar citas y consultas en paralelo
     Promise.all([this.cargarCitas(), this.cargarConsultas()])
       .then(([citas, consultas]) => {
         const todas: Notificacion[] = [
           ...this.citasANotificaciones(citas),
+          ...this.citasPorEvaluarANotificaciones(citas), // ← NUEVO
           ...this.consultasANotificaciones(consultas),
+          ...this.mensajesNuevosANotificaciones(consultas), // ← NUEVO
         ].filter((n) => !this.idsBorrados.has(n.id));
 
-        // Ordenar por fecha desc
         todas.sort((a, b) => b.fecha.getTime() - a.fecha.getTime());
 
-        // Detectar nuevas (después de primera carga)
         if (!this.primeraCarga && todas.length > this.cantidadAnterior) {
           this.reproducirSonidoNuevo();
         }
@@ -120,9 +121,7 @@ export class NotificacionesService {
 
         this._notificaciones.set(todas);
       })
-      .catch(() => {
-        // Silencioso, no rompe la app
-      });
+      .catch(() => {});
   }
 
   private cargarCitas(): Promise<any[]> {
@@ -294,5 +293,64 @@ export class NotificacionesService {
     try {
       localStorage.setItem(this.STORAGE_BORRADAS, JSON.stringify(Array.from(this.idsBorrados)));
     } catch {}
+  }
+
+  private mensajesNuevosANotificaciones(consultas: any[]): Notificacion[] {
+    return consultas
+      .filter((c) => {
+        const m = c.ultimoMensaje;
+        return m && m.autor === 'cliente' && m.metodo === 'inbound';
+      })
+      .map((c) => {
+        const m = c.ultimoMensaje;
+        const id = `mensaje_${c.id}_${new Date(m.createdAt).getTime()}`;
+        const preview = (m.texto || '').substring(0, 100).trim();
+        return {
+          id,
+          tipo: 'mensaje_nuevo' as TipoNotificacion,
+          titulo: `Nuevo mensaje de ${c.nombre}`,
+          subtitulo: preview || 'Mensaje sin contenido',
+          fecha: new Date(m.createdAt),
+          leida: this.idsLeidos.has(id),
+          ruta: '/admin/consultas',
+          meta: {
+            consultaId: c.id,
+            cliente: c.nombre,
+            correo: c.correo,
+            mensaje: m.texto,
+          },
+        };
+      });
+  }
+
+  private citasPorEvaluarANotificaciones(citas: any[]): Notificacion[] {
+    const ahora = new Date();
+    return citas
+      .filter((c) => {
+        if (c.estado !== 'confirmada' && c.estado !== 'pendiente') return false;
+        if (!c.fecha || !c.hora) return false;
+        const [h, m] = c.hora.split(':').map(Number);
+        const fin = new Date(c.fecha + 'T00:00:00');
+        fin.setHours(h, m + (c.duracion || 60), 0, 0);
+        return fin < ahora; // ya terminó la cita
+      })
+      .map((c) => {
+        const id = `evaluar_${c.id}`;
+        return {
+          id,
+          tipo: 'cita_por_evaluar' as TipoNotificacion,
+          titulo: `¿${c.nombre} asistió a su cita?`,
+          subtitulo: `${this.formatoFecha(c.fecha)} · ${c.hora}`,
+          detalle: c.servicio?.titulo || 'Marca asistió o no asistió',
+          fecha: new Date(c.fecha + 'T' + c.hora),
+          leida: this.idsLeidos.has(id),
+          ruta: '/admin/citas',
+          meta: {
+            citaId: c.id,
+            cliente: c.nombre,
+            servicio: c.servicio?.titulo,
+          },
+        };
+      });
   }
 }

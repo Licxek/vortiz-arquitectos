@@ -15,7 +15,7 @@ import {
 } from '../../core/services/notificaciones.service';
 
 type Filtro = 'todas' | 'citas' | 'consultas';
-type TipoVisual = 'cita' | 'consulta' | 'confirmacion' | 'cancelacion' | 'mensaje';
+type TipoVisual = 'cita' | 'consulta' | 'confirmacion' | 'cancelacion' | 'mensaje' | 'evaluar';
 
 @Component({
   selector: 'app-notificaciones-bell',
@@ -113,6 +113,8 @@ export class NotificacionesBellComponent implements OnInit, OnDestroy {
   tipoVisual(tipo: TipoNotificacion): TipoVisual {
     if (tipo === 'cita_pendiente' || tipo === 'cita_nueva') return 'cita';
     if (tipo === 'cita_confirmada') return 'confirmacion';
+    if (tipo === 'cita_por_evaluar') return 'evaluar';
+    if (tipo === 'mensaje_nuevo') return 'mensaje';
     if (tipo === 'consulta_general') return 'consulta';
     if (tipo === 'consulta_servicio') return 'mensaje';
     return 'cita';
@@ -149,14 +151,18 @@ export class NotificacionesBellComponent implements OnInit, OnDestroy {
 
   textoAccionRapida(tipo: TipoNotificacion): string {
     const vis = this.tipoVisual(tipo);
-    if (vis === 'consulta' || vis === 'mensaje') return 'Responder';
+    if (vis === 'mensaje') return 'Responder';
+    if (vis === 'consulta') return 'Ver consulta';
+    if (vis === 'evaluar') return 'Marcar asistencia';
     if (vis === 'cita') return 'Ver en calendario';
     return 'Ver detalles';
   }
 
   colorAccionRapida(tipo: TipoNotificacion): string {
     const vis = this.tipoVisual(tipo);
-    if (vis === 'consulta' || vis === 'mensaje') return 'bg-green-500 hover:bg-green-600';
+    if (vis === 'mensaje') return 'bg-orange-500 hover:bg-orange-600';
+    if (vis === 'consulta') return 'bg-green-500 hover:bg-green-600';
+    if (vis === 'evaluar') return 'bg-purple-500 hover:bg-purple-600';
     if (vis === 'cita') return 'bg-blue-500 hover:bg-blue-600';
     return 'bg-gray-500 hover:bg-gray-600';
   }
