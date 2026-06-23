@@ -162,16 +162,40 @@
       <!-- Estadísticas rápidas -->
       <div class="grid grid-cols-3 gap-2 md:gap-4 mt-6 pt-6 border-t border-gray-100">
         <div class="text-center">
-          <p class="text-xl md:text-2xl font-bold text-gray-900">
+          <p
+            *ngIf="!cargandoEstadisticas()"
+            class="text-xl md:text-2xl font-bold text-gray-900 animate-[fadeIn_0.3s_ease-out]"
+          >
             {{ estadisticas.proyectosTotales }}
           </p>
-          <p class="text-[11px] md:text-xs text-gray-500 mt-0.5">Proyectos</p>
+          <app-skeleton
+            *ngIf="cargandoEstadisticas()"
+            variant="text"
+            width="40px"
+            height="1.75rem"
+            class="block mx-auto"
+          />
+          <p class="text-[11px] md:text-xs text-gray-500 mt-0.5">
+            {{ estadisticas.proyectosTotales === 1 ? 'Proyecto' : 'Proyectos' }}
+          </p>
         </div>
         <div class="text-center border-l border-r border-gray-100">
-          <p class="text-xl md:text-2xl font-bold text-gray-900">
+          <p
+            *ngIf="!cargandoEstadisticas()"
+            class="text-xl md:text-2xl font-bold text-gray-900 animate-[fadeIn_0.3s_ease-out]"
+          >
             {{ estadisticas.clientesAtendidos }}
           </p>
-          <p class="text-[11px] md:text-xs text-gray-500 mt-0.5">Clientes</p>
+          <app-skeleton
+            *ngIf="cargandoEstadisticas()"
+            variant="text"
+            width="40px"
+            height="1.75rem"
+            class="block mx-auto"
+          />
+          <p class="text-[11px] md:text-xs text-gray-500 mt-0.5">
+            {{ estadisticas.clientesAtendidos === 1 ? 'Cliente' : 'Clientes' }}
+          </p>
         </div>
         <div class="text-center">
           <p class="text-sm md:text-base font-bold text-gray-900">

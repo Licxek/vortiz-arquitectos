@@ -8,11 +8,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { Usuario } from '../usuarios/usuario.entity'; // ⚠️ ajusta la ruta
+import { Proyecto } from '../proyectos/proyecto.entity'; // 👈 NUEVO
 
 @Injectable()
 export class PerfilService {
   constructor(
     @InjectRepository(Usuario) private usuariosRepo: Repository<Usuario>,
+    @InjectRepository(Proyecto) private proyectosRepo: Repository<Proyecto>,
   ) {}
 
   async obtener(userId: number) {
@@ -91,5 +93,25 @@ export class PerfilService {
     await this.usuariosRepo.save(usuario);
 
     return { ok: true };
+  }
+
+  async obtenerEstadisticas() {
+    const [proyectosTotales, clientesResult] = await Promise.all([
+      // Total de proyectos del estudio
+      this.proyectosRepo.count(),
+
+      // Clientes únicos que tienen al menos un proyecto (case insensitive)
+      this.proyectosRepo
+        .createQueryBuilder('p')
+        .select('COUNT(DISTINCT LOWER(TRIM(p.cliente)))', 'total')
+        .where('p.cliente IS NOT NULL')
+        .andWhere("TRIM(p.cliente) != ''")
+        .getRawOne(),
+    ]);
+
+    return {
+      proyectosTotales,
+      clientesAtendidos: parseInt(clientesResult?.total || '0', 10),
+    };
   }
 }

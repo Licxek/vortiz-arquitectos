@@ -81,10 +81,12 @@ export class PerfilComponent implements OnInit {
   mensajeErrorPassword = '';
 
   estadisticas = {
-    proyectosTotales: 47,
-    clientesAtendidos: 124,
+    proyectosTotales: 0,
+    clientesAtendidos: 0,
     miembroDesde: '—',
   };
+
+  cargandoEstadisticas = signal(true); // 👈 NUEVO
 
   sesiones: Sesion[] = [];
   cargandoSesiones = signal(true);
@@ -102,6 +104,7 @@ export class PerfilComponent implements OnInit {
   ngOnInit() {
     this.cargarPerfil();
     this.cargarSesiones();
+    this.cargarEstadisticas(); // ← NUEVO
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(() => this.aplicarParamsDeUrl());
@@ -766,5 +769,22 @@ export class PerfilComponent implements OnInit {
     if (d.includes('iphone') || d.includes('móvil')) return 'phone';
     if (d.includes('ipad') || d.includes('tablet')) return 'tablet';
     return 'computer';
+  }
+
+  private cargarEstadisticas() {
+    this.cargandoEstadisticas.set(true);
+    this.perfilService.obtenerEstadisticas().subscribe({
+      next: (stats) => {
+        this.estadisticas.proyectosTotales = stats.proyectosTotales;
+        this.estadisticas.clientesAtendidos = stats.clientesAtendidos;
+        this.cargandoEstadisticas.set(false);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        // No es crítico — mantener en 0 si falla
+        this.cargandoEstadisticas.set(false);
+        this.cdr.detectChanges();
+      },
+    });
   }
 }

@@ -33,6 +33,12 @@ export class PerfilController {
     return this.servicio.obtener(userId);
   }
 
+  // ====== GET /perfil/estadisticas — proyectos totales + clientes únicos ======
+  @Get('estadisticas')
+  estadisticas() {
+    return this.servicio.obtenerEstadisticas();
+  }
+
   // ====== PATCH /perfil — actualizar (exige código si cambia correo) ======
   @Patch()
   async actualizar(
