@@ -50,7 +50,11 @@ export class InicioService {
     };
   }
 
-  private async contarCitas(desde: string, hasta: string, tipo?: string): Promise<number> {
+  private async contarCitas(
+    desde: string,
+    hasta: string,
+    tipo?: string,
+  ): Promise<number> {
     const qb = this.citasRepo
       .createQueryBuilder('c')
       .where('c.fecha >= :desde', { desde })
@@ -64,7 +68,10 @@ export class InicioService {
     return Math.round(((actual - previo) / previo) * 100);
   }
 
-  private rangoPorPeriodo(periodo: Periodo, timezone?: string): { desde: string; hasta: string } {
+  private rangoPorPeriodo(
+    periodo: Periodo,
+    timezone?: string,
+  ): { desde: string; hasta: string } {
     const hoy = this.getHoy(timezone);
     hoy.setHours(0, 0, 0, 0);
 
@@ -92,7 +99,10 @@ export class InicioService {
     }
   }
 
-  private periodoAnterior(periodo: Periodo, timezone?: string): { desde: string; hasta: string } {
+  private periodoAnterior(
+    periodo: Periodo,
+    timezone?: string,
+  ): { desde: string; hasta: string } {
     const hoy = this.getHoy(timezone);
     hoy.setHours(0, 0, 0, 0);
 
@@ -143,22 +153,46 @@ export class InicioService {
   }
 
   async obtenerConsultasPendientes() {
-    return this.citasRepo.find({
+    // 1. Traer citas pendientes (igual que antes, pero SIN filtrar tipo)
+    //    Los mensajes pueden llegar a citas de proyecto también
+    const citas = await this.citasRepo.find({
       where: {
         tipo: 'consulta',
         estado: 'pendiente',
       },
-      order: { createdAt: 'DESC' }, // 👈 createdAt, no created_at
+      order: { createdAt: 'DESC' },
       relations: ['servicio'],
     });
+
+    if (citas.length === 0) return citas;
+
+    // 2. Último mensaje de cada cita en una sola query
+    const ids = citas.map((c) => c.id);
+    const ultimos = await this.citasRepo.manager.query(
+      `
+    SELECT DISTINCT ON ("citaId") 
+      "citaId", id, texto, autor, metodo, "createdAt"
+    FROM mensajes_consulta
+    WHERE "citaId" = ANY($1)
+    ORDER BY "citaId", "createdAt" DESC
+    `,
+      [ids],
+    );
+
+    const mapa = new Map<number, any>();
+    ultimos.forEach((m: any) => mapa.set(m.citaId, m));
+
+    // 3. Adjuntar ultimoMensaje a cada cita
+    return citas.map((cita) => ({
+      ...cita,
+      ultimoMensaje: mapa.get(cita.id) || null,
+    })) as any;
   }
 
   private getHoy(timezone?: string): Date {
     const tz = this.tzValido(timezone);
     const ahora = new Date();
-    const enZona = new Date(
-      ahora.toLocaleString('en-US', { timeZone: tz }),
-    );
+    const enZona = new Date(ahora.toLocaleString('en-US', { timeZone: tz }));
     enZona.setHours(0, 0, 0, 0);
     return enZona;
   }
