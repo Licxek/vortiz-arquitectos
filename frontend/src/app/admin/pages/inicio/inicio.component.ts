@@ -229,7 +229,6 @@ export class InicioComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
 
   ngOnInit() {
-    this.sonidoActivado = localStorage.getItem(this.STORAGE_SONIDO) === '1';
     const hoy = new Date();
     const meses = [
       'enero',
@@ -513,13 +512,6 @@ export class InicioComponent implements OnInit, OnDestroy {
           .filter((c) => c.estado === 'confirmada' || c.estado === 'pendiente')
           .map((c) => this.mapearCita(c));
 
-        // 👇 Detectar nuevas (después de primera carga)
-        if (!this.primeraCargaAgenda && lista.length > this.cantidadCitasAnterior) {
-          this.reproducirSonidoNuevo();
-        }
-        this.cantidadCitasAnterior = lista.length;
-        this.primeraCargaAgenda = false;
-
         this.cargandoAgenda = false;
         this.cdr.detectChanges();
       },
@@ -539,13 +531,6 @@ export class InicioComponent implements OnInit, OnDestroy {
         const vigentes = lista.filter((c) => this.esFechaVigente(c.fecha));
         this.consultasRaw = vigentes;
         this.consultasPendientes = vigentes.map((c) => this.mapearConsulta(c));
-
-        // 👇 Detectar nuevas (después de primera carga)
-        if (!this.primeraCargaConsultas && vigentes.length > this.cantidadConsultasAnterior) {
-          this.reproducirSonidoNuevo();
-        }
-        this.cantidadConsultasAnterior = vigentes.length;
-        this.primeraCargaConsultas = false;
 
         this.cargandoConsultas = false;
         this.cdr.detectChanges();
@@ -1038,42 +1023,6 @@ export class InicioComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  sonidoActivado = false;
-  private primeraCargaAgenda = true;
-  private primeraCargaConsultas = true;
-  private cantidadCitasAnterior = 0;
-  private cantidadConsultasAnterior = 0;
-  private readonly STORAGE_SONIDO = 'vortiz_inicio_sonido';
-
-  toggleSonido() {
-    this.sonidoActivado = !this.sonidoActivado;
-    localStorage.setItem(this.STORAGE_SONIDO, this.sonidoActivado ? '1' : '0');
-    if (this.sonidoActivado) {
-      this.reproducirSonidoNuevo(); // sonido de prueba al activar
-    }
-  }
-
-  private reproducirSonidoNuevo() {
-    if (!this.sonidoActivado) return;
-    try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-
-      // Tono suave ascendente
-      oscillator.frequency.setValueAtTime(800, ctx.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
-
-      gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-
-      oscillator.start(ctx.currentTime);
-      oscillator.stop(ctx.currentTime + 0.3);
-    } catch {}
-  }
   refrescando = false;
 
   refrescarManual() {

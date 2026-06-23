@@ -35,6 +35,11 @@ interface Consulta {
   tipo: string;
   iniciales: string;
   colorAvatar: string;
+  ultimoMensajeTexto?: string;
+  ultimoMensajeAutor?: 'cliente' | 'admin';
+  ultimoMensajeFecha?: string;
+  ultimoMensajeMetodo?: 'email' | 'whatsapp' | 'guardado' | 'inbound';
+  tieneRespuestaNoLeida: boolean;
 }
 
 interface MensajeChat {
@@ -78,12 +83,15 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
   private intervalPolling: any = null;
 
   private bodyOverflowAnterior = '';
+  private readonly STORAGE_LEIDAS = 'vortiz_consultas_leidas';
+  private idsLeidos = new Set<string>();
 
   ngOnInit() {
     this.bodyOverflowAnterior = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     this.cargarLocalStorage();
     this.cargar();
+    this.iniciarPollingLista(); // ← NUEVO
   }
 
   ngAfterViewInit() {
@@ -132,6 +140,7 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     this.elementosScrollBloqueados = [];
     window.removeEventListener('resize', this.ajustarAlturaCard);
     this.detenerPolling();
+    this.detenerPollingLista();
   }
 
   private cargarLocalStorage() {
@@ -140,6 +149,10 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
       if (r) this.idsResueltos = new Set(JSON.parse(r));
       const a = localStorage.getItem(this.STORAGE_ARCHIVADAS);
       if (a) this.idsArchivados = new Set(JSON.parse(a));
+    } catch {}
+    try {
+      const l = localStorage.getItem(this.STORAGE_LEIDAS);
+      if (l) this.idsLeidos = new Set(JSON.parse(l));
     } catch {}
   }
 
@@ -222,6 +235,14 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   seleccionar(c: Consulta) {
+    // Marcar como leído si tenía mensaje sin leer
+    if (c.tieneRespuestaNoLeida && c.ultimoMensajeFecha) {
+      const key = `${c.id}_${c.ultimoMensajeFecha}`;
+      this.idsLeidos.add(key);
+      this.guardar(this.STORAGE_LEIDAS, this.idsLeidos as any);
+      c.tieneRespuestaNoLeida = false;
+    }
+
     this.consultaSeleccionada = c;
     this.respuestaTexto = '';
     this.mensajesActuales = [];
@@ -411,6 +432,11 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
   private mapearConsulta(c: CitaBackend): Consulta {
     const conServicio = !!c.servicio?.titulo;
     const tipoLabel = c.tipo === 'consulta' ? 'Consulta general' : 'Solicitud de cita';
+    const ultimo = (c as any).ultimoMensaje;
+    const keyLeido = ultimo ? `${c.id}_${ultimo.createdAt}` : '';
+    const tieneRespuestaNoLeida =
+      !!ultimo && ultimo.autor === 'cliente' && !this.idsLeidos.has(keyLeido);
+
     return {
       id: c.id,
       nombre: c.nombre,
@@ -431,6 +457,11 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
       tipo: c.tipo || 'consulta',
       iniciales: this.iniciales(c.nombre),
       colorAvatar: this.colorAvatar(c.nombre),
+      ultimoMensajeTexto: ultimo?.texto || '',
+      ultimoMensajeAutor: ultimo?.autor,
+      ultimoMensajeFecha: ultimo?.createdAt,
+      ultimoMensajeMetodo: ultimo?.metodo,
+      tieneRespuestaNoLeida,
     };
   }
 
@@ -560,6 +591,24 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.intervalPolling) {
       clearInterval(this.intervalPolling);
       this.intervalPolling = null;
+    }
+  }
+
+  private intervalPollingLista: any = null;
+
+  private iniciarPollingLista() {
+    this.detenerPollingLista();
+    this.intervalPollingLista = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        this.cargar();
+      }
+    }, 60000); // cada 60s
+  }
+
+  private detenerPollingLista() {
+    if (this.intervalPollingLista) {
+      clearInterval(this.intervalPollingLista);
+      this.intervalPollingLista = null;
     }
   }
 }

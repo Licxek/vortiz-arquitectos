@@ -233,7 +233,21 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-start justify-between gap-2">
                 <p class="text-sm font-semibold text-gray-900 truncate">{{ c.nombre }}</p>
-                <span class="text-[10px] text-gray-400 shrink-0 mt-0.5">{{ c.fechaCreacion }}</span>
+                <div class="flex items-center gap-1 shrink-0 mt-0.5">
+                  <span
+                    class="text-[10px]"
+                    [class.text-blue-600]="c.tieneRespuestaNoLeida"
+                    [class.font-bold]="c.tieneRespuestaNoLeida"
+                    [class.text-gray-400]="!c.tieneRespuestaNoLeida"
+                  >
+                    {{ c.fechaCreacion }}
+                  </span>
+                  <!-- Badge punto azul si hay mensaje no leído -->
+                  <span
+                    *ngIf="c.tieneRespuestaNoLeida"
+                    class="w-2 h-2 bg-blue-500 rounded-full"
+                  ></span>
+                </div>
               </div>
               <div class="flex items-center gap-1.5 mt-0.5">
                 <span
@@ -250,7 +264,27 @@
                 </span>
               </div>
               <p class="text-xs text-gray-600 truncate mt-1">{{ c.asunto }}</p>
-              <p class="text-[11px] text-gray-400 truncate mt-0.5">{{ c.mensaje }}</p>
+              <p
+                class="text-[11px] truncate mt-0.5 flex items-center gap-1"
+                [class.text-gray-900]="c.tieneRespuestaNoLeida"
+                [class.font-bold]="c.tieneRespuestaNoLeida"
+                [class.text-gray-400]="!c.tieneRespuestaNoLeida"
+              >
+                <!-- Check si admin envió (estilo WhatsApp doble check azul) -->
+                <svg
+                  *ngIf="c.ultimoMensajeAutor === 'admin'"
+                  class="w-3 h-3 text-blue-500 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="truncate">
+                  {{ c.ultimoMensajeTexto || c.mensaje }}
+                </span>
+              </p>
             </div>
           </button>
         </div>
