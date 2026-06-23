@@ -15,13 +15,15 @@ import {
   ReporteHistorial,
 } from '../../../core/services/historial-reportes.service';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
-import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import { ActivatedRoute, Router, NavigationEnd, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
+
+type OrdenTipo = 'reciente' | 'antiguo' | 'pesado' | 'ligero' | 'tipo';
 
 @Component({
   selector: 'app-historial-reportes',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent],
+  imports: [CommonModule, FormsModule, SkeletonComponent, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './historial-reportes.component.html',
 })
@@ -35,6 +37,7 @@ export class HistorialReportesComponent implements OnInit {
   cargando = signal(true);
   filtroTipo = signal('');
   busqueda = signal('');
+  orden = signal<OrdenTipo>('reciente');
 
   // Modal Reenviar
   modalReenviarAbierto = signal(false);
@@ -54,18 +57,75 @@ export class HistorialReportesComponent implements OnInit {
     { value: 'categorias-servicios', label: 'Categorías de servicios' },
     { value: 'actividad-semanal', label: 'Actividad semanal' },
     { value: 'clientes-nuevos', label: 'Clientes nuevos' },
-    { value: 'visitas', label: 'Visitas al sitio' },  // 👈
+    { value: 'visitas', label: 'Visitas al sitio' },
   ];
+
+  ordenesDisponibles = [
+    { value: 'reciente' as OrdenTipo, label: 'Más reciente primero' },
+    { value: 'antiguo' as OrdenTipo, label: 'Más antiguo primero' },
+    { value: 'pesado' as OrdenTipo, label: 'Más pesado primero' },
+    { value: 'ligero' as OrdenTipo, label: 'Más ligero primero' },
+    { value: 'tipo' as OrdenTipo, label: 'Por tipo' },
+  ];
+
+  // ============ COMPUTEDS ============
 
   reportesFiltrados = computed(() => {
     const todos = this.reportes();
     const tipo = this.filtroTipo();
     const search = this.busqueda().toLowerCase().trim();
-    return todos.filter((r) => {
+    const orden = this.orden();
+
+    let resultado = todos.filter((r) => {
       if (tipo && r.tipo !== tipo) return false;
       if (search && !r.titulo.toLowerCase().includes(search)) return false;
       return true;
     });
+
+    // Ordenamiento
+    resultado = [...resultado].sort((a, b) => {
+      if (orden === 'reciente') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      if (orden === 'antiguo') {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+      if (orden === 'pesado') {
+        return (b.tamanioKb || 0) - (a.tamanioKb || 0);
+      }
+      if (orden === 'ligero') {
+        return (a.tamanioKb || 0) - (b.tamanioKb || 0);
+      }
+      if (orden === 'tipo') {
+        return a.tipo.localeCompare(b.tipo);
+      }
+      return 0;
+    });
+
+    return resultado;
+  });
+
+  // Stats expandidas
+  totalReportes = computed(() => this.reportes().length);
+
+  reportesEsteMes = computed(() => {
+    const ahora = new Date();
+    const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    return this.reportes().filter((r) => new Date(r.createdAt) >= inicioMes).length;
+  });
+
+  tamanioTotalKb = computed(() => {
+    return this.reportes().reduce((acc, r) => acc + (r.tamanioKb || 0), 0);
+  });
+
+  tamanioTotalFormateado = computed(() => {
+    const kb = this.tamanioTotalKb();
+    if (kb < 1024) return `${kb} KB`;
+    return `${(kb / 1024).toFixed(1)} MB`;
+  });
+
+  totalEnviadosPorEmail = computed(() => {
+    return this.reportes().filter((r) => r.emailEnviado).length;
   });
 
   destinatariosValidos = computed(() => {
@@ -76,12 +136,15 @@ export class HistorialReportesComponent implements OnInit {
       .filter((d) => emailRegex.test(d));
   });
 
+  hayFiltrosActivos = computed(() => !!this.filtroTipo() || !!this.busqueda().trim());
+
+  // ============ LIFECYCLE ============
+
   ngOnInit() {
     this.cargar();
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(() => this.aplicarParamsDeUrl());
-
     this.aplicarParamsDeUrl();
   }
 
@@ -101,6 +164,8 @@ export class HistorialReportesComponent implements OnInit {
     });
   }
 
+  // ============ ACCIONES ============
+
   async descargar(reporte: ReporteHistorial) {
     try {
       const blob = await firstValueFrom(this.historialService.descargar(reporte.id));
@@ -118,7 +183,11 @@ export class HistorialReportesComponent implements OnInit {
     }
   }
 
-  // ============ Reenviar ============
+  limpiarFiltros() {
+    this.filtroTipo.set('');
+    this.busqueda.set('');
+  }
+
   abrirReenviar(reporte: ReporteHistorial) {
     this.reporteSeleccionado.set(reporte);
     this.destinatariosReenvio.set(reporte.destinatarios?.join(', ') || '');
@@ -153,7 +222,7 @@ export class HistorialReportesComponent implements OnInit {
       await firstValueFrom(this.historialService.reenviar(reporte.id, destinatarios));
       this.resultadoReenvio.set({
         tipo: 'exito',
-        mensaje: `✉️ Reenviado a ${destinatarios.length} destinatario(s)`,
+        mensaje: `Reenviado a ${destinatarios.length} destinatario(s)`,
       });
       this.cargar();
     } catch (err) {
@@ -167,7 +236,6 @@ export class HistorialReportesComponent implements OnInit {
     }
   }
 
-  // ============ Eliminar ============
   abrirEliminar(reporte: ReporteHistorial) {
     this.reporteAEliminar.set(reporte);
     this.modalEliminarAbierto.set(true);
@@ -194,7 +262,8 @@ export class HistorialReportesComponent implements OnInit {
     }
   }
 
-  // ============ Helpers ============
+  // ============ HELPERS ============
+
   formatearFecha(iso: string): string {
     const fecha = new Date(iso);
     return fecha.toLocaleDateString('es-MX', {
@@ -206,12 +275,35 @@ export class HistorialReportesComponent implements OnInit {
     });
   }
 
+  tiempoRelativo(iso: string): string {
+    if (!iso) return '—';
+    const ahora = Date.now();
+    const fecha = new Date(iso).getTime();
+    const diffMs = ahora - fecha;
+    const min = Math.floor(diffMs / 60000);
+    const horas = Math.floor(diffMs / 3600000);
+    const dias = Math.floor(diffMs / 86400000);
+
+    if (min < 1) return 'Recién';
+    if (min < 60) return `Hace ${min}m`;
+    if (horas < 24) return `Hace ${horas}h`;
+    if (dias === 1) return 'Ayer';
+    if (dias < 7) return `Hace ${dias}d`;
+    return new Date(iso).toLocaleDateString('es-MX');
+  }
+
   formatearRango(desde: string, hasta: string): string {
     const formatear = (iso: string) => {
       const [y, m, d] = iso.split('-');
       return `${parseInt(d, 10)}/${parseInt(m, 10)}/${y.slice(-2)}`;
     };
     return `${formatear(desde)} → ${formatear(hasta)}`;
+  }
+
+  formatearTamanio(kb: number): string {
+    if (!kb) return '—';
+    if (kb < 1024) return `${kb} KB`;
+    return `${(kb / 1024).toFixed(1)} MB`;
   }
 
   obtenerTipoLabel(tipo: string): string {
@@ -224,10 +316,11 @@ export class HistorialReportesComponent implements OnInit {
       'categorias-servicios': 'bg-purple-100 text-purple-700',
       'actividad-semanal': 'bg-emerald-100 text-emerald-700',
       'clientes-nuevos': 'bg-orange-100 text-orange-700',
-      'visitas': 'bg-fuchsia-100 text-fuchsia-700',  // 👈
+      visitas: 'bg-fuchsia-100 text-fuchsia-700',
     };
     return colores[tipo] || 'bg-gray-100 text-gray-700';
   }
+
   private aplicarParamsDeUrl() {
     const tipo = this.route.snapshot.queryParamMap.get('tipo');
     if (tipo) {
