@@ -325,20 +325,22 @@ export class ImapService implements OnModuleInit {
   private limpiarTextoEmail(texto: string): string {
     if (!texto) return '';
 
+    // 1. Cortar el quote multilínea ANTES de procesar línea por línea
+    //    Detecta "El ... escribió:", "On ... wrote:", etc.
+    //    aunque Gmail/Outlook lo hayan partido en varios renglones
+    const matchQuote = texto.match(
+      /\n\s*(El|On|Le|Am|Il)\s[\s\S]{0,400}?(escribió|wrote|a écrit|schrieb|ha scritto)\s*:?\s*\n/i,
+    );
+    if (matchQuote && matchQuote.index !== undefined) {
+      texto = texto.substring(0, matchQuote.index).trim();
+    }
+
+    // 2. Procesar línea por línea para firmas y líneas citadas residuales
     const lineas = texto.split(/\r?\n/);
     const resultado: string[] = [];
 
     for (const linea of lineas) {
       const trimmed = linea.trim();
-
-      // Detectar inicio de respuesta citada (varios idiomas)
-      if (
-        /^(El\s|On\s|Le\s|Am\s|Il\s).*(escribió|wrote|a écrit|schrieb|ha scritto)\s*:?\s*$/i.test(
-          trimmed,
-        )
-      ) {
-        break;
-      }
 
       // Líneas tipo "From: ... Sent: ..." (Outlook)
       if (/^(De|From):\s/i.test(trimmed)) {
