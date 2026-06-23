@@ -72,4 +72,14 @@ export class PerfilService {
   cerrarOtrasSesiones(): Observable<{ message: string; cerradas: number }> {
     return this.http.delete<{ message: string; cerradas: number }>(`${this.base}/sesiones`);
   }
+
+  obtenerEstadisticas(): Observable<{
+    proyectosTotales: number;
+    clientesAtendidos: number;
+  }> {
+    return this.http.get<{
+      proyectosTotales: number;
+      clientesAtendidos: number;
+    }>(`${this.base}/estadisticas`);
+  }
 }
