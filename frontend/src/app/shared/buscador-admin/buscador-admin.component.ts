@@ -9,6 +9,7 @@ import {
   inject,
   Input,
   OnChanges,
+  OnDestroy,
   Output,
   signal,
 } from '@angular/core';
@@ -26,7 +27,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './buscador-admin.component.html',
 })
-export class BuscadorAdminComponent implements OnChanges {
+export class BuscadorAdminComponent implements OnChanges, OnDestroy {
   @Input() abierto = false;
   @Input() query = '';
   @Output() cerrar = new EventEmitter<void>();
@@ -43,6 +44,9 @@ export class BuscadorAdminComponent implements OnChanges {
   indiceSeleccionado = signal(0);
   mostrarCascada = signal(false);
 
+  private debounceTimer: any = null;
+  private timeoutCascada: any = null;
+
   async ngOnChanges(changes: any) {
     if (changes['abierto']?.currentValue === true) {
       this.cargando.set(true);
@@ -56,15 +60,35 @@ export class BuscadorAdminComponent implements OnChanges {
       this.cargando.set(false);
       this.cdr.markForCheck();
 
-      setTimeout(() => {
+      if (this.timeoutCascada) clearTimeout(this.timeoutCascada);
+      this.timeoutCascada = setTimeout(() => {
         this.mostrarCascada.set(false);
         this.cdr.markForCheck();
+        this.timeoutCascada = null;
       }, 800);
     }
 
+    // Cuando se cierra, limpiar cualquier timer pendiente
+    if (changes['abierto']?.currentValue === false) {
+      if (this.timeoutCascada) {
+        clearTimeout(this.timeoutCascada);
+        this.timeoutCascada = null;
+      }
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer);
+        this.debounceTimer = null;
+      }
+      this.mostrarCascada.set(false);
+    }
+
+    // Debounce para query: espera 180ms antes de buscar
     if (changes['query'] && !changes['query'].firstChange) {
-      this.actualizarResultados();
-      this.cdr.markForCheck();
+      if (this.debounceTimer) clearTimeout(this.debounceTimer);
+      this.debounceTimer = setTimeout(() => {
+        this.actualizarResultados();
+        this.cdr.markForCheck();
+        this.debounceTimer = null;
+      }, 180);
     }
   }
 
@@ -216,5 +240,10 @@ export class BuscadorAdminComponent implements OnChanges {
       acumulado += grupos[c].length;
     }
     return -1;
+  }
+
+  ngOnDestroy() {
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    if (this.timeoutCascada) clearTimeout(this.timeoutCascada);
   }
 }
