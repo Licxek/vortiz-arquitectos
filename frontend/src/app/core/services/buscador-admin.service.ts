@@ -981,40 +981,40 @@ export class BuscadorAdminService {
 
   // ============ Algoritmo de Scoring (fuzzy + exacto) ============
   private calcularScore(item: ResultadoBusqueda, query: string): number {
-    const titulo = item.titulo.toLowerCase();
-    const subtitulo = (item.subtitulo || '').toLowerCase();
-    const keywords = (item.keywords || []).join(' ').toLowerCase();
+    try {
+      const titulo = this.truncar(item.titulo || '', 200).toLowerCase();
+      const subtitulo = this.truncar(item.subtitulo || '', 200).toLowerCase();
+      const keywords = this.truncar(
+        (item.keywords || []).map((k) => this.toSearchableString(k)).join(' '),
+        300,
+      ).toLowerCase();
 
-    let score = 0;
+      let score = 0;
 
-    // Match exacto en titulo
-    if (titulo === query) return 10000;
+      if (titulo === query) return 10000;
+      if (titulo.startsWith(query)) score += 500;
+      if (titulo.includes(query)) score += 200;
 
-    // Titulo empieza con query
-    if (titulo.startsWith(query)) score += 500;
+      const palabras = titulo.split(/\s+/).slice(0, 20);
+      for (const p of palabras) {
+        if (p.startsWith(query)) score += 150;
+        else if (p.includes(query)) score += 80;
+      }
 
-    // Titulo contiene query
-    if (titulo.includes(query)) score += 200;
+      if (subtitulo.includes(query)) score += 80;
+      if (keywords.includes(query)) score += 60;
 
-    // Alguna palabra del titulo empieza con query
-    const palabras = titulo.split(/\s+/);
-    for (const p of palabras) {
-      if (p.startsWith(query)) score += 150;
-      else if (p.includes(query)) score += 80;
+      if (score === 0) {
+        if (this.fuzzyMatch(titulo, query)) score += 30;
+        else if (this.fuzzyMatch(subtitulo, query)) score += 15;
+        else if (this.fuzzyMatch(keywords, query)) score += 10;
+      }
+
+      return score;
+    } catch (err) {
+      console.warn('[Buscador] Error scoring item:', item?.id, err);
+      return 0;
     }
-
-    // Subtitulo o keywords
-    if (subtitulo.includes(query)) score += 80;
-    if (keywords.includes(query)) score += 60;
-
-    // Fuzzy match como fallback (caracteres en orden)
-    if (score === 0) {
-      if (this.fuzzyMatch(titulo, query)) score += 30;
-      else if (this.fuzzyMatch(subtitulo, query)) score += 15;
-      else if (this.fuzzyMatch(keywords, query)) score += 10;
-    }
-
-    return score;
   }
 
   /**
@@ -1022,8 +1022,12 @@ export class BuscadorAdminService {
    * Ejemplo: "cnt" matchea "co nf ig u ra ci on" (porque c-o-n... contiene c-n-...)
    */
   private fuzzyMatch(text: string, query: string): boolean {
+    if (!text || !query) return false;
+    if (text.length > 300) text = text.slice(0, 300);
+
     let qi = 0;
-    for (let ti = 0; ti < text.length && qi < query.length; ti++) {
+    const maxIter = text.length;
+    for (let ti = 0; ti < maxIter && qi < query.length; ti++) {
       if (text[ti] === query[qi]) qi++;
     }
     return qi === query.length;
@@ -1031,55 +1035,89 @@ export class BuscadorAdminService {
 
   // ============ Mappers ============
   private mapearProyectos(arr: any[]): ResultadoBusqueda[] {
-    return (arr || []).map((p) => ({
-      id: `proy-${p.id}`,
-      categoria: 'proyecto' as CategoriaResultado,
-      titulo: p.nombre || 'Sin nombre',
-      subtitulo: `${p.cliente || 'Sin cliente'} · ${this.labelEstado(p.estado)}`,
-      icono: '🏗️',
-      ruta: '/admin/inicio',
-      keywords: [p.ubicacion, p.cliente, p.superficie].filter(Boolean),
-      meta: p,
-    }));
+    return (arr || []).slice(0, 100).map((p) => {
+      const nombre = this.toSearchableString(p.nombre) || 'Sin nombre';
+      const cliente = this.toSearchableString(p.cliente);
+      const ubicacion = this.toSearchableString(p.ubicacion);
+      const superficie = this.toSearchableString(p.superficie);
+
+      return {
+        id: `proy-${p.id}`,
+        categoria: 'proyecto' as CategoriaResultado,
+        titulo: this.truncar(nombre, 80),
+        subtitulo: this.truncar(`${cliente || 'Sin cliente'} · ${this.labelEstado(p.estado)}`, 100),
+        icono: '🏗️',
+        ruta: '/admin/inicio',
+        keywords: [ubicacion, cliente, superficie]
+          .filter((s) => s && s.length > 0)
+          .map((s) => this.truncar(s, 50)),
+        meta: { id: p.id, nombre, cliente, estado: p.estado },
+      };
+    });
   }
 
   private mapearCitas(arr: any[]): ResultadoBusqueda[] {
-    return (arr || []).slice(0, 30).map((c) => ({
-      id: `cita-${c.id}`,
-      categoria: 'cita' as CategoriaResultado,
-      titulo: c.nombre || 'Sin nombre',
-      subtitulo: `${c.tipo === 'consulta' ? 'Consulta' : 'Proyecto'} · ${c.hora || 'sin hora'}`,
-      icono: '📅',
-      ruta: '/admin/citas',
-      keywords: [c.correo, c.telefono, c.servicio?.titulo].filter(Boolean),
-      meta: c,
-    }));
+    return (arr || []).slice(0, 30).map((c) => {
+      const nombre = this.toSearchableString(c.nombre) || 'Sin nombre';
+      const tipo = c.tipo === 'consulta' ? 'Consulta' : 'Proyecto';
+      const correo = this.toSearchableString(c.correo);
+      const telefono = this.toSearchableString(c.telefono);
+      const servicio = this.toSearchableString(c.servicio);
+
+      return {
+        id: `cita-${c.id}`,
+        categoria: 'cita' as CategoriaResultado,
+        titulo: this.truncar(nombre, 80),
+        subtitulo: this.truncar(`${tipo} · ${c.hora || 'sin hora'}`, 100),
+        icono: '📅',
+        ruta: '/admin/citas',
+        keywords: [correo, telefono, servicio]
+          .filter((s) => s && s.length > 0)
+          .map((s) => this.truncar(s, 50)),
+        meta: { id: c.id, nombre, tipo: c.tipo, hora: c.hora },
+      };
+    });
   }
 
   private mapearConsultas(arr: any[]): ResultadoBusqueda[] {
-    return (arr || []).slice(0, 30).map((c) => ({
-      id: `cons-${c.id}`,
-      categoria: 'consulta' as CategoriaResultado,
-      titulo: c.nombre || 'Sin nombre',
-      subtitulo: c.servicio?.titulo || c.motivo?.slice(0, 50) || 'Consulta general',
-      icono: '💬',
-      ruta: '/admin/inicio',
-      keywords: [c.correo, c.motivo].filter(Boolean),
-      meta: c,
-    }));
+    return (arr || []).slice(0, 30).map((c) => {
+      const nombre = this.toSearchableString(c.nombre) || 'Sin nombre';
+      const servicio = this.toSearchableString(c.servicio);
+      const motivo = this.toSearchableString(c.motivo);
+      const correo = this.toSearchableString(c.correo);
+
+      return {
+        id: `cons-${c.id}`,
+        categoria: 'consulta' as CategoriaResultado,
+        titulo: this.truncar(nombre, 80),
+        subtitulo: this.truncar(servicio || motivo.slice(0, 50) || 'Consulta general', 100),
+        icono: '💬',
+        ruta: '/admin/inicio',
+        keywords: [correo, this.truncar(motivo, 100)].filter((s) => s && s.length > 0),
+        meta: { id: c.id, nombre, servicio, motivo: this.truncar(motivo, 200) },
+      };
+    });
   }
 
   private mapearReportes(arr: any[]): ResultadoBusqueda[] {
-    return (arr || []).map((r) => ({
-      id: `rep-${r.id}`,
-      categoria: 'reporte' as CategoriaResultado,
-      titulo: r.titulo,
-      subtitulo: `${this.fmtFecha(r.createdAt)} · ${r.tamanioKb} KB`,
-      icono: '📄',
-      ruta: '/admin/reportes/historial',
-      keywords: [r.tipo, r.descripcion].filter(Boolean),
-      meta: r,
-    }));
+    return (arr || []).slice(0, 50).map((r) => {
+      const titulo = this.toSearchableString(r.titulo) || 'Sin título';
+      const tipo = this.toSearchableString(r.tipo);
+      const descripcion = this.toSearchableString(r.descripcion);
+
+      return {
+        id: `rep-${r.id}`,
+        categoria: 'reporte' as CategoriaResultado,
+        titulo: this.truncar(titulo, 80),
+        subtitulo: this.truncar(`${this.fmtFecha(r.createdAt)} · ${r.tamanioKb || 0} KB`, 100),
+        icono: '📄',
+        ruta: '/admin/reportes/historial',
+        keywords: [tipo, descripcion]
+          .filter((s) => s && s.length > 0)
+          .map((s) => this.truncar(s, 50)),
+        meta: { id: r.id, titulo, tipo },
+      };
+    });
   }
 
   private labelEstado(estado: string): string {
@@ -1097,5 +1135,24 @@ export class BuscadorAdminService {
     if (!iso) return 'Sin fecha';
     const d = new Date(iso);
     return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  /** Convierte cualquier valor a string seguro para búsqueda */
+  private toSearchableString(value: any): string {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (typeof value === 'object') {
+      if ('nombre' in value && typeof value.nombre === 'string') return value.nombre;
+      if ('titulo' in value && typeof value.titulo === 'string') return value.titulo;
+      return '';
+    }
+    return '';
+  }
+
+  /** Limita strings muy largos para evitar hangs en fuzzy match */
+  private truncar(s: string, max = 200): string {
+    if (!s) return '';
+    return s.length > max ? s.slice(0, max) : s;
   }
 }
