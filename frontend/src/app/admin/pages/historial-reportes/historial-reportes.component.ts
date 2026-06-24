@@ -6,10 +6,11 @@ import {
   inject,
   OnInit,
   signal,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, forkJoin } from 'rxjs';
 import {
   HistorialReportesService,
   ReporteHistorial,
@@ -39,6 +40,18 @@ export class HistorialReportesComponent implements OnInit {
   busqueda = signal('');
   orden = signal<OrdenTipo>('reciente');
 
+  // Filtros de fecha
+  fechaDesde = signal('');
+  fechaHasta = signal('');
+
+  // Paginación
+  paginaActual = signal(1);
+  itemsPorPagina = signal(10);
+
+  // Selección múltiple
+  seleccionados = signal<Set<number>>(new Set());
+  modoSeleccion = computed(() => this.seleccionados().size > 0);
+
   // Modal Reenviar
   modalReenviarAbierto = signal(false);
   reporteSeleccionado = signal<ReporteHistorial | null>(null);
@@ -46,10 +59,14 @@ export class HistorialReportesComponent implements OnInit {
   reenviandoEmail = signal(false);
   resultadoReenvio = signal<{ tipo: 'exito' | 'error'; mensaje: string } | null>(null);
 
-  // Modal Eliminar
+  // Modal Eliminar (individual)
   modalEliminarAbierto = signal(false);
   reporteAEliminar = signal<ReporteHistorial | null>(null);
   eliminandoReporte = signal(false);
+
+  // Modal Eliminar múltiple
+  modalEliminarMultipleAbierto = signal(false);
+  eliminandoMultiples = signal(false);
 
   tiposDisponibles = [
     { value: '', label: 'Todos los tipos' },
@@ -68,44 +85,92 @@ export class HistorialReportesComponent implements OnInit {
     { value: 'tipo' as OrdenTipo, label: 'Por tipo' },
   ];
 
+  opcionesItemsPorPagina = [10, 25, 50, 100];
+
   // ============ COMPUTEDS ============
 
-  reportesFiltrados = computed(() => {
+  reportesFiltradosSinPaginar = computed(() => {
     const todos = this.reportes();
     const tipo = this.filtroTipo();
     const search = this.busqueda().toLowerCase().trim();
     const orden = this.orden();
+    const desde = this.fechaDesde();
+    const hasta = this.fechaHasta();
 
     let resultado = todos.filter((r) => {
       if (tipo && r.tipo !== tipo) return false;
       if (search && !r.titulo.toLowerCase().includes(search)) return false;
+
+      // Filtro fecha desde (compara con createdAt)
+      if (desde) {
+        const fechaR = new Date(r.createdAt);
+        const fechaDesde = new Date(desde + 'T00:00:00');
+        if (fechaR < fechaDesde) return false;
+      }
+      // Filtro fecha hasta
+      if (hasta) {
+        const fechaR = new Date(r.createdAt);
+        const fechaHasta = new Date(hasta + 'T23:59:59');
+        if (fechaR > fechaHasta) return false;
+      }
+
       return true;
     });
 
     // Ordenamiento
     resultado = [...resultado].sort((a, b) => {
-      if (orden === 'reciente') {
+      if (orden === 'reciente')
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-      if (orden === 'antiguo') {
+      if (orden === 'antiguo')
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      }
-      if (orden === 'pesado') {
-        return (b.tamanioKb || 0) - (a.tamanioKb || 0);
-      }
-      if (orden === 'ligero') {
-        return (a.tamanioKb || 0) - (b.tamanioKb || 0);
-      }
-      if (orden === 'tipo') {
-        return a.tipo.localeCompare(b.tipo);
-      }
+      if (orden === 'pesado') return (b.tamanioKb || 0) - (a.tamanioKb || 0);
+      if (orden === 'ligero') return (a.tamanioKb || 0) - (b.tamanioKb || 0);
+      if (orden === 'tipo') return a.tipo.localeCompare(b.tipo);
       return 0;
     });
 
     return resultado;
   });
 
-  // Stats expandidas
+  reportesFiltrados = computed(() => {
+    const todos = this.reportesFiltradosSinPaginar();
+    const inicio = (this.paginaActual() - 1) * this.itemsPorPagina();
+    const fin = inicio + this.itemsPorPagina();
+    return todos.slice(inicio, fin);
+  });
+
+  totalPaginas = computed(() =>
+    Math.max(1, Math.ceil(this.reportesFiltradosSinPaginar().length / this.itemsPorPagina())),
+  );
+
+  paginas = computed(() => {
+    const total = this.totalPaginas();
+    const actual = this.paginaActual();
+    const paginas: (number | '...')[] = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) paginas.push(i);
+    } else {
+      paginas.push(1);
+      if (actual > 3) paginas.push('...');
+      const inicio = Math.max(2, actual - 1);
+      const fin = Math.min(total - 1, actual + 1);
+      for (let i = inicio; i <= fin; i++) paginas.push(i);
+      if (actual < total - 2) paginas.push('...');
+      paginas.push(total);
+    }
+    return paginas;
+  });
+
+  rangoVisible = computed(() => {
+    const total = this.reportesFiltradosSinPaginar().length;
+    if (total === 0) return { inicio: 0, fin: 0, total: 0 };
+    const inicio = (this.paginaActual() - 1) * this.itemsPorPagina() + 1;
+    const fin = Math.min(inicio + this.itemsPorPagina() - 1, total);
+    return { inicio, fin, total };
+  });
+
+  // Stats
   totalReportes = computed(() => this.reportes().length);
 
   reportesEsteMes = computed(() => {
@@ -114,9 +179,9 @@ export class HistorialReportesComponent implements OnInit {
     return this.reportes().filter((r) => new Date(r.createdAt) >= inicioMes).length;
   });
 
-  tamanioTotalKb = computed(() => {
-    return this.reportes().reduce((acc, r) => acc + (r.tamanioKb || 0), 0);
-  });
+  tamanioTotalKb = computed(() =>
+    this.reportes().reduce((acc, r) => acc + (r.tamanioKb || 0), 0),
+  );
 
   tamanioTotalFormateado = computed(() => {
     const kb = this.tamanioTotalKb();
@@ -124,9 +189,9 @@ export class HistorialReportesComponent implements OnInit {
     return `${(kb / 1024).toFixed(1)} MB`;
   });
 
-  totalEnviadosPorEmail = computed(() => {
-    return this.reportes().filter((r) => r.emailEnviado).length;
-  });
+  totalEnviadosPorEmail = computed(
+    () => this.reportes().filter((r) => r.emailEnviado).length,
+  );
 
   destinatariosValidos = computed(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -136,7 +201,24 @@ export class HistorialReportesComponent implements OnInit {
       .filter((d) => emailRegex.test(d));
   });
 
-  hayFiltrosActivos = computed(() => !!this.filtroTipo() || !!this.busqueda().trim());
+  hayFiltrosActivos = computed(
+    () =>
+      !!this.filtroTipo() ||
+      !!this.busqueda().trim() ||
+      !!this.fechaDesde() ||
+      !!this.fechaHasta(),
+  );
+
+  todosVisiblesSeleccionados = computed(() => {
+    const visibles = this.reportesFiltrados();
+    if (visibles.length === 0) return false;
+    return visibles.every((r) => this.seleccionados().has(r.id));
+  });
+
+  algunoVisibleSeleccionado = computed(() => {
+    const visibles = this.reportesFiltrados();
+    return visibles.some((r) => this.seleccionados().has(r.id));
+  });
 
   // ============ LIFECYCLE ============
 
@@ -164,6 +246,47 @@ export class HistorialReportesComponent implements OnInit {
     });
   }
 
+  // ============ PAGINACIÓN ============
+
+  irAPagina(p: number | '...') {
+    if (p === '...') return;
+    const pagina = Math.max(1, Math.min(p, this.totalPaginas()));
+    this.paginaActual.set(pagina);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  cambiarItemsPorPagina(n: number) {
+    this.itemsPorPagina.set(n);
+    this.paginaActual.set(1);
+  }
+
+  // ============ SELECCIÓN MÚLTIPLE ============
+
+  toggleSeleccion(id: number) {
+    const nuevo = new Set(this.seleccionados());
+    if (nuevo.has(id)) {
+      nuevo.delete(id);
+    } else {
+      nuevo.add(id);
+    }
+    this.seleccionados.set(nuevo);
+  }
+
+  toggleSeleccionarTodosVisibles() {
+    const visibles = this.reportesFiltrados();
+    const nuevo = new Set(this.seleccionados());
+    if (this.todosVisiblesSeleccionados()) {
+      visibles.forEach((r) => nuevo.delete(r.id));
+    } else {
+      visibles.forEach((r) => nuevo.add(r.id));
+    }
+    this.seleccionados.set(nuevo);
+  }
+
+  limpiarSeleccion() {
+    this.seleccionados.set(new Set());
+  }
+
   // ============ ACCIONES ============
 
   async descargar(reporte: ReporteHistorial) {
@@ -186,6 +309,9 @@ export class HistorialReportesComponent implements OnInit {
   limpiarFiltros() {
     this.filtroTipo.set('');
     this.busqueda.set('');
+    this.fechaDesde.set('');
+    this.fechaHasta.set('');
+    this.paginaActual.set(1);
   }
 
   abrirReenviar(reporte: ReporteHistorial) {
@@ -254,11 +380,58 @@ export class HistorialReportesComponent implements OnInit {
     try {
       await firstValueFrom(this.historialService.eliminar(reporte.id));
       this.reportes.update((arr) => arr.filter((r) => r.id !== reporte.id));
+      // También quitar de seleccionados si estaba
+      const nuevo = new Set(this.seleccionados());
+      nuevo.delete(reporte.id);
+      this.seleccionados.set(nuevo);
       this.cerrarEliminar();
     } catch (err) {
       console.error(err);
     } finally {
       this.eliminandoReporte.set(false);
+    }
+  }
+
+  // ============ ACCIONES MÚLTIPLES ============
+
+  abrirEliminarMultiple() {
+    if (this.seleccionados().size === 0) return;
+    this.modalEliminarMultipleAbierto.set(true);
+  }
+
+  cerrarEliminarMultiple() {
+    this.modalEliminarMultipleAbierto.set(false);
+  }
+
+  async confirmarEliminarMultiple() {
+    const ids = Array.from(this.seleccionados());
+    if (ids.length === 0) return;
+
+    this.eliminandoMultiples.set(true);
+    try {
+      // Eliminar en paralelo
+      await firstValueFrom(
+        forkJoin(ids.map((id) => this.historialService.eliminar(id))),
+      );
+      this.reportes.update((arr) => arr.filter((r) => !ids.includes(r.id)));
+      this.limpiarSeleccion();
+      this.cerrarEliminarMultiple();
+    } catch (err) {
+      console.error('Error eliminando reportes:', err);
+    } finally {
+      this.eliminandoMultiples.set(false);
+    }
+  }
+
+  async descargarMultiples() {
+    const ids = Array.from(this.seleccionados());
+    if (ids.length === 0) return;
+
+    const reportesADescargar = this.reportes().filter((r) => ids.includes(r.id));
+    // Descarga secuencial con pequeño delay para no saturar
+    for (const r of reportesADescargar) {
+      await this.descargar(r);
+      await new Promise((resolve) => setTimeout(resolve, 300));
     }
   }
 
@@ -319,6 +492,32 @@ export class HistorialReportesComponent implements OnInit {
       visitas: 'bg-fuchsia-100 text-fuchsia-700',
     };
     return colores[tipo] || 'bg-gray-100 text-gray-700';
+  }
+
+  // ============ ATAJOS DE TECLADO ============
+
+  @HostListener('document:keydown', ['$event'])
+  manejarAtajos(event: KeyboardEvent) {
+    const target = event.target as HTMLElement;
+    const enInput =
+      target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+    // Esc: cerrar modales o limpiar selección
+    if (event.key === 'Escape') {
+      if (this.modalReenviarAbierto()) this.cerrarReenviar();
+      else if (this.modalEliminarAbierto()) this.cerrarEliminar();
+      else if (this.modalEliminarMultipleAbierto()) this.cerrarEliminarMultiple();
+      else if (this.modoSeleccion()) this.limpiarSeleccion();
+      return;
+    }
+
+    if (enInput) return;
+
+    // Ctrl+A: seleccionar todos los visibles
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+      event.preventDefault();
+      this.toggleSeleccionarTodosVisibles();
+    }
   }
 
   private aplicarParamsDeUrl() {
