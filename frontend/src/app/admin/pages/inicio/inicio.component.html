@@ -6,7 +6,6 @@
     <div class="flex items-center gap-2">
       <!-- Grupo utility (icon-only) -->
       <div class="flex items-center bg-white rounded-lg shadow-sm border border-gray-100 p-1">
-
         <button
           (click)="refrescarManual()"
           [disabled]="refrescando"
@@ -685,7 +684,7 @@
   </div>
 
   <!-- Visión General — Gráficas reales con ApexCharts -->
-  <div *ngIf="!modoFocus">
+  <div id="visión-general" *ngIf="!modoFocus">
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Visión General</h2>
       <button
