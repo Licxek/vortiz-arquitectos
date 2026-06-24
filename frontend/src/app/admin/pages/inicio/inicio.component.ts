@@ -699,6 +699,22 @@ export class InicioComponent implements OnInit, OnDestroy {
     const accion = this.route.snapshot.queryParamMap.get('accion');
     if (accion === 'nuevo-proyecto') {
       this.router.navigate(['/admin/proyectos', 'nuevo']);
+      return;
+    }
+
+    // Scroll al fragment si existe (#vision-general, etc.)
+    const fragment = this.route.snapshot.fragment;
+    if (fragment) {
+      // Delay para que el componente termine de renderizar
+      setTimeout(() => {
+        const el = document.getElementById(fragment);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Highlight visual breve
+          el.classList.add('vortiz-highlight-flash');
+          setTimeout(() => el.classList.remove('vortiz-highlight-flash'), 2000);
+        }
+      }, 600); // 600ms para que cargue agenda + stats antes del scroll
     }
   }
   /** Banner inteligente: evalúa el estado actual y sugiere acciones prioritarias */
