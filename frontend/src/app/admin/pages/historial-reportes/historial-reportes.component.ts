@@ -19,7 +19,7 @@ import {
   ReporteHistorial,
 } from '../../../core/services/historial-reportes.service';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
-import { SafeUrlPipe } from '../../../shared/safe-url.pipe';
+import { SafeUrlPipe } from '../../../shared/pipes/safe-url.pipe';
 import { ActivatedRoute, Router, NavigationEnd, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
