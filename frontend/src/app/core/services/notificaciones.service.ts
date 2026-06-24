@@ -1,15 +1,16 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export type TipoNotificacion =
   | 'cita_nueva'
   | 'cita_pendiente'
   | 'cita_confirmada'
-  | 'cita_por_evaluar' // ← NUEVO
+  | 'cita_por_evaluar'
   | 'consulta_general'
   | 'consulta_servicio'
-  | 'mensaje_nuevo'; // ← NUEVO
+  | 'mensaje_nuevo';
 
 export interface Notificacion {
   id: string;
@@ -19,7 +20,6 @@ export interface Notificacion {
   detalle?: string;
   fecha: Date;
   leida: boolean;
-  // Para navegación contextual
   ruta?: string;
   meta?: {
     citaId?: number;
@@ -32,18 +32,25 @@ export interface Notificacion {
   };
 }
 
+interface EstadoBackend {
+  id: number;
+  externalId: string;
+  leida: boolean;
+  borrada: boolean;
+  leidaEn: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class NotificacionesService {
   private http = inject(HttpClient);
   private readonly API = environment.apiUrl;
-  private readonly STORAGE_KEY = 'vortiz_notif_leidas';
+  private readonly STORAGE_KEY_LEIDAS = 'vortiz_notif_leidas';
+  private readonly STORAGE_KEY_BORRADAS = 'vortiz_notif_borradas';
   private readonly STORAGE_SONIDO = 'vortiz_notif_sonido';
 
-  // Estado reactivo
   private _notificaciones = signal<Notificacion[]>([]);
   notificaciones = this._notificaciones.asReadonly();
 
-  // Conteos derivados
   noLeidas = computed(() => this._notificaciones().filter((n) => !n.leida).length);
   noLeidasCitas = computed(
     () => this._notificaciones().filter((n) => !n.leida && n.tipo.startsWith('cita')).length,
@@ -52,10 +59,10 @@ export class NotificacionesService {
     () => this._notificaciones().filter((n) => !n.leida && n.tipo.startsWith('consulta')).length,
   );
 
-  // Estado de sonido
   sonidoActivado = signal(false);
 
   private idsLeidos = new Set<string>();
+  private idsBorrados = new Set<string>();
   private intervalRefresh: any = null;
   private primeraCarga = true;
   private cantidadAnterior = 0;
@@ -65,23 +72,15 @@ export class NotificacionesService {
     if (this.inicializado) return;
     this.inicializado = true;
 
-    // Cargar IDs leídos del storage
-    try {
-      const guardado = localStorage.getItem(this.STORAGE_KEY);
-      if (guardado) this.idsLeidos = new Set(JSON.parse(guardado));
-    } catch {}
-
-    // Cargar IDs borrados del storage
-    try {
-      const borrados = localStorage.getItem(this.STORAGE_BORRADAS);
-      if (borrados) this.idsBorrados = new Set(JSON.parse(borrados));
-    } catch {}
-
-    // Cargar preferencia de sonido
+    // 1. Cargar cache local primero (UI optimista — visible inmediato)
+    this.cargarCacheLocal();
     this.sonidoActivado.set(localStorage.getItem(this.STORAGE_SONIDO) === '1');
 
-    // Primera carga
-    this.cargar();
+    // 2. Sincronizar con backend (fuente de verdad)
+    this.sincronizarEstadosDesdeBackend().then(() => {
+      // 3. Primera carga de notificaciones
+      this.cargar();
+    });
 
     // Polling cada 30s solo si la pestaña está visible
     this.intervalRefresh = setInterval(() => {
@@ -90,9 +89,10 @@ export class NotificacionesService {
       }
     }, 30000);
 
-    // Refrescar al volver a la pestaña
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') this.cargar();
+      if (document.visibilityState === 'visible') {
+        this.sincronizarEstadosDesdeBackend().then(() => this.cargar());
+      }
     });
   }
 
@@ -101,14 +101,58 @@ export class NotificacionesService {
     this.inicializado = false;
   }
 
+  // ============ SYNC CON BACKEND ============
+
+  private async sincronizarEstadosDesdeBackend() {
+    try {
+      const estados = await firstValueFrom(
+        this.http.get<EstadoBackend[]>(`${this.API}/notificaciones/estados`),
+      );
+
+      // Backend es fuente de verdad — reemplazar sets locales
+      this.idsLeidos = new Set(
+        estados.filter((e) => e.leida).map((e) => e.externalId),
+      );
+      this.idsBorrados = new Set(
+        estados.filter((e) => e.borrada).map((e) => e.externalId),
+      );
+
+      // Persistir en localStorage como cache
+      this.guardarCacheLocal();
+    } catch (err) {
+      console.warn('No se pudo sincronizar estados de notificaciones:', err);
+      // Si falla, seguimos con el cache local
+    }
+  }
+
+  private cargarCacheLocal() {
+    try {
+      const leidas = localStorage.getItem(this.STORAGE_KEY_LEIDAS);
+      if (leidas) this.idsLeidos = new Set(JSON.parse(leidas));
+    } catch {}
+    try {
+      const borradas = localStorage.getItem(this.STORAGE_KEY_BORRADAS);
+      if (borradas) this.idsBorrados = new Set(JSON.parse(borradas));
+    } catch {}
+  }
+
+  private guardarCacheLocal() {
+    try {
+      localStorage.setItem(this.STORAGE_KEY_LEIDAS, JSON.stringify(Array.from(this.idsLeidos)));
+      localStorage.setItem(this.STORAGE_KEY_BORRADAS, JSON.stringify(Array.from(this.idsBorrados)));
+    } catch {}
+  }
+
+  // ============ CARGAR NOTIFICACIONES ============
+
   cargar() {
     Promise.all([this.cargarCitas(), this.cargarConsultas()])
       .then(([citas, consultas]) => {
         const todas: Notificacion[] = [
           ...this.citasANotificaciones(citas),
-          ...this.citasPorEvaluarANotificaciones(citas), // ← NUEVO
+          ...this.citasPorEvaluarANotificaciones(citas),
           ...this.consultasANotificaciones(consultas),
-          ...this.mensajesNuevosANotificaciones(consultas), // ← NUEVO
+          ...this.mensajesNuevosANotificaciones(consultas),
         ].filter((n) => !this.idsBorrados.has(n.id));
 
         todas.sort((a, b) => b.fecha.getTime() - a.fecha.getTime());
@@ -142,6 +186,8 @@ export class NotificacionesService {
     });
   }
 
+  // ============ TRANSFORMERS ============
+
   private citasANotificaciones(citas: any[]): Notificacion[] {
     return citas
       .filter((c) => this.esFechaVigente(c.fecha))
@@ -158,7 +204,7 @@ export class NotificacionesService {
               ? `Cita pendiente: ${c.nombre}`
               : `Cita confirmada: ${c.nombre}`,
           subtitulo: `${this.formatoFecha(c.fecha)} · ${c.hora || 'Sin hora'}`,
-          detalle: c.servicio?.titulo || c.tipo || 'Sin servicio especificado',
+          detalle: c.servicio?.titulo || c.tipo || 'Sin servicio',
           fecha: new Date(c.createdAt || c.fecha || Date.now()),
           leida: this.idsLeidos.has(id),
           ruta: '/admin/citas',
@@ -169,6 +215,33 @@ export class NotificacionesService {
             telefono: c.telefono,
             servicio: c.servicio?.titulo,
           },
+        };
+      });
+  }
+
+  private citasPorEvaluarANotificaciones(citas: any[]): Notificacion[] {
+    const ahora = new Date();
+    return citas
+      .filter((c) => {
+        if (c.estado !== 'confirmada' && c.estado !== 'pendiente') return false;
+        if (!c.fecha || !c.hora) return false;
+        const [h, m] = c.hora.split(':').map(Number);
+        const fin = new Date(c.fecha + 'T00:00:00');
+        fin.setHours(h, m + (c.duracion || 60), 0, 0);
+        return fin < ahora;
+      })
+      .map((c) => {
+        const id = `evaluar_${c.id}`;
+        return {
+          id,
+          tipo: 'cita_por_evaluar' as TipoNotificacion,
+          titulo: `¿${c.nombre} asistió a su cita?`,
+          subtitulo: `${this.formatoFecha(c.fecha)} · ${c.hora}`,
+          detalle: c.servicio?.titulo || 'Marca asistió o no asistió',
+          fecha: new Date(c.fecha + 'T' + c.hora),
+          leida: this.idsLeidos.has(id),
+          ruta: '/admin/citas',
+          meta: { citaId: c.id, cliente: c.nombre, servicio: c.servicio?.titulo },
         };
       });
   }
@@ -189,7 +262,7 @@ export class NotificacionesService {
           detalle: conServicio ? `Servicio: ${c.servicio?.titulo || 'Sin nombre'}` : undefined,
           fecha: new Date(c.createdAt || c.fecha || Date.now()),
           leida: this.idsLeidos.has(id),
-          ruta: '/admin/consultas', // En Fase 4 será /admin/consultas
+          ruta: '/admin/consultas',
           meta: {
             consultaId: c.id,
             cliente: c.nombre,
@@ -202,16 +275,79 @@ export class NotificacionesService {
       });
   }
 
+  private mensajesNuevosANotificaciones(consultas: any[]): Notificacion[] {
+    return consultas
+      .filter((c) => {
+        const m = c.ultimoMensaje;
+        return m && m.autor === 'cliente' && m.metodo === 'inbound';
+      })
+      .map((c) => {
+        const m = c.ultimoMensaje;
+        const id = `mensaje_${c.id}_${new Date(m.createdAt).getTime()}`;
+        const preview = (m.texto || '').substring(0, 100).trim();
+        return {
+          id,
+          tipo: 'mensaje_nuevo' as TipoNotificacion,
+          titulo: `Nuevo mensaje de ${c.nombre}`,
+          subtitulo: preview || 'Mensaje sin contenido',
+          fecha: new Date(m.createdAt),
+          leida: this.idsLeidos.has(id),
+          ruta: '/admin/consultas',
+          meta: {
+            consultaId: c.id,
+            cliente: c.nombre,
+            correo: c.correo,
+            mensaje: m.texto,
+          },
+        };
+      });
+  }
+
+  // ============ ACCIONES (optimistic UI + backend) ============
+
   marcarLeida(id: string) {
+    // 1. Optimista: actualizar UI inmediato
     this.idsLeidos.add(id);
-    this.guardarLeidos();
-    this._notificaciones.update((arr) => arr.map((n) => (n.id === id ? { ...n, leida: true } : n)));
+    this.guardarCacheLocal();
+    this._notificaciones.update((arr) =>
+      arr.map((n) => (n.id === id ? { ...n, leida: true } : n)),
+    );
+
+    // 2. Sincronizar con backend (no bloqueante)
+    this.http
+      .post(`${this.API}/notificaciones/marcar-leida`, { externalId: id })
+      .subscribe({
+        error: (err) => console.warn('Error sincronizando marcarLeida:', err),
+      });
   }
 
   marcarTodasLeidas() {
-    this._notificaciones().forEach((n) => this.idsLeidos.add(n.id));
-    this.guardarLeidos();
+    // Optimista
+    const ids = this._notificaciones().map((n) => n.id);
+    ids.forEach((id) => this.idsLeidos.add(id));
+    this.guardarCacheLocal();
     this._notificaciones.update((arr) => arr.map((n) => ({ ...n, leida: true })));
+
+    // Backend
+    this.http
+      .post(`${this.API}/notificaciones/marcar-todas-leidas`, { externalIds: ids })
+      .subscribe({
+        error: (err) => console.warn('Error sincronizando marcarTodasLeidas:', err),
+      });
+  }
+
+  borrar(id: string) {
+    // Optimista
+    this.idsBorrados.add(id);
+    this.guardarCacheLocal();
+    this._notificaciones.update((arr) => arr.filter((n) => n.id !== id));
+
+    // Backend
+    this.http
+      .post(`${this.API}/notificaciones/marcar-borrada`, { externalId: id })
+      .subscribe({
+        error: (err) => console.warn('Error sincronizando borrar:', err),
+      });
   }
 
   toggleSonido() {
@@ -222,14 +358,10 @@ export class NotificacionesService {
   }
 
   refrescarManual() {
-    this.cargar();
+    this.sincronizarEstadosDesdeBackend().then(() => this.cargar());
   }
 
-  private guardarLeidos() {
-    try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(Array.from(this.idsLeidos)));
-    } catch {}
-  }
+  // ============ HELPERS ============
 
   private reproducirSonidoNuevo() {
     if (!this.sonidoActivado()) return;
@@ -278,79 +410,5 @@ export class NotificacionesService {
     if (horas < 24) return `Hace ${horas}h`;
     if (dias === 1) return 'Ayer';
     return `Hace ${dias}d`;
-  }
-
-  private readonly STORAGE_BORRADAS = 'vortiz_notif_borradas';
-  private idsBorrados = new Set<string>();
-
-  borrar(id: string) {
-    this.idsBorrados.add(id);
-    this.guardarBorrados();
-    this._notificaciones.update((arr) => arr.filter((n) => n.id !== id));
-  }
-
-  private guardarBorrados() {
-    try {
-      localStorage.setItem(this.STORAGE_BORRADAS, JSON.stringify(Array.from(this.idsBorrados)));
-    } catch {}
-  }
-
-  private mensajesNuevosANotificaciones(consultas: any[]): Notificacion[] {
-    return consultas
-      .filter((c) => {
-        const m = c.ultimoMensaje;
-        return m && m.autor === 'cliente' && m.metodo === 'inbound';
-      })
-      .map((c) => {
-        const m = c.ultimoMensaje;
-        const id = `mensaje_${c.id}_${new Date(m.createdAt).getTime()}`;
-        const preview = (m.texto || '').substring(0, 100).trim();
-        return {
-          id,
-          tipo: 'mensaje_nuevo' as TipoNotificacion,
-          titulo: `Nuevo mensaje de ${c.nombre}`,
-          subtitulo: preview || 'Mensaje sin contenido',
-          fecha: new Date(m.createdAt),
-          leida: this.idsLeidos.has(id),
-          ruta: '/admin/consultas',
-          meta: {
-            consultaId: c.id,
-            cliente: c.nombre,
-            correo: c.correo,
-            mensaje: m.texto,
-          },
-        };
-      });
-  }
-
-  private citasPorEvaluarANotificaciones(citas: any[]): Notificacion[] {
-    const ahora = new Date();
-    return citas
-      .filter((c) => {
-        if (c.estado !== 'confirmada' && c.estado !== 'pendiente') return false;
-        if (!c.fecha || !c.hora) return false;
-        const [h, m] = c.hora.split(':').map(Number);
-        const fin = new Date(c.fecha + 'T00:00:00');
-        fin.setHours(h, m + (c.duracion || 60), 0, 0);
-        return fin < ahora; // ya terminó la cita
-      })
-      .map((c) => {
-        const id = `evaluar_${c.id}`;
-        return {
-          id,
-          tipo: 'cita_por_evaluar' as TipoNotificacion,
-          titulo: `¿${c.nombre} asistió a su cita?`,
-          subtitulo: `${this.formatoFecha(c.fecha)} · ${c.hora}`,
-          detalle: c.servicio?.titulo || 'Marca asistió o no asistió',
-          fecha: new Date(c.fecha + 'T' + c.hora),
-          leida: this.idsLeidos.has(id),
-          ruta: '/admin/citas',
-          meta: {
-            citaId: c.id,
-            cliente: c.nombre,
-            servicio: c.servicio?.titulo,
-          },
-        };
-      });
   }
 }
