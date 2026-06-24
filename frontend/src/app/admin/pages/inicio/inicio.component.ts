@@ -719,6 +719,7 @@ export class InicioComponent implements OnInit, OnDestroy {
     }
 
     // Scroll al fragment si existe (#vision-general, etc.)
+    // Scroll al fragment si existe (#vision-general, etc.)
     const fragment = this.route.snapshot.fragment;
     if (fragment && !this.accionEjecutada.has(`fragment-${fragment}`)) {
       this.accionEjecutada.add(`fragment-${fragment}`);
@@ -728,6 +729,13 @@ export class InicioComponent implements OnInit, OnDestroy {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           el.classList.add('vortiz-highlight-flash');
           setTimeout(() => el.classList.remove('vortiz-highlight-flash'), 2000);
+
+          // 👇 LIMPIAR el fragment de la URL para que al volver no se vuelva a hacer scroll
+          this.router.navigate([], {
+            relativeTo: this.route,
+            fragment: undefined,
+            replaceUrl: true,
+          });
         }
       }, 600);
     }
