@@ -108,9 +108,9 @@ interface Tip {
     FormsModule,
     SkeletonComponent,
     GraficaDashboardComponent,
-    HeatmapHorariosComponent,
+    //HeatmapHorariosComponent,
     RouterLink,
-    ImageCarouselComponent, // 👈 AGREGAR
+    //ImageCarouselComponent, // 👈 AGREGAR
   ],
   templateUrl: './inicio.component.html',
 })
