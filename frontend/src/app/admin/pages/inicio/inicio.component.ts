@@ -28,6 +28,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { AnalyticsService } from '../../../core/services/analytics.service';
 import { ImageCarouselComponent } from '../../../shared/image-carousel/image-carousel.component';
+import { takeUntil } from 'rxjs/operators'; // ← agregar takeUntil
+import { Subject } from 'rxjs';
 
 // ============ INTERFACES ============
 interface StatCard {
@@ -133,6 +135,8 @@ export class InicioComponent implements OnInit, OnDestroy {
     this.modoFocus = !this.modoFocus;
   }
 
+  private destroy$ = new Subject<void>();
+  private accionEjecutada = new Set<string>();
   stats: StatCard[] = [];
 
   gaConectado = false; // 🔧 cambia a true cuando esté integrado
@@ -262,7 +266,10 @@ export class InicioComponent implements OnInit, OnDestroy {
     this.cargarProyectosRecientes(); // 👈 nuevo
     this.cargarGraficas();
     this.router.events
-      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntil(this.destroy$),
+      )
       .subscribe(() => this.aplicarParamsDeUrl());
 
     this.aplicarParamsDeUrl();
@@ -697,24 +704,32 @@ export class InicioComponent implements OnInit, OnDestroy {
 
   private aplicarParamsDeUrl() {
     const accion = this.route.snapshot.queryParamMap.get('accion');
-    if (accion === 'nuevo-proyecto') {
-      this.router.navigate(['/admin/proyectos', 'nuevo']);
-      return;
+
+    // Guard: solo ejecutar la acción UNA vez
+    if (accion && !this.accionEjecutada.has(accion)) {
+      this.accionEjecutada.add(accion);
+
+      if (accion === 'nuevo-proyecto') {
+        // replaceUrl para que la URL del historial sea limpia y no haya loop
+        this.router.navigate(['/admin/proyectos', 'nuevo'], {
+          replaceUrl: true,
+        });
+        return;
+      }
     }
 
     // Scroll al fragment si existe (#vision-general, etc.)
     const fragment = this.route.snapshot.fragment;
-    if (fragment) {
-      // Delay para que el componente termine de renderizar
+    if (fragment && !this.accionEjecutada.has(`fragment-${fragment}`)) {
+      this.accionEjecutada.add(`fragment-${fragment}`);
       setTimeout(() => {
         const el = document.getElementById(fragment);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          // Highlight visual breve
           el.classList.add('vortiz-highlight-flash');
           setTimeout(() => el.classList.remove('vortiz-highlight-flash'), 2000);
         }
-      }, 600); // 600ms para que cargue agenda + stats antes del scroll
+      }, 600);
     }
   }
   /** Banner inteligente: evalúa el estado actual y sugiere acciones prioritarias */
@@ -971,12 +986,13 @@ export class InicioComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
     if (this.intervaloTips) clearInterval(this.intervaloTips);
     if (this.intervalRefresh) clearInterval(this.intervalRefresh);
-    if (this.intervalTexto) clearInterval(this.intervalTexto); // 👈 NUEVO
+    if (this.intervalTexto) clearInterval(this.intervalTexto);
     if (this.timeoutFecha) clearTimeout(this.timeoutFecha);
   }
-
   get tip(): Tip {
     return this.tips[this.tipActual];
   }
