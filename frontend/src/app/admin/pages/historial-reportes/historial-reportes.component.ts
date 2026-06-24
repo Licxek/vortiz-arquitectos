@@ -19,16 +19,16 @@ import {
   ReporteHistorial,
 } from '../../../core/services/historial-reportes.service';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
+import { SafeUrlPipe } from '../../../shared/safe-url.pipe';
 import { ActivatedRoute, Router, NavigationEnd, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { SafeUrlPipe } from '../../../shared/safe-url.pipe';
 
 type OrdenTipo = 'reciente' | 'antiguo' | 'pesado' | 'ligero' | 'tipo';
 
 @Component({
   selector: 'app-historial-reportes',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, RouterLink,SafeUrlPipe],
+  imports: [CommonModule, FormsModule, SkeletonComponent, RouterLink, SafeUrlPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './historial-reportes.component.html',
 })
@@ -37,6 +37,7 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+
   @ViewChild('inputBusqueda') inputBusqueda?: ElementRef<HTMLInputElement>;
 
   reportes = signal<ReporteHistorial[]>([]);
@@ -45,33 +46,34 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
   busqueda = signal('');
   orden = signal<OrdenTipo>('reciente');
 
-  // Filtros de fecha
   fechaDesde = signal('');
   fechaHasta = signal('');
 
-  // Paginación
   paginaActual = signal(1);
   itemsPorPagina = signal(10);
 
-  // Selección múltiple
   seleccionados = signal<Set<number>>(new Set());
   modoSeleccion = computed(() => this.seleccionados().size > 0);
 
-  // Modal Reenviar
   modalReenviarAbierto = signal(false);
   reporteSeleccionado = signal<ReporteHistorial | null>(null);
   destinatariosReenvio = signal('');
   reenviandoEmail = signal(false);
   resultadoReenvio = signal<{ tipo: 'exito' | 'error'; mensaje: string } | null>(null);
 
-  // Modal Eliminar (individual)
   modalEliminarAbierto = signal(false);
   reporteAEliminar = signal<ReporteHistorial | null>(null);
   eliminandoReporte = signal(false);
 
-  // Modal Eliminar múltiple
   modalEliminarMultipleAbierto = signal(false);
   eliminandoMultiples = signal(false);
+
+  // Modal Preview PDF
+  modalPreviewAbierto = signal(false);
+  reporteEnPreview = signal<ReporteHistorial | null>(null);
+  urlPreview = signal<string>('');
+  cargandoPreview = signal(false);
+  errorPreview = signal('');
 
   tiposDisponibles = [
     { value: '', label: 'Todos los tipos' },
@@ -105,24 +107,19 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
     let resultado = todos.filter((r) => {
       if (tipo && r.tipo !== tipo) return false;
       if (search && !r.titulo.toLowerCase().includes(search)) return false;
-
-      // Filtro fecha desde (compara con createdAt)
       if (desde) {
         const fechaR = new Date(r.createdAt);
         const fechaDesde = new Date(desde + 'T00:00:00');
         if (fechaR < fechaDesde) return false;
       }
-      // Filtro fecha hasta
       if (hasta) {
         const fechaR = new Date(r.createdAt);
         const fechaHasta = new Date(hasta + 'T23:59:59');
         if (fechaR > fechaHasta) return false;
       }
-
       return true;
     });
 
-    // Ordenamiento
     resultado = [...resultado].sort((a, b) => {
       if (orden === 'reciente')
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -175,7 +172,6 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
     return { inicio, fin, total };
   });
 
-  // Stats
   totalReportes = computed(() => this.reportes().length);
 
   reportesEsteMes = computed(() => {
@@ -184,7 +180,9 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
     return this.reportes().filter((r) => new Date(r.createdAt) >= inicioMes).length;
   });
 
-  tamanioTotalKb = computed(() => this.reportes().reduce((acc, r) => acc + (r.tamanioKb || 0), 0));
+  tamanioTotalKb = computed(() =>
+    this.reportes().reduce((acc, r) => acc + (r.tamanioKb || 0), 0),
+  );
 
   tamanioTotalFormateado = computed(() => {
     const kb = this.tamanioTotalKb();
@@ -192,7 +190,9 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
     return `${(kb / 1024).toFixed(1)} MB`;
   });
 
-  totalEnviadosPorEmail = computed(() => this.reportes().filter((r) => r.emailEnviado).length);
+  totalEnviadosPorEmail = computed(
+    () => this.reportes().filter((r) => r.emailEnviado).length,
+  );
 
   destinatariosValidos = computed(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -204,7 +204,10 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
 
   hayFiltrosActivos = computed(
     () =>
-      !!this.filtroTipo() || !!this.busqueda().trim() || !!this.fechaDesde() || !!this.fechaHasta(),
+      !!this.filtroTipo() ||
+      !!this.busqueda().trim() ||
+      !!this.fechaDesde() ||
+      !!this.fechaHasta(),
   );
 
   todosVisiblesSeleccionados = computed(() => {
@@ -267,11 +270,8 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
 
   toggleSeleccion(id: number) {
     const nuevo = new Set(this.seleccionados());
-    if (nuevo.has(id)) {
-      nuevo.delete(id);
-    } else {
-      nuevo.add(id);
-    }
+    if (nuevo.has(id)) nuevo.delete(id);
+    else nuevo.add(id);
     this.seleccionados.set(nuevo);
   }
 
@@ -383,7 +383,6 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
     try {
       await firstValueFrom(this.historialService.eliminar(reporte.id));
       this.reportes.update((arr) => arr.filter((r) => r.id !== reporte.id));
-      // También quitar de seleccionados si estaba
       const nuevo = new Set(this.seleccionados());
       nuevo.delete(reporte.id);
       this.seleccionados.set(nuevo);
@@ -394,8 +393,6 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
       this.eliminandoReporte.set(false);
     }
   }
-
-  // ============ ACCIONES MÚLTIPLES ============
 
   abrirEliminarMultiple() {
     if (this.seleccionados().size === 0) return;
@@ -412,8 +409,9 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
 
     this.eliminandoMultiples.set(true);
     try {
-      // Eliminar en paralelo
-      await firstValueFrom(forkJoin(ids.map((id) => this.historialService.eliminar(id))));
+      await firstValueFrom(
+        forkJoin(ids.map((id) => this.historialService.eliminar(id))),
+      );
       this.reportes.update((arr) => arr.filter((r) => !ids.includes(r.id)));
       this.limpiarSeleccion();
       this.cerrarEliminarMultiple();
@@ -427,12 +425,58 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
   async descargarMultiples() {
     const ids = Array.from(this.seleccionados());
     if (ids.length === 0) return;
-
     const reportesADescargar = this.reportes().filter((r) => ids.includes(r.id));
-    // Descarga secuencial con pequeño delay para no saturar
     for (const r of reportesADescargar) {
       await this.descargar(r);
       await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+  }
+
+  // ============ PREVIEW PDF ============
+
+  async abrirPreview(reporte: ReporteHistorial) {
+    console.log('Abriendo preview de:', reporte.id, reporte.titulo);
+    this.reporteEnPreview.set(reporte);
+    this.modalPreviewAbierto.set(true);
+    this.cargandoPreview.set(true);
+    this.errorPreview.set('');
+    this.urlPreview.set('');
+    this.cdr.markForCheck();
+
+    try {
+      const blob = await firstValueFrom(this.historialService.descargar(reporte.id));
+      const url = window.URL.createObjectURL(blob);
+      this.urlPreview.set(url);
+      this.cargandoPreview.set(false);
+      this.cdr.markForCheck();
+    } catch (err: any) {
+      console.error('Error cargando preview:', err);
+      this.errorPreview.set('No se pudo cargar el PDF');
+      this.cargandoPreview.set(false);
+      this.cdr.markForCheck();
+    }
+  }
+
+  cerrarPreview() {
+    const url = this.urlPreview();
+    if (url) window.URL.revokeObjectURL(url);
+    this.modalPreviewAbierto.set(false);
+    this.reporteEnPreview.set(null);
+    this.urlPreview.set('');
+    this.errorPreview.set('');
+    this.cargandoPreview.set(false);
+  }
+
+  async descargarDesdePreview() {
+    const r = this.reporteEnPreview();
+    if (r) await this.descargar(r);
+  }
+
+  reenviarDesdePreview() {
+    const r = this.reporteEnPreview();
+    if (r) {
+      this.cerrarPreview();
+      this.abrirReenviar(r);
     }
   }
 
@@ -495,66 +539,12 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
     return colores[tipo] || 'bg-gray-100 text-gray-700';
   }
 
-  // ============ PREVIEW PDF ============
-
-  async abrirPreview(reporte: ReporteHistorial) {
-    this.reporteEnPreview.set(reporte);
-    this.modalPreviewAbierto.set(true);
-    this.cargandoPreview.set(true);
-    this.errorPreview.set('');
-    this.urlPreview.set('');
-
-    try {
-      const blob = await firstValueFrom(this.historialService.descargar(reporte.id));
-      const url = window.URL.createObjectURL(blob);
-      this.urlPreview.set(url);
-      this.cargandoPreview.set(false);
-      this.cdr.markForCheck();
-    } catch (err: any) {
-      console.error('Error cargando preview:', err);
-      this.errorPreview.set('No se pudo cargar el PDF');
-      this.cargandoPreview.set(false);
-      this.cdr.markForCheck();
-    }
-  }
-
-  cerrarPreview() {
-    // Liberar URL del blob para no acumular memoria
-    const url = this.urlPreview();
-    if (url) {
-      window.URL.revokeObjectURL(url);
-    }
-    this.modalPreviewAbierto.set(false);
-    this.reporteEnPreview.set(null);
-    this.urlPreview.set('');
-    this.errorPreview.set('');
-    this.cargandoPreview.set(false);
-  }
-
-  async descargarDesdePreview() {
-    const r = this.reporteEnPreview();
-    if (r) {
-      await this.descargar(r);
-    }
-  }
-
-  reenviarDesdePreview() {
-    const r = this.reporteEnPreview();
-    if (r) {
-      this.cerrarPreview();
-      this.abrirReenviar(r);
-    }
-  }
-
-  // ============ ATAJOS DE TECLADO ============
-
   @HostListener('document:keydown', ['$event'])
   manejarAtajos(event: KeyboardEvent) {
     const target = event.target as HTMLElement;
     const enInput =
       target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
 
-    // Esc: cerrar modales o limpiar selección
     if (event.key === 'Escape') {
       if (this.modalPreviewAbierto()) this.cerrarPreview();
       else if (this.modalReenviarAbierto()) this.cerrarReenviar();
@@ -564,7 +554,6 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Ctrl+K / Cmd+K: enfocar búsqueda (funciona incluso en input para volver al buscador)
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
       setTimeout(() => {
@@ -576,7 +565,6 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
 
     if (enInput) return;
 
-    // Ctrl+A: seleccionar todos los visibles
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
       event.preventDefault();
       this.toggleSeleccionarTodosVisibles();
@@ -585,17 +573,6 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
 
   private aplicarParamsDeUrl() {
     const tipo = this.route.snapshot.queryParamMap.get('tipo');
-    if (tipo) {
-      this.filtroTipo.set(tipo);
-    }
+    if (tipo) this.filtroTipo.set(tipo);
   }
-  // Modal Preview PDF
-  modalPreviewAbierto = signal(false);
-  reporteEnPreview = signal<ReporteHistorial | null>(null);
-  urlPreview = signal<string>('');
-  cargandoPreview = signal(false);
-  errorPreview = signal('');
-
-  // Búsqueda rápida (Ctrl+K)
-  busquedaEnfocada = signal(false);
 }
