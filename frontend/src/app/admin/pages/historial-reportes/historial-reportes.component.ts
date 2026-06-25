@@ -76,12 +76,12 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
   errorPreview = signal('');
 
   tiposDisponibles = [
-    { value: '', label: 'Todos los tipos' },
-    { value: 'citas-por-mes', label: 'Citas por mes' },
-    { value: 'categorias-servicios', label: 'Categorías de servicios' },
-    { value: 'actividad-semanal', label: 'Actividad semanal' },
-    { value: 'clientes-nuevos', label: 'Clientes nuevos' },
-    { value: 'visitas', label: 'Visitas al sitio' },
+    { value: '', label: 'Todos los tipos', color: 'gray' },
+    { value: 'citas-por-mes', label: 'Citas por mes', color: 'blue' },
+    { value: 'categorias-servicios', label: 'Categorías de servicios', color: 'purple' },
+    { value: 'actividad-semanal', label: 'Actividad semanal', color: 'emerald' },
+    { value: 'clientes-nuevos', label: 'Clientes nuevos', color: 'orange' },
+    { value: 'visitas', label: 'Visitas al sitio', color: 'fuchsia' },
   ];
 
   ordenesDisponibles = [
@@ -180,9 +180,7 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
     return this.reportes().filter((r) => new Date(r.createdAt) >= inicioMes).length;
   });
 
-  tamanioTotalKb = computed(() =>
-    this.reportes().reduce((acc, r) => acc + (r.tamanioKb || 0), 0),
-  );
+  tamanioTotalKb = computed(() => this.reportes().reduce((acc, r) => acc + (r.tamanioKb || 0), 0));
 
   tamanioTotalFormateado = computed(() => {
     const kb = this.tamanioTotalKb();
@@ -190,9 +188,7 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
     return `${(kb / 1024).toFixed(1)} MB`;
   });
 
-  totalEnviadosPorEmail = computed(
-    () => this.reportes().filter((r) => r.emailEnviado).length,
-  );
+  totalEnviadosPorEmail = computed(() => this.reportes().filter((r) => r.emailEnviado).length);
 
   destinatariosValidos = computed(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -204,10 +200,7 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
 
   hayFiltrosActivos = computed(
     () =>
-      !!this.filtroTipo() ||
-      !!this.busqueda().trim() ||
-      !!this.fechaDesde() ||
-      !!this.fechaHasta(),
+      !!this.filtroTipo() || !!this.busqueda().trim() || !!this.fechaDesde() || !!this.fechaHasta(),
   );
 
   todosVisiblesSeleccionados = computed(() => {
@@ -409,9 +402,7 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
 
     this.eliminandoMultiples.set(true);
     try {
-      await firstValueFrom(
-        forkJoin(ids.map((id) => this.historialService.eliminar(id))),
-      );
+      await firstValueFrom(forkJoin(ids.map((id) => this.historialService.eliminar(id))));
       this.reportes.update((arr) => arr.filter((r) => !ids.includes(r.id)));
       this.limpiarSeleccion();
       this.cerrarEliminarMultiple();
@@ -574,5 +565,46 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
   private aplicarParamsDeUrl() {
     const tipo = this.route.snapshot.queryParamMap.get('tipo');
     if (tipo) this.filtroTipo.set(tipo);
+  }
+
+  // ====== Dropdowns custom ======
+  filtroTipoAbierto = signal(false);
+  ordenAbierto = signal(false);
+
+  get filtroTipoActual() {
+    return this.tiposDisponibles.find((t) => t.value === this.filtroTipo());
+  }
+
+  get ordenActual() {
+    return this.ordenesDisponibles.find((o) => o.value === this.orden());
+  }
+
+  toggleFiltroTipo(event: Event) {
+    event.stopPropagation();
+    this.filtroTipoAbierto.update((v) => !v);
+    this.ordenAbierto.set(false);
+  }
+
+  toggleOrden(event: Event) {
+    event.stopPropagation();
+    this.ordenAbierto.update((v) => !v);
+    this.filtroTipoAbierto.set(false);
+  }
+
+  seleccionarFiltroTipo(valor: string) {
+    this.filtroTipo.set(valor);
+    this.paginaActual.set(1);
+    this.filtroTipoAbierto.set(false);
+  }
+
+  seleccionarOrden(valor: OrdenTipo) {
+    this.orden.set(valor);
+    this.ordenAbierto.set(false);
+  }
+
+  @HostListener('document:click')
+  cerrarDropdowns() {
+    this.filtroTipoAbierto.set(false);
+    this.ordenAbierto.set(false);
   }
 }
