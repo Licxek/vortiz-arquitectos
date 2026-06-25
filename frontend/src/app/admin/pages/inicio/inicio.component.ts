@@ -274,6 +274,8 @@ export class InicioComponent implements OnInit, OnDestroy {
 
     this.aplicarParamsDeUrl();
     this.iniciarRotacionTips();
+    this.iniciarRefreshAutomatico(); // 👈 NUEVA línea 1
+    this.ultimaActualizacion = new Date();
   }
 
   // ============ GETTERS ============
@@ -1044,11 +1046,11 @@ export class InicioComponent implements OnInit, OnDestroy {
   }
 
   private refrescarDatos() {
+    this.ultimaActualizacion = new Date(); // 👈 mover ARRIBA
+    this.actualizarTextoActualizacion();
     this.cargarAgenda();
     this.cargarConsultas();
     this.cargarStats();
-    this.ultimaActualizacion = new Date();
-    this.actualizarTextoActualizacion();
   }
 
   private actualizarTextoActualizacion() {
