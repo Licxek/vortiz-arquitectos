@@ -3,39 +3,56 @@
   class="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col text-gray-800 vortiz-buscador-entrada"
   style="max-height: 70vh; z-index: 60"
 >
-  <div *ngIf="cargando()" class="p-6 text-center">
-    <p class="text-sm text-gray-400">Cargando...</p>
+  <!-- Estado: cargando -->
+  <div *ngIf="cargando()" class="p-12 text-center">
+    <div class="inline-block w-8 h-8 border-2 border-gray-200 border-t-[#0a4d7a] rounded-full animate-spin"></div>
+    <p class="text-sm text-gray-400 mt-3">Buscando...</p>
   </div>
 
+  <!-- Resultados -->
   <div class="flex-1 overflow-y-auto p-2" *ngIf="!cargando()">
-    <div *ngIf="resultados().length === 0 && query.trim()" class="p-6 text-center">
-      <p class="text-sm text-gray-400">Sin resultados para "{{ query }}"</p>
-      <p class="text-xs text-gray-300 mt-1">Intenta con otra palabra clave</p>
+    <!-- Estado vacío -->
+    <div *ngIf="resultados().length === 0 && query.trim()" class="p-10 text-center">
+      <div class="w-12 h-12 mx-auto mb-3 bg-gray-50 rounded-2xl flex items-center justify-center">
+        <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </div>
+      <p class="text-sm font-medium text-gray-700">Sin resultados para "{{ query }}"</p>
+      <p class="text-xs text-gray-400 mt-1">Prueba con otra palabra clave</p>
     </div>
 
+    <!-- Grupos por categoría -->
     <ng-container
       *ngFor="let grupo of resultadosAgrupados() | keyvalue: ordenComparator; trackBy: trackByKey"
     >
-      <div class="flex items-center justify-between px-3 py-1.5 mt-3 first:mt-0">
-        <span
-          class="text-[11px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5"
-        >
+      <!-- Header de categoría -->
+      <div class="flex items-center justify-between px-3 py-1.5 mt-3 first:mt-2">
+        <div class="flex items-center gap-2">
+          <!-- Ícono SVG de la categoría -->
           <svg
-            *ngIf="grupo.key === 'reciente'"
-            class="w-3 h-3"
+            class="w-3.5 h-3.5"
+            [style.color]="configCategoria(grupo.key).borderHex"
             fill="none"
             stroke="currentColor"
-            stroke-width="2.5"
+            stroke-width="2"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              [attr.d]="configCategoria(grupo.key).iconoPath"
             />
           </svg>
-          {{ etiquetaCategoria(grupo.key) }}
-        </span>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+            {{ configCategoria(grupo.key).label }}
+          </span>
+          <span class="text-[10px] text-gray-300">·</span>
+          <span class="text-[10px] font-semibold text-gray-400">
+            {{ grupo.value.length }}
+          </span>
+        </div>
         <button
           *ngIf="grupo.key === 'reciente'"
           type="button"
@@ -46,58 +63,133 @@
         </button>
       </div>
 
+      <!-- Items -->
       <button
         *ngFor="let r of grupo.value; let i = index; trackBy: trackById"
         type="button"
         (click)="seleccionar(r, $event)"
         (mouseenter)="indiceSeleccionado.set(indiceGlobal(grupo.key, i))"
-        class="w-full flex items-center gap-3 px-3 py-2 text-left rounded-lg transition-colors"
-        [class.resultado-activo]="indiceSeleccionado() === indiceGlobal(grupo.key, i)"
+        class="w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-all relative"
         [class.bg-blue-50]="indiceSeleccionado() === indiceGlobal(grupo.key, i)"
+        [style.border-left]="
+          indiceSeleccionado() === indiceGlobal(grupo.key, i)
+            ? '2px solid ' + configCategoria(grupo.key).borderHex
+            : '2px solid transparent'
+        "
         [class.vortiz-cascada-item]="mostrarCascada()"
         [style.animation-delay.ms]="mostrarCascada() ? indiceGlobal(grupo.key, i) * 25 : 0"
       >
-        <div class="text-lg shrink-0">{{ r.icono }}</div>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm font-medium text-gray-900 truncate">{{ r.titulo }}</div>
-          <div class="text-xs text-gray-500 truncate">{{ r.subtitulo }}</div>
-        </div>
-        <svg
-          *ngIf="r._reciente"
-          class="w-3.5 h-3.5 text-gray-300 shrink-0"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
+        <!-- Cuadrito de ícono con color por categoría -->
+        <div
+          class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+          [style.background-color]="configCategoria(grupo.key).bgIconHex"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
+          <svg
+            class="w-[18px] h-[18px]"
+            [style.color]="configCategoria(grupo.key).textIconHex"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              [attr.d]="configCategoria(grupo.key).iconoPath"
+            />
+          </svg>
+        </div>
+
+        <!-- Texto -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span
+              class="text-sm font-medium text-gray-900 truncate"
+              [innerHTML]="r.titulo | highlightSearch: query"
+            ></span>
+
+            <!-- Pill de estado para proyectos -->
+            <span
+              *ngIf="r.categoria === 'proyecto' && r.meta?.estado"
+              class="text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0"
+              [style.background-color]="pillEstadoBg(r.meta.estado)"
+              [style.color]="pillEstadoText(r.meta.estado)"
+            >
+              {{ labelEstado(r.meta.estado) }}
+            </span>
+
+            <!-- Pill urgente para consultas -->
+            <span
+              *ngIf="r.categoria === 'consulta' && esConsultaUrgente(r)"
+              class="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-red-100 text-red-700 shrink-0"
+            >
+              Urgente
+            </span>
+          </div>
+          <div
+            class="text-xs text-gray-500 truncate mt-0.5"
+            [innerHTML]="r.subtitulo | highlightSearch: query"
+          ></div>
+        </div>
+
+        <!-- Lado derecho: atajo + flecha -->
+        <div class="flex items-center gap-2 shrink-0">
+          <!-- Atajo numérico (solo primeros 9) -->
+          <kbd
+            *ngIf="indiceGlobal(grupo.key, i) < 9"
+            class="text-[10px] font-mono px-1.5 py-0.5 rounded border border-gray-200 bg-white text-gray-500 font-semibold transition-all"
+            [class.!bg-white]="indiceSeleccionado() === indiceGlobal(grupo.key, i)"
+            [class.!border-current]="indiceSeleccionado() === indiceGlobal(grupo.key, i)"
+            [style.color]="
+              indiceSeleccionado() === indiceGlobal(grupo.key, i)
+                ? configCategoria(grupo.key).borderHex
+                : ''
+            "
+          >
+            {{ indiceGlobal(grupo.key, i) + 1 }}
+          </kbd>
+
+          <!-- Flecha cuando seleccionado -->
+          <svg
+            *ngIf="indiceSeleccionado() === indiceGlobal(grupo.key, i)"
+            class="w-4 h-4"
+            [style.color]="configCategoria(grupo.key).borderHex"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
       </button>
     </ng-container>
   </div>
 
+  <!-- Footer con atajos -->
   <div
-    class="px-4 py-2 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-[11px] text-gray-500"
+    class="px-4 py-2.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-[11px] text-gray-500"
   >
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 flex-wrap">
       <span class="flex items-center gap-1">
-        <kbd class="px-1 py-0 font-mono bg-white rounded border border-gray-200">↑↓</kbd>
+        <kbd class="px-1.5 py-0.5 font-mono bg-white rounded border border-gray-200 text-[10px]">↑↓</kbd>
         Navegar
       </span>
       <span class="flex items-center gap-1">
-        <kbd class="px-1 py-0 font-mono bg-white rounded border border-gray-200">↵</kbd>
+        <kbd class="px-1.5 py-0.5 font-mono bg-white rounded border border-gray-200 text-[10px]">↵</kbd>
         Abrir
       </span>
+      <span class="hidden sm:flex items-center gap-1">
+        <kbd class="px-1.5 py-0.5 font-mono bg-white rounded border border-gray-200 text-[10px]">1-9</kbd>
+        Saltar
+      </span>
       <span class="flex items-center gap-1">
-        <kbd class="px-1 py-0 font-mono bg-white rounded border border-gray-200">ESC</kbd>
+        <kbd class="px-1.5 py-0.5 font-mono bg-white rounded border border-gray-200 text-[10px]">ESC</kbd>
         Cerrar
       </span>
     </div>
-    <span class="font-semibold text-[#0a4d7a]">
+    <span class="font-semibold text-[#0a4d7a] shrink-0">
       {{ resultados().length }} {{ resultados().length === 1 ? 'resultado' : 'resultados' }}
     </span>
   </div>

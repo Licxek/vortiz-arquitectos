@@ -19,11 +19,13 @@ import {
   BuscadorAdminService,
   ResultadoBusqueda,
 } from '../../core/services/buscador-admin.service';
+import { HighlightSearchPipe } from '../pipes/highlight-search.pipe';
+import { obtenerCategoriaConfig, CategoriaConfig } from '../../core/services/categoria-config';
 
 @Component({
   selector: 'app-buscador-admin',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HighlightSearchPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './buscador-admin.component.html',
 })
@@ -245,5 +247,61 @@ export class BuscadorAdminComponent implements OnChanges, OnDestroy {
   ngOnDestroy() {
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     if (this.timeoutCascada) clearTimeout(this.timeoutCascada);
+  }
+
+  /** Devuelve la configuración visual (color, ícono, label) para una categoría */
+  configCategoria(key: string | unknown): CategoriaConfig {
+    return obtenerCategoriaConfig(String(key));
+  }
+
+  /** Convierte el código de estado a texto legible */
+  labelEstado(estado: string): string {
+    const map: Record<string, string> = {
+      en_diseno: 'En diseño',
+      en_proceso: 'En proceso',
+      en_revision: 'En revisión',
+      pausado: 'Pausado',
+      finalizado: 'Finalizado',
+    };
+    return map[estado] || estado;
+  }
+
+  /** Color de fondo del pill de estado para proyectos */
+  pillEstadoBg(estado: string): string {
+    const map: Record<string, string> = {
+      en_proceso: '#dbeafe', // azul claro
+      en_diseno: '#fef3c7', // ámbar claro
+      en_revision: '#fef3c7', // ámbar claro
+      pausado: '#f3f4f6', // gris claro
+      finalizado: '#d1fae5', // verde claro
+    };
+    return map[estado] || '#f3f4f6';
+  }
+
+  /** Color del texto del pill de estado para proyectos */
+  pillEstadoText(estado: string): string {
+    const map: Record<string, string> = {
+      en_proceso: '#1e40af',
+      en_diseno: '#92400e',
+      en_revision: '#92400e',
+      pausado: '#374151',
+      finalizado: '#047857',
+    };
+    return map[estado] || '#374151';
+  }
+
+  /** Determina si una consulta es urgente (cita para hoy o mañana) */
+  esConsultaUrgente(r: any): boolean {
+    const fecha = r?.meta?.fecha;
+    if (!fecha) return false;
+    try {
+      const cita = new Date(fecha + 'T00:00:00');
+      const ahora = new Date();
+      ahora.setHours(0, 0, 0, 0);
+      const diffDias = (cita.getTime() - ahora.getTime()) / 86400000;
+      return diffDias <= 1; // hoy, mañana o ya pasada
+    } catch {
+      return false;
+    }
   }
 }

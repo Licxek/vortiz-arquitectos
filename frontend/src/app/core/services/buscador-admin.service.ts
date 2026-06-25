@@ -17,7 +17,7 @@ export interface ResultadoBusqueda {
   categoria: CategoriaResultado;
   titulo: string;
   subtitulo: string;
-  icono: string;
+  icono?: string;
   ruta: string;
   fragment?: string;
   queryParams?: Record<string, string>;
@@ -94,6 +94,39 @@ export class BuscadorAdminService {
       icono: '📚',
       ruta: '/admin/reportes/historial',
       keywords: ['historial', 'archivo', 'pdfs guardados'],
+    },
+    {
+      id: 'p-consultas',
+      categoria: 'pagina',
+      titulo: 'Consultas',
+      subtitulo: 'Mensajes y solicitudes de clientes',
+      icono: '💬',
+      ruta: '/admin/consultas',
+      keywords: [
+        'consultas',
+        'mensajes',
+        'whatsapp',
+        'correos clientes',
+        'inbox',
+        'bandeja',
+        'preguntas',
+        'solicitudes',
+      ],
+    },
+    {
+      id: 'p-proyectos',
+      categoria: 'pagina',
+      titulo: 'Proyectos',
+      subtitulo: 'Lista de todos los proyectos',
+      icono: '🏗️',
+      ruta: '/admin/proyectos',
+      keywords: [
+        'proyectos',
+        'listado proyectos',
+        'portafolio admin',
+        'todos los proyectos',
+        'ver proyectos',
+      ],
     },
   ];
 
@@ -901,7 +934,10 @@ export class BuscadorAdminService {
       ...this.paginasEstaticas,
       ...this.configuraciones,
       ...this.accionesRapidas,
+      ...this.accionesInicio,
       ...this.accionesCitas,
+      ...this.accionesConsultas, // 👈 NUEVO
+      ...this.accionesNotificaciones,
       ...this.accionesPerfil,
       ...this.accionesPaginas,
       ...this.accionesReportes,
@@ -1094,7 +1130,13 @@ export class BuscadorAdminService {
         icono: '💬',
         ruta: '/admin/inicio',
         keywords: [correo, this.truncar(motivo, 100)].filter((s) => s && s.length > 0),
-        meta: { id: c.id, nombre, servicio, motivo: this.truncar(motivo, 200) },
+        meta: {
+          id: c.id,
+          nombre,
+          servicio,
+          motivo: this.truncar(motivo, 200),
+          fecha: c.fecha, // 👈 NUEVO: para detectar urgencia en el buscador
+        },
       };
     });
   }
@@ -1155,4 +1197,198 @@ export class BuscadorAdminService {
     if (!s) return '';
     return s.length > max ? s.slice(0, max) : s;
   }
+  private accionesConsultas: ResultadoBusqueda[] = [
+    {
+      id: 'con-todas',
+      categoria: 'accion',
+      titulo: 'Ver todas las consultas',
+      subtitulo: 'Bandeja completa de mensajes',
+      icono: '📥',
+      ruta: '/admin/consultas',
+      keywords: ['todas consultas', 'bandeja', 'inbox completo', 'ver mensajes', 'ver consultas'],
+    },
+    {
+      id: 'con-urgentes',
+      categoria: 'accion',
+      titulo: 'Consultas urgentes',
+      subtitulo: 'Mensajes que requieren atención inmediata',
+      icono: '🔥',
+      ruta: '/admin/consultas',
+      queryParams: { filtro: 'urgentes' },
+      keywords: ['urgentes', 'prioridad alta', 'urgente', 'importantes', 'criticas'],
+    },
+    {
+      id: 'con-no-leidas',
+      categoria: 'accion',
+      titulo: 'Consultas sin leer',
+      subtitulo: 'Mensajes pendientes de revisar',
+      icono: '🔵',
+      ruta: '/admin/consultas',
+      queryParams: { filtro: 'no-leidas' },
+      keywords: ['no leidas', 'sin leer', 'nuevas consultas', 'pendientes leer', 'unread'],
+    },
+    {
+      id: 'con-mensajes-nuevos',
+      categoria: 'accion',
+      titulo: 'Mensajes nuevos',
+      subtitulo: 'Respuestas recibidas por correo',
+      icono: '✉️',
+      ruta: '/admin/consultas',
+      queryParams: { filtro: 'mensajes-nuevos' },
+      keywords: ['mensajes nuevos', 'respuestas', 'replies', 'nuevo mensaje', 'whatsapp nuevo'],
+    },
+    {
+      id: 'con-pendientes-inicio',
+      categoria: 'accion',
+      titulo: 'Consultas pendientes del día',
+      subtitulo: 'Ver desde el dashboard',
+      icono: '⏳',
+      ruta: '/admin/consultas',
+      keywords: ['pendientes hoy', 'consultas pendientes', 'por responder', 'sin responder'],
+    },
+  ];
+
+  private accionesNotificaciones: ResultadoBusqueda[] = [
+    {
+      id: 'not-ver-todas',
+      categoria: 'accion',
+      titulo: 'Ver todas las notificaciones',
+      subtitulo: 'Centro de notificaciones',
+      icono: '🔔',
+      ruta: '/admin/inicio',
+      queryParams: { accion: 'abrir-notificaciones' },
+      keywords: [
+        'notificaciones',
+        'alertas',
+        'avisos',
+        'centro notificaciones',
+        'ver alertas',
+        'bell',
+      ],
+    },
+    {
+      id: 'not-marcar-leidas',
+      categoria: 'accion',
+      titulo: 'Marcar todas las notificaciones como leídas',
+      subtitulo: 'Limpiar contador de no leídas',
+      icono: '✅',
+      ruta: '/admin/inicio',
+      queryParams: { accion: 'marcar-notif-leidas' },
+      keywords: [
+        'marcar leidas',
+        'limpiar notificaciones',
+        'leer todas',
+        'vaciar bell',
+        'limpiar avisos',
+      ],
+    },
+  ];
+
+  private accionesInicio: ResultadoBusqueda[] = [
+    {
+      id: 'ini-graficas',
+      categoria: 'accion',
+      titulo: 'Ver gráficas y estadísticas',
+      subtitulo: 'Visión general del negocio',
+      icono: '📊',
+      ruta: '/admin/inicio',
+      fragment: 'vision-general',
+      keywords: [
+        'graficas',
+        'estadisticas',
+        'vision general',
+        'dashboard graficas',
+        'charts',
+        'metricas',
+        'analisis',
+        'reportes visuales',
+      ],
+    },
+    {
+      id: 'ini-stats-perfil',
+      categoria: 'accion',
+      titulo: 'Estadísticas del perfil',
+      subtitulo: 'Tus números: clientes, proyectos, etc.',
+      icono: '📈',
+      ruta: '/admin/perfil',
+      fragment: 'estadisticas',
+      keywords: [
+        'estadisticas perfil',
+        'mis numeros',
+        'mis stats',
+        'clientes totales',
+        'proyectos realizados',
+      ],
+    },
+    {
+      id: 'ini-refrescar',
+      categoria: 'accion',
+      titulo: 'Refrescar datos del inicio',
+      subtitulo: 'Recargar agenda, consultas y stats',
+      icono: '🔄',
+      ruta: '/admin/inicio',
+      queryParams: { accion: 'refrescar' },
+      keywords: ['refrescar', 'recargar', 'actualizar datos', 'sincronizar', 'reload', 'refresh'],
+    },
+    {
+      id: 'ini-focus',
+      categoria: 'accion',
+      titulo: 'Modo focus',
+      subtitulo: 'Vista limpia sin distracciones',
+      icono: '🎯',
+      ruta: '/admin/inicio',
+      queryParams: { accion: 'focus' },
+      keywords: ['modo focus', 'concentracion', 'enfoque', 'vista limpia', 'minimalista'],
+    },
+    {
+      id: 'ini-periodo-hoy',
+      categoria: 'accion',
+      titulo: 'Estadísticas de hoy',
+      subtitulo: 'Filtrar período: hoy',
+      icono: '☀️',
+      ruta: '/admin/inicio',
+      queryParams: { periodo: 'hoy' },
+      keywords: ['hoy', 'stats hoy', 'metricas hoy', 'periodo hoy'],
+    },
+    {
+      id: 'ini-periodo-semana',
+      categoria: 'accion',
+      titulo: 'Estadísticas de la semana',
+      subtitulo: 'Filtrar período: esta semana',
+      icono: '📅',
+      ruta: '/admin/inicio',
+      queryParams: { periodo: 'semana' },
+      keywords: ['semana', 'stats semana', 'esta semana', 'periodo semana'],
+    },
+    {
+      id: 'ini-periodo-mes',
+      categoria: 'accion',
+      titulo: 'Estadísticas del mes',
+      subtitulo: 'Filtrar período: este mes',
+      icono: '🗓️',
+      ruta: '/admin/inicio',
+      queryParams: { periodo: 'mes' },
+      keywords: ['mes', 'stats mes', 'este mes', 'periodo mes'],
+    },
+    {
+      id: 'ini-periodo-año',
+      categoria: 'accion',
+      titulo: 'Estadísticas del año',
+      subtitulo: 'Filtrar período: este año',
+      icono: '📆',
+      ruta: '/admin/inicio',
+      queryParams: { periodo: 'año' },
+      keywords: ['año', 'anio', 'stats año', 'este año', 'periodo año', 'anual'],
+    },
+    {
+      id: 'ini-logout-global',
+      categoria: 'accion',
+      titulo: 'Cerrar sesión',
+      subtitulo: 'Salir del panel admin',
+      icono: '🚪',
+      ruta: '/admin/perfil',
+      fragment: 'cerrar-sesion',
+      keywords: ['cerrar sesion', 'logout', 'salir', 'sign out', 'desconectar', 'log out', 'exit'],
+    },
+  ];
 }
