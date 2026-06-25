@@ -276,14 +276,6 @@
           </button>
         </div>
       </div>
-
-      <select
-        [ngModel]="orden()"
-        (ngModelChange)="orden.set($event)"
-        class="px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-[#0a4d7a] focus:bg-white transition-all min-w-[200px]"
-      >
-        <option *ngFor="let o of ordenesDisponibles" [value]="o.value">{{ o.label }}</option>
-      </select>
     </div>
 
     <!-- Segunda fila: rango de fechas + limpiar -->
