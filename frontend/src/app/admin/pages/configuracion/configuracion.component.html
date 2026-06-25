@@ -131,11 +131,11 @@
           </svg>
         </div>
         <div class="flex-1">
-          <h3 class="text-base font-semibold text-gray-900 mb-1">Restaurar valores originales</h3>
+          <h3 class="text-base font-semibold text-gray-900 mb-1">Descartar cambios</h3>
           <p class="text-sm text-gray-500">
-            Se sobrescribirá lo que tengas guardado en
-            <span class="font-semibold text-gray-700">{{ seccionARestaurar }}</span
-            >. Esta acción no se puede deshacer.
+            Se perderán los cambios sin guardar en
+            <span class="font-semibold text-gray-700">{{ seccionARestaurar }}</span> y volverá a lo
+            último guardado. Esta acción no se puede deshacer.
           </p>
         </div>
       </div>
@@ -151,9 +151,9 @@
         <button
           (click)="confirmarRestauracion()"
           type="button"
-          class="px-4 py-2.5 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-sm font-medium shadow-md transition-all"
+          class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium shadow-md transition-all"
         >
-          Sí, restaurar
+          Sí, descartar
         </button>
       </div>
     </div>
@@ -597,10 +597,11 @@
     <div class="flex justify-end gap-3 pt-2">
       <button
         (click)="restaurar('negocio')"
+        [disabled]="!hayCambiosEn('negocio')"
         type="button"
-        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
       >
-        Restaurar original
+        Descartar cambios
       </button>
       <button
         (click)="pedirGuardar('negocio')"
@@ -980,10 +981,11 @@
     <div class="flex justify-end gap-3 pt-2">
       <button
         (click)="restaurar('contacto')"
+        [disabled]="!hayCambiosEn('contacto')"
         type="button"
-        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
       >
-        Restaurar original
+        Descartar cambios
       </button>
       <button
         (click)="pedirGuardar('contacto')"
@@ -1499,10 +1501,11 @@
     <div class="flex justify-end gap-3 pt-2">
       <button
         (click)="restaurar('agenda')"
+        [disabled]="!hayCambiosEn('agenda')"
         type="button"
-        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
       >
-        Restaurar original
+        Descartar cambios
       </button>
       <button
         (click)="pedirGuardar('agenda')"
@@ -1756,10 +1759,11 @@
     <div class="flex justify-end gap-3 pt-2">
       <button
         (click)="restaurar('apariencia')"
+        [disabled]="!hayCambiosEn('apariencia')"
         type="button"
-        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
       >
-        Restaurar original
+        Descartar cambios
       </button>
       <button
         (click)="pedirGuardar('apariencia')"
@@ -1975,10 +1979,11 @@
     <div class="flex justify-end gap-3 pt-2">
       <button
         (click)="restaurar('notificaciones')"
+        [disabled]="!hayCambiosEn('notificaciones')"
         type="button"
-        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
       >
-        Restaurar original
+        Descartar cambios
       </button>
       <button
         (click)="pedirGuardar('notificaciones')"
@@ -2186,10 +2191,11 @@
     <div class="flex justify-end gap-3 pt-2">
       <button
         (click)="restaurar('seo')"
+        [disabled]="!hayCambiosEn('seo')"
         type="button"
-        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
       >
-        Restaurar original
+        Descartar cambios
       </button>
       <button
         (click)="pedirGuardar('seo')"

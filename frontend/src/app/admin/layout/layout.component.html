@@ -27,10 +27,10 @@
           />
           <div>
             <h1 class="text-base md:text-xl font-bold leading-tight tracking-tight">
-              Vortiz Arquitectos
+              {{ configuracion?.nombre || 'Vortiz Arquitectos' }}
             </h1>
             <p class="text-[11px] text-blue-200/70 hidden md:block leading-tight mt-0.5">
-              Diseñamos espacios, construimos confianza
+              {{ configuracion?.eslogan || 'Diseñamos espacios, construimos confianza' }}
             </p>
           </div>
         </ng-container>

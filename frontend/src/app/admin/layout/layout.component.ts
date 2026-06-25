@@ -18,7 +18,14 @@ interface MenuItem {
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, SkeletonComponent, BuscadorAdminComponent, FormsModule,NotificacionesBellComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    SkeletonComponent,
+    BuscadorAdminComponent,
+    FormsModule,
+    NotificacionesBellComponent,
+  ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css',
 })
@@ -74,15 +81,17 @@ export class AdminLayoutComponent implements OnInit {
       this.usuario = u;
       this.cdr.detectChanges();
     });
-    this.configuracionService.getConfiguracion().subscribe({
-      next: (data) => {
+    // Suscribirse al BehaviorSubject para reaccionar a cambios en vivo
+    this.configuracionService.configPublica$.subscribe((data) => {
+      if (data) {
         this.configuracion = data;
-        this.cargando.set(false); // 👈 NUEVO
-      },
-      error: () => {
-        this.cargando.set(false); // 👈 NUEVO: aunque falle, sale del skeleton
-      },
+        this.cargando.set(false);
+        this.cdr.detectChanges();
+      }
     });
+
+    // Disparar carga inicial (también actualiza el BehaviorSubject)
+    this.configuracionService.cargarPublica();
 
     const guardado = localStorage.getItem('sidebar_colapsado');
     if (guardado) this.sidebarColapsado = guardado === 'true';

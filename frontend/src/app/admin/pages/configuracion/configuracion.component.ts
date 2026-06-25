@@ -472,121 +472,17 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   confirmarRestauracion() {
-    const seccion = this.seccionARestaurar;
+    const label = this.seccionARestaurar;
     this.confirmacionAbierta = false;
     this.seccionARestaurar = '';
 
-    switch (seccion) {
-      case 'Negocio':
-        this.negocio = {
-          nombre: 'Vortiz Arquitectos',
-          eslogan: 'Diseñamos espacios, construimos confianza.',
-          direccion: 'Milpillas 101, La Forestal',
-          ciudad: 'Durango',
-          estado: 'Dgo.',
-          codigoPostal: '34217',
-          rfc: 'VOR000000-001',
-        };
-        break;
-      case 'Contacto':
-        this.contacto = {
-          telefono: '+52 618 000 0000',
-          whatsapp: '618 000 0000',
-          correoPublico: 'contacto@vortizarquitectos.com',
-          correoNotificaciones: 'alertas@vortizarquitectos.com',
-        };
-        this.redes = [
-          {
-            nombre: 'Instagram',
-            icono: 'instagram',
-            url: 'https://www.instagram.com/vortizarquitectos',
-            activa: true,
-            color: 'pink',
-          },
-          {
-            nombre: 'Facebook',
-            icono: 'facebook',
-            url: 'https://www.facebook.com/vortizarquitectos',
-            activa: true,
-            color: 'blue',
-          },
-          {
-            nombre: 'LinkedIn',
-            icono: 'linkedin',
-            url: 'https://www.linkedin.com/in/vortizarquitectos',
-            activa: true,
-            color: 'sky',
-          },
-          { nombre: 'Twitter / X', icono: 'twitter', url: '', activa: false, color: 'gray' },
-          { nombre: 'YouTube', icono: 'youtube', url: '', activa: false, color: 'red' },
-          {
-            nombre: 'WhatsApp',
-            icono: 'whatsapp',
-            url: 'https://wa.me/526180000000',
-            activa: true,
-            color: 'green',
-          },
-        ];
-        break;
-      case 'Agenda':
-        this.diasSemana = [
-          { nombre: 'Lunes', abrev: 'Lun', activo: true },
-          { nombre: 'Martes', abrev: 'Mar', activo: true },
-          { nombre: 'Miércoles', abrev: 'Mié', activo: true },
-          { nombre: 'Jueves', abrev: 'Jue', activo: true },
-          { nombre: 'Viernes', abrev: 'Vie', activo: true },
-          { nombre: 'Sábado', abrev: 'Sáb', activo: false },
-          { nombre: 'Domingo', abrev: 'Dom', activo: false },
-        ];
-        this.agenda = {
-          horaInicio: '09:00',
-          horaFin: '18:00',
-          duracionCita: 60,
-          tiempoEntreCitas: 15,
-          limiteDiario: 8,
-        };
-        this.diasFeriados = [
-          { id: 1, fecha: '2026-12-25', motivo: 'Navidad' },
-          { id: 2, fecha: '2026-01-01', motivo: 'Año nuevo' },
-          { id: 3, fecha: '2026-12-12', motivo: 'Día de la Virgen de Guadalupe' },
-        ];
-        break;
-      case 'Apariencia':
-        this.apariencia = {
-          logoUrl: '/assets/img/logo.png',
-          logoFooterUrl: '/assets/img/logo_vortiz.png',
-          faviconUrl: '/assets/img/logo.ico',
-          colorPrimario: '#0a4d7a',
-          colorSecundario: '#0a1f3d',
-          colorTextoNav: '#ffffff',
-          colorTextoFooter: '#ffffff',
-          degradadoInicio: '#000000',
-          degradadoFin: '#0a1f3d',
-        };
-        break;
-      case 'Notificaciones':
-        this.notificaciones = {
-          nuevaCita: true,
-          resumenDiario: false,
-          resumenSemanal: true,
-          recordatorio24h: true,
-          recordatorio1h: false,
-          canalRecordatorio: 'email' as 'email' | 'whatsapp' | 'ambos',
-        };
-        break;
-      case 'SEO':
-        this.seo = {
-          metaTitle: 'Vortiz Arquitectos | Diseño y Construcción en Durango',
-          metaDescription:
-            'Firma de arquitectura en Durango especializada en proyectos residenciales, comerciales e industriales. Diseñamos espacios, construimos confianza.',
-          keywords: 'arquitectos durango, diseño residencial, proyectos comerciales, construcción',
-          ogImageUrl: '',
-          siteUrl: 'https://vortizarquitectos.com.mx', // 👈 NUEVO
-        };
-        break;
-    }
+    // Convertir label ("Negocio") → key ("negocio")
+    const key = Object.entries(this.MAP_TAB_LABEL).find(([, v]) => v === label)?.[0];
+    if (!key) return;
 
-    this.guardarCambios(seccion);
+    this.restaurarDesdeSnapshot(key);
+    this.cdr.markForCheck();
+    this.mostrarMensaje('exito', `Cambios descartados en "${label}"`);
   }
 
   async setMantenimiento(nuevoEstado: boolean) {
@@ -826,7 +722,7 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   /** Restaura el estado de una sección desde su snapshot */
-  private restaurarDesdeSnapshot(seccion: string): void {
+  restaurarDesdeSnapshot(seccion: string): void {
     const snap = this.snapshots[seccion];
     if (!snap) return;
     const datos = JSON.parse(snap);
