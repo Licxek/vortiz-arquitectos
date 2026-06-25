@@ -4,7 +4,13 @@
     <div>
       <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
         <a routerLink="/admin/inicio" class="hover:text-[#0a4d7a] transition-colors">Inicio</a>
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <svg
+          class="w-3 h-3"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+        >
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
         </svg>
         <span class="text-gray-700 font-medium">Proyectos</span>
@@ -45,13 +51,22 @@
   </div>
 
   <!-- Filtros -->
-  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col md:flex-row gap-3">
+  <div
+    class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col md:flex-row gap-3"
+  >
     <div class="relative flex-1">
       <svg
         class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-        fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
       >
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        />
       </svg>
       <input
         type="text"
@@ -60,13 +75,126 @@
         class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
       />
     </div>
-    <select
-      [(ngModel)]="filtroEstado"
-      class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all cursor-pointer"
-    >
-      <option value="todos">Todos los estados</option>
-      <option *ngFor="let e of estadosProyecto" [value]="e">{{ e }}</option>
-    </select>
+    <!-- Dropdown: Filtro de estado -->
+    <div class="relative" (click)="$event.stopPropagation()">
+      <button
+        (click)="toggleFiltroEstado($event)"
+        class="w-full sm:w-52 flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all"
+      >
+        <span
+          class="w-2 h-2 rounded-full shrink-0"
+          [class.bg-gray-400]="filtroEstadoActual?.color === 'gray'"
+          [class.bg-orange-500]="filtroEstadoActual?.color === 'orange'"
+          [class.bg-blue-500]="filtroEstadoActual?.color === 'blue'"
+          [class.bg-green-500]="filtroEstadoActual?.color === 'green'"
+        ></span>
+        <span class="flex-1 text-left">{{ filtroEstadoActual?.label }}</span>
+        <svg
+          class="w-4 h-4 text-gray-500 transition-transform"
+          [class.rotate-180]="filtroEstadoAbierto"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <div
+        *ngIf="filtroEstadoAbierto"
+        class="absolute right-0 top-full mt-1 w-full sm:w-52 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-[fadeIn_0.15s_ease-out]"
+      >
+        <button
+          *ngFor="let opcion of opcionesEstado"
+          (click)="seleccionarFiltroEstado(opcion.value)"
+          class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 transition-colors"
+          [class.bg-blue-50]="filtroEstado === opcion.value"
+          [class.text-blue-700]="filtroEstado === opcion.value"
+          [class.font-semibold]="filtroEstado === opcion.value"
+          [class.text-gray-700]="filtroEstado !== opcion.value"
+        >
+          <span
+            class="w-2 h-2 rounded-full"
+            [class.bg-gray-400]="opcion.color === 'gray'"
+            [class.bg-orange-500]="opcion.color === 'orange'"
+            [class.bg-blue-500]="opcion.color === 'blue'"
+            [class.bg-green-500]="opcion.color === 'green'"
+          ></span>
+          <span class="flex-1">{{ opcion.label }}</span>
+          <svg
+            *ngIf="filtroEstado === opcion.value"
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Dropdown: Ordenamiento -->
+    <div class="relative" (click)="$event.stopPropagation()">
+      <button
+        (click)="toggleOrdenamiento($event)"
+        class="w-full sm:w-44 flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all"
+      >
+        <svg
+          class="w-4 h-4 text-gray-500 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
+          />
+        </svg>
+        <span class="flex-1 text-left">{{ ordenamientoActual?.label }}</span>
+        <svg
+          class="w-4 h-4 text-gray-500 transition-transform"
+          [class.rotate-180]="ordenamientoAbierto"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <div
+        *ngIf="ordenamientoAbierto"
+        class="absolute right-0 top-full mt-1 w-full sm:w-44 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-[fadeIn_0.15s_ease-out]"
+      >
+        <button
+          *ngFor="let opcion of opcionesOrden"
+          (click)="seleccionarOrden(opcion.value)"
+          class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 transition-colors"
+          [class.bg-blue-50]="ordenamiento === opcion.value"
+          [class.text-blue-700]="ordenamiento === opcion.value"
+          [class.font-semibold]="ordenamiento === opcion.value"
+          [class.text-gray-700]="ordenamiento !== opcion.value"
+        >
+          <span class="flex-1">{{ opcion.label }}</span>
+          <svg
+            *ngIf="ordenamiento === opcion.value"
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
     <select
       [(ngModel)]="ordenamiento"
       class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all cursor-pointer"
@@ -80,7 +208,10 @@
   <!-- Grid de proyectos -->
   <!-- Skeleton -->
   <div *ngIf="cargando" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-    <div *ngFor="let _ of [1,2,3,4,5,6,7,8]" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div
+      *ngFor="let _ of [1, 2, 3, 4, 5, 6, 7, 8]"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+    >
       <app-skeleton variant="rect" height="180px" />
       <div class="p-4 space-y-3">
         <app-skeleton variant="text" width="80%" />
@@ -91,19 +222,34 @@
   </div>
 
   <!-- Empty -->
-  <div *ngIf="!cargando && proyectosFiltrados.length === 0" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+  <div
+    *ngIf="!cargando && proyectosFiltrados.length === 0"
+    class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center"
+  >
     <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
-      <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      <svg
+        class="w-10 h-10 text-gray-400"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+        />
       </svg>
     </div>
     <p class="text-sm font-semibold text-gray-800 mb-1">
       {{ busqueda.trim() || filtroEstado !== 'todos' ? 'Sin coincidencias' : 'No hay proyectos' }}
     </p>
     <p class="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed mb-4">
-      {{ busqueda.trim() || filtroEstado !== 'todos'
-        ? 'Intenta cambiar los filtros para ver más resultados.'
-        : 'Crea el primer proyecto del estudio para empezar.' }}
+      {{
+        busqueda.trim() || filtroEstado !== 'todos'
+          ? 'Intenta cambiar los filtros para ver más resultados.'
+          : 'Crea el primer proyecto del estudio para empezar.'
+      }}
     </p>
     <button
       *ngIf="busqueda.trim() || filtroEstado !== 'todos'"
@@ -117,7 +263,13 @@
       (click)="nuevoProyecto()"
       class="text-xs font-semibold text-white bg-[#0a4d7a] hover:bg-[#0a5d8f] px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-sm"
     >
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <svg
+        class="w-3.5 h-3.5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        viewBox="0 0 24 24"
+      >
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
       </svg>
       Crear primer proyecto
@@ -125,7 +277,10 @@
   </div>
 
   <!-- Grid real -->
-  <div *ngIf="!cargando && proyectosFiltrados.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+  <div
+    *ngIf="!cargando && proyectosFiltrados.length > 0"
+    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+  >
     <div
       *ngFor="let p of proyectosFiltrados"
       class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden cursor-pointer group"
@@ -146,14 +301,33 @@
         </span>
       </div>
       <div class="p-4">
-        <h3 class="text-sm font-semibold text-gray-900 truncate group-hover:text-[#0a4d7a] transition-colors">
+        <h3
+          class="text-sm font-semibold text-gray-900 truncate group-hover:text-[#0a4d7a] transition-colors"
+        >
           {{ p.nombre }}
         </h3>
         <p class="text-xs text-gray-500 truncate mt-0.5">{{ p.cliente || 'Sin cliente' }}</p>
-        <p *ngIf="p.ubicacion" class="text-xs text-gray-400 truncate mt-0.5 flex items-center gap-1">
-          <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        <p
+          *ngIf="p.ubicacion"
+          class="text-xs text-gray-400 truncate mt-0.5 flex items-center gap-1"
+        >
+          <svg
+            class="w-3 h-3 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            />
           </svg>
           {{ p.ubicacion }}
         </p>

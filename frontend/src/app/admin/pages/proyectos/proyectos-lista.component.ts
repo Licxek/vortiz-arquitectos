@@ -1,16 +1,8 @@
-import {
-  Component,
-  OnInit,
-  inject,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import {
-  InicioService,
-  ProyectoBackend,
-} from '../../../core/services/inicio.service';
+import { InicioService, ProyectoBackend } from '../../../core/services/inicio.service';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { ImageCarouselComponent } from '../../../shared/image-carousel/image-carousel.component';
 
@@ -36,13 +28,7 @@ type EstadoFiltro = 'todos' | 'En diseño' | 'En proceso' | 'En revisión' | 'Pa
 @Component({
   selector: 'app-proyectos-lista',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    SkeletonComponent,
-    ImageCarouselComponent,
-  ],
+  imports: [CommonModule, FormsModule, RouterLink, SkeletonComponent, ImageCarouselComponent],
   templateUrl: './proyectos-lista.component.html',
 })
 export class ProyectosListaComponent implements OnInit {
@@ -135,11 +121,7 @@ export class ProyectosListaComponent implements OnInit {
 
   private mapearProyecto(p: ProyectoBackend): Proyecto {
     const imagenes =
-      Array.isArray(p.imagenes) && p.imagenes.length > 0
-        ? p.imagenes
-        : p.imagen
-          ? [p.imagen]
-          : [];
+      Array.isArray(p.imagenes) && p.imagenes.length > 0 ? p.imagenes : p.imagen ? [p.imagen] : [];
     return {
       id: p.id,
       nombre: p.nombre,
@@ -170,13 +152,77 @@ export class ProyectosListaComponent implements OnInit {
 
   formatearFechaCorta(iso?: string | Date | null): string {
     if (!iso) return '—';
-    const d =
-      typeof iso === 'string' ? new Date(iso.includes('T') ? iso : iso + 'T00:00:00') : iso;
+    const d = typeof iso === 'string' ? new Date(iso.includes('T') ? iso : iso + 'T00:00:00') : iso;
     if (isNaN(d.getTime())) return '—';
     const meses = [
-      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
     ];
     return `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  // ====== Dropdowns custom ======
+  filtroEstadoAbierto = false;
+  ordenamientoAbierto = false;
+
+  opcionesEstado: { value: EstadoFiltro; label: string; color: string }[] = [
+    { value: 'todos', label: 'Todos los estados', color: 'gray' },
+    { value: 'En diseño', label: 'En diseño', color: 'orange' },
+    { value: 'En proceso', label: 'En proceso', color: 'blue' },
+    { value: 'En revisión', label: 'En revisión', color: 'orange' },
+    { value: 'Pausado', label: 'Pausado', color: 'gray' },
+    { value: 'Finalizado', label: 'Finalizado', color: 'green' },
+  ];
+
+  opcionesOrden: { value: Orden; label: string }[] = [
+    { value: 'recientes', label: 'Más recientes' },
+    { value: 'antiguos', label: 'Más antiguos' },
+    { value: 'az', label: 'Nombre A-Z' },
+  ];
+
+  get filtroEstadoActual() {
+    return this.opcionesEstado.find((o) => o.value === this.filtroEstado);
+  }
+
+  get ordenamientoActual() {
+    return this.opcionesOrden.find((o) => o.value === this.ordenamiento);
+  }
+
+  toggleFiltroEstado(event: Event) {
+    event.stopPropagation();
+    this.filtroEstadoAbierto = !this.filtroEstadoAbierto;
+    this.ordenamientoAbierto = false;
+  }
+
+  toggleOrdenamiento(event: Event) {
+    event.stopPropagation();
+    this.ordenamientoAbierto = !this.ordenamientoAbierto;
+    this.filtroEstadoAbierto = false;
+  }
+
+  seleccionarFiltroEstado(valor: EstadoFiltro) {
+    this.filtroEstado = valor;
+    this.filtroEstadoAbierto = false;
+  }
+
+  seleccionarOrden(valor: Orden) {
+    this.ordenamiento = valor;
+    this.ordenamientoAbierto = false;
+  }
+
+  @HostListener('document:click')
+  cerrarDropdowns() {
+    this.filtroEstadoAbierto = false;
+    this.ordenamientoAbierto = false;
   }
 }
