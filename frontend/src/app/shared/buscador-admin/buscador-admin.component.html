@@ -5,7 +5,9 @@
 >
   <!-- Estado: cargando -->
   <div *ngIf="cargando()" class="p-12 text-center">
-    <div class="inline-block w-8 h-8 border-2 border-gray-200 border-t-[#0a4d7a] rounded-full animate-spin"></div>
+    <div
+      class="inline-block w-8 h-8 border-2 border-gray-200 border-t-[#0a4d7a] rounded-full animate-spin"
+    ></div>
     <p class="text-sm text-gray-400 mt-3">Buscando...</p>
   </div>
 
@@ -14,8 +16,18 @@
     <!-- Estado vacío -->
     <div *ngIf="resultados().length === 0 && query.trim()" class="p-10 text-center">
       <div class="w-12 h-12 mx-auto mb-3 bg-gray-50 rounded-2xl flex items-center justify-center">
-        <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        <svg
+          class="w-6 h-6 text-gray-300"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
         </svg>
       </div>
       <p class="text-sm font-medium text-gray-700">Sin resultados para "{{ query }}"</p>
@@ -73,20 +85,21 @@
         [class.bg-blue-50]="indiceSeleccionado() === indiceGlobal(grupo.key, i)"
         [style.border-left]="
           indiceSeleccionado() === indiceGlobal(grupo.key, i)
-            ? '2px solid ' + configCategoria(grupo.key).borderHex
+            ? '2px solid ' + configCategoria(r.categoria).borderHex
             : '2px solid transparent'
         "
         [class.vortiz-cascada-item]="mostrarCascada()"
         [style.animation-delay.ms]="mostrarCascada() ? indiceGlobal(grupo.key, i) * 25 : 0"
       >
         <!-- Cuadrito de ícono con color por categoría -->
+        <!-- Cuadrito de ícono con color por categoría -->
         <div
           class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-          [style.background-color]="configCategoria(grupo.key).bgIconHex"
+          [style.background-color]="configCategoria(r.categoria).bgIconHex"
         >
           <svg
             class="w-[18px] h-[18px]"
-            [style.color]="configCategoria(grupo.key).textIconHex"
+            [style.color]="configCategoria(r.categoria).textIconHex"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -96,7 +109,7 @@
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              [attr.d]="configCategoria(grupo.key).iconoPath"
+              [attr.d]="configCategoria(r.categoria).iconoPath"
             />
           </svg>
         </div>
@@ -143,7 +156,7 @@
             [class.!border-current]="indiceSeleccionado() === indiceGlobal(grupo.key, i)"
             [style.color]="
               indiceSeleccionado() === indiceGlobal(grupo.key, i)
-                ? configCategoria(grupo.key).borderHex
+                ? configCategoria(r.categoria).borderHex
                 : ''
             "
           >
@@ -154,7 +167,7 @@
           <svg
             *ngIf="indiceSeleccionado() === indiceGlobal(grupo.key, i)"
             class="w-4 h-4"
-            [style.color]="configCategoria(grupo.key).borderHex"
+            [style.color]="configCategoria(r.categoria).borderHex"
             fill="none"
             stroke="currentColor"
             stroke-width="2.5"
@@ -173,19 +186,27 @@
   >
     <div class="flex items-center gap-3 flex-wrap">
       <span class="flex items-center gap-1">
-        <kbd class="px-1.5 py-0.5 font-mono bg-white rounded border border-gray-200 text-[10px]">↑↓</kbd>
+        <kbd class="px-1.5 py-0.5 font-mono bg-white rounded border border-gray-200 text-[10px]"
+          >↑↓</kbd
+        >
         Navegar
       </span>
       <span class="flex items-center gap-1">
-        <kbd class="px-1.5 py-0.5 font-mono bg-white rounded border border-gray-200 text-[10px]">↵</kbd>
+        <kbd class="px-1.5 py-0.5 font-mono bg-white rounded border border-gray-200 text-[10px]"
+          >↵</kbd
+        >
         Abrir
       </span>
       <span class="hidden sm:flex items-center gap-1">
-        <kbd class="px-1.5 py-0.5 font-mono bg-white rounded border border-gray-200 text-[10px]">1-9</kbd>
+        <kbd class="px-1.5 py-0.5 font-mono bg-white rounded border border-gray-200 text-[10px]"
+          >1-9</kbd
+        >
         Saltar
       </span>
       <span class="flex items-center gap-1">
-        <kbd class="px-1.5 py-0.5 font-mono bg-white rounded border border-gray-200 text-[10px]">ESC</kbd>
+        <kbd class="px-1.5 py-0.5 font-mono bg-white rounded border border-gray-200 text-[10px]"
+          >ESC</kbd
+        >
         Cerrar
       </span>
     </div>
