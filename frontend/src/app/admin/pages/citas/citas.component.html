@@ -2362,7 +2362,9 @@
                   type="date"
                   [(ngModel)]="nuevaCita.fecha"
                   [min]="hoyISO"
-                  (ngModelChange)="advertenciaFecha = validarFecha($event)"
+                  (ngModelChange)="
+                    advertenciaFecha = validarFecha($event); cargarSlotsAdminFecha($event)
+                  "
                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
                 />
                 <p
@@ -2390,23 +2392,90 @@
                   class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
                   >Hora</label
                 >
-                <div class="grid grid-cols-3 gap-2">
+
+                <!-- Estado vacío -->
+                <div
+                  *ngIf="
+                    !cargandoHorasAdmin() && nuevaCita.fecha && horasDisponibles().length === 0
+                  "
+                  class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center"
+                >
+                  <p class="text-xs font-semibold text-gray-700">Sin horarios disponibles</p>
+                  <p class="text-[10px] text-gray-500 mt-0.5">Elige otra fecha</p>
+                </div>
+
+                <!-- Sin fecha aún -->
+                <div
+                  *ngIf="!nuevaCita.fecha"
+                  class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center"
+                >
+                  <p class="text-[11px] text-gray-500">Primero elige una fecha</p>
+                </div>
+
+                <!-- Grid de horas -->
+                <div
+                  *ngIf="nuevaCita.fecha && horasDisponibles().length > 0"
+                  class="grid grid-cols-3 gap-2 relative"
+                >
+                  <!-- Loader -->
+                  <div
+                    *ngIf="cargandoHorasAdmin()"
+                    class="absolute inset-0 bg-white/50 backdrop-blur-[1px] rounded-lg flex items-center justify-center z-10"
+                  >
+                    <svg
+                      class="w-5 h-5 animate-spin text-[#0a4d7a]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                        class="opacity-25"
+                      ></circle>
+                      <path
+                        fill="currentColor"
+                        class="opacity-75"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      ></path>
+                    </svg>
+                  </div>
+
                   <button
-                    *ngFor="let h of horasDisponibles"
+                    *ngFor="let h of horasDisponibles()"
                     type="button"
-                    (click)="nuevaCita.hora = h"
+                    (click)="!horasOcupadasAdmin().includes(h) && (nuevaCita.hora = h)"
+                    [disabled]="horasOcupadasAdmin().includes(h)"
+                    [title]="horasOcupadasAdmin().includes(h) ? 'Hora ocupada por otra cita' : ''"
                     class="px-2 py-2 rounded-lg text-xs font-semibold border transition-all"
-                    [class.bg-[#0a4d7a]]="nuevaCita.hora === h"
-                    [class.text-white]="nuevaCita.hora === h"
-                    [class.border-[#0a4d7a]]="nuevaCita.hora === h"
-                    [class.bg-gray-50]="nuevaCita.hora !== h"
-                    [class.text-gray-700]="nuevaCita.hora !== h"
-                    [class.border-gray-200]="nuevaCita.hora !== h"
-                    [class.hover:border-gray-400]="nuevaCita.hora !== h"
+                    [class.bg-[#0a4d7a]]="nuevaCita.hora === h && !horasOcupadasAdmin().includes(h)"
+                    [class.text-white]="nuevaCita.hora === h && !horasOcupadasAdmin().includes(h)"
+                    [class.border-[#0a4d7a]]="
+                      nuevaCita.hora === h && !horasOcupadasAdmin().includes(h)
+                    "
+                    [class.bg-gray-50]="nuevaCita.hora !== h && !horasOcupadasAdmin().includes(h)"
+                    [class.text-gray-700]="
+                      nuevaCita.hora !== h && !horasOcupadasAdmin().includes(h)
+                    "
+                    [class.border-gray-200]="
+                      nuevaCita.hora !== h && !horasOcupadasAdmin().includes(h)
+                    "
+                    [class.hover:border-gray-400]="
+                      nuevaCita.hora !== h && !horasOcupadasAdmin().includes(h)
+                    "
+                    [class.bg-gray-100]="horasOcupadasAdmin().includes(h)"
+                    [class.text-gray-400]="horasOcupadasAdmin().includes(h)"
+                    [class.cursor-not-allowed]="horasOcupadasAdmin().includes(h)"
+                    [class.line-through]="horasOcupadasAdmin().includes(h)"
                   >
                     {{ h }}
                   </button>
                 </div>
+                <p *ngIf="horasOcupadasAdmin().length > 0" class="text-xs text-gray-500 mt-2">
+                  ⚠️ Las horas tachadas ya están reservadas
+                </p>
               </div>
             </div>
           </div>

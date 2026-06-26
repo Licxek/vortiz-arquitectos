@@ -139,25 +139,40 @@ export class CitasComponent implements OnInit {
   // Catálogo real (señal del CatalogoService — antes era una lista hardcodeada)
   serviciosDisponibles = this.catalogo.servicios;
 
-  get horasDisponibles(): string[] {
-    if (!this.configAgenda) return [];
-    const { horaInicio, horaFin, duracionCita, tiempoEntreCitas } = this.configAgenda;
-    if (!horaInicio || !horaFin) return [];
+  // 👇 Slots y ocupadas vienen del backend (igual que en formulario público)
+  horasDisponibles = signal<string[]>([]);
+  horasOcupadasAdmin = signal<string[]>([]);
+  cargandoHorasAdmin = signal(false);
 
-    const [hI, mI] = horaInicio.split(':').map(Number);
-    const [hF, mF] = horaFin.split(':').map(Number);
-    const inicioMin = hI * 60 + mI;
-    const finMin = hF * 60 + mF;
-
-    const slot = (duracionCita || 60) + (tiempoEntreCitas || 0);
-    const horas: string[] = [];
-
-    for (let m = inicioMin; m + (duracionCita || 60) <= finMin; m += slot) {
-      const h = Math.floor(m / 60);
-      const min = m % 60;
-      horas.push(`${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`);
+  /** Carga slots y ocupadas para la fecha seleccionada en nueva cita */
+  private cargarSlotsAdmin(fecha: string) {
+    if (!fecha) {
+      this.horasDisponibles.set([]);
+      this.horasOcupadasAdmin.set([]);
+      return;
     }
-    return horas;
+    this.cargandoHorasAdmin.set(true);
+    this.citasService.obtenerHorariosOcupados(fecha).subscribe({
+      next: ({ todas, ocupadas }) => {
+        this.horasDisponibles.set(todas);
+        this.horasOcupadasAdmin.set(ocupadas);
+        this.cargandoHorasAdmin.set(false);
+        // Si la hora seleccionada ya no existe o está ocupada, deseleccionarla
+        if (this.nuevaCita.hora) {
+          const existe = todas.includes(this.nuevaCita.hora);
+          const ocupada = ocupadas.includes(this.nuevaCita.hora);
+          if (!existe || ocupada) {
+            this.nuevaCita.hora = '';
+          }
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargandoHorasAdmin.set(false);
+        this.horasDisponibles.set([]);
+        this.horasOcupadasAdmin.set([]);
+      },
+    });
   }
 
   mostrarSelectorServicioNueva = false;
@@ -1744,5 +1759,10 @@ export class CitasComponent implements OnInit {
     this.cerrarDetalle();
     this.mostrarNuevaCita = true;
     this.cdr.detectChanges();
+  }
+
+  /** Wrapper público para usar desde el template */
+  cargarSlotsAdminFecha(fecha: string) {
+    this.cargarSlotsAdmin(fecha);
   }
 }
