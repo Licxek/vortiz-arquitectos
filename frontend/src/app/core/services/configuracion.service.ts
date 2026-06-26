@@ -34,7 +34,7 @@ export interface Configuracion {
   mantenimiento?: MantenimientoConfig;
   agenda?: {
     diasSemana: { nombre: string; activo: boolean }[];
-    diasFeriados: { id?: number; fecha: string; motivo: string }[];
+    diasFeriados: { id?: number; fecha: string; motivo: string; recurrente?: boolean }[];
     horaInicio: string;
     horaFin: string;
   };

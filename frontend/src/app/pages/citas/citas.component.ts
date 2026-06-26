@@ -388,8 +388,14 @@ export class CitasComponent implements OnInit {
       return `Lo sentimos, no atendemos los ${nombreDia.toLowerCase()}. Por favor elige otro día.`;
     }
 
-    // Día feriado / vacaciones
-    const feriado = this.configAgenda.diasFeriados?.find((f) => f.fecha === fecha);
+    // Día feriado / vacaciones (con soporte de recurrentes)
+    const feriado = this.configAgenda.diasFeriados?.find((f: any) => {
+      if (f.recurrente) {
+        // Comparar solo mes-día (MM-DD), ignorar el año
+        return f.fecha?.substring(5) === fecha?.substring(5);
+      }
+      return f.fecha === fecha;
+    });
     if (feriado) {
       return `📅 ${feriado.motivo}. Ese día estamos cerrados, elige otra fecha.`;
     }
