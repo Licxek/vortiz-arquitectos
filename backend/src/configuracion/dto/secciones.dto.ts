@@ -52,7 +52,9 @@ export class NotificacionesDto {
   @IsOptional() @IsBoolean() resumenSemanal?: boolean;
   @IsOptional() @IsBoolean() recordatorio24h?: boolean;
   @IsOptional() @IsBoolean() recordatorio1h?: boolean;
-  @IsOptional() @IsIn(['email', 'whatsapp', 'ambos']) canalRecordatorio?: string;
+  @IsOptional()
+  @IsIn(['email', 'whatsapp', 'ambos'])
+  canalRecordatorio?: string;
 }
 
 // ========== SEO ==========
@@ -61,7 +63,7 @@ export class SeoDto {
   @IsOptional() @IsString() @MaxLength(160) metaDescription?: string;
   @IsOptional() @IsString() @MaxLength(200) keywords?: string;
   @IsOptional() @IsString() ogImageUrl?: string;
-  @IsOptional() @IsString() @MaxLength(300) siteUrl?: string;  // 👈 AGREGAR
+  @IsOptional() @IsString() @MaxLength(300) siteUrl?: string; // 👈 AGREGAR
 }
 
 // ========== MANTENIMIENTO ==========
@@ -92,6 +94,10 @@ export class DiaFeriadoDto {
   @IsInt() id!: number;
   @IsString() fecha!: string;
   @IsString() @MaxLength(120) motivo!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  recurrente?: boolean;
 }
 
 export class AgendaDto {

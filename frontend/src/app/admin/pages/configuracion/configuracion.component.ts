@@ -22,6 +22,7 @@ interface DiaFeriado {
   id: number;
   fecha: string;
   motivo: string;
+  recurrente?: boolean;
 }
 
 interface RedSocial {
@@ -142,7 +143,11 @@ export class ConfiguracionComponent implements OnInit {
     { id: 2, fecha: '2026-01-01', motivo: 'Año nuevo' },
     { id: 3, fecha: '2026-12-12', motivo: 'Día de la Virgen de Guadalupe' },
   ];
-  nuevoFeriado = { fecha: '', motivo: '' };
+  nuevoFeriado: { fecha: string; motivo: string; recurrente: boolean } = {
+    fecha: '',
+    motivo: '',
+    recurrente: false,
+  };
 
   // =========== APARIENCIA ===========
   apariencia = {
@@ -288,8 +293,9 @@ export class ConfiguracionComponent implements OnInit {
         id: Date.now(),
         fecha: this.nuevoFeriado.fecha,
         motivo: this.nuevoFeriado.motivo,
+        recurrente: this.nuevoFeriado.recurrente,
       });
-      this.nuevoFeriado = { fecha: '', motivo: '' };
+      this.nuevoFeriado = { fecha: '', motivo: '', recurrente: false };
     }
   }
 
@@ -814,5 +820,28 @@ export class ConfiguracionComponent implements OnInit {
       this.mensaje.set(null);
       this.cdr.markForCheck();
     }, 3000);
+  }
+  /** Formato amigable para feriados recurrentes (ej: "Cada 25 de diciembre") */
+  fechaRecurrenteLabel(fecha: string): string {
+    if (!fecha) return '';
+    const partes = fecha.split('-');
+    if (partes.length !== 3) return fecha;
+    const mes = parseInt(partes[1], 10);
+    const dia = parseInt(partes[2], 10);
+    const meses = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
+    return `Cada ${dia} de ${meses[mes - 1] || ''}`;
   }
 }

@@ -804,16 +804,6 @@ export class PaginasComponent implements OnInit {
           { key: 'beneficio4', label: 'Beneficio 4', tipo: 'texto' },
         ],
       },
-      {
-        id: 'horarios',
-        nombre: 'Horarios',
-        icono: '🕐',
-        campos: [
-          { key: 'lunVie', label: 'Lunes a viernes', tipo: 'texto', placeholder: '9:00 – 18:00' },
-          { key: 'sabado', label: 'Sábado', tipo: 'texto' },
-          { key: 'domingo', label: 'Domingo', tipo: 'texto' },
-        ],
-      },
     ],
   };
 

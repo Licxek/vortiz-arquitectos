@@ -1231,10 +1231,17 @@ export class CitasComponent implements OnInit {
       return `${nombreDia} no es día laboral. Cambia la fecha o ajusta tus días en Configuración → Agenda.`;
     }
 
-    // Validar feriado
-    const feriado = this.configAgenda?.diasFeriados?.find((f: any) => f.fecha === fecha);
+    // Validar feriado (con soporte de recurrentes)
+    const feriado = this.configAgenda?.diasFeriados?.find((f: any) => {
+      if (f.recurrente) {
+        // Comparar solo mes-día (MM-DD), ignorar el año
+        return f.fecha?.substring(5) === fecha?.substring(5);
+      }
+      return f.fecha === fecha;
+    });
     if (feriado) {
-      return `📅 ${feriado.motivo}. Si necesitas atender ese día, quita el feriado en Configuración → Agenda.`;
+      const sufijo = feriado.recurrente ? ' (cada año)' : '';
+      return `📅 ${feriado.motivo}${sufijo}. Si necesitas atender ese día, quita el feriado en Configuración → Agenda.`;
     }
 
     // 🔒 NUEVO: validar límite diario

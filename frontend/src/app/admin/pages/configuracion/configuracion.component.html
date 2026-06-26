@@ -1321,7 +1321,7 @@
       <h3 class="text-base font-semibold text-gray-900 mb-1">Días feriados y vacaciones</h3>
       <p class="text-xs text-gray-500 mb-5">Días en que no se pueden agendar citas</p>
 
-      <div class="flex flex-col sm:flex-row gap-2 mb-4">
+      <div class="flex flex-col sm:flex-row gap-2 mb-3">
         <input
           type="date"
           [(ngModel)]="nuevoFeriado.fecha"
@@ -1350,14 +1350,46 @@
         </button>
       </div>
 
+      <!-- 👇 NUEVO: Toggle "Se repite cada año" -->
+      <div class="flex items-center gap-3 mb-5 px-1 py-2">
+        <button
+          type="button"
+          (click)="nuevoFeriado.recurrente = !nuevoFeriado.recurrente"
+          class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+          [class.bg-blue-500]="nuevoFeriado.recurrente"
+          [class.bg-gray-300]="!nuevoFeriado.recurrente"
+        >
+          <span
+            class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+            [class.translate-x-5]="nuevoFeriado.recurrente"
+          ></span>
+        </button>
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+            <span>🔁</span> Se repite cada año
+          </p>
+          <p class="text-xs text-gray-500">
+            Actívalo para fechas fijas como Navidad, Año Nuevo, Independencia. Déjalo apagado para
+            vacaciones específicas (que solo aplican un año).
+          </p>
+        </div>
+      </div>
+
       <div class="space-y-2">
         <div
           *ngFor="let feriado of diasFeriados"
           class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
         >
-          <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center shrink-0">
+          <!-- Icono: AZUL para recurrentes, NARANJA para únicos -->
+          <div
+            class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors"
+            [class.bg-blue-100]="feriado.recurrente"
+            [class.bg-orange-100]="!feriado.recurrente"
+          >
             <svg
-              class="w-5 h-5 text-orange-600"
+              class="w-5 h-5 transition-colors"
+              [class.text-blue-600]="feriado.recurrente"
+              [class.text-orange-600]="!feriado.recurrente"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -1370,10 +1402,41 @@
               />
             </svg>
           </div>
+
+          <!-- Motivo + fecha (formato cambia según recurrente) -->
           <div class="flex-1 min-w-0">
             <p class="text-sm font-semibold text-gray-900">{{ feriado.motivo }}</p>
-            <p class="text-xs text-gray-500">{{ feriado.fecha | date: 'EEEE d MMMM y' }}</p>
+            <p class="text-xs text-gray-500 flex items-center gap-1.5">
+              <span *ngIf="feriado.recurrente" class="inline-flex items-center gap-1">
+                <span>🔁</span>
+                <span>{{ fechaRecurrenteLabel(feriado.fecha) }}</span>
+              </span>
+              <span *ngIf="!feriado.recurrente">
+                {{ feriado.fecha | date: 'EEEE d MMMM y' }}
+              </span>
+            </p>
           </div>
+
+          <!-- 👇 NUEVO: Toggle inline para hacer recurrente/único sin re-agregar -->
+          <div
+            class="flex items-center gap-1.5 shrink-0 px-2"
+            [title]="feriado.recurrente ? 'Se repite cada año' : 'Solo aplica esta fecha'"
+          >
+            <span class="text-xs opacity-60">🔁</span>
+            <button
+              type="button"
+              (click)="feriado.recurrente = !feriado.recurrente"
+              class="relative w-9 h-5 rounded-full transition-colors"
+              [class.bg-blue-500]="feriado.recurrente"
+              [class.bg-gray-300]="!feriado.recurrente"
+            >
+              <span
+                class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
+                [class.translate-x-4]="feriado.recurrente"
+              ></span>
+            </button>
+          </div>
+
           <button
             (click)="eliminarFeriado(feriado.id)"
             class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
