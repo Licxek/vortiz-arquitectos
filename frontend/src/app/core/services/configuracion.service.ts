@@ -28,10 +28,16 @@ export interface Configuracion {
   meta_title: string;
   meta_description: string;
   meta_keywords: string;
-  og_image_url?: string;  //
+  og_image_url?: string; //
   nombre: string;
   eslogan: string;
   mantenimiento?: MantenimientoConfig;
+  agenda?: {
+    diasSemana: { nombre: string; activo: boolean }[];
+    diasFeriados: { id?: number; fecha: string; motivo: string }[];
+    horaInicio: string;
+    horaFin: string;
+  };
 }
 
 export interface ConfiguracionCompleta {
@@ -57,29 +63,37 @@ export class ConfiguracionService {
   // Pública (header, footer, login) — la que ya usabas
   getConfiguracion(): Observable<Configuracion> {
     return this.http.get<Configuracion>(`${this.base}/publica`).pipe(
-      catchError(() => of({
-        id: 1,
-        logo_url: '/assets/img/logo.png',
-        logo_footer_url: '/assets/img/logo_vortiz.png',
-        favicon_url: '/assets/img/logo.ico',
-        telefono: '+52 000-000-0000',
-        correo_contacto: 'contacto@vortizarquitectos.com',
-        direccion: 'Milpillas 101, La Forestal, 34217 Durango, Dgo.',
-        redes: [],
-        horario: 'Lunes - Viernes 9:00 - 18:00',
-        color_degradado_inicio: '#000000',
-        color_degradado_fin: '#0a1f3d',
-        color_primario: '#0a4d7a',
-        color_secundario: '#0a1f3d',
-        color_texto_nav: '#ffffff',
-        color_texto_footer: '#ffffff',
-        meta_title: 'Vortiz Arquitectos',
-        meta_description: '',
-        meta_keywords: '',
-        nombre: 'Vortiz Arquitectos',
-        eslogan: 'Diseñamos espacios, construimos confianza.',
-        mantenimiento: { activo: false, mensaje: '', fechaEstimada: '' },
-      }))
+      catchError(() =>
+        of({
+          id: 1,
+          logo_url: '/assets/img/logo.png',
+          logo_footer_url: '/assets/img/logo_vortiz.png',
+          favicon_url: '/assets/img/logo.ico',
+          telefono: '+52 000-000-0000',
+          correo_contacto: 'contacto@vortizarquitectos.com',
+          direccion: 'Milpillas 101, La Forestal, 34217 Durango, Dgo.',
+          redes: [],
+          horario: 'Lunes - Viernes 9:00 - 18:00',
+          color_degradado_inicio: '#000000',
+          color_degradado_fin: '#0a1f3d',
+          color_primario: '#0a4d7a',
+          color_secundario: '#0a1f3d',
+          color_texto_nav: '#ffffff',
+          color_texto_footer: '#ffffff',
+          meta_title: 'Vortiz Arquitectos',
+          meta_description: '',
+          meta_keywords: '',
+          nombre: 'Vortiz Arquitectos',
+          eslogan: 'Diseñamos espacios, construimos confianza.',
+          mantenimiento: { activo: false, mensaje: '', fechaEstimada: '' },
+          agenda: {
+            diasSemana: [],
+            diasFeriados: [],
+            horaInicio: '09:00',
+            horaFin: '18:00',
+          },
+        }),
+      ),
     );
   }
 
@@ -94,6 +108,6 @@ export class ConfiguracionService {
   }
 
   cargarPublica() {
-    this.getConfiguracion().subscribe(c => this.publicaSubject.next(c));
+    this.getConfiguracion().subscribe((c) => this.publicaSubject.next(c));
   }
 }

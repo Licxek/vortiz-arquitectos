@@ -166,6 +166,7 @@ export class ConfiguracionService implements OnModuleInit {
   async obtenerPublica() {
     const c = await this.obtener();
     const redes: any[] = c.redes || [];
+    const agenda: any = c.agenda || {};
 
     const redesPublicas = redes
       .filter((r) => r.activa && r.url)
@@ -197,6 +198,13 @@ export class ConfiguracionService implements OnModuleInit {
       eslogan:
         c.negocio?.eslogan || 'Diseñamos espacios, construimos confianza.',
       mantenimiento: c.mantenimiento,
+      // 👇 NUEVO: agenda pública para validación del formulario
+      agenda: {
+        diasSemana: agenda.diasSemana || [],
+        diasFeriados: agenda.diasFeriados || [],
+        horaInicio: agenda.horaInicio || '09:00',
+        horaFin: agenda.horaFin || '18:00',
+      },
     };
   }
   private readonly INDEX_PATH = '/app/frontend-dist/index.html';
