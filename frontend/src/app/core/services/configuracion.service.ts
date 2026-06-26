@@ -87,7 +87,15 @@ export class ConfiguracionService {
           eslogan: 'Diseñamos espacios, construimos confianza.',
           mantenimiento: { activo: false, mensaje: '', fechaEstimada: '' },
           agenda: {
-            diasSemana: [],
+            diasSemana: [
+              { nombre: 'Lunes', activo: true },
+              { nombre: 'Martes', activo: true },
+              { nombre: 'Miércoles', activo: true },
+              { nombre: 'Jueves', activo: true },
+              { nombre: 'Viernes', activo: true },
+              { nombre: 'Sábado', activo: false },
+              { nombre: 'Domingo', activo: false },
+            ],
             diasFeriados: [],
             horaInicio: '09:00',
             horaFin: '18:00',

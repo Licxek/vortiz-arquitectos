@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable,map  } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export type TipoCita = 'consulta' | 'proyecto';
@@ -46,13 +46,12 @@ export class CitasService {
     return this.http.post<Cita>(this.base, data);
   }
 
-   // 👇 NUEVO - PÚBLICO
-  obtenerHorariosOcupados(fecha: string): Observable<string[]> {
-    return this.http
-      .get<{ ocupadas: string[] }>(`${this.base}/horarios-ocupados`, {  // 👈 this.base, no this.apiUrl
-        params: { fecha },
-      })
-      .pipe(map((r) => r.ocupadas));
+  // PÚBLICO: devuelve todos los slots posibles + los ocupados
+  obtenerHorariosOcupados(fecha: string): Observable<{ todas: string[]; ocupadas: string[] }> {
+    return this.http.get<{ todas: string[]; ocupadas: string[] }>(
+      `${this.base}/horarios-ocupados`,
+      { params: { fecha } },
+    );
   }
 
   // Admin (los siguientes los usaremos en la etapa 3)
@@ -71,5 +70,4 @@ export class CitasService {
   eliminar(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
-
 }
