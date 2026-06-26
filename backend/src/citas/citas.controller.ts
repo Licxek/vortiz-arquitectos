@@ -33,10 +33,9 @@ export class CitasController {
   @Get('horarios-ocupados')
   async getHorariosOcupados(@Query('fecha') fecha: string) {
     if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-      return { ocupadas: [] };
+      return { todas: [], ocupadas: [] };
     }
-    const ocupadas = await this.servicio.getHorariosOcupados(fecha); // 👈 this.servicio, no this.citasService
-    return { ocupadas };
+    return this.servicio.getHorariosOcupados(fecha);
   }
 
   // PROTEGIDOS — admin (JWT + throttle global 60/min ya protegen)

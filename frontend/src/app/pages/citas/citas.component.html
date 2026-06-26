@@ -847,7 +847,32 @@
                     class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2"
                     >Hora</label
                   >
-                  <div class="grid grid-cols-3 gap-2 relative">
+                  <!-- Estado vacío: sin horas disponibles ese día -->
+                  <div
+                    *ngIf="!cargandoHoras() && form().fecha && horasDisponibles().length === 0"
+                    class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center"
+                  >
+                    <svg
+                      class="w-8 h-8 text-gray-400 mx-auto mb-2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <p class="text-sm font-semibold text-gray-700">Sin horarios disponibles</p>
+                    <p class="text-xs text-gray-500 mt-1">Por favor elige otra fecha</p>
+                  </div>
+
+                  <div
+                    *ngIf="!form().fecha || horasDisponibles().length > 0"
+                    class="grid grid-cols-3 gap-2 relative"
+                  >
                     <!-- Loader sutil al cargar -->
                     <div
                       *ngIf="cargandoHoras()"
@@ -1192,17 +1217,22 @@
                 Horario de atención
               </h3>
               <div class="space-y-2 text-sm">
-                <div class="flex justify-between">
-                  <span class="text-gray-700">Lunes a viernes</span>
-                  <span class="font-semibold text-gray-900">{{ horarioLunVie }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-700">Sábado</span>
-                  <span class="font-semibold text-gray-900">{{ horarioSabado }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-700">Domingo</span>
-                  <span class="font-semibold text-red-500">{{ horarioDomingo }}</span>
+                <div
+                  *ngFor="let dia of configAgenda?.diasSemana || []"
+                  class="flex justify-between items-center"
+                >
+                  <span class="text-gray-700">{{ dia.nombre }}</span>
+                  <span
+                    class="font-semibold"
+                    [class.text-gray-900]="dia.activo"
+                    [class.text-red-400]="!dia.activo"
+                  >
+                    {{
+                      dia.activo
+                        ? configAgenda?.horaInicio + ' - ' + configAgenda?.horaFin
+                        : 'Cerrado'
+                    }}
+                  </span>
                 </div>
               </div>
             </div>

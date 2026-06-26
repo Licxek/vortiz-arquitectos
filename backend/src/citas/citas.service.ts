@@ -424,16 +424,63 @@ export class CitasService {
     );
   }
 
-  // Dentro de la clase CitasService
-  async getHorariosOcupados(fecha: string): Promise<string[]> {
+  /**
+   * Devuelve todos los slots posibles del día y cuáles están ocupados.
+   * Los slots se generan dinámicamente desde la config de agenda.
+   */
+  async getHorariosOcupados(
+    fecha: string,
+  ): Promise<{ todas: string[]; ocupadas: string[] }> {
+    // 1) Leer config de agenda
+    const config = await this.configuracionService.obtener();
+    const agenda: any = config.agenda || {};
+    const horaInicio: string = agenda.horaInicio || '09:00';
+    const horaFin: string = agenda.horaFin || '18:00';
+    const duracionCita: number = agenda.duracionCita || 60;
+    const buffer: number = agenda.tiempoEntreCitas || 0;
+
+    // 2) Traer citas activas del día
     const citas = await this.repo.find({
       where: {
         fecha,
         estado: In(['pendiente', 'confirmada']),
       },
-      select: ['hora'],
+      select: ['hora', 'duracion'],
     });
-    return citas.map((c) => c.hora);
+
+    // 3) Generar TODOS los slots posibles según config
+    const [hI, mI] = horaInicio.split(':').map(Number);
+    const [hF, mF] = horaFin.split(':').map(Number);
+    const inicioMin = hI * 60 + mI;
+    const finMin = hF * 60 + mF;
+    const paso = duracionCita + buffer;
+
+    const todas: string[] = [];
+    const ocupadas: string[] = [];
+
+    for (let m = inicioMin; m + duracionCita <= finMin; m += paso) {
+      const h = Math.floor(m / 60);
+      const min = m % 60;
+      const slotHora = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+      todas.push(slotHora);
+
+      const inicioSlot = m;
+      const finSlot = m + duracionCita;
+
+      // ¿Se solapa con alguna cita existente (considerando buffer)?
+      for (const c of citas) {
+        const [hC, mC] = c.hora.split(':').map(Number);
+        const inicioC = hC * 60 + mC;
+        const finC = inicioC + (c.duracion || 60);
+
+        if (inicioSlot - buffer < finC && finSlot + buffer > inicioC) {
+          ocupadas.push(slotHora);
+          break;
+        }
+      }
+    }
+
+    return { todas, ocupadas };
   }
 
   async responderConsulta(id: number, mensaje: string) {

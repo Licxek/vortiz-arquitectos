@@ -64,11 +64,6 @@ export class CitasComponent implements OnInit {
   benef3 = '';
   benef4 = '';
 
-  // ============ HORARIOS ============
-  horarioLunVie = '';
-  horarioSabado = '';
-  horarioDomingo = '';
-
   form = signal<FormCita>({
     nombreCompleto: '',
     correo: '',
@@ -85,17 +80,7 @@ export class CitasComponent implements OnInit {
   errorEnvio = signal<string | null>(null);
   mostrarSelectorServicio = signal(false);
 
-  horasDisponibles = [
-    '09:00',
-    '10:00',
-    '11:00',
-    '12:00',
-    '13:00',
-    '15:00',
-    '16:00',
-    '17:00',
-    '18:00',
-  ];
+  horasDisponibles = signal<string[]>([]);
 
   servicioSeleccionado = computed<Servicio | null>(() => {
     const id = this.form().servicioId;
@@ -292,11 +277,6 @@ export class CitasComponent implements OnInit {
     this.benef3 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio3');
     this.benef4 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio4');
 
-    // HORARIOS
-    this.horarioLunVie = this.contenidoService.getCampo('citas', 'horarios', 'lunVie');
-    this.horarioSabado = this.contenidoService.getCampo('citas', 'horarios', 'sabado');
-    this.horarioDomingo = this.contenidoService.getCampo('citas', 'horarios', 'domingo');
-
     // 👇 NUEVO: suscribirse a config pública para obtener agenda
     this.configuracionService.configPublica$.subscribe((c) => {
       if (c?.agenda) {
@@ -317,7 +297,7 @@ export class CitasComponent implements OnInit {
   // Computed que combina las horas disponibles con las ocupadas
   horasDisponiblesConEstado = computed(() => {
     const ocupadas = this.horasOcupadas();
-    return this.horasDisponibles.map((h) => ({
+    return this.horasDisponibles().map((h) => ({
       hora: h,
       ocupada: ocupadas.includes(h),
     }));
@@ -327,21 +307,25 @@ export class CitasComponent implements OnInit {
   private cargarHorasOcupadas(fecha: string) {
     if (!fecha) {
       this.horasOcupadas.set([]);
+      this.horasDisponibles.set([]);
       return;
     }
     this.cargandoHoras.set(true);
     this.citas.obtenerHorariosOcupados(fecha).subscribe({
-      next: (ocupadas) => {
+      next: ({ todas, ocupadas }) => {
+        this.horasDisponibles.set(todas);
         this.horasOcupadas.set(ocupadas);
         this.cargandoHoras.set(false);
-        // Si la hora seleccionada está ahora ocupada, deseleccionarla
-        if (this.form().hora && ocupadas.includes(this.form().hora)) {
+        // Si la hora seleccionada ya no existe o está ocupada, deseleccionarla
+        const horaActual = this.form().hora;
+        if (horaActual && (!todas.includes(horaActual) || ocupadas.includes(horaActual))) {
           this.actualizarForm('hora', '');
         }
       },
       error: () => {
         this.cargandoHoras.set(false);
         this.horasOcupadas.set([]);
+        this.horasDisponibles.set([]);
       },
     });
   }
