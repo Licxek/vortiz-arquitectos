@@ -8,6 +8,7 @@ import { CitasService } from '../../core/services/citas.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { TelefonoInputComponent } from '../../shared/telefono-input/telefono-input.component';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
+import { ConfiguracionService } from '../../core/services/configuracion.service';
 
 interface FormCita {
   nombreCompleto: string;
@@ -37,9 +38,20 @@ export class CitasComponent implements OnInit {
   private contenidoService = inject(ContenidoService);
   private catalogo = inject(CatalogoService);
   private citas = inject(CitasService);
+  private configuracionService = inject(ConfiguracionService);
 
   servicios = this.catalogo.servicios;
 
+  // 👇 NUEVO: config de agenda (días no laborales + feriados) para validar fecha
+  configAgenda: {
+    diasSemana?: { nombre: string; activo: boolean }[];
+    diasFeriados?: { fecha: string; motivo: string }[];
+    horaInicio?: string;
+    horaFin?: string;
+  } | null = null;
+
+  // 👇 NUEVO: mensaje de advertencia si la fecha elegida no es válida
+  advertenciaFecha = signal<string>('');
   // ============ HERO ============
   heroBadge = '';
   heroTitulo = '';
@@ -184,7 +196,8 @@ export class CitasComponent implements OnInit {
       f.tipo !== null &&
       (f.tipo !== 'proyecto' || f.servicioId !== null) &&
       f.fecha.length > 0 &&
-      f.hora.length > 0
+      f.hora.length > 0 &&
+      this.advertenciaFecha() === ''
     );
   });
 
@@ -195,8 +208,9 @@ export class CitasComponent implements OnInit {
   actualizarForm<K extends keyof FormCita>(campo: K, valor: FormCita[K]) {
     this.form.update((f) => ({ ...f, [campo]: valor }));
 
-    // 👇 NUEVO: si cambia la fecha, recargar horas ocupadas
+    // Si cambia la fecha, validar contra agenda + recargar horas ocupadas
     if (campo === 'fecha') {
+      this.advertenciaFecha.set(this.validarFecha(valor as string));
       this.cargarHorasOcupadas(valor as string);
     }
   }
@@ -282,6 +296,18 @@ export class CitasComponent implements OnInit {
     this.horarioLunVie = this.contenidoService.getCampo('citas', 'horarios', 'lunVie');
     this.horarioSabado = this.contenidoService.getCampo('citas', 'horarios', 'sabado');
     this.horarioDomingo = this.contenidoService.getCampo('citas', 'horarios', 'domingo');
+
+    // 👇 NUEVO: suscribirse a config pública para obtener agenda
+    this.configuracionService.configPublica$.subscribe((c) => {
+      if (c?.agenda) {
+        this.configAgenda = c.agenda;
+        // Re-validar la fecha si ya estaba seleccionada
+        if (this.form().fecha) {
+          this.advertenciaFecha.set(this.validarFecha(this.form().fecha));
+        }
+      }
+    });
+    this.configuracionService.cargarPublica();
   }
 
   // Al inicio de la clase, junto a los otros signals
@@ -348,5 +374,35 @@ export class CitasComponent implements OnInit {
     const restoMin = min % 60;
     if (restoMin === 0) return horas === 1 ? '1 hora' : `${horas} horas`;
     return `${horas}h ${restoMin}min`;
+  }
+  /** Valida si una fecha es laboral y no es feriado. Devuelve mensaje o '' si es válida. */
+  validarFecha(fecha: string): string {
+    if (!fecha || !this.configAgenda) return '';
+
+    const d = new Date(fecha + 'T00:00:00');
+
+    // Fecha pasada (redundante con [min] del input, pero por seguridad)
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    if (d.getTime() < hoy.getTime()) {
+      return 'No puedes agendar citas en fechas pasadas. Elige hoy o un día futuro.';
+    }
+
+    // Día de la semana no laboral
+    const idx = d.getDay();
+    const mapDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const nombreDia = mapDias[idx];
+    const diaConfig = this.configAgenda.diasSemana?.find((ds) => ds.nombre === nombreDia);
+    if (diaConfig && !diaConfig.activo) {
+      return `Lo sentimos, no atendemos los ${nombreDia.toLowerCase()}. Por favor elige otro día.`;
+    }
+
+    // Día feriado / vacaciones
+    const feriado = this.configAgenda.diasFeriados?.find((f) => f.fecha === fecha);
+    if (feriado) {
+      return `📅 ${feriado.motivo}. Ese día estamos cerrados, elige otra fecha.`;
+    }
+
+    return '';
   }
 }
