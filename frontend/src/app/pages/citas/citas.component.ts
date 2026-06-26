@@ -43,6 +43,10 @@ export class CitasComponent implements OnInit {
   servicios = this.catalogo.servicios;
 
   // 👇 NUEVO: config de agenda (días no laborales + feriados) para validar fecha
+  // 👇 Config completa pública (usada para contacto, horario, etc.)
+  configuracion: any = null;
+
+  // 👇 NUEVO: config de agenda (días no laborales + feriados) para validar fecha
   configAgenda: {
     diasSemana?: { nombre: string; activo: boolean }[];
     diasFeriados?: { fecha: string; motivo: string }[];
@@ -277,13 +281,16 @@ export class CitasComponent implements OnInit {
     this.benef3 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio3');
     this.benef4 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio4');
 
-    // 👇 NUEVO: suscribirse a config pública para obtener agenda
+    // 👇 NUEVO: suscribirse a config pública (contacto, agenda, etc.)
     this.configuracionService.configPublica$.subscribe((c) => {
-      if (c?.agenda) {
-        this.configAgenda = c.agenda;
-        // Re-validar la fecha si ya estaba seleccionada
-        if (this.form().fecha) {
-          this.advertenciaFecha.set(this.validarFecha(this.form().fecha));
+      if (c) {
+        this.configuracion = c;
+        if (c.agenda) {
+          this.configAgenda = c.agenda;
+          // Re-validar la fecha si ya estaba seleccionada
+          if (this.form().fecha) {
+            this.advertenciaFecha.set(this.validarFecha(this.form().fecha));
+          }
         }
       }
     });
@@ -388,5 +395,42 @@ export class CitasComponent implements OnInit {
     }
 
     return '';
+  }
+
+  /** Agrupa Lun-Vie en una sola línea si todos tienen el mismo estado */
+  get horariosAgrupados(): { label: string; activo: boolean }[] {
+    const dias = this.configAgenda?.diasSemana || [];
+    if (dias.length !== 7) {
+      return dias.map((d) => ({ label: d.nombre, activo: d.activo }));
+    }
+
+    // Lun-Vie ocupan índices 0-4, Sábado=5, Domingo=6
+    const lunVie = dias.slice(0, 5);
+    const sab = dias[5];
+    const dom = dias[6];
+
+    const todosLunVieIguales = lunVie.every((d) => d.activo === lunVie[0].activo);
+
+    const result: { label: string; activo: boolean }[] = [];
+
+    if (todosLunVieIguales) {
+      result.push({ label: 'Lunes a viernes', activo: lunVie[0].activo });
+    } else {
+      lunVie.forEach((d) => result.push({ label: d.nombre, activo: d.activo }));
+    }
+
+    result.push({ label: 'Sábado', activo: sab.activo });
+    result.push({ label: 'Domingo', activo: dom.activo });
+
+    return result;
+  }
+
+  /** Construye URL de WhatsApp a partir del teléfono de configuración */
+  get whatsappContactoUrl(): string {
+    const tel = this.configuracion?.telefono || '';
+    const cleaned = tel.replace(/\D/g, '');
+    if (!cleaned) return '#';
+    const numero = cleaned.length === 10 ? `52${cleaned}` : cleaned;
+    return `https://wa.me/${numero}`;
   }
 }

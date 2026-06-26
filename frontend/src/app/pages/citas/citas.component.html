@@ -1124,7 +1124,9 @@
               </h3>
 
               <a
-                href="https://wa.me/526180000000"
+                [href]="whatsappContactoUrl"
+                target="_blank"
+                rel="noopener noreferrer"
                 class="flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition-colors group"
               >
                 <div
@@ -1144,12 +1146,16 @@
                   <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">
                     WhatsApp
                   </p>
-                  <p class="text-sm font-bold text-gray-900">+52 618 000 0000</p>
+                  <p class="text-sm font-bold text-gray-900">
+                    {{ configuracion?.telefono || '+52 618 000 0000' }}
+                  </p>
                 </div>
               </a>
 
               <a
-                href="mailto:info@vortizarquitectos.com"
+                [href]="
+                  'mailto:' + (configuracion?.correo_contacto || 'info@vortizarquitectos.com')
+                "
                 class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition-colors group"
               >
                 <div
@@ -1172,7 +1178,7 @@
                 <div>
                   <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Correo</p>
                   <p class="text-sm font-bold text-gray-900 truncate">
-                    info&#64;vortizarquitectos.com
+                    {{ configuracion?.correo_contacto || 'info@vortizarquitectos.com' }}
                   </p>
                 </div>
               </a>
@@ -1205,23 +1211,22 @@
                     Oficina
                   </p>
                   <p class="text-sm text-gray-700 leading-relaxed">
-                    Milpillas 101<br />La Forestal, Durango
+                    {{ configuracion?.direccion || 'Milpillas 101, La Forestal, Durango' }}
                   </p>
                 </div>
               </div>
             </div>
 
-            <!-- Horarios -->
             <div class="bg-white border border-gray-100 rounded-2xl p-6">
               <h3 class="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
                 Horario de atención
               </h3>
               <div class="space-y-2 text-sm">
                 <div
-                  *ngFor="let dia of configAgenda?.diasSemana || []"
+                  *ngFor="let dia of horariosAgrupados"
                   class="flex justify-between items-center"
                 >
-                  <span class="text-gray-700">{{ dia.nombre }}</span>
+                  <span class="text-gray-700">{{ dia.label }}</span>
                   <span
                     class="font-semibold"
                     [class.text-gray-900]="dia.activo"
