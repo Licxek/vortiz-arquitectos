@@ -51,14 +51,33 @@ export class NavbarComponent implements OnInit, OnDestroy {
     { label: 'Nosotros', path: '/nosotros' },
   ];
 
-  busquedasPopulares = [
-    'Diseño arquitectónico',
-    'Modelado BIM',
-    'Supervisión técnica',
-    'Gerencia de obra',
-    'Residencial',
-    'Comercial',
-  ];
+  /** Búsquedas populares dinámicas: salen del catálogo real */
+  busquedasPopulares: string[] = [];
+
+  private generarBusquedasPopulares() {
+    const populares: string[] = [];
+
+    // Top 3 servicios (por orden del catálogo)
+    const servicios = this.busquedaService['catalogo'].getServicios().slice(0, 3);
+    servicios.forEach((s: any) => populares.push(s.titulo));
+
+    // Top 2 categorías de proyectos (únicas)
+    const cats = new Set<string>();
+    this.busquedaService['catalogo']
+      .getProyectos()
+      .slice(0, 6)
+      .forEach((p: any) => cats.add(p.categoria));
+    Array.from(cats)
+      .slice(0, 2)
+      .forEach((c) => {
+        populares.push(this.busquedaService['catalogo'].etiquetaCategoriaProyecto(c));
+      });
+
+    // Y un par útil siempre
+    populares.push('Agendar cita');
+
+    this.busquedasPopulares = populares;
+  }
 
   private busquedaService = inject(BusquedaService);
   private router = inject(Router);
@@ -91,7 +110,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     });
 
     this.paginasService.getPaginasVisibles().subscribe({
-      next: (data) => (this.paginasDinamicas = data),
+      next: (data) => {
+        this.paginasDinamicas = data;
+        this.generarBusquedasPopulares(); // 👈 NUEVO: ahora que tenemos catálogo
+      },
       error: () => (this.paginasDinamicas = []),
     });
 
@@ -107,12 +129,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (this.busquedaTimer) clearTimeout(this.busquedaTimer);
   }
 
+  /** Cuántas páginas dinámicas mostrar inline antes del mega menú */
+  private readonly MAX_INLINE = 3;
+
   get inlineDynamic(): Pagina[] {
-    return this.paginasDinamicas.length === 1 ? this.paginasDinamicas : [];
+    return this.paginasDinamicas.slice(0, this.MAX_INLINE);
   }
 
   get overflowPages(): Pagina[] {
-    return this.paginasDinamicas.length >= 2 ? this.paginasDinamicas : [];
+    return this.paginasDinamicas.slice(this.MAX_INLINE);
   }
 
   get hasOverflow(): boolean {
@@ -235,5 +260,39 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.buscadorAbierto = false;
     this.masAbierto = false;
     this.buscadorEscritorioAbierto = false;
+  }
+
+  /** Genera el gradient del icono de una página dinámica en el mega menú */
+  iconoBgPagina(p: Pagina): string {
+    const color = (p as any).color || 'blue';
+
+    if (typeof color === 'string' && color.startsWith('#')) {
+      return `linear-gradient(135deg, ${color}, ${this.oscurecerHex(color, 25)})`;
+    }
+
+    const PRESETS: Record<string, [string, string]> = {
+      blue: ['#60A5FA', '#2563EB'],
+      green: ['#4ADE80', '#16A34A'],
+      orange: ['#FB923C', '#EA580C'],
+      purple: ['#A78BFA', '#7C3AED'],
+      pink: ['#F472B6', '#DB2777'],
+      gray: ['#9CA3AF', '#4B5563'],
+    };
+    const [from, to] = PRESETS[color] || PRESETS['blue'];
+    return `linear-gradient(135deg, ${from}, ${to})`;
+  }
+
+  private oscurecerHex(hex: string, porcentaje: number): string {
+    const s = hex.replace('#', '');
+    if (s.length !== 6) return hex;
+    const num = parseInt(s, 16);
+    const factor = 1 - porcentaje / 100;
+    let r = (num >> 16) & 0xff;
+    let g = (num >> 8) & 0xff;
+    let b = num & 0xff;
+    r = Math.max(0, Math.floor(r * factor));
+    g = Math.max(0, Math.floor(g * factor));
+    b = Math.max(0, Math.floor(b * factor));
+    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
   }
 }

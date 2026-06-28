@@ -31,18 +31,16 @@ export class FooterComponent implements OnInit {
     private cdr: ChangeDetectorRef,
   ) {}
 
-  /** URL del iframe de Google Maps embebido, basada en la dirección configurada */
-  get mapaUrl(): SafeResourceUrl {
-    const dir = this.configuracion?.direccion || 'Milpillas 101, La Forestal, Durango, Mexico';
-    const url = `https://maps.google.com/maps?q=${encodeURIComponent(dir)}&output=embed`;
-    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
-  }
+  /** URL del iframe de Google Maps (se cachea, solo se recalcula si cambia la dirección) */
+  mapaUrl: SafeResourceUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+    `https://maps.google.com/maps?q=${encodeURIComponent('Milpillas 101, La Forestal, Durango, Mexico')}&output=embed`,
+  );
 
-  /** Link a Google Maps para "Ver en Google Maps" */
-  get mapaLink(): string {
-    const dir = this.configuracion?.direccion || 'Milpillas 101, La Forestal, Durango';
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dir)}`;
-  }
+  /** Link "Ver en Google Maps" */
+  mapaLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Milpillas 101, La Forestal, Durango')}`;
+
+  /** Dirección actual cacheada para detectar cambios reales */
+  private direccionCacheada = '';
 
   @HostListener('window:scroll')
   onScroll() {
@@ -56,6 +54,17 @@ export class FooterComponent implements OnInit {
   ngOnInit() {
     this.configuracionService.configPublica$.subscribe((c) => {
       this.configuracion = c;
+
+      // Solo recalcular el mapa si la dirección REALMENTE cambió
+      const direccionNueva = c?.direccion || 'Milpillas 101, La Forestal, Durango, Mexico';
+      if (direccionNueva !== this.direccionCacheada) {
+        this.direccionCacheada = direccionNueva;
+        this.mapaUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+          `https://maps.google.com/maps?q=${encodeURIComponent(direccionNueva)}&output=embed`,
+        );
+        this.mapaLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccionNueva)}`;
+      }
+
       this.cargando.set(false);
       this.cdr.markForCheck();
     });
