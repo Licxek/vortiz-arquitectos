@@ -11,6 +11,7 @@ export interface ResultadoBusqueda {
   queryParams?: Record<string, any>;
   badge?: string;
   contexto?: string;
+  seccionId?: string; // 👈 NUEVO: ID de sección para scrollear ('mision', 'arquitecto', etc.)
 }
 
 interface PaginaFija {
@@ -145,6 +146,7 @@ export class BusquedaService {
             ruta: pf.ruta,
             badge: 'Página',
             contexto: `📍 En "${match.contextoSeccion}"`,
+            seccionId: match.seccionKey, // 👈 para scrollear a la sección
           });
         }
       }
@@ -238,7 +240,7 @@ export class BusquedaService {
   private buscarEnContenidoPagina(
     paginaKey: string,
     queryNormalizada: string,
-  ): { fragmento: string; contextoSeccion: string } | null {
+  ): { fragmento: string; contextoSeccion: string; seccionKey: string } | null {
     const paginaData = this.contenido.getPagina(paginaKey);
     if (!paginaData || Object.keys(paginaData).length === 0) return null;
 
@@ -264,7 +266,7 @@ export class BusquedaService {
       const contextoSeccion =
         this.nombresSecciones[paginaKey]?.[seccionKey] || seccionKey;
 
-      return { fragmento, contextoSeccion };
+      return { fragmento, contextoSeccion, seccionKey };
     }
 
     return null;

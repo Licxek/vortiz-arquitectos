@@ -2644,6 +2644,9 @@ export class PaginasComponent implements OnInit {
   /** Temporal para el input type=color */
   colorCustomTemp = '#0a4d7a';
 
+  /** Timer para debounce del guardado de color custom */
+  private colorSaveTimer: any = null;
+
   /** Devuelve el gradient CSS para un color (preset o custom hex) */
   gradientePagina(color: string): string {
     if (!color) color = 'blue';
@@ -2668,6 +2671,14 @@ export class PaginasComponent implements OnInit {
   seleccionarColorCustom(hex: string) {
     this.colorCustomTemp = hex;
     this.formNuevaPagina.color = hex;
+
+    // 👇 NUEVO: guardar en la paleta inmediatamente (con debounce para
+    // no spammear localStorage mientras el usuario arrastra el picker)
+    if (this.colorSaveTimer) clearTimeout(this.colorSaveTimer);
+    this.colorSaveTimer = setTimeout(() => {
+      this.guardarColorPersonalizado(hex);
+      this.cdr.markForCheck();
+    }, 800);
   }
 
   /** Oscurece un hex en X% (para generar el gradient automáticamente) */

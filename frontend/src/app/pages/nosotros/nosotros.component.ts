@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { ContenidoService } from '../../core/services/contenido.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
@@ -31,6 +31,7 @@ interface Credencial {
 })
 export class NosotrosComponent implements OnInit {
   private contenidoService = inject(ContenidoService);
+  private route = inject(ActivatedRoute);
   cargando = signal(false);
 
   // ============ HERO ============
@@ -123,5 +124,15 @@ export class NosotrosComponent implements OnInit {
     // ============ CTA ============
     this.ctaTitulo = this.contenidoService.getCampo('nosotros', 'cta', 'titulo');
     this.ctaDescripcion = this.contenidoService.getCampo('nosotros', 'cta', 'descripcion');
+
+    // 🎯 Scroll a sección si viene ?seccion=X del buscador
+    this.route.queryParams.subscribe((params) => {
+      const seccion = params['seccion'];
+      if (!seccion) return;
+      setTimeout(() => {
+        const el = document.getElementById(`seccion-${seccion}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+    });
   }
 }

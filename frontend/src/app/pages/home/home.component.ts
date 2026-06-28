@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { ContenidoService } from '../../core/services/contenido.service';
 import { CatalogoService, Servicio, Proyecto } from '../../core/services/catalogo.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
@@ -81,6 +81,7 @@ export class HomeComponent implements OnInit {
 
   private contenidoService = inject(ContenidoService);
   private catalogo = inject(CatalogoService);
+  private route = inject(ActivatedRoute);
 
   ngOnInit() {
     // Catálogos
@@ -137,6 +138,17 @@ export class HomeComponent implements OnInit {
       0,
       8,
     );
+
+    // 🎯 Scroll a sección si viene ?seccion=X del buscador
+    this.route.queryParams.subscribe((params) => {
+      const seccion = params['seccion'];
+      if (!seccion) return;
+      setTimeout(() => {
+        const el = document.getElementById(`seccion-${seccion}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+    });
+
   }
 
   private filtrarPorSeleccion<T extends { id: number }>(lista: T[], seleccion: string): T[] {

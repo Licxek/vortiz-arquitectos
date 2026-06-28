@@ -1,7 +1,7 @@
 import { Component, computed, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { ContenidoService } from '../../core/services/contenido.service';
 import { CatalogoService, Servicio } from '../../core/services/catalogo.service';
 import { CitasService } from '../../core/services/citas.service';
@@ -39,6 +39,7 @@ export class CitasComponent implements OnInit {
   private catalogo = inject(CatalogoService);
   private citas = inject(CitasService);
   private configuracionService = inject(ConfiguracionService);
+  private route = inject(ActivatedRoute);
 
   servicios = this.catalogo.servicios;
 
@@ -295,6 +296,16 @@ export class CitasComponent implements OnInit {
       }
     });
     this.configuracionService.cargarPublica();
+
+    // 🎯 Scroll a sección si viene ?seccion=X del buscador
+    this.route.queryParams.subscribe((params) => {
+      const seccion = params['seccion'];
+      if (!seccion) return;
+      setTimeout(() => {
+        const el = document.getElementById(`seccion-${seccion}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+    });
   }
 
   // Al inicio de la clase, junto a los otros signals

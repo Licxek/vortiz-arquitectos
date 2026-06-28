@@ -1,6 +1,6 @@
 <div class="bg-white">
   <!-- ============ 1. HERO ============ -->
-  <section class="relative h-[90vh] min-h-[600px] overflow-hidden">
+  <section id="seccion-hero" class="relative h-[90vh] min-h-[600px] overflow-hidden">
     <!-- Imagen de fondo optimizada -->
     <img
       [ngSrc]="heroImagenFondo"
@@ -63,7 +63,7 @@
   </section>
 
   <!-- ============ 2. FILOSOFÍA ============ -->
-  <section class="py-20 md:py-28 bg-gray-50">
+  <section id="seccion-filosofia" class="py-20 md:py-28 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4">
       <div class="grid md:grid-cols-2 gap-10 md:gap-12 lg:gap-20 items-center">
         <!-- Imagen -->
@@ -149,6 +149,7 @@
 
   <!-- ============ 3. STATS ============ -->
   <section
+    id="seccion-stats"
     class="py-16 bg-gradient-to-br from-[#0a1f3d] to-[#0a4d7a] text-white relative overflow-hidden"
   >
     <div class="absolute inset-0 opacity-10">
@@ -168,7 +169,7 @@
   </section>
 
   <!-- ============ 4. SERVICIOS ============ -->
-  <section class="py-20 md:py-28">
+  <section id="seccion-servicios" class="py-20 md:py-28">
     <div class="max-w-7xl mx-auto px-4">
       <div class="text-center max-w-2xl mx-auto mb-16">
         <span class="text-xs font-bold uppercase tracking-widest text-[#0a4d7a]">{{
@@ -429,7 +430,7 @@
   </section>
 
   <!-- ============ 5. PROYECTOS DESTACADOS ============ -->
-  <section class="py-20 md:py-28 bg-gray-50 relative overflow-hidden">
+  <section id="seccion-proyectos" class="py-20 md:py-28 bg-gray-50 relative overflow-hidden">
     <!-- Orbs decorativos de fondo -->
     <div class="absolute inset-0 opacity-40 pointer-events-none">
       <div
@@ -637,7 +638,7 @@
   </section>
 
   <!-- ============ 6. PROCESO ============ -->
-  <section class="py-20 md:py-28">
+  <section id="seccion-proceso" class="py-20 md:py-28">
     <div class="max-w-7xl mx-auto px-4">
       <div class="text-center max-w-2xl mx-auto mb-16">
         <span class="text-xs font-bold uppercase tracking-widest text-[#0a4d7a]">{{
@@ -667,7 +668,7 @@
   </section>
 
   <!-- ============ 7. CTA FINAL ============ -->
-  <section class="relative py-20 md:py-28 overflow-hidden">
+  <section id="seccion-cta" class="relative py-20 md:py-28 overflow-hidden">
     <img [ngSrc]="ctaImagenFondo" fill alt="CTA Vortiz" class="absolute inset-0 object-cover" />
     <div
       class="absolute inset-0 bg-gradient-to-br from-[#0a1f3d]/95 via-[#0a4d7a]/90 to-[#0a1f3d]/95 z-10"

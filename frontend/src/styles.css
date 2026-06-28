@@ -103,3 +103,7 @@
   padding: 0 1px;
   border-radius: 2px;
 }
+
+[id^="seccion-"] {
+  scroll-margin-top: 140px;
+}
