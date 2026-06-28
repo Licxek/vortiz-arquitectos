@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { CatalogoService } from './catalogo.service';
+import { ContenidoService } from './contenido.service';
 import { Pagina, BloquePagina } from './paginas.service';
 
 export interface ResultadoBusqueda {
@@ -9,10 +10,11 @@ export interface ResultadoBusqueda {
   ruta: string;
   queryParams?: Record<string, any>;
   badge?: string;
-  contexto?: string; // 👈 NUEVO: "Encontrado en 'Misión y visión'"
+  contexto?: string;
 }
 
 interface PaginaFija {
+  key: string; // 'inicio', 'nosotros', etc → para leer su contenido editable
   titulo: string;
   ruta: string;
   descripcion: string;
@@ -22,35 +24,81 @@ interface PaginaFija {
 @Injectable({ providedIn: 'root' })
 export class BusquedaService {
   private catalogo = inject(CatalogoService);
+  private contenido = inject(ContenidoService);
 
   private readonly STORAGE_RECIENTES = 'vortiz_busquedas_recientes';
 
+  /** Etiquetas amigables para cada sección de cada página fija */
+  private nombresSecciones: Record<string, Record<string, string>> = {
+    inicio: {
+      hero: 'Hero principal',
+      filosofia: 'Filosofía',
+      stats: 'Estadísticas',
+      servicios: 'Servicios destacados',
+      proyectos: 'Proyectos destacados',
+      proceso: 'Proceso de trabajo',
+      cta: 'Llamada a la acción',
+    },
+    nosotros: {
+      hero: 'Hero',
+      intro: 'Introducción',
+      mision: 'Misión',
+      vision: 'Visión',
+      arquitecto: 'El arquitecto',
+      credenciales: 'Credenciales',
+      hitos: 'Hitos',
+      valores: 'Valores',
+      cta: 'Llamada a la acción',
+    },
+    proyectos: {
+      hero: 'Hero',
+      intro: 'Introducción',
+      catalogo: 'Catálogo',
+      cta: 'Llamada a la acción',
+    },
+    servicios: {
+      hero: 'Hero',
+      intro: 'Introducción',
+      catalogo: 'Catálogo',
+      cta: 'Llamada a la acción',
+    },
+    citas: {
+      hero: 'Hero',
+      beneficios: 'Beneficios',
+    },
+  };
+
   private paginasFijas: PaginaFija[] = [
     {
+      key: 'inicio',
       titulo: 'Inicio',
       ruta: '/',
       descripcion: 'Página principal de Vortiz Arquitectos',
       keywords: 'inicio home principal portada',
     },
     {
+      key: 'servicios',
       titulo: 'Servicios',
       ruta: '/servicios',
       descripcion: 'Nuestros servicios profesionales de arquitectura',
       keywords: 'servicios diseño construcción gerencia trámites BIM',
     },
     {
+      key: 'proyectos',
       titulo: 'Proyectos',
       ruta: '/proyectos',
       descripcion: 'Portafolio de proyectos realizados',
       keywords: 'proyectos portafolio obras clientes trabajo realizado',
     },
     {
+      key: 'nosotros',
       titulo: 'Nosotros',
       ruta: '/nosotros',
       descripcion: 'Conoce a Vortiz Arquitectos y su trayectoria',
       keywords: 'nosotros sobre arquitecto historia equipo experiencia',
     },
     {
+      key: 'citas',
       titulo: 'Citas',
       ruta: '/citas',
       descripcion: 'Agenda una cita con nosotros',
@@ -58,15 +106,18 @@ export class BusquedaService {
     },
   ];
 
+  // ============================================================
+  // MÉTODO PRINCIPAL DE BÚSQUEDA
+  // ============================================================
   buscar(query: string, paginasDinamicas: Pagina[] = []): ResultadoBusqueda[] {
-    const q = query.toLowerCase().trim();
+    const q = this.normalizar(query);
     if (!q) return [];
 
     const resultados: ResultadoBusqueda[] = [];
 
-    // Páginas fijas
+    // 1️⃣ Páginas fijas (matching por título, descripción, keywords)
     for (const p of this.paginasFijas) {
-      const texto = `${p.titulo} ${p.descripcion} ${p.keywords}`.toLowerCase();
+      const texto = this.normalizar(`${p.titulo} ${p.descripcion} ${p.keywords}`);
       if (texto.includes(q)) {
         resultados.push({
           tipo: 'pagina',
@@ -78,9 +129,32 @@ export class BusquedaService {
       }
     }
 
-    // Servicios
+    // 2️⃣ CONTENIDO EDITABLE de páginas fijas (lo nuevo 🎯)
+    for (const pf of this.paginasFijas) {
+      const match = this.buscarEnContenidoPagina(pf.key, q);
+      if (match) {
+        // Si esa página ya se agregó por título/keywords, no duplicar
+        const yaExiste = resultados.some(
+          (r) => r.tipo === 'pagina' && r.ruta === pf.ruta,
+        );
+        if (!yaExiste) {
+          resultados.push({
+            tipo: 'pagina',
+            titulo: pf.titulo,
+            descripcion: match.fragmento,
+            ruta: pf.ruta,
+            badge: 'Página',
+            contexto: `📍 En "${match.contextoSeccion}"`,
+          });
+        }
+      }
+    }
+
+    // 3️⃣ Servicios
     for (const s of this.catalogo.getServicios()) {
-      const texto = `${s.titulo} ${s.descripcion || ''} ${s.categoria || ''}`.toLowerCase();
+      const texto = this.normalizar(
+        `${s.titulo} ${s.descripcion || ''} ${s.categoria || ''}`,
+      );
       if (texto.includes(q)) {
         resultados.push({
           tipo: 'servicio',
@@ -92,9 +166,11 @@ export class BusquedaService {
       }
     }
 
-    // Proyectos
+    // 4️⃣ Proyectos
     for (const p of this.catalogo.getProyectos()) {
-      const texto = `${p.nombre} ${p.descripcion || ''} ${p.categoria} ${p.cliente || ''} ${p.ubicacion || ''}`.toLowerCase();
+      const texto = this.normalizar(
+        `${p.nombre} ${p.descripcion || ''} ${p.categoria} ${p.cliente || ''} ${p.ubicacion || ''}`,
+      );
       if (texto.includes(q)) {
         resultados.push({
           tipo: 'proyecto',
@@ -107,10 +183,10 @@ export class BusquedaService {
       }
     }
 
-    // 🔍 PÁGINAS DINÁMICAS: buscar en título, descripción Y bloques
+    // 5️⃣ Páginas dinámicas (título, descripción, bloques)
     for (const p of paginasDinamicas) {
-      // 1. Match en título
-      if (p.titulo.toLowerCase().includes(q)) {
+      // Match en título
+      if (this.normalizar(p.titulo).includes(q)) {
         resultados.push({
           tipo: 'pagina-dinamica',
           titulo: p.titulo,
@@ -123,8 +199,8 @@ export class BusquedaService {
         continue;
       }
 
-      // 2. Match en descripción
-      if (p.descripcion && p.descripcion.toLowerCase().includes(q)) {
+      // Match en descripción
+      if (p.descripcion && this.normalizar(p.descripcion).includes(q)) {
         resultados.push({
           tipo: 'pagina-dinamica',
           titulo: p.titulo,
@@ -136,7 +212,7 @@ export class BusquedaService {
         continue;
       }
 
-      // 3. Match en bloques
+      // Match en bloques
       const matchBloque = this.buscarEnBloques(p.bloques || [], q);
       if (matchBloque) {
         resultados.push({
@@ -153,13 +229,86 @@ export class BusquedaService {
     return resultados.slice(0, 15);
   }
 
-  /** Busca dentro de los bloques de una página y devuelve el fragmento + contexto */
+  // ============================================================
+  // BÚSQUEDA EN CONTENIDO EDITABLE DE PÁGINAS FIJAS
+  // ============================================================
+
+  /** Busca dentro del contenido editado en admin de una página fija */
+  private buscarEnContenidoPagina(
+    paginaKey: string,
+    queryNormalizada: string,
+  ): { fragmento: string; contextoSeccion: string } | null {
+    const paginaData = this.contenido.getPagina(paginaKey);
+    if (!paginaData || Object.keys(paginaData).length === 0) return null;
+
+    for (const seccionKey of Object.keys(paginaData)) {
+      const seccionData = paginaData[seccionKey];
+      const textoOriginal = this.extraerTextoSeccion(seccionData);
+      if (!textoOriginal) continue;
+
+      const textoNormalizado = this.normalizar(textoOriginal);
+      if (!textoNormalizado.includes(queryNormalizada)) continue;
+
+      // Construir snippet con contexto
+      const idx = textoNormalizado.indexOf(queryNormalizada);
+      const inicio = Math.max(0, idx - 30);
+      const fin = Math.min(
+        textoOriginal.length,
+        idx + queryNormalizada.length + 60,
+      );
+      let fragmento = textoOriginal.substring(inicio, fin);
+      if (inicio > 0) fragmento = '…' + fragmento;
+      if (fin < textoOriginal.length) fragmento += '…';
+
+      const contextoSeccion =
+        this.nombresSecciones[paginaKey]?.[seccionKey] || seccionKey;
+
+      return { fragmento, contextoSeccion };
+    }
+
+    return null;
+  }
+
+  /** Extrae todo el texto buscable de una sección (incluye campos y listas) */
+  private extraerTextoSeccion(seccionData: any): string {
+    if (!seccionData || typeof seccionData !== 'object') return '';
+
+    const piezas: string[] = [];
+
+    for (const key of Object.keys(seccionData)) {
+      const valor = seccionData[key];
+
+      if (typeof valor === 'string' && valor.trim()) {
+        piezas.push(valor);
+      } else if (Array.isArray(valor)) {
+        // Listas: estadísticas, valores, hitos, credenciales, pasos del proceso...
+        for (const item of valor) {
+          if (typeof item === 'string') {
+            piezas.push(item);
+          } else if (item && typeof item === 'object') {
+            for (const subkey of Object.keys(item)) {
+              const subvalor = (item as any)[subkey];
+              if (typeof subvalor === 'string' && subvalor.trim()) {
+                piezas.push(subvalor);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return piezas.join(' • ');
+  }
+
+  // ============================================================
+  // BÚSQUEDA EN BLOQUES (páginas dinámicas)
+  // ============================================================
+
   private buscarEnBloques(
     bloques: BloquePagina[],
-    query: string,
+    queryNormalizada: string,
   ): { fragmento: string; contextoBloque: string } | null {
     for (const bloque of bloques) {
-      // Recopilar TODOS los textos del bloque
       const piezas: string[] = [];
 
       if (bloque.titulo) piezas.push(bloque.titulo);
@@ -168,7 +317,6 @@ export class BusquedaService {
       if (bloque.textoBoton) piezas.push(bloque.textoBoton);
       if (bloque.direccion) piezas.push(bloque.direccion);
 
-      // Items (estadísticas, etc.)
       if (Array.isArray(bloque.items)) {
         for (const item of bloque.items) {
           if (item.titulo) piezas.push(item.titulo);
@@ -177,27 +325,25 @@ export class BusquedaService {
         }
       }
 
-      // Campos del formulario de contacto
       if (Array.isArray(bloque.campos)) {
         piezas.push(...bloque.campos);
       }
 
-      const textoCompleto = piezas.join(' • ');
-      const textoLower = textoCompleto.toLowerCase();
+      const textoOriginal = piezas.join(' • ');
+      const textoNormalizado = this.normalizar(textoOriginal);
 
-      if (textoLower.includes(query)) {
-        // Extraer fragmento con contexto alrededor del match
-        const idx = textoLower.indexOf(query);
+      if (textoNormalizado.includes(queryNormalizada)) {
+        const idx = textoNormalizado.indexOf(queryNormalizada);
         const inicio = Math.max(0, idx - 30);
-        const fin = Math.min(textoCompleto.length, idx + query.length + 60);
-        let fragmento = textoCompleto.substring(inicio, fin);
-
+        const fin = Math.min(
+          textoOriginal.length,
+          idx + queryNormalizada.length + 60,
+        );
+        let fragmento = textoOriginal.substring(inicio, fin);
         if (inicio > 0) fragmento = '…' + fragmento;
-        if (fin < textoCompleto.length) fragmento += '…';
+        if (fin < textoOriginal.length) fragmento += '…';
 
-        // Contexto: título del bloque o nombre legible del tipo
         const contextoBloque = bloque.titulo || this.labelTipoBloque(bloque.tipo);
-
         return { fragmento, contextoBloque };
       }
     }
@@ -221,12 +367,28 @@ export class BusquedaService {
     return labels[tipo] || 'Sección';
   }
 
+  // ============================================================
+  // HELPERS
+  // ============================================================
+
+  /** Normaliza texto: lowercase + sin acentos (busqueda → busqueda, ñ → n) */
+  private normalizar(texto: string): string {
+    if (!texto) return '';
+    return texto
+      .toLowerCase()
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
   private recortar(texto: string | undefined, n: number): string {
     if (!texto) return '';
     return texto.length > n ? texto.substring(0, n).trim() + '…' : texto;
   }
 
-  // ===== Búsquedas recientes (sin cambios) =====
+  // ============================================================
+  // BÚSQUEDAS RECIENTES (sin cambios)
+  // ============================================================
 
   obtenerRecientes(): string[] {
     try {
