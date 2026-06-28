@@ -119,7 +119,7 @@ export class BusquedaService {
     // 1️⃣ Páginas fijas (matching por título, descripción, keywords)
     for (const p of this.paginasFijas) {
       const texto = this.normalizar(`${p.titulo} ${p.descripcion} ${p.keywords}`);
-      if (texto.includes(q)) {
+      if (this.matchesQuery(texto, q)) {
         resultados.push({
           tipo: 'pagina',
           titulo: p.titulo,
@@ -135,9 +135,7 @@ export class BusquedaService {
       const match = this.buscarEnContenidoPagina(pf.key, q);
       if (match) {
         // Si esa página ya se agregó por título/keywords, no duplicar
-        const yaExiste = resultados.some(
-          (r) => r.tipo === 'pagina' && r.ruta === pf.ruta,
-        );
+        const yaExiste = resultados.some((r) => r.tipo === 'pagina' && r.ruta === pf.ruta);
         if (!yaExiste) {
           resultados.push({
             tipo: 'pagina',
@@ -157,7 +155,7 @@ export class BusquedaService {
       const texto = this.normalizar(
         `${s.titulo} ${s.descripcion || ''} ${s.categoria || ''}`,
       );
-      if (texto.includes(q)) {
+      if (this.matchesQuery(texto, q)) {
         resultados.push({
           tipo: 'servicio',
           titulo: s.titulo,
@@ -174,7 +172,7 @@ export class BusquedaService {
       const texto = this.normalizar(
         `${p.nombre} ${p.descripcion || ''} ${p.categoria} ${p.cliente || ''} ${p.ubicacion || ''}`,
       );
-      if (texto.includes(q)) {
+      if (this.matchesQuery(texto, q)) {
         resultados.push({
           tipo: 'proyecto',
           titulo: p.nombre,
@@ -189,7 +187,7 @@ export class BusquedaService {
     // 5️⃣ Páginas dinámicas (título, descripción, bloques)
     for (const p of paginasDinamicas) {
       // Match en título
-      if (this.normalizar(p.titulo).includes(q)) {
+      if (this.matchesQuery(this.normalizar(p.titulo), q)) {
         resultados.push({
           tipo: 'pagina-dinamica',
           titulo: p.titulo,
@@ -203,7 +201,7 @@ export class BusquedaService {
       }
 
       // Match en descripción
-      if (p.descripcion && this.normalizar(p.descripcion).includes(q)) {
+      if (p.descripcion && this.matchesQuery(this.normalizar(p.descripcion), q)) {
         resultados.push({
           tipo: 'pagina-dinamica',
           titulo: p.titulo,
@@ -244,29 +242,28 @@ export class BusquedaService {
     const paginaData = this.contenido.getPagina(paginaKey);
     if (!paginaData || Object.keys(paginaData).length === 0) return null;
 
+    // Nombre amigable de la página para incluirlo en el texto buscable
+    const pageInfo = this.paginasFijas.find((p) => p.key === paginaKey);
+    const pageName = pageInfo?.titulo || paginaKey;
+
     for (const seccionKey of Object.keys(paginaData)) {
       const seccionData = paginaData[seccionKey];
-      const textoOriginal = this.extraerTextoSeccion(seccionData);
-      if (!textoOriginal) continue;
+      const seccionLabel = this.nombresSecciones[paginaKey]?.[seccionKey] || seccionKey;
+      const contenidoSeccion = this.extraerTextoSeccion(seccionData);
 
+      // 🎯 Texto buscable = nombre de página + label de sección + contenido
+      // Permite que "proyectos del catalogo" matchee Proyectos→Catálogo
+      // y "mision" matchee Nosotros→Misión, aunque el contenido no traiga esas palabras.
+      const textoOriginal = `${pageName} • ${seccionLabel}${contenidoSeccion ? ' • ' + contenidoSeccion : ''}`;
       const textoNormalizado = this.normalizar(textoOriginal);
-      if (!textoNormalizado.includes(queryNormalizada)) continue;
 
-      // Construir snippet con contexto
-      const idx = textoNormalizado.indexOf(queryNormalizada);
-      const inicio = Math.max(0, idx - 30);
-      const fin = Math.min(
-        textoOriginal.length,
-        idx + queryNormalizada.length + 60,
-      );
-      let fragmento = textoOriginal.substring(inicio, fin);
-      if (inicio > 0) fragmento = '…' + fragmento;
-      if (fin < textoOriginal.length) fragmento += '…';
+      if (!this.matchesQuery(textoNormalizado, queryNormalizada)) continue;
 
-      const contextoSeccion =
-        this.nombresSecciones[paginaKey]?.[seccionKey] || seccionKey;
+      // Snippet del contenido real (o del header si la sección no tiene texto editable)
+      const textoSnippet = contenidoSeccion || `${pageName} → ${seccionLabel}`;
+      const fragmento = this.buildSnippet(textoSnippet, queryNormalizada);
 
-      return { fragmento, contextoSeccion, seccionKey };
+      return { fragmento, contextoSeccion: seccionLabel, seccionKey };
     }
 
     return null;
@@ -335,17 +332,8 @@ export class BusquedaService {
       const textoOriginal = piezas.join(' • ');
       const textoNormalizado = this.normalizar(textoOriginal);
 
-      if (textoNormalizado.includes(queryNormalizada)) {
-        const idx = textoNormalizado.indexOf(queryNormalizada);
-        const inicio = Math.max(0, idx - 30);
-        const fin = Math.min(
-          textoOriginal.length,
-          idx + queryNormalizada.length + 60,
-        );
-        let fragmento = textoOriginal.substring(inicio, fin);
-        if (inicio > 0) fragmento = '…' + fragmento;
-        if (fin < textoOriginal.length) fragmento += '…';
-
+      if (this.matchesQuery(textoNormalizado, queryNormalizada)) {
+        const fragmento = this.buildSnippet(textoOriginal, queryNormalizada);
         const contextoBloque = bloque.titulo || this.labelTipoBloque(bloque.tipo);
         return { fragmento, contextoBloque };
       }
@@ -384,6 +372,65 @@ export class BusquedaService {
       .replace(/[\u0300-\u036f]/g, '');
   }
 
+  /**
+   * Match flexible: primero intenta substring exacto, luego tokeniza la query
+   * y exige que TODOS los tokens >2 chars aparezcan en el texto (en cualquier orden).
+   * Así "proyectos del catalogo" matchea texto que contenga "proyectos" Y "catalogo"
+   * (ignora "del" porque es ≤2 chars).
+   */
+  private matchesQuery(textoNormalizado: string, queryNormalizada: string): boolean {
+    if (!queryNormalizada) return false;
+
+    // 1. Match exacto (más rápido)
+    if (textoNormalizado.includes(queryNormalizada)) return true;
+
+    // 2. Match por tokens (ignora stop-words cortas como "del", "la", "el", "y")
+    const tokens = queryNormalizada.split(/\s+/).filter((t) => t.length > 2);
+    if (tokens.length === 0) return false;
+
+    return tokens.every((token) => textoNormalizado.includes(token));
+  }
+
+  /**
+   * Construye un snippet de ~100 chars alrededor del primer match.
+   * Si no hay match exacto, busca el primer token que sí aparezca.
+   */
+  private buildSnippet(textoOriginal: string, queryNormalizada: string): string {
+    if (!textoOriginal) return '';
+    const textoNormalizado = this.normalizar(textoOriginal);
+
+    // Primero intentar match exacto
+    let idx = textoNormalizado.indexOf(queryNormalizada);
+    let largoMatch = queryNormalizada.length;
+
+    // Si no hay match exacto, buscar el primer token que sí aparezca
+    if (idx === -1) {
+      const tokens = queryNormalizada.split(/\s+/).filter((t) => t.length > 2);
+      for (const token of tokens) {
+        const pos = textoNormalizado.indexOf(token);
+        if (pos !== -1) {
+          idx = pos;
+          largoMatch = token.length;
+          break;
+        }
+      }
+    }
+
+    if (idx === -1) {
+      // Sin match → primeros 100 chars
+      return textoOriginal.length > 100
+        ? textoOriginal.substring(0, 100).trim() + '…'
+        : textoOriginal;
+    }
+
+    const inicio = Math.max(0, idx - 30);
+    const fin = Math.min(textoOriginal.length, idx + largoMatch + 60);
+    let fragmento = textoOriginal.substring(inicio, fin);
+    if (inicio > 0) fragmento = '…' + fragmento;
+    if (fin < textoOriginal.length) fragmento += '…';
+    return fragmento;
+  }
+
   private recortar(texto: string | undefined, n: number): string {
     if (!texto) return '';
     return texto.length > n ? texto.substring(0, n).trim() + '…' : texto;
@@ -398,9 +445,7 @@ export class BusquedaService {
       const data = JSON.parse(localStorage.getItem(this.STORAGE_RECIENTES) || '[]');
       if (!Array.isArray(data)) return [];
 
-      const limpios = data.filter(
-        (q): q is string => typeof q === 'string' && q.trim().length > 0,
-      );
+      const limpios = data.filter((q): q is string => typeof q === 'string' && q.trim().length > 0);
 
       if (limpios.length !== data.length) {
         localStorage.setItem(this.STORAGE_RECIENTES, JSON.stringify(limpios));
@@ -415,9 +460,7 @@ export class BusquedaService {
   guardarReciente(query: string) {
     if (!query || typeof query !== 'string' || !query.trim()) return;
     const recientes = this.obtenerRecientes();
-    const filtradas = recientes.filter(
-      (q) => q.toLowerCase() !== query.toLowerCase(),
-    );
+    const filtradas = recientes.filter((q) => q.toLowerCase() !== query.toLowerCase());
     filtradas.unshift(query.trim());
     const top = filtradas.slice(0, 5);
     localStorage.setItem(this.STORAGE_RECIENTES, JSON.stringify(top));

@@ -163,8 +163,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   toggleBuscadorEscritorio(event: Event) {
     event.stopPropagation();
-    this.buscadorEscritorioAbierto = !this.buscadorEscritorioAbierto;
-    if (this.buscadorEscritorioAbierto) {
+    // 🛡️ Solo abrir, nunca cerrar desde el click del wrapper
+    // Cerrar se hace solo con X, Escape, o click fuera (HostListener)
+    // Esto evita el bug donde al copiar+pegar se cerraba accidentalmente
+    if (!this.buscadorEscritorioAbierto) {
+      this.buscadorEscritorioAbierto = true;
       this.busquedasRecientes.set(this.busquedaService.obtenerRecientes());
     }
   }
