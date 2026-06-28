@@ -6,7 +6,7 @@ import { ContenidoService } from '../../core/services/contenido.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { ProjectShowcaseComponent } from '../../shared/project-showcase/project-showcase.component';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 interface CategoriaFiltro {
   id: string;
@@ -31,6 +31,7 @@ export class ProyectosComponent implements OnInit {
   private catalogo = inject(CatalogoService);
   private contenidoService = inject(ContenidoService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   filtroActivo = signal<string>('todos');
   busqueda = signal<string>('');
@@ -109,11 +110,20 @@ export class ProyectosComponent implements OnInit {
     this.proyCtaTitulo = this.contenidoService.getCampo('proyectos', 'cta', 'titulo');
     this.proyCtaDescripcion = this.contenidoService.getCampo('proyectos', 'cta', 'descripcion');
 
-    // 🔍 Escuchar query param ?showcase=:id para abrir modal desde la búsqueda
+    // 🔍 Escuchar query param ?showcase=:id para abrir/cerrar modal desde la búsqueda
     this.route.queryParams.subscribe((params) => {
       const showcaseId = params['showcase'];
-      if (!showcaseId) return;
 
+      // Si NO hay param → asegurar que el modal esté cerrado
+      if (!showcaseId) {
+        if (this.proyectoSeleccionado()) {
+          this.proyectoSeleccionado.set(null);
+          document.body.style.overflow = '';
+        }
+        return;
+      }
+
+      // Si hay param → abrir el proyecto (con reintentos por si el catálogo no cargó)
       const tryOpen = (intentos = 0) => {
         if (intentos > 20) return;
         const proyecto = this.proyectos().find((p) => p.id === Number(showcaseId));
@@ -138,5 +148,13 @@ export class ProyectosComponent implements OnInit {
   cerrarShowcase() {
     this.proyectoSeleccionado.set(null);
     document.body.style.overflow = '';
+
+    // Limpiar el query param ?showcase de la URL para que no se reabra al recargar
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { showcase: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 }
