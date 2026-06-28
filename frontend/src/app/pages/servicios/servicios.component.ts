@@ -1,6 +1,6 @@
 import { Component, computed, signal, inject, OnInit } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { CatalogoService, Servicio } from '../../core/services/catalogo.service';
 import { ContenidoService } from '../../core/services/contenido.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
@@ -21,6 +21,8 @@ interface CategoriaFiltro {
 export class ServiciosComponent implements OnInit {
   private catalogo = inject(CatalogoService);
   private contenidoService = inject(ContenidoService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   servicioActivo = signal<Servicio | null>(null);
   filtroActivo = signal<string>('todos');
@@ -94,6 +96,14 @@ export class ServiciosComponent implements OnInit {
 
   cerrarModal() {
     this.servicioActivo.set(null);
+
+    // Limpiar el query param ?servicio de la URL para que no se reabra al recargar
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { servicio: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   ngOnInit() {
@@ -111,5 +121,30 @@ export class ServiciosComponent implements OnInit {
     // CTA
     this.servCtaTitulo = this.contenidoService.getCampo('servicios', 'cta', 'titulo');
     this.servCtaDescripcion = this.contenidoService.getCampo('servicios', 'cta', 'descripcion');
+
+    // 🔍 Escuchar query param ?servicio=:id para abrir/cerrar modal desde la búsqueda
+    this.route.queryParams.subscribe((params) => {
+      const servicioId = params['servicio'];
+
+      // Si NO hay param → asegurar que el modal esté cerrado
+      if (!servicioId) {
+        if (this.servicioActivo()) {
+          this.servicioActivo.set(null);
+        }
+        return;
+      }
+
+      // Si hay param → abrir el servicio (con reintentos por si el catálogo no cargó)
+      const tryOpen = (intentos = 0) => {
+        if (intentos > 20) return;
+        const servicio = this.servicios().find((s) => s.id === Number(servicioId));
+        if (servicio) {
+          this.abrirServicio(servicio);
+        } else {
+          setTimeout(() => tryOpen(intentos + 1), 200);
+        }
+      };
+      tryOpen();
+    });
   }
 }

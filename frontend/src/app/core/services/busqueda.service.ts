@@ -161,6 +161,7 @@ export class BusquedaService {
           titulo: s.titulo,
           descripcion: this.recortar(s.descripcion, 80),
           ruta: '/servicios',
+          queryParams: { servicio: s.id },
           badge: this.catalogo.etiquetaCategoriaServicio(s.categoria),
         });
       }
