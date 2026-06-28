@@ -152,9 +152,7 @@ export class BusquedaService {
 
     // 3️⃣ Servicios
     for (const s of this.catalogo.getServicios()) {
-      const texto = this.normalizar(
-        `${s.titulo} ${s.descripcion || ''} ${s.categoria || ''}`,
-      );
+      const texto = this.normalizar(`${s.titulo} ${s.descripcion || ''} ${s.categoria || ''}`);
       if (this.matchesQuery(texto, q)) {
         resultados.push({
           tipo: 'servicio',
@@ -191,9 +189,7 @@ export class BusquedaService {
         resultados.push({
           tipo: 'pagina-dinamica',
           titulo: p.titulo,
-          descripcion: p.descripcion
-            ? this.recortar(p.descripcion, 80)
-            : 'Página personalizada',
+          descripcion: p.descripcion ? this.recortar(p.descripcion, 80) : 'Página personalizada',
           ruta: `/p/${p.slug}`,
           badge: 'Página',
         });
@@ -372,11 +368,48 @@ export class BusquedaService {
       .replace(/[\u0300-\u036f]/g, '');
   }
 
+  /** Palabras vacías en español que se ignoran al tokenizar */
+  private readonly STOP_WORDS = new Set([
+    'de',
+    'la',
+    'el',
+    'en',
+    'un',
+    'y',
+    'o',
+    'a',
+    'al',
+    'del',
+    'los',
+    'las',
+    'una',
+    'uno',
+    'por',
+    'con',
+    'sin',
+    'para',
+    'sus',
+    'que',
+    'son',
+    'mas',
+    'muy',
+    'fue',
+    'ser',
+    'hay',
+    'ese',
+    'esa',
+    'eso',
+    'su',
+    'le',
+    'lo',
+    'se',
+  ]);
+
   /**
    * Match flexible: primero intenta substring exacto, luego tokeniza la query
-   * y exige que TODOS los tokens >2 chars aparezcan en el texto (en cualquier orden).
+   * y exige que TODOS los tokens significativos aparezcan en el texto (en cualquier orden).
    * Así "proyectos del catalogo" matchea texto que contenga "proyectos" Y "catalogo"
-   * (ignora "del" porque es ≤2 chars).
+   * (ignora "del" porque está en STOP_WORDS).
    */
   private matchesQuery(textoNormalizado: string, queryNormalizada: string): boolean {
     if (!queryNormalizada) return false;
@@ -384,8 +417,10 @@ export class BusquedaService {
     // 1. Match exacto (más rápido)
     if (textoNormalizado.includes(queryNormalizada)) return true;
 
-    // 2. Match por tokens (ignora stop-words cortas como "del", "la", "el", "y")
-    const tokens = queryNormalizada.split(/\s+/).filter((t) => t.length > 2);
+    // 2. Match por tokens (ignora stop-words españolas)
+    const tokens = queryNormalizada
+      .split(/\s+/)
+      .filter((t) => t.length > 1 && !this.STOP_WORDS.has(t));
     if (tokens.length === 0) return false;
 
     return tokens.every((token) => textoNormalizado.includes(token));
@@ -405,7 +440,9 @@ export class BusquedaService {
 
     // Si no hay match exacto, buscar el primer token que sí aparezca
     if (idx === -1) {
-      const tokens = queryNormalizada.split(/\s+/).filter((t) => t.length > 2);
+      const tokens = queryNormalizada
+        .split(/\s+/)
+        .filter((t) => t.length > 1 && !this.STOP_WORDS.has(t));
       for (const token of tokens) {
         const pos = textoNormalizado.indexOf(token);
         if (pos !== -1) {
