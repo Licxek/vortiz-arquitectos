@@ -139,9 +139,9 @@ export class ConfiguracionComponent implements OnInit {
   };
 
   diasFeriados: DiaFeriado[] = [
-    { id: 1, fecha: '2026-12-25', motivo: 'Navidad' },
-    { id: 2, fecha: '2026-01-01', motivo: 'Año nuevo' },
-    { id: 3, fecha: '2026-12-12', motivo: 'Día de la Virgen de Guadalupe' },
+    { id: 1, fecha: '2026-12-25', motivo: 'Navidad', recurrente: false },
+    { id: 2, fecha: '2026-01-01', motivo: 'Año nuevo', recurrente: false },
+    { id: 3, fecha: '2026-12-12', motivo: 'Día de la Virgen de Guadalupe', recurrente: false },
   ];
   nuevoFeriado: { fecha: string; motivo: string; recurrente: boolean } = {
     fecha: '',
@@ -203,7 +203,14 @@ export class ConfiguracionComponent implements OnInit {
           const { diasSemana, diasFeriados, ...scalars } = c.agenda;
           this.agenda = { ...this.agenda, ...scalars };
           if (diasSemana?.length) this.diasSemana = diasSemana;
-          if (diasFeriados) this.diasFeriados = diasFeriados;
+          if (diasFeriados) {
+            // Normalizar: forzar recurrente a boolean para que el sistema
+            // de cambios sin guardar funcione correctamente
+            this.diasFeriados = diasFeriados.map((f: any) => ({
+              ...f,
+              recurrente: !!f.recurrente,
+            }));
+          }
         }
         if (c.apariencia) this.apariencia = { ...this.apariencia, ...c.apariencia };
         if (c.notificaciones) this.notificaciones = { ...this.notificaciones, ...c.notificaciones };
