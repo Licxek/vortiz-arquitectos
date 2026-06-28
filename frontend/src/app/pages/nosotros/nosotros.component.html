@@ -78,7 +78,7 @@
 
 <div *ngIf="!cargando()" class="bg-white">
   <!-- ============ HERO ============ -->
-  <section class="relative h-[60vh] min-h-[400px] overflow-hidden">
+  <section id="seccion-hero" class="relative h-[60vh] min-h-[400px] overflow-hidden">
     <!-- Imagen de fondo optimizada -->
     <img
       [ngSrc]="heroImagenFondo"
@@ -111,7 +111,7 @@
   </section>
 
   <!-- ============ INTRODUCCIÓN ============ -->
-  <section class="py-20 md:py-28">
+  <section id="seccion-intro" class="py-20 md:py-28">
     <div class="max-w-4xl mx-auto px-4 text-center">
       <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-primario)]">{{
         introBadge
@@ -131,6 +131,7 @@
       <div class="grid md:grid-cols-2 gap-6">
         <!-- Misión -->
         <div
+          id="seccion-mision"
           class="relative bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-2xl p-6 md:p-8 lg:p-10 overflow-hidden group hover:shadow-2xl transition-all duration-300"
         >
           <div
@@ -167,6 +168,7 @@
 
         <!-- Visión -->
         <div
+          id="seccion-vision"
           class="relative bg-gradient-to-br from-[#0a1f3d] to-[#0a4d7a] text-white rounded-2xl p-6 md:p-8 lg:p-10 overflow-hidden group hover:shadow-2xl transition-all duration-300"
         >
           <div
@@ -210,7 +212,7 @@
   </section>
 
   <!-- ============ EL ARQUITECTO ============ -->
-  <section class="py-20 md:py-28 bg-gray-50">
+  <section id="seccion-arquitecto" class="py-20 md:py-28 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4">
       <div class="text-center max-w-2xl mx-auto mb-16">
         <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-primario)]"
@@ -311,7 +313,7 @@
 
       <!-- Credenciales y formación -->
       <div class="grid md:grid-cols-2 gap-8">
-        <div>
+        <div id="seccion-credenciales">
           <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <svg
               class="w-5 h-5 text-[var(--color-primario)]"
@@ -348,7 +350,7 @@
         </div>
 
         <!-- Timeline de hitos -->
-        <div>
+        <div id="seccion-hitos">
           <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <svg
               class="w-5 h-5 text-[var(--color-primario)]"
@@ -384,7 +386,7 @@
   </section>
 
   <!-- ============ VALORES ============ -->
-  <section class="py-20 md:py-28">
+  <section id="seccion-valores" class="py-20 md:py-28">
     <div class="max-w-7xl mx-auto px-4">
       <div class="text-center max-w-2xl mx-auto mb-16">
         <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-primario)]">{{
@@ -501,7 +503,7 @@
   </section>
 
   <!-- ============ CTA FINAL ============ -->
-  <section class="relative py-20 overflow-hidden">
+  <section id="seccion-cta" class="relative py-20 overflow-hidden">
     <div class="absolute inset-0 bg-gradient-to-br from-[#0a1f3d] via-[#0a4d7a] to-[#0a1f3d]"></div>
     <div class="absolute inset-0 opacity-10">
       <div class="absolute top-0 right-0 w-96 h-96 rounded-full bg-white blur-3xl"></div>

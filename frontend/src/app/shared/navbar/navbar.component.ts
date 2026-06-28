@@ -196,9 +196,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
 
     // 2. Navegar PRIMERO (antes de cerrar el panel)
-    const promesa = r.queryParams
-      ? this.router.navigate([r.ruta], { queryParams: r.queryParams })
-      : this.router.navigate([r.ruta]);
+    // Construir queryParams combinando los existentes + seccion para scroll
+    const queryParams: Record<string, any> = { ...(r.queryParams || {}) };
+    if (r.seccionId) queryParams['seccion'] = r.seccionId;
+
+    const promesa =
+      Object.keys(queryParams).length > 0
+        ? this.router.navigate([r.ruta], { queryParams })
+        : this.router.navigate([r.ruta]);
 
     // 3. Cerrar el panel DESPUÉS de iniciar la navegación
     promesa.then(() => {

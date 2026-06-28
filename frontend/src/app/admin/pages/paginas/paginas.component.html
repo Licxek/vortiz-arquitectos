@@ -4105,6 +4105,40 @@
                             class="flex-1 px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-mono outline-none focus:border-[#0a4d7a]"
                           />
                         </div>
+
+                        <!-- 🎨 Paleta de colores guardados -->
+                        <div *ngIf="coloresGuardados.length > 0" class="mt-2">
+                          <p
+                            class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-1.5"
+                          >
+                            <svg
+                              class="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                              />
+                            </svg>
+                            Tus colores guardados
+                          </p>
+                          <div class="flex flex-wrap gap-1.5">
+                            <button
+                              *ngFor="let hex of coloresGuardados; trackBy: trackByHex"
+                              type="button"
+                              (click)="proyectoForm.colorMarca = hex"
+                              [title]="hex"
+                              class="w-7 h-7 rounded-md border-2 transition-all hover:scale-110 hover:shadow-md"
+                              [class.border-[#0a4d7a]]="proyectoForm.colorMarca === hex"
+                              [class.border-white]="proyectoForm.colorMarca !== hex"
+                              [style.background-color]="hex"
+                            ></button>
+                          </div>
+                        </div>
                       </div>
 
                       <div>

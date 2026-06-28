@@ -122,6 +122,16 @@ export class ServiciosComponent implements OnInit {
     this.servCtaTitulo = this.contenidoService.getCampo('servicios', 'cta', 'titulo');
     this.servCtaDescripcion = this.contenidoService.getCampo('servicios', 'cta', 'descripcion');
 
+    // 🎯 Scroll a sección si viene ?seccion=X del buscador
+    this.route.queryParams.subscribe((params) => {
+      const seccion = params['seccion'];
+      if (!seccion) return;
+      setTimeout(() => {
+        const el = document.getElementById(`seccion-${seccion}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+    });
+
     // 🔍 Escuchar query param ?servicio=:id para abrir/cerrar modal desde la búsqueda
     this.route.queryParams.subscribe((params) => {
       const servicioId = params['servicio'];

@@ -110,6 +110,16 @@ export class ProyectosComponent implements OnInit {
     this.proyCtaTitulo = this.contenidoService.getCampo('proyectos', 'cta', 'titulo');
     this.proyCtaDescripcion = this.contenidoService.getCampo('proyectos', 'cta', 'descripcion');
 
+    // 🎯 Scroll a sección si viene ?seccion=X del buscador
+    this.route.queryParams.subscribe((params) => {
+      const seccion = params['seccion'];
+      if (!seccion) return;
+      setTimeout(() => {
+        const el = document.getElementById(`seccion-${seccion}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+    });
+
     // 🔍 Escuchar query param ?showcase=:id para abrir/cerrar modal desde la búsqueda
     this.route.queryParams.subscribe((params) => {
       const showcaseId = params['showcase'];
