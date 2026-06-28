@@ -1,7 +1,7 @@
 import { Component, computed, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ContenidoService } from '../../core/services/contenido.service';
 import { CatalogoService, Servicio } from '../../core/services/catalogo.service';
 import { CitasService } from '../../core/services/citas.service';
@@ -40,6 +40,7 @@ export class CitasComponent implements OnInit {
   private citas = inject(CitasService);
   private configuracionService = inject(ConfiguracionService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   servicios = this.catalogo.servicios;
 
@@ -304,7 +305,14 @@ export class CitasComponent implements OnInit {
       setTimeout(() => {
         const el = document.getElementById(`seccion-${seccion}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 400);
+        // Limpiar el query param para que no scrollee otra vez al recargar
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { seccion: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }, 600);
     });
   }
 

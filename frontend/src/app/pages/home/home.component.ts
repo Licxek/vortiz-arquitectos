@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ContenidoService } from '../../core/services/contenido.service';
 import { CatalogoService, Servicio, Proyecto } from '../../core/services/catalogo.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
@@ -82,6 +82,7 @@ export class HomeComponent implements OnInit {
   private contenidoService = inject(ContenidoService);
   private catalogo = inject(CatalogoService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   ngOnInit() {
     // Catálogos
@@ -146,7 +147,14 @@ export class HomeComponent implements OnInit {
       setTimeout(() => {
         const el = document.getElementById(`seccion-${seccion}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 400);
+        // Limpiar el query param para que no scrollee otra vez al recargar
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { seccion: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }, 600);
     });
 
   }
