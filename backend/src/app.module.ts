@@ -26,6 +26,7 @@ import { WhatsAppModule } from './whatsapp/whatsapp.module';
 import { ScheduleModule } from '@nestjs/schedule';  // 👈 AGREGAR import
 import { ImapModule } from './imap/imap.module';
 import { NotificacionesModule } from './notificaciones/notificaciones.module';
+import { ColoresGuardadosModule } from './colores-guardados/colores-guardados.module';
 
 @Module({
   imports: [
@@ -116,6 +117,7 @@ import { NotificacionesModule } from './notificaciones/notificaciones.module';
     ScheduleModule.forRoot(),
     ImapModule,
     NotificacionesModule,
+    ColoresGuardadosModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

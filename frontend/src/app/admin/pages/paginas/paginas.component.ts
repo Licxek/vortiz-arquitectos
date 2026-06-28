@@ -14,6 +14,7 @@ import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { ImageGalleryInputComponent } from '../../../shared/image-gallery-input/image-gallery-input.component';
+import { ColoresGuardadosService } from '../../../core/services/colores-guardados.service';
 
 interface Pagina {
   id: number;
@@ -818,6 +819,7 @@ export class PaginasComponent implements OnInit {
 
   private sanitizer = inject(DomSanitizer);
   private contenidoService = inject(ContenidoService);
+  private coloresService = inject(ColoresGuardadosService);
 
   private rutasPublicas: Record<string, string> = {
     '/': '/',
@@ -2700,59 +2702,62 @@ export class PaginasComponent implements OnInit {
     return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
   }
 
-  /** Storage key para colores personalizados guardados */
-  private readonly STORAGE_COLORES = 'vortiz_paginas_colores_guardados';
-
   /** Colores custom que el admin ha usado antes */
   coloresGuardados: string[] = [];
 
   /** trackBy para el ngFor de colores guardados */
   trackByHex = (_: number, hex: string) => hex;
 
-  /** Carga colores guardados desde localStorage */
+  /** Carga colores guardados desde el backend (sincronizados entre dispositivos) */
   private cargarColoresGuardados() {
-    try {
-      const stored = localStorage.getItem(this.STORAGE_COLORES);
-      if (stored) {
-        const arr = JSON.parse(stored);
-        if (Array.isArray(arr)) {
-          this.coloresGuardados = arr.filter(
-            (c) => typeof c === 'string' && c.startsWith('#') && c.length === 7,
-          );
-        }
-      }
-    } catch {
-      this.coloresGuardados = [];
-    }
+    this.coloresService.listar().subscribe({
+      next: (colores) => {
+        this.coloresGuardados = colores.filter(
+          (c) => typeof c === 'string' && c.startsWith('#') && c.length === 7,
+        );
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.coloresGuardados = [];
+        this.cdr.markForCheck();
+      },
+    });
   }
 
-  /** Guarda un color custom en la lista (se llama al guardar página) */
+  /** Guarda un color custom en la lista del backend (sincronizado entre dispositivos) */
   private guardarColorPersonalizado(hex: string) {
     if (!hex || !hex.startsWith('#')) return;
 
-    // Quitar si ya existe (para moverlo al frente)
-    this.coloresGuardados = this.coloresGuardados.filter(
-      (c) => c.toLowerCase() !== hex.toLowerCase(),
-    );
-
-    // Agregar al inicio
-    this.coloresGuardados.unshift(hex);
-
-    // Limitar a 12 más recientes
-    this.coloresGuardados = this.coloresGuardados.slice(0, 12);
-
-    // Persistir
-    try {
-      localStorage.setItem(this.STORAGE_COLORES, JSON.stringify(this.coloresGuardados));
-    } catch {}
+    this.coloresService.guardar(hex).subscribe({
+      next: (lista) => {
+        this.coloresGuardados = lista;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        // Si falla, no romper la UI - el color sigue funcionando en la página actual
+      },
+    });
   }
 
-  /** Elimina un color guardado */
+  /** Elimina un color guardado del backend */
   eliminarColorGuardado(hex: string, event: Event) {
     event.stopPropagation();
+
+    // UI optimista: quitar de inmediato para feedback rápido
     this.coloresGuardados = this.coloresGuardados.filter((c) => c !== hex);
-    try {
-      localStorage.setItem(this.STORAGE_COLORES, JSON.stringify(this.coloresGuardados));
-    } catch {}
+    this.cdr.markForCheck();
+
+    // Persistir en backend
+    this.coloresService.eliminar(hex).subscribe({
+      next: (lista) => {
+        // Sincronizar con la respuesta del servidor
+        this.coloresGuardados = lista;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        // Si falla, recargar del servidor para reconstruir el estado real
+        this.cargarColoresGuardados();
+      },
+    });
   }
 }
