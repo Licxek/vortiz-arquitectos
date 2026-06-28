@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ContenidoService } from '../../core/services/contenido.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
@@ -32,6 +32,7 @@ interface Credencial {
 export class NosotrosComponent implements OnInit {
   private contenidoService = inject(ContenidoService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   cargando = signal(false);
 
   // ============ HERO ============
@@ -132,7 +133,14 @@ export class NosotrosComponent implements OnInit {
       setTimeout(() => {
         const el = document.getElementById(`seccion-${seccion}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 400);
+        // Limpiar el query param para que no scrollee otra vez al recargar
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { seccion: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }, 600);
     });
   }
 }

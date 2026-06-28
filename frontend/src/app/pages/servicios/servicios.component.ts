@@ -129,7 +129,14 @@ export class ServiciosComponent implements OnInit {
       setTimeout(() => {
         const el = document.getElementById(`seccion-${seccion}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 400);
+        // Limpiar el query param para que no scrollee otra vez al recargar
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { seccion: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }, 600);
     });
 
     // 🔍 Escuchar query param ?servicio=:id para abrir/cerrar modal desde la búsqueda
@@ -144,12 +151,24 @@ export class ServiciosComponent implements OnInit {
         return;
       }
 
-      // Si hay param → abrir el servicio (con reintentos por si el catálogo no cargó)
+      // Si hay param → buscar el servicio, scrollear a su card y abrir modal
       const tryOpen = (intentos = 0) => {
         if (intentos > 20) return;
         const servicio = this.servicios().find((s) => s.id === Number(servicioId));
         if (servicio) {
-          this.abrirServicio(servicio);
+          // 1. Resetear filtro para garantizar que la card sea visible en el grid
+          this.filtroActivo.set('todos');
+
+          // 2. Esperar a que el grid re-renderice, luego scrollear a la card
+          setTimeout(() => {
+            const el = document.getElementById(`servicio-${servicio.id}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // 3. Después del scroll, abrir el modal
+            setTimeout(() => {
+              this.abrirServicio(servicio);
+            }, 700);
+          }, 250);
         } else {
           setTimeout(() => tryOpen(intentos + 1), 200);
         }

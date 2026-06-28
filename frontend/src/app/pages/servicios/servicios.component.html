@@ -114,6 +114,7 @@
       >
         <button
           *ngFor="let s of serviciosFiltrados()"
+          [id]="'servicio-' + s.id"
           (click)="abrirServicio(s)"
           class="text-left bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-2xl hover:-translate-y-1 hover:border-transparent transition-all duration-300 cursor-pointer group flex flex-col"
         >

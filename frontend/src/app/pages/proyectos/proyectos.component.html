@@ -187,6 +187,7 @@
       >
         <div
           *ngFor="let p of proyectosFiltrados(); let i = index"
+          [id]="'proyecto-' + p.id"
           (click)="abrirShowcase(p)"
           class="group relative bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-transparent overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 cursor-pointer"
         >

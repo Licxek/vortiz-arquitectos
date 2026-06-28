@@ -117,7 +117,14 @@ export class ProyectosComponent implements OnInit {
       setTimeout(() => {
         const el = document.getElementById(`seccion-${seccion}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 400);
+        // Limpiar el query param para que no scrollee otra vez al recargar
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { seccion: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }, 600);
     });
 
     // 🔍 Escuchar query param ?showcase=:id para abrir/cerrar modal desde la búsqueda
@@ -133,12 +140,25 @@ export class ProyectosComponent implements OnInit {
         return;
       }
 
-      // Si hay param → abrir el proyecto (con reintentos por si el catálogo no cargó)
+      // Si hay param → buscar el proyecto, scrollear a su card y abrir modal
       const tryOpen = (intentos = 0) => {
         if (intentos > 20) return;
         const proyecto = this.proyectos().find((p) => p.id === Number(showcaseId));
         if (proyecto) {
-          this.abrirShowcase(proyecto);
+          // 1. Resetear filtros para garantizar que la card sea visible en el grid
+          this.filtroActivo.set('todos');
+          this.busqueda.set('');
+
+          // 2. Esperar a que el grid re-renderice, luego scrollear a la card
+          setTimeout(() => {
+            const el = document.getElementById(`proyecto-${proyecto.id}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // 3. Después del scroll, abrir el modal
+            setTimeout(() => {
+              this.abrirShowcase(proyecto);
+            }, 700);
+          }, 250);
         } else {
           setTimeout(() => tryOpen(intentos + 1), 200);
         }
