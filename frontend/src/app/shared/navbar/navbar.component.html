@@ -72,7 +72,12 @@
         </a>
       </li>
 
-      <li *ngIf="hasOverflow" class="mas-dropdown relative">
+      <li
+        *ngIf="hasOverflow"
+        class="mas-dropdown relative"
+        (mouseenter)="abrirMasHover()"
+        (mouseleave)="cerrarMasHover()"
+      >
         <button
           (click)="toggleMas($event)"
           class="relative inline-flex items-center gap-1 transition-all duration-300 hover:text-blue-400 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]"
@@ -95,8 +100,9 @@
         </button>
 
         <!-- 🎨 MEGA MENÚ -->
+        <!-- 🎨 MEGA MENÚ -->
         <div
-          class="absolute right-0 top-full mt-3 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top-right"
+          class="absolute right-0 top-full mt-3 z-[60] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top-right"
           [class.opacity-0]="!masAbierto"
           [class.scale-95]="!masAbierto"
           [class.opacity-100]="masAbierto"

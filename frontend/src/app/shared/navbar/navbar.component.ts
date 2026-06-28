@@ -129,15 +129,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (this.busquedaTimer) clearTimeout(this.busquedaTimer);
   }
 
-  /** Cuántas páginas dinámicas mostrar inline antes del mega menú */
-  private readonly MAX_INLINE = 3;
+  /** Si hay 1-2 dinámicas → inline. Si hay 3+ → todas al mega menú. */
+  private readonly MAX_INLINE = 2;
 
   get inlineDynamic(): Pagina[] {
-    return this.paginasDinamicas.slice(0, this.MAX_INLINE);
+    return this.paginasDinamicas.length <= this.MAX_INLINE ? this.paginasDinamicas : [];
   }
 
   get overflowPages(): Pagina[] {
-    return this.paginasDinamicas.slice(this.MAX_INLINE);
+    return this.paginasDinamicas.length > this.MAX_INLINE ? this.paginasDinamicas : [];
   }
 
   get hasOverflow(): boolean {
@@ -294,5 +294,25 @@ export class NavbarComponent implements OnInit, OnDestroy {
     g = Math.max(0, Math.floor(g * factor));
     b = Math.max(0, Math.floor(b * factor));
     return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+  }
+
+  private masHoverTimer: any = null;
+
+  /** Abre el mega menú al pasar el mouse */
+  abrirMasHover() {
+    if (this.masHoverTimer) {
+      clearTimeout(this.masHoverTimer);
+      this.masHoverTimer = null;
+    }
+    this.masAbierto = true;
+  }
+
+  /** Cierra el mega menú al sacar el mouse (con pequeño delay para evitar parpadeo) */
+  cerrarMasHover() {
+    if (this.masHoverTimer) clearTimeout(this.masHoverTimer);
+    this.masHoverTimer = setTimeout(() => {
+      this.masAbierto = false;
+      this.cdr.markForCheck();
+    }, 200);
   }
 }
