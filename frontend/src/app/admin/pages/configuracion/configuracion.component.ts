@@ -844,4 +844,10 @@ export class ConfiguracionComponent implements OnInit {
     ];
     return `Cada ${dia} de ${meses[mes - 1] || ''}`;
   }
+
+  /** Alterna si un feriado es recurrente o no. Dispara el sistema de cambios sin guardar. */
+  toggleFeriadoRecurrente(feriado: DiaFeriado) {
+    feriado.recurrente = !feriado.recurrente;
+    this.cdr.markForCheck();
+  }
 }
