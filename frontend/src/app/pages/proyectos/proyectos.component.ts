@@ -168,9 +168,11 @@ export class ProyectosComponent implements OnInit {
   }
   // Agrega propiedad en la clase
   proyectoSeleccionado = signal<Proyecto | null>(null);
+  private scrollPosBeforeModal = 0;
 
   // Métodos
   abrirShowcase(p: Proyecto) {
+    this.scrollPosBeforeModal = window.scrollY;
     this.proyectoSeleccionado.set(p);
     document.body.style.overflow = 'hidden';
   }
@@ -179,12 +181,19 @@ export class ProyectosComponent implements OnInit {
     this.proyectoSeleccionado.set(null);
     document.body.style.overflow = '';
 
+    const scrollPos = this.scrollPosBeforeModal;
+
     // Limpiar el query param ?showcase de la URL para que no se reabra al recargar
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { showcase: null },
-      queryParamsHandling: 'merge',
-      replaceUrl: true,
-    });
+    this.router
+      .navigate([], {
+        relativeTo: this.route,
+        queryParams: { showcase: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      })
+      .then(() => {
+        // Restaurar la posición del scroll donde estaba la card
+        window.scrollTo({ top: scrollPos, behavior: 'instant' as ScrollBehavior });
+      });
   }
 }

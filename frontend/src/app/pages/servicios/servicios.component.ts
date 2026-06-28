@@ -90,20 +90,30 @@ export class ServiciosComponent implements OnInit {
     this.filtroActivo.set(id);
   }
 
+  private scrollPosBeforeModal = 0;
+
   abrirServicio(servicio: Servicio) {
+    this.scrollPosBeforeModal = window.scrollY;
     this.servicioActivo.set(servicio);
   }
 
   cerrarModal() {
     this.servicioActivo.set(null);
 
+    const scrollPos = this.scrollPosBeforeModal;
+
     // Limpiar el query param ?servicio de la URL para que no se reabra al recargar
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { servicio: null },
-      queryParamsHandling: 'merge',
-      replaceUrl: true,
-    });
+    this.router
+      .navigate([], {
+        relativeTo: this.route,
+        queryParams: { servicio: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      })
+      .then(() => {
+        // Restaurar la posición del scroll donde estaba la card
+        window.scrollTo({ top: scrollPos, behavior: 'instant' as ScrollBehavior });
+      });
   }
 
   ngOnInit() {
