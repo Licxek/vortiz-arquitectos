@@ -149,16 +149,21 @@ export class ProyectosComponent implements OnInit {
           this.filtroActivo.set('todos');
           this.busqueda.set('');
 
-          // 2. Esperar a que el grid re-renderice, luego scrollear a la card
-          setTimeout(() => {
-            const el = document.getElementById(`proyecto-${proyecto.id}`);
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // 2. Esperar 2 frames a que el grid se renderice con filtroActivo=todos
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              const el = document.getElementById(`proyecto-${proyecto.id}`);
+              if (el) {
+                // 3. Scroll INSTANTÁNEO (sin smooth) para que scrollY se actualice de inmediato
+                el.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'center' });
+              }
 
-            // 3. Después del scroll, abrir el modal
-            setTimeout(() => {
-              this.abrirShowcase(proyecto);
-            }, 700);
-          }, 250);
+              // 4. Abrir modal con pequeño delay para que el usuario vea la card
+              setTimeout(() => {
+                this.abrirShowcase(proyecto);
+              }, 200);
+            });
+          });
         } else {
           setTimeout(() => tryOpen(intentos + 1), 200);
         }
@@ -178,37 +183,34 @@ export class ProyectosComponent implements OnInit {
   }
 
   cerrarShowcase() {
-    // Capturar el proyecto ANTES de limpiar para usarlo en el fallback
+    // Capturar el proyecto ANTES de limpiar para usarlo después
     const proyectoCerrado = this.proyectoSeleccionado();
     this.proyectoSeleccionado.set(null);
     document.body.style.overflow = '';
 
     const scrollPos = this.scrollPosBeforeModal;
 
-    // Limpiar el query param ?showcase de la URL para que no se reabra al recargar
-    this.router
-      .navigate([], {
-        relativeTo: this.route,
-        queryParams: { showcase: null },
-        queryParamsHandling: 'merge',
-        replaceUrl: true,
-      })
-      .then(() => {
-        // Si la posición capturada es válida (no es top), restaurarla exactamente
-        if (scrollPos > 50) {
-          window.scrollTo({ top: scrollPos, behavior: 'instant' as ScrollBehavior });
-          return;
+    // Función que restaura el scroll de forma robusta
+    const restaurarScroll = () => {
+      if (scrollPos > 50) {
+        window.scrollTo({ top: scrollPos, behavior: 'instant' as ScrollBehavior });
+      } else if (proyectoCerrado) {
+        const el = document.getElementById(`proyecto-${proyectoCerrado.id}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'center' });
         }
-        // Fallback: si el scroll no se capturó bien (típico al venir del buscador),
-        // scrollear a la card del proyecto que estaba abierto
-        if (proyectoCerrado) {
-          setTimeout(() => {
-            const el = document.getElementById(`proyecto-${proyectoCerrado.id}`);
-            if (el) {
-              el.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'center' });
-            }
-          }, 50);
-        }
-      });
+      }
+    };
+
+    // Limpiar URL usando history API directamente (bypass del scroll restoration de Angular)
+    const url = window.location.pathname;
+    window.history.replaceState({}, '', url);
+
+    // Restaurar scroll en el SIGUIENTE frame para que sea después del cleanup del modal
+    requestAnimationFrame(() => {
+      restaurarScroll();
+      // Doble seguro: volver a restaurar después de otro frame
+      requestAnimationFrame(restaurarScroll);
+    });
   }
 }
