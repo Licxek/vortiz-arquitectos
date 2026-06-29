@@ -52,8 +52,14 @@ export class EmailReportesService {
   }): Promise<{ enviados: number; previewUrl?: string }> {
     const transporter = await this.obtenerTransporter();
 
+    const fromEmail =
+      this.configService.get<string>('SMTP_FROM') ||
+      this.configService.get<string>('SMTP_USER') ||
+      'admin@vortizarquitectos.com.mx';
+    const fromName = this.configService.get<string>('SMTP_FROM_NAME') || 'Vortiz Arquitectos';
+
     const info = await transporter.sendMail({
-      from: '"Vortiz Arquitectos" <reportes@vortizarquitectos.com>',
+      from: `"${fromName}" <${fromEmail}>`,
       to: opciones.destinatarios.join(', '),
       subject: `📊 Reporte Vortiz: ${opciones.titulo}`,
       html: this.plantillaHTML(opciones),
