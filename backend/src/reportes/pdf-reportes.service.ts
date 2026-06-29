@@ -265,12 +265,13 @@ html, body { background: var(--paper); color: var(--ink); font-family: var(--san
 .cover .hero-number {
   font-family: var(--serif); font-size: 132px; line-height: 1;
   font-weight: 300; color: var(--ink); letter-spacing: -0.04em;
-  display: flex; align-items: baseline; gap: 16px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
   font-variation-settings: 'opsz' 144;
 }
 .cover .hero-number .unit {
-  font-family: var(--serif); font-style: italic; font-size: 24px;
-  color: var(--blue); font-weight: 400;
+  font-family: var(--serif); font-style: italic; font-size: 22px;
+  color: var(--blue); font-weight: 400; line-height: 1.2;
+  margin-top: 4px; letter-spacing: -0.01em;
 }
 .cover .hero-meta {
   display: flex; gap: 32px; margin-top: 12px;
@@ -448,16 +449,24 @@ html, body { background: var(--paper); color: var(--ink); font-family: var(--san
   font-size: 14px; line-height: 1.5; color: var(--ink-soft);
   max-width: 460px;
 }
-table.detail { width: 100%; border-collapse: collapse; margin-top: 12px; }
+table.detail {
+  width: 100%; border-collapse: collapse; margin-top: 12px;
+  table-layout: fixed;
+}
+table.detail col.col-month { width: 38%; }
+table.detail col.col-value { width: 14%; }
+table.detail col.col-bar { width: 30%; }
+table.detail col.col-delta { width: 18%; }
 table.detail thead th {
-  font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.25em;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em;
   text-transform: uppercase; color: var(--mute); text-align: left;
-  padding: 10px 12px; border-bottom: 1px solid var(--ink); font-weight: 500;
+  padding: 10px 8px; border-bottom: 1px solid var(--ink); font-weight: 500;
 }
 table.detail thead th.r { text-align: right; }
 table.detail tbody td {
-  padding: 12px; border-bottom: 0.5px solid var(--line-soft);
+  padding: 10px 8px; border-bottom: 0.5px solid var(--line-soft);
   vertical-align: middle; font-size: 11px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 table.detail tbody tr.zebra { background: rgba(232, 238, 244, 0.4); }
 table.detail tbody td.month {
@@ -475,9 +484,13 @@ table.detail tbody td.delta {
 table.detail tbody td.delta.up { color: var(--success); }
 table.detail tbody td.delta.down { color: var(--danger); }
 table.detail tbody td.delta.neutral { color: var(--mute); }
-.mini-bar { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+.mini-bar {
+  display: flex; align-items: center; gap: 8px; justify-content: flex-end;
+  width: 100%;
+}
 .mini-bar .bar-track {
-  width: 70px; height: 6px; background: var(--line-soft); position: relative;
+  width: 100%; max-width: 110px; height: 6px;
+  background: var(--line-soft); position: relative; flex-shrink: 0;
 }
 .mini-bar .bar-fill {
   position: absolute; top: 0; left: 0; height: 100%; background: var(--blue);
@@ -803,6 +816,12 @@ table.detail tfoot td.value.neg { color: var(--danger); }
       Tabla completa del periodo analizado. La columna <em>vs. anterior</em> compara cada fila contra la inmediatamente previa de la serie.
     </p>
     <table class="detail">
+      <colgroup>
+        <col class="col-month">
+        <col class="col-value">
+        <col class="col-bar">
+        <col class="col-delta">
+      </colgroup>
       <thead>
         <tr>
           <th>${this.escapeHtml(tabla.columnas[0] || 'Periodo')}</th>
