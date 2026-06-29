@@ -98,6 +98,8 @@ export class ServiciosComponent implements OnInit {
   }
 
   cerrarModal() {
+    // Capturar el servicio ANTES de limpiar para usarlo en el fallback
+    const servicioCerrado = this.servicioActivo();
     this.servicioActivo.set(null);
 
     const scrollPos = this.scrollPosBeforeModal;
@@ -111,8 +113,21 @@ export class ServiciosComponent implements OnInit {
         replaceUrl: true,
       })
       .then(() => {
-        // Restaurar la posición del scroll donde estaba la card
-        window.scrollTo({ top: scrollPos, behavior: 'instant' as ScrollBehavior });
+        // Si la posición capturada es válida (no es top), restaurarla exactamente
+        if (scrollPos > 50) {
+          window.scrollTo({ top: scrollPos, behavior: 'instant' as ScrollBehavior });
+          return;
+        }
+        // Fallback: si el scroll no se capturó bien (típico al venir del buscador),
+        // scrollear a la card del servicio que estaba abierto
+        if (servicioCerrado) {
+          setTimeout(() => {
+            const el = document.getElementById(`servicio-${servicioCerrado.id}`);
+            if (el) {
+              el.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'center' });
+            }
+          }, 50);
+        }
       });
   }
 

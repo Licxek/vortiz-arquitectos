@@ -178,6 +178,8 @@ export class ProyectosComponent implements OnInit {
   }
 
   cerrarShowcase() {
+    // Capturar el proyecto ANTES de limpiar para usarlo en el fallback
+    const proyectoCerrado = this.proyectoSeleccionado();
     this.proyectoSeleccionado.set(null);
     document.body.style.overflow = '';
 
@@ -192,8 +194,21 @@ export class ProyectosComponent implements OnInit {
         replaceUrl: true,
       })
       .then(() => {
-        // Restaurar la posición del scroll donde estaba la card
-        window.scrollTo({ top: scrollPos, behavior: 'instant' as ScrollBehavior });
+        // Si la posición capturada es válida (no es top), restaurarla exactamente
+        if (scrollPos > 50) {
+          window.scrollTo({ top: scrollPos, behavior: 'instant' as ScrollBehavior });
+          return;
+        }
+        // Fallback: si el scroll no se capturó bien (típico al venir del buscador),
+        // scrollear a la card del proyecto que estaba abierto
+        if (proyectoCerrado) {
+          setTimeout(() => {
+            const el = document.getElementById(`proyecto-${proyectoCerrado.id}`);
+            if (el) {
+              el.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'center' });
+            }
+          }, 50);
+        }
       });
   }
 }
