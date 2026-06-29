@@ -125,8 +125,11 @@ export class PdfReportesService implements OnModuleDestroy {
     const fechaGeneracion = this.formatearFechaCorta(new Date());
     const logoSrc = this.cargarLogoBase64();
 
-    // Total páginas (4 fijas: portada + resumen + visualización + detalle)
-    const totalPaginas = 4;
+    // Calcular páginas dinámicas: 3 fijas (portada, resumen, viz) + N de tabla
+    const FILAS_POR_PAGINA = 20;
+    const numFilas = detalle.tabla?.filas?.length || 0;
+    const paginasTabla = Math.max(1, Math.ceil(numFilas / FILAS_POR_PAGINA));
+    const totalPaginas = 3 + paginasTabla;
 
     const ctx = {
       detalle,
@@ -137,6 +140,7 @@ export class PdfReportesService implements OnModuleDestroy {
       totalPaginas,
       fechaGeneracion,
       logoSrc,
+      filasPorPagina: FILAS_POR_PAGINA,
     };
 
     return `<!DOCTYPE html>
@@ -458,16 +462,22 @@ table.detail col.col-value { width: 14%; }
 table.detail col.col-bar { width: 30%; }
 table.detail col.col-delta { width: 18%; }
 table.detail thead th {
-  font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em;
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.2em;
   text-transform: uppercase; color: var(--mute); text-align: left;
-  padding: 10px 8px; border-bottom: 1px solid var(--ink); font-weight: 500;
+  padding: 8px 6px; border-bottom: 1px solid var(--ink); font-weight: 500;
 }
 table.detail thead th.r { text-align: right; }
 table.detail tbody td {
-  padding: 10px 8px; border-bottom: 0.5px solid var(--line-soft);
-  vertical-align: middle; font-size: 11px;
+  padding: 7px 6px; border-bottom: 0.5px solid var(--line-soft);
+  vertical-align: middle; font-size: 10.5px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+table.detail tbody td.month { font-size: 12px; }
+table.detail tbody td.value { font-size: 10.5px; }
+table.detail tbody td.delta { font-size: 9.5px; }
+.mini-bar .bar-track { max-width: 85px; height: 5px; }
+table.detail tfoot td { padding: 10px 6px; font-size: 9px; }
+table.detail tfoot td.value { font-size: 16px; }
 table.detail tbody tr.zebra { background: rgba(232, 238, 244, 0.4); }
 table.detail tbody td.month {
   font-family: var(--serif); font-size: 14px; color: var(--ink);
@@ -522,7 +532,14 @@ table.detail tfoot td.value.neg { color: var(--danger); }
   // ============================================================
 
   private construirPortada(ctx: any): string {
-    const { detalle, titulo, descripcion, totalDias, totalPaginas, reporteNumero } = ctx;
+    const {
+      detalle,
+      titulo,
+      descripcion,
+      totalDias,
+      totalPaginas,
+      reporteNumero,
+    } = ctx;
     const { insights, unidad } = detalle;
 
     const tituloHtml = this.aplicarEnfasisEnTitulo(titulo);
@@ -744,27 +761,64 @@ table.detail tfoot td.value.neg { color: var(--danger); }
   // ============================================================
 
   private construirDetalle(ctx: any): string {
-    const { detalle, titulo, totalPaginas, reporteNumero } = ctx;
-    const { tabla, insights, unidad } = detalle;
+    const { detalle, filasPorPagina } = ctx;
+    const { tabla } = detalle;
 
     if (!tabla || !tabla.filas || tabla.filas.length === 0) {
       return this.construirDetalleVacio(ctx);
     }
 
-    // Determinar el valor máximo para escalar las mini-bars
-    const valores = tabla.filas.map((f: any[]) => Number(f[1]) || 0);
-    const maxValor = Math.max(...valores, 1);
+    const filas = tabla.filas;
+    const porPagina = filasPorPagina || 20;
+    const totalPagsTabla = Math.ceil(filas.length / porPagina);
 
-    // Encontrar el índice de la fila con valor máximo (para highlight)
-    const idxMax = valores.indexOf(maxValor);
+    // Calcular max global para que las barras sean proporcionales en todas las páginas
+    const todosValores = filas.map((f: any[]) => Number(f[1]) || 0);
+    const maxValor = Math.max(...todosValores, 1);
+    const idxMaxGlobal = todosValores.indexOf(maxValor);
 
-    const filasHtml = tabla.filas
-      .map((fila: any[], idx: number) => {
+    const paginas: string[] = [];
+    for (let i = 0; i < totalPagsTabla; i++) {
+      const inicio = i * porPagina;
+      const fin = Math.min(inicio + porPagina, filas.length);
+      const filasPag = filas.slice(inicio, fin);
+      paginas.push(
+        this.renderPaginaTabla(
+          ctx,
+          filasPag,
+          inicio,
+          maxValor,
+          idxMaxGlobal,
+          i === 0,
+          i === totalPagsTabla - 1,
+          4 + i,
+        ),
+      );
+    }
+    return paginas.join('\n');
+  }
+
+  private renderPaginaTabla(
+    ctx: any,
+    filasPag: any[],
+    offset: number,
+    maxValor: number,
+    idxMaxGlobal: number,
+    esPrimera: boolean,
+    esUltima: boolean,
+    pageNum: number,
+  ): string {
+    const { detalle, titulo, totalPaginas, reporteNumero } = ctx;
+    const { tabla, insights, unidad } = detalle;
+
+    const filasHtml = filasPag
+      .map((fila: any[], idxLocal: number) => {
+        const idxGlobal = offset + idxLocal;
         const valor = Number(fila[1]) || 0;
         const cambio = String(fila[2] || '—');
         const pct = maxValor > 0 ? (valor / maxValor) * 100 : 0;
-        const esZebra = idx % 2 === 1;
-        const esMax = idx === idxMax;
+        const esZebra = idxGlobal % 2 === 1;
+        const esMax = idxGlobal === idxMaxGlobal;
 
         let barFillClass = '';
         if (esMax) barFillClass = 'dark';
@@ -790,10 +844,31 @@ table.detail tfoot td.value.neg { color: var(--danger); }
       })
       .join('');
 
-    const total = insights.total || valores.reduce((a: number, b: number) => a + b, 0);
+    const total =
+      insights.total ||
+      tabla.filas.reduce((a: number, f: any[]) => a + (Number(f[1]) || 0), 0);
     const cambio = Number(insights.cambio || 0);
     const cambioCls = cambio >= 0 ? 'pos' : 'neg';
     const cambioSign = cambio >= 0 ? '+' : '';
+
+    const sectionLabel = esPrimera
+      ? 'Detalle por periodo'
+      : 'Detalle por periodo · continuación';
+
+    const introHtml = esPrimera
+      ? `<p class="detail-intro">Tabla completa del periodo analizado. La columna <em>vs. anterior</em> compara cada fila contra la inmediatamente previa de la serie.</p>`
+      : '';
+
+    const tfootHtml = esUltima
+      ? `<tfoot>
+          <tr>
+            <td>Total acumulado</td>
+            <td class="value">${total}</td>
+            <td></td>
+            <td class="value ${cambioCls}">${cambioSign}${cambio}%</td>
+          </tr>
+        </tfoot>`
+      : '';
 
     return `
 <div class="page">
@@ -809,12 +884,10 @@ table.detail tfoot td.value.neg { color: var(--danger); }
   <div class="page-content">
     <div class="section-marker">
       <span class="num">03</span>
-      <span class="label">Detalle por periodo</span>
+      <span class="label">${sectionLabel}</span>
       <span class="scale">Esc. 1:1</span>
     </div>
-    <p class="detail-intro">
-      Tabla completa del periodo analizado. La columna <em>vs. anterior</em> compara cada fila contra la inmediatamente previa de la serie.
-    </p>
+    ${introHtml}
     <table class="detail">
       <colgroup>
         <col class="col-month">
@@ -831,19 +904,12 @@ table.detail tfoot td.value.neg { color: var(--danger); }
         </tr>
       </thead>
       <tbody>${filasHtml}</tbody>
-      <tfoot>
-        <tr>
-          <td>Total acumulado</td>
-          <td class="value">${total}</td>
-          <td></td>
-          <td class="value ${cambioCls}">${cambioSign}${cambio}%</td>
-        </tr>
-      </tfoot>
+      ${tfootHtml}
     </table>
   </div>
   <div class="tech-footer">
     <span>Vortiz Arquitectos · Consultoría</span>
-    <span class="pagination">Pág. 04 / ${String(ctx.totalPaginas).padStart(2, '0')}</span>
+    <span class="pagination">Pág. ${String(pageNum).padStart(2, '0')} / ${String(totalPaginas).padStart(2, '0')}</span>
     <span>Esc. 1:1 · Sec. 03</span>
   </div>
 </div>`;
@@ -901,7 +967,7 @@ table.detail tfoot td.value.neg { color: var(--danger); }
     const serie = detalle.serie || [];
     const valores = serie.map((s: any) => Number(s.valor) || 0);
     const maxV = Math.max(...valores, 1);
-    const escalaMax = Math.ceil(maxV * 1.1 / 10) * 10 || 10;
+    const escalaMax = Math.ceil((maxV * 1.1) / 10) * 10 || 10;
 
     // Dimensiones SVG
     const W = 600;
@@ -923,7 +989,12 @@ table.detail tfoot td.value.neg { color: var(--danger); }
     });
 
     // Línea path
-    const linePath = points.map((p: any, i: number) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    const linePath = points
+      .map(
+        (p: any, i: number) =>
+          `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)},${p.y.toFixed(1)}`,
+      )
+      .join(' ');
     const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(1)},${(PAD_T + innerH).toFixed(1)} L ${points[0].x.toFixed(1)},${(PAD_T + innerH).toFixed(1)} Z`;
 
     // Encontrar pico
@@ -931,7 +1002,13 @@ table.detail tfoot td.value.neg { color: var(--danger); }
     const peak = points[idxMax];
 
     // Y-axis labels (4 steps)
-    const yLabels = [escalaMax, Math.round(escalaMax * 0.75), Math.round(escalaMax * 0.5), Math.round(escalaMax * 0.25), 0];
+    const yLabels = [
+      escalaMax,
+      Math.round(escalaMax * 0.75),
+      Math.round(escalaMax * 0.5),
+      Math.round(escalaMax * 0.25),
+      0,
+    ];
     const yLabelsHtml = yLabels
       .map((v, i) => {
         const y = PAD_T + (innerH * i) / 4;
@@ -1003,43 +1080,58 @@ table.detail tfoot td.value.neg { color: var(--danger); }
     const serie = detalle.serie || [];
     const valores = serie.map((s: any) => Number(s.valor) || 0);
     const maxV = Math.max(...valores, 1);
-    const escalaMax = Math.ceil(maxV * 1.1 / 10) * 10 || 10;
+    const escalaMax = Math.ceil((maxV * 1.1) / 10) * 10 || 10;
 
     const W = 600;
     const H = 280;
-    const PAD_L = 40, PAD_R = 20, PAD_T = 30, PAD_B = 50;
+    const PAD_L = 40,
+      PAD_R = 20,
+      PAD_T = 30,
+      PAD_B = 50;
     const innerW = W - PAD_L - PAD_R;
     const innerH = H - PAD_T - PAD_B;
 
     const n = serie.length;
     const barGap = 4;
-    const barW = (innerW / n) - barGap;
+    const barW = innerW / n - barGap;
 
     const idxMax = valores.indexOf(Math.max(...valores));
 
-    const yLabels = [escalaMax, Math.round(escalaMax * 0.75), Math.round(escalaMax * 0.5), Math.round(escalaMax * 0.25), 0];
-    const yLabelsHtml = yLabels.map((v, i) => {
-      const y = PAD_T + (innerH * i) / 4;
-      return `<text x="${PAD_L - 8}" y="${y + 3}" font-family="JetBrains Mono" font-size="8" fill="#6b7a8c" text-anchor="end">${v}</text>`;
-    }).join('');
+    const yLabels = [
+      escalaMax,
+      Math.round(escalaMax * 0.75),
+      Math.round(escalaMax * 0.5),
+      Math.round(escalaMax * 0.25),
+      0,
+    ];
+    const yLabelsHtml = yLabels
+      .map((v, i) => {
+        const y = PAD_T + (innerH * i) / 4;
+        return `<text x="${PAD_L - 8}" y="${y + 3}" font-family="JetBrains Mono" font-size="8" fill="#6b7a8c" text-anchor="end">${v}</text>`;
+      })
+      .join('');
 
-    const barsHtml = serie.map((s: any, i: number) => {
-      const valor = Number(s.valor) || 0;
-      const barH = (valor / escalaMax) * innerH;
-      const x = PAD_L + i * (innerW / n) + barGap / 2;
-      const y = PAD_T + innerH - barH;
-      const fill = i === idxMax ? '#b8863a' : '#0a4d7a';
-      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="${fill}" fill-opacity="0.85"/>`;
-    }).join('');
+    const barsHtml = serie
+      .map((s: any, i: number) => {
+        const valor = Number(s.valor) || 0;
+        const barH = (valor / escalaMax) * innerH;
+        const x = PAD_L + i * (innerW / n) + barGap / 2;
+        const y = PAD_T + innerH - barH;
+        const fill = i === idxMax ? '#b8863a' : '#0a4d7a';
+        return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="${fill}" fill-opacity="0.85"/>`;
+      })
+      .join('');
 
     const maxLabels = 12;
     const step = Math.max(1, Math.ceil(n / maxLabels));
-    const xLabelsHtml = serie.map((s: any, i: number) => {
-      if (i % step !== 0 && i !== n - 1) return '';
-      const x = PAD_L + i * (innerW / n) + (innerW / n) / 2;
-      const isPeak = i === idxMax;
-      return `<text x="${x.toFixed(1)}" y="${(PAD_T + innerH + 16).toFixed(1)}" font-family="JetBrains Mono" font-size="8" fill="${isPeak ? '#b8863a' : '#6b7a8c'}" font-weight="${isPeak ? '700' : '400'}" text-anchor="middle">${this.escapeHtml(this.acortarLabel(s.label))}</text>`;
-    }).join('');
+    const xLabelsHtml = serie
+      .map((s: any, i: number) => {
+        if (i % step !== 0 && i !== n - 1) return '';
+        const x = PAD_L + i * (innerW / n) + innerW / n / 2;
+        const isPeak = i === idxMax;
+        return `<text x="${x.toFixed(1)}" y="${(PAD_T + innerH + 16).toFixed(1)}" font-family="JetBrains Mono" font-size="8" fill="${isPeak ? '#b8863a' : '#6b7a8c'}" font-weight="${isPeak ? '700' : '400'}" text-anchor="middle">${this.escapeHtml(this.acortarLabel(s.label))}</text>`;
+      })
+      .join('');
 
     const peak = serie[idxMax];
 
@@ -1067,46 +1159,63 @@ table.detail tfoot td.value.neg { color: var(--danger); }
 
   private chartDonut(detalle: any): string {
     const serie = detalle.serie || [];
-    const total = serie.reduce((sum: number, s: any) => sum + (Number(s.valor) || 0), 0);
-    if (total === 0) return '<div class="chart-wrap" style="height: 280px;"></div>';
+    const total = serie.reduce(
+      (sum: number, s: any) => sum + (Number(s.valor) || 0),
+      0,
+    );
+    if (total === 0)
+      return '<div class="chart-wrap" style="height: 280px;"></div>';
 
-    const W = 600, H = 280;
-    const cx = 180, cy = H / 2;
+    const W = 600,
+      H = 280;
+    const cx = 180,
+      cy = H / 2;
     const r = 90;
     const rInner = 55;
 
-    const colores = ['#0a4d7a', '#b8863a', '#2d7a4f', '#4a7ca8', '#a83a2c', '#1a2e4a'];
+    const colores = [
+      '#0a4d7a',
+      '#b8863a',
+      '#2d7a4f',
+      '#4a7ca8',
+      '#a83a2c',
+      '#1a2e4a',
+    ];
 
     let acumAngulo = -Math.PI / 2;
-    const arcsHtml = serie.map((s: any, i: number) => {
-      const valor = Number(s.valor) || 0;
-      const pct = valor / total;
-      const angulo = pct * 2 * Math.PI;
-      const x1 = cx + r * Math.cos(acumAngulo);
-      const y1 = cy + r * Math.sin(acumAngulo);
-      const x2 = cx + r * Math.cos(acumAngulo + angulo);
-      const y2 = cy + r * Math.sin(acumAngulo + angulo);
-      const x3 = cx + rInner * Math.cos(acumAngulo + angulo);
-      const y3 = cy + rInner * Math.sin(acumAngulo + angulo);
-      const x4 = cx + rInner * Math.cos(acumAngulo);
-      const y4 = cy + rInner * Math.sin(acumAngulo);
-      const largeArc = angulo > Math.PI ? 1 : 0;
-      const path = `M ${x1.toFixed(1)},${y1.toFixed(1)} A ${r},${r} 0 ${largeArc} 1 ${x2.toFixed(1)},${y2.toFixed(1)} L ${x3.toFixed(1)},${y3.toFixed(1)} A ${rInner},${rInner} 0 ${largeArc} 0 ${x4.toFixed(1)},${y4.toFixed(1)} Z`;
-      acumAngulo += angulo;
-      return `<path d="${path}" fill="${colores[i % colores.length]}" fill-opacity="0.9"/>`;
-    }).join('');
+    const arcsHtml = serie
+      .map((s: any, i: number) => {
+        const valor = Number(s.valor) || 0;
+        const pct = valor / total;
+        const angulo = pct * 2 * Math.PI;
+        const x1 = cx + r * Math.cos(acumAngulo);
+        const y1 = cy + r * Math.sin(acumAngulo);
+        const x2 = cx + r * Math.cos(acumAngulo + angulo);
+        const y2 = cy + r * Math.sin(acumAngulo + angulo);
+        const x3 = cx + rInner * Math.cos(acumAngulo + angulo);
+        const y3 = cy + rInner * Math.sin(acumAngulo + angulo);
+        const x4 = cx + rInner * Math.cos(acumAngulo);
+        const y4 = cy + rInner * Math.sin(acumAngulo);
+        const largeArc = angulo > Math.PI ? 1 : 0;
+        const path = `M ${x1.toFixed(1)},${y1.toFixed(1)} A ${r},${r} 0 ${largeArc} 1 ${x2.toFixed(1)},${y2.toFixed(1)} L ${x3.toFixed(1)},${y3.toFixed(1)} A ${rInner},${rInner} 0 ${largeArc} 0 ${x4.toFixed(1)},${y4.toFixed(1)} Z`;
+        acumAngulo += angulo;
+        return `<path d="${path}" fill="${colores[i % colores.length]}" fill-opacity="0.9"/>`;
+      })
+      .join('');
 
     // Leyenda
     const legendX = 320;
-    const legendHtml = serie.map((s: any, i: number) => {
-      const valor = Number(s.valor) || 0;
-      const pct = ((valor / total) * 100).toFixed(1);
-      const y = 80 + i * 28;
-      return `
+    const legendHtml = serie
+      .map((s: any, i: number) => {
+        const valor = Number(s.valor) || 0;
+        const pct = ((valor / total) * 100).toFixed(1);
+        const y = 80 + i * 28;
+        return `
         <rect x="${legendX}" y="${y}" width="14" height="14" fill="${colores[i % colores.length]}"/>
         <text x="${legendX + 24}" y="${y + 11}" font-family="Inter Tight" font-size="11" fill="#0a1f3d" font-weight="500">${this.escapeHtml(s.label)}</text>
         <text x="${legendX + 24}" y="${y + 24}" font-family="JetBrains Mono" font-size="9" fill="#6b7a8c">${valor} · ${pct}%</text>`;
-    }).join('');
+      })
+      .join('');
 
     return `
 <div class="chart-wrap">
@@ -1136,7 +1245,10 @@ table.detail tfoot td.value.neg { color: var(--danger); }
     const n = valores.length;
     const stepX = n > 1 ? 200 / (n - 1) : 0;
     const points = valores
-      .map((v, i) => `${(i * stepX).toFixed(1)},${(28 - ((v - min) / range) * 24).toFixed(1)}`)
+      .map(
+        (v, i) =>
+          `${(i * stepX).toFixed(1)},${(28 - ((v - min) / range) * 24).toFixed(1)}`,
+      )
       .join(' ');
     const lastX = ((n - 1) * stepX).toFixed(1);
     const lastY = (28 - ((valores[n - 1] - min) / range) * 24).toFixed(1);
@@ -1153,7 +1265,10 @@ table.detail tfoot td.value.neg { color: var(--danger); }
     const n = valores.length;
     const stepX = n > 1 ? 200 / (n - 1) : 0;
     const points = valores
-      .map((v, i) => `${(i * stepX).toFixed(1)},${(28 - (v / max) * 24).toFixed(1)}`)
+      .map(
+        (v, i) =>
+          `${(i * stepX).toFixed(1)},${(28 - (v / max) * 24).toFixed(1)}`,
+      )
       .join(' ');
     const avgY = (28 - (avg / max) * 24).toFixed(1);
     return `<svg viewBox="0 0 200 30" preserveAspectRatio="none">
@@ -1183,7 +1298,7 @@ table.detail tfoot td.value.neg { color: var(--danger); }
     const max = Math.max(...valores, 1);
     const n = valores.length;
     const idxMax = valores.indexOf(max);
-    const barW = Math.max(2, (200 / n) - 2);
+    const barW = Math.max(2, 200 / n - 2);
     const stepX = 200 / n;
     const bars = valores
       .map((v, i) => {
@@ -1222,8 +1337,11 @@ table.detail tfoot td.value.neg { color: var(--danger); }
 
     const valores = serie.map((s: any) => Number(s.valor) || 0);
     const sumTotal = valores.reduce((a: number, b: number) => a + b, 0);
-    const sumSegundaMitad = valores.slice(Math.floor(valores.length / 2)).reduce((a: number, b: number) => a + b, 0);
-    const pctSegundaMitad = sumTotal > 0 ? Math.round((sumSegundaMitad / sumTotal) * 100) : 0;
+    const sumSegundaMitad = valores
+      .slice(Math.floor(valores.length / 2))
+      .reduce((a: number, b: number) => a + b, 0);
+    const pctSegundaMitad =
+      sumTotal > 0 ? Math.round((sumSegundaMitad / sumTotal) * 100) : 0;
 
     const max = Math.max(...valores);
     const min = Math.min(...valores);
@@ -1259,7 +1377,15 @@ table.detail tfoot td.value.neg { color: var(--danger); }
   /** Aplica énfasis al título: la última palabra significativa va en itálica azul */
   private aplicarEnfasisEnTitulo(titulo: string): string {
     // Buscar palabras clave para resaltar (la más significativa)
-    const palabrasClave = ['citas', 'clientes', 'servicios', 'visitas', 'actividad', 'categorías', 'reporte'];
+    const palabrasClave = [
+      'citas',
+      'clientes',
+      'servicios',
+      'visitas',
+      'actividad',
+      'categorías',
+      'reporte',
+    ];
     const palabras = titulo.split(' ');
     for (const palabra of palabras) {
       const limpia = palabra.toLowerCase().replace(/[.,;:]/g, '');
@@ -1271,7 +1397,11 @@ table.detail tfoot td.value.neg { color: var(--danger); }
     const ultimaImportante = palabras.filter((p) => p.length > 3).pop();
     if (ultimaImportante) {
       const lastIndex = titulo.lastIndexOf(ultimaImportante);
-      return titulo.slice(0, lastIndex) + `<em>${ultimaImportante}</em>` + titulo.slice(lastIndex + ultimaImportante.length);
+      return (
+        titulo.slice(0, lastIndex) +
+        `<em>${ultimaImportante}</em>` +
+        titulo.slice(lastIndex + ultimaImportante.length)
+      );
     }
     return titulo;
   }
@@ -1293,7 +1423,20 @@ table.detail tfoot td.value.neg { color: var(--danger); }
     if (isNaN(d.getTime())) return String(fecha);
 
     const dia = d.getDate();
-    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const meses = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
     return `${dia} ${meses[d.getMonth()]} ${d.getFullYear()}`;
   }
 
@@ -1301,7 +1444,8 @@ table.detail tfoot td.value.neg { color: var(--danger); }
     if (!desde || !hasta) return 0;
     const d1 = new Date(desde);
     const d2 = new Date(hasta);
-    const diff = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const diff =
+      Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     return Math.max(1, diff);
   }
 
@@ -1310,7 +1454,8 @@ table.detail tfoot td.value.neg { color: var(--danger); }
     const ahora = new Date();
     const yy = ahora.getFullYear() % 100;
     const dayOfYear = Math.floor(
-      (ahora.getTime() - new Date(ahora.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24),
+      (ahora.getTime() - new Date(ahora.getFullYear(), 0, 0).getTime()) /
+        (1000 * 60 * 60 * 24),
     );
     return `${String(yy).padStart(2, '0')}${String(dayOfYear).padStart(3, '0')}`;
   }
