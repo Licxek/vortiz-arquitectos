@@ -7,9 +7,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cita, EstadoCita } from './cita.entity';
-import { MailService } from '../mail/mail.service'; // ⚠️ ajusta la ruta
+import { MailService } from '../mail/mail.service';
+import { EmailLayoutService } from '../mail/email-layout.service';
 import { CrearCitaDto } from './dto/crear-cita.dto';
-import { ConfiguracionService } from '../configuracion/configuracion.service'; // 👈 NUEVO
+import { ConfiguracionService } from '../configuracion/configuracion.service';
 import { In } from 'typeorm';
 import { MensajesConsultaService } from './mensajes-consulta.service';
 
@@ -18,7 +19,7 @@ const ESTADOS_VALIDOS: EstadoCita[] = [
   'confirmada',
   'cancelada',
   'completada',
-  'no_asistio', // 👈 NUEVO
+  'no_asistio',
 ];
 
 @Injectable()
@@ -28,6 +29,7 @@ export class CitasService {
   constructor(
     @InjectRepository(Cita) private repo: Repository<Cita>,
     private mailService: MailService,
+    private emailLayout: EmailLayoutService,
     private configuracionService: ConfiguracionService,
     private mensajesService: MensajesConsultaService,
   ) {}
@@ -40,7 +42,6 @@ export class CitasService {
 
     if (citas.length === 0) return citas;
 
-    // Último mensaje de cada cita (subquery con DISTINCT ON)
     const ids = citas.map((c) => c.id);
     const ultimos = await this.repo.manager.query(
       `
@@ -89,7 +90,6 @@ export class CitasService {
       );
     }
 
-    // 🔒 No permitir citas en fechas pasadas
     const fechaCita = new Date(data.fecha + 'T00:00:00');
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
@@ -99,7 +99,6 @@ export class CitasService {
       );
     }
 
-    // Validar que no haya empalme con otra cita activa
     const duracion = data.duracion ?? 60;
     const conflicto = await this.hayEmpalme(data.fecha, data.hora, duracion);
     if (conflicto) {
@@ -124,21 +123,20 @@ export class CitasService {
     const guardada = await this.repo.save(cita);
     const completa = await this.findOne(guardada.id);
 
-    // 📧 Notificaciones según el estado inicial
     if (completa) {
       if (completa.estado === 'confirmada') {
-        // Admin la creó ya confirmada: solo correo de confirmación al cliente
+        const ctx = await this.emailLayout.obtenerContexto();
+        const html = await this.htmlConfirmacion(completa, ctx);
         this.mailService
           .enviar(
             completa.correo,
-            'Tu cita ha sido confirmada — Vortiz Arquitectos',
-            this.htmlConfirmacion(completa),
+            `Tu cita ha sido confirmada — ${ctx.negocio.nombre}`,
+            html,
           )
           .catch((err) =>
             this.logger.error(`Error enviando confirmación: ${err.message}`),
           );
       } else {
-        // Cliente la solicitó (pendiente): acuse + aviso a admin
         this.notificarNuevaCita(completa).catch((err) =>
           this.logger.error(`Error notificando nueva cita: ${err.message}`),
         );
@@ -158,39 +156,45 @@ export class CitasService {
     await this.repo.save(cita);
     const actualizada = await this.findOne(id);
 
-    // 📧 Notifica al cliente según el nuevo estado
-    if (actualizada && estado === 'confirmada') {
-      this.mailService
-        .enviar(
-          actualizada.correo,
-          'Tu cita ha sido confirmada — Vortiz Arquitectos',
-          this.htmlConfirmacion(actualizada),
-        )
-        .catch((err) =>
-          this.logger.error(`Error enviando confirmación: ${err.message}`),
-        );
-    } else if (actualizada && estado === 'cancelada') {
-      this.mailService
-        .enviar(
-          actualizada.correo,
-          'Tu cita ha sido cancelada — Vortiz Arquitectos',
-          this.htmlCancelacion(actualizada),
-        )
-        .catch((err) =>
-          this.logger.error(`Error enviando cancelación: ${err.message}`),
-        );
-    } else if (actualizada && estado === 'no_asistio') {
-      this.mailService
-        .enviar(
-          actualizada.correo,
-          'Lamentamos no haberte visto — Vortiz Arquitectos',
-          this.htmlNoAsistio(actualizada),
-        )
-        .catch((err) =>
-          this.logger.error(
-            `Error enviando aviso de no asistencia: ${err.message}`,
-          ),
-        );
+    if (actualizada) {
+      const ctx = await this.emailLayout.obtenerContexto();
+
+      if (estado === 'confirmada') {
+        const html = await this.htmlConfirmacion(actualizada, ctx);
+        this.mailService
+          .enviar(
+            actualizada.correo,
+            `Tu cita ha sido confirmada — ${ctx.negocio.nombre}`,
+            html,
+          )
+          .catch((err) =>
+            this.logger.error(`Error enviando confirmación: ${err.message}`),
+          );
+      } else if (estado === 'cancelada') {
+        const html = await this.htmlCancelacion(actualizada, ctx);
+        this.mailService
+          .enviar(
+            actualizada.correo,
+            `Tu cita ha sido cancelada — ${ctx.negocio.nombre}`,
+            html,
+          )
+          .catch((err) =>
+            this.logger.error(`Error enviando cancelación: ${err.message}`),
+          );
+      } else if (estado === 'no_asistio') {
+        const html = await this.htmlNoAsistio(actualizada, ctx);
+        this.mailService
+          .enviar(
+            actualizada.correo,
+            `Lamentamos no haberte visto — ${ctx.negocio.nombre}`,
+            html,
+          )
+          .catch((err) =>
+            this.logger.error(
+              `Error enviando aviso de no asistencia: ${err.message}`,
+            ),
+          );
+      }
     }
 
     return actualizada;
@@ -206,12 +210,13 @@ export class CitasService {
 
   private async notificarNuevaCita(cita: Cita) {
     const servicio = this.nombreServicio(cita);
+    const ctx = await this.emailLayout.obtenerContexto();
 
-    // 1) Cliente: SIEMPRE recibe acuse (no se desactiva)
+    // 1) Cliente: SIEMPRE recibe acuse
     await this.mailService.enviar(
       cita.correo,
-      'Recibimos tu solicitud de cita — Vortiz Arquitectos',
-      this.htmlAcuseCliente(cita, servicio),
+      `Recibimos tu solicitud de cita — ${ctx.negocio.nombre}`,
+      this.htmlAcuseCliente(cita, servicio, ctx),
     );
 
     // 2) Admin: solo si el toggle está activo
@@ -222,17 +227,15 @@ export class CitasService {
       const correoAdmin = config.contacto?.correoNotificaciones?.trim();
 
       if (correoAdmin) {
-        // Usar el correo configurado en admin
         await this.mailService.enviar(
           correoAdmin,
           `Nueva cita pendiente — ${cita.nombre}`,
-          this.htmlAvisoAdmin(cita, servicio),
+          this.htmlAvisoAdmin(cita, servicio, ctx),
         );
       } else {
-        // Fallback: enviar a todos los admins de BD
         await this.mailService.enviarAAdmins(
           `Nueva cita pendiente — ${cita.nombre}`,
-          this.htmlAvisoAdmin(cita, servicio),
+          this.htmlAvisoAdmin(cita, servicio, ctx),
         );
       }
     }
@@ -247,129 +250,182 @@ export class CitasService {
 
   private formatearFecha(fechaISO: string, hora: string): string {
     const d = new Date(fechaISO + 'T00:00:00');
-    const dias = [
-      'domingo',
-      'lunes',
-      'martes',
-      'miércoles',
-      'jueves',
-      'viernes',
-      'sábado',
-    ];
-    const meses = [
-      'enero',
-      'febrero',
-      'marzo',
-      'abril',
-      'mayo',
-      'junio',
-      'julio',
-      'agosto',
-      'septiembre',
-      'octubre',
-      'noviembre',
-      'diciembre',
-    ];
+    const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
     return `${dias[d.getDay()]} ${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()} · ${hora}`;
   }
 
-  private layout(titulo: string, contenido: string): string {
-    return `
-<div style="font-family: Arial, sans-serif; background: #f3f4f6; padding: 24px;">
-  <div style="max-width: 560px; margin: auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-    <div style="background: linear-gradient(135deg, #0a1f3d, #0a4d7a); color: white; padding: 24px;">
-      <h1 style="margin: 0; font-size: 22px;">Vortiz Arquitectos</h1>
-      <p style="margin: 4px 0 0; opacity: 0.85; font-size: 14px;">${titulo}</p>
-    </div>
-    <div style="padding: 28px; color: #0a1f3d;">
-      ${contenido}
-    </div>
-    <div style="background: #f9fafb; padding: 16px 28px; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb;">
-      Vortiz Arquitectos · Milpillas 101, La Forestal, Durango
-    </div>
-  </div>
-</div>`;
+  // ============ PLANTILLAS DE CORREO ============
+
+  private htmlAcuseCliente(cita: Cita, servicio: string, ctx: any): string {
+    const nombre = cita.nombre.split(' ')[0];
+
+    const caja = this.emailLayout.cajaDestacada({
+      titulo: 'Tu solicitud · pendiente de confirmación',
+      variante: 'default',
+      items: [
+        { label: 'Fecha y hora', valor: this.formatearFecha(cita.fecha, cita.hora) },
+        { label: 'Servicio', valor: servicio },
+        { label: 'Estado', valor: 'Pendiente de confirmación' },
+      ],
+    });
+
+    const mensajeBox = cita.motivo
+      ? this.emailLayout.cajaMensaje('Tu mensaje', cita.motivo)
+      : '';
+
+    const contenido = `
+      <p style="margin: 0 0 16px;">
+        Hola <strong style="color: #0a4d7a;">${this.emailLayout.escape(nombre)}</strong>, hemos recibido tu solicitud de cita. Te contactaremos en menos de <strong>24 horas</strong> para confirmarla.
+      </p>
+      ${caja}
+      ${mensajeBox}
+      <p style="margin: 16px 0 0; color: #6b7a8c; font-size: 13px;">
+        Si tienes alguna duda urgente, contáctanos por los medios de abajo.
+      </p>`;
+
+    return this.emailLayout.layout({
+      eyebrow: 'Solicitud recibida',
+      titulo: '¡Gracias por contactarnos!',
+      subtitulo: 'Procesaremos tu solicitud en las próximas horas.',
+      contenido,
+      ctx,
+    });
   }
 
-  private htmlAcuseCliente(cita: Cita, servicio: string): string {
-    return this.layout(
-      'Recibimos tu solicitud',
-      `
-      <h2 style="color: #0a4d7a; margin-top: 0;">¡Gracias por contactarnos, ${cita.nombre.split(' ')[0]}!</h2>
-      <p>Hemos recibido tu solicitud de cita y te contactaremos en menos de 24 horas para confirmarla.</p>
-      <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0a4d7a;">
-        <p style="margin: 4px 0;"><strong>Fecha y hora:</strong> ${this.formatearFecha(cita.fecha, cita.hora)}</p>
-        <p style="margin: 4px 0;"><strong>Servicio:</strong> ${servicio}</p>
-        <p style="margin: 4px 0;"><strong>Estado:</strong> Pendiente de confirmación</p>
-      </div>
-      ${cita.motivo ? `<p style="font-size: 14px; color: #6b7280;"><strong>Tu mensaje:</strong> ${cita.motivo}</p>` : ''}
-      <p>Si necesitas algo urgente, puedes escribirnos al WhatsApp <strong>+52 618 000 0000</strong>.</p>
-      `,
-    );
+  private htmlAvisoAdmin(cita: Cita, servicio: string, ctx: any): string {
+    const caja = this.emailLayout.cajaDestacada({
+      titulo: 'Datos de la cita',
+      variante: 'warning',
+      items: [
+        { label: 'Cliente', valor: cita.nombre },
+        { label: 'Correo', valor: cita.correo },
+        { label: 'Teléfono', valor: cita.telefono },
+        { label: 'Tipo', valor: cita.tipo === 'consulta' ? 'Consulta' : 'Proyecto' },
+        { label: 'Servicio', valor: servicio },
+        { label: 'Fecha y hora', valor: this.formatearFecha(cita.fecha, cita.hora) },
+      ],
+    });
+
+    const mensajeBox = cita.motivo
+      ? this.emailLayout.cajaMensaje('Mensaje del cliente', cita.motivo)
+      : '';
+
+    const contenido = `
+      <p style="margin: 0 0 16px;">
+        Tienes una <strong style="color: #b8863a;">nueva cita pendiente de confirmación</strong>. Revisa los detalles abajo y confírmala desde el panel de administración.
+      </p>
+      ${caja}
+      ${mensajeBox}`;
+
+    return this.emailLayout.layout({
+      eyebrow: 'Aviso interno · admin',
+      titulo: 'Nueva cita pendiente',
+      subtitulo: 'Requiere tu confirmación.',
+      contenido,
+      ctx,
+    });
   }
 
-  private htmlAvisoAdmin(cita: Cita, servicio: string): string {
-    return this.layout(
-      'Nueva cita pendiente de confirmación',
-      `
-      <h2 style="color: #0a4d7a; margin-top: 0;">Tienes una nueva cita pendiente</h2>
-      <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
-        <p style="margin: 4px 0;"><strong>Cliente:</strong> ${cita.nombre}</p>
-        <p style="margin: 4px 0;"><strong>Correo:</strong> ${cita.correo}</p>
-        <p style="margin: 4px 0;"><strong>Teléfono:</strong> ${cita.telefono}</p>
-        <p style="margin: 4px 0;"><strong>Tipo:</strong> ${cita.tipo === 'consulta' ? 'Consulta' : 'Proyecto'}</p>
-        <p style="margin: 4px 0;"><strong>Servicio:</strong> ${servicio}</p>
-        <p style="margin: 4px 0;"><strong>Fecha y hora:</strong> ${this.formatearFecha(cita.fecha, cita.hora)}</p>
-      </div>
-      ${cita.motivo ? `<p><strong>Mensaje del cliente:</strong></p><p style="background: #fef3c7; padding: 12px; border-radius: 6px; font-size: 14px;">${cita.motivo}</p>` : ''}
-      <p style="font-size: 13px; color: #6b7280;">Entra al panel de administración para confirmar o cancelar.</p>
-      `,
-    );
+  private htmlConfirmacion(cita: Cita, ctx: any): string {
+    const nombre = cita.nombre.split(' ')[0];
+
+    const caja = this.emailLayout.cajaDestacada({
+      titulo: 'Tu cita · confirmada',
+      variante: 'success',
+      items: [
+        { label: 'Fecha y hora', valor: this.formatearFecha(cita.fecha, cita.hora) },
+        { label: 'Servicio', valor: this.nombreServicio(cita) },
+        { label: 'Lugar', valor: ctx.negocio.direccionCompleta },
+      ],
+    });
+
+    const contenido = `
+      <p style="margin: 0 0 16px;">
+        Hola <strong style="color: #0a4d7a;">${this.emailLayout.escape(nombre)}</strong>, te confirmamos los detalles de tu cita.
+      </p>
+      ${caja}
+      <p style="margin: 16px 0 0; color: #1a2e4a;">
+        Te esperamos. Si por algún motivo no puedes asistir, por favor avísanos con anticipación.
+      </p>`;
+
+    return this.emailLayout.layout({
+      eyebrow: 'Cita confirmada',
+      titulo: '¡Cita confirmada!',
+      subtitulo: 'Te esperamos en la fecha indicada.',
+      contenido,
+      ctx,
+    });
   }
 
-  private htmlConfirmacion(cita: Cita): string {
-    return this.layout(
-      'Tu cita ha sido confirmada',
-      `
-      <h2 style="color: #16a34a; margin-top: 0;">¡Cita confirmada! ✓</h2>
-      <p>Hola ${cita.nombre.split(' ')[0]}, te confirmamos los detalles de tu cita:</p>
-      <div style="background: #ecfdf5; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #16a34a;">
-        <p style="margin: 4px 0;"><strong>Fecha y hora:</strong> ${this.formatearFecha(cita.fecha, cita.hora)}</p>
-        <p style="margin: 4px 0;"><strong>Servicio:</strong> ${this.nombreServicio(cita)}</p>
-        <p style="margin: 4px 0;"><strong>Lugar:</strong> Milpillas 101, La Forestal, Durango</p>
-      </div>
-      <p>Te esperamos. Si por algún motivo no puedes asistir, por favor avísanos con anticipación.</p>
-      `,
-    );
+  private htmlCancelacion(cita: Cita, ctx: any): string {
+    const nombre = cita.nombre.split(' ')[0];
+
+    const caja = this.emailLayout.cajaDestacada({
+      titulo: 'Cita cancelada',
+      variante: 'danger',
+      items: [
+        { label: 'Fecha original', valor: this.formatearFecha(cita.fecha, cita.hora) },
+        { label: 'Servicio', valor: this.nombreServicio(cita) },
+      ],
+    });
+
+    const contenido = `
+      <p style="margin: 0 0 16px;">
+        Hola <strong style="color: #0a4d7a;">${this.emailLayout.escape(nombre)}</strong>, te informamos que tu cita ha sido cancelada.
+      </p>
+      ${caja}
+      <p style="margin: 16px 0 0; color: #1a2e4a;">
+        Si fue un error o quieres reagendar, contáctanos por los medios de abajo. Estaremos encantados de encontrar otra fecha que te funcione.
+      </p>`;
+
+    return this.emailLayout.layout({
+      eyebrow: 'Cita cancelada',
+      titulo: 'Tu cita ha sido cancelada',
+      subtitulo: 'Puedes reagendar en cualquier momento.',
+      contenido,
+      ctx,
+    });
   }
 
-  private htmlCancelacion(cita: Cita): string {
-    return this.layout(
-      'Tu cita ha sido cancelada',
-      `
-      <h2 style="color: #dc2626; margin-top: 0;">Cita cancelada</h2>
-      <p>Hola ${cita.nombre.split(' ')[0]}, te informamos que la cita programada para el <strong>${this.formatearFecha(cita.fecha, cita.hora)}</strong> ha sido cancelada.</p>
-      <p>Si fue un error o quieres reagendar, contáctanos:</p>
-      <ul style="font-size: 14px;">
-        <li>WhatsApp: <strong>+52 618 000 0000</strong></li>
-        <li>Correo: <strong>info@vortizarquitectos.com</strong></li>
-      </ul>
-      `,
-    );
+  private htmlNoAsistio(cita: Cita, ctx: any): string {
+    const nombre = cita.nombre.split(' ')[0];
+
+    const caja = this.emailLayout.cajaDestacada({
+      titulo: 'Cita no asistida',
+      variante: 'warning',
+      items: [
+        { label: 'Fecha programada', valor: this.formatearFecha(cita.fecha, cita.hora) },
+        { label: 'Servicio', valor: this.nombreServicio(cita) },
+      ],
+    });
+
+    const contenido = `
+      <p style="margin: 0 0 16px;">
+        Hola <strong style="color: #0a4d7a;">${this.emailLayout.escape(nombre)}</strong>, te esperábamos para tu cita pero no pudimos atenderte.
+      </p>
+      ${caja}
+      <p style="margin: 16px 0 0; color: #1a2e4a;">
+        Sabemos que pueden pasar imprevistos. Si quieres reagendar, contáctanos por los medios de abajo. Estaremos encantados de encontrar otra fecha que te funcione.
+      </p>`;
+
+    return this.emailLayout.layout({
+      eyebrow: 'No te vimos',
+      titulo: 'Lamentamos no haberte visto',
+      subtitulo: 'Te ayudamos a reagendar cuando puedas.',
+      contenido,
+      ctx,
+    });
   }
 
-  /**
-   * Verifica si una cita propuesta choca con otra existente.
-   * Considera duración completa (inicio + duracion minutos).
-   * Las canceladas se ignoran (su horario queda libre).
-   */
+  // ============ HELPERS DE EMPALME Y HORARIOS (SIN CAMBIOS) ============
+
   private async hayEmpalme(
     fecha: string,
     hora: string,
     duracion: number,
     idIgnorar?: number,
   ): Promise<Cita | null> {
-    // Buffer entre citas desde config
     const config = await this.configuracionService.obtener();
     const buffer: number = config.agenda?.tiempoEntreCitas ?? 0;
 
@@ -390,7 +446,6 @@ export class CitasService {
       const inicioExistente = hC * 60 + mC;
       const finExistente = inicioExistente + (c.duracion || 60);
 
-      // Solape considerando buffer (debe haber AL MENOS `buffer` min entre citas)
       if (
         inicioNueva - buffer < finExistente &&
         finNueva + buffer > inicioExistente
@@ -401,37 +456,9 @@ export class CitasService {
     return null;
   }
 
-  private calcularHoraFin(horaInicio: string, duracion: number): string {
-    const [h, m] = horaInicio.split(':').map(Number);
-    const total = h * 60 + m + duracion;
-    const hF = Math.floor(total / 60);
-    const mF = total % 60;
-    return `${String(hF).padStart(2, '0')}:${String(mF).padStart(2, '0')}`;
-  }
-  private htmlNoAsistio(cita: Cita): string {
-    return this.layout(
-      'No te vimos en tu cita',
-      `
-    <h2 style="color: #d97706; margin-top: 0;">Hola ${cita.nombre.split(' ')[0]}</h2>
-    <p>Te esperábamos para tu cita del <strong>${this.formatearFecha(cita.fecha, cita.hora)}</strong>, pero no pudimos atenderte.</p>
-    <p>Sabemos que pueden pasar imprevistos. Si quieres reagendar, contáctanos:</p>
-    <ul style="font-size: 14px;">
-      <li>WhatsApp: <strong>+52 618 000 0000</strong></li>
-      <li>Correo: <strong>info@vortizarquitectos.com</strong></li>
-    </ul>
-    <p>Estaremos encantados de encontrar otra fecha que te funcione.</p>
-    `,
-    );
-  }
-
-  /**
-   * Devuelve todos los slots posibles del día y cuáles están ocupados.
-   * Los slots se generan dinámicamente desde la config de agenda.
-   */
   async getHorariosOcupados(
     fecha: string,
   ): Promise<{ todas: string[]; ocupadas: string[] }> {
-    // 1) Leer config de agenda
     const config = await this.configuracionService.obtener();
     const agenda: any = config.agenda || {};
     const horaInicio: string = agenda.horaInicio || '09:00';
@@ -439,7 +466,6 @@ export class CitasService {
     const duracionCita: number = agenda.duracionCita || 60;
     const buffer: number = agenda.tiempoEntreCitas || 0;
 
-    // 2) Traer citas activas del día
     const citas = await this.repo.find({
       where: {
         fecha,
@@ -448,7 +474,6 @@ export class CitasService {
       select: ['hora', 'duracion'],
     });
 
-    // 3) Generar TODOS los slots posibles según config
     const [hI, mI] = horaInicio.split(':').map(Number);
     const [hF, mF] = horaFin.split(':').map(Number);
     const inicioMin = hI * 60 + mI;
@@ -467,7 +492,6 @@ export class CitasService {
       const inicioSlot = m;
       const finSlot = m + duracionCita;
 
-      // ¿Se solapa con alguna cita existente (considerando buffer)?
       for (const c of citas) {
         const [hC, mC] = c.hora.split(':').map(Number);
         const inicioC = hC * 60 + mC;
@@ -492,7 +516,6 @@ export class CitasService {
       throw new NotFoundException('Consulta no encontrada');
     }
 
-    // 1. Enviar email primero (lo más importante)
     await this.mailService.enviarRespuestaConsulta({
       destinatario: consulta.correo,
       nombreCliente: consulta.nombre,
@@ -502,7 +525,6 @@ export class CitasService {
       consultaId: consulta.id,
     });
 
-    // 2. Guardar mensaje en BD (no crítico si falla — el email ya se envió)
     let mensajeGuardado;
     try {
       mensajeGuardado = await this.mensajesService.crear(id, {
