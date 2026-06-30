@@ -283,13 +283,12 @@ export class CitasComponent implements OnInit {
     this.benef3 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio3');
     this.benef4 = this.contenidoService.getCampo('citas', 'beneficios', 'beneficio4');
 
-    // 👇 NUEVO: suscribirse a config pública (contacto, agenda, etc.)
     this.configuracionService.configPublica$.subscribe((c) => {
       if (c) {
         this.configuracion = c;
+        console.log('🔍 Config pública recibida:', c); // 👈 TEMPORAL para debug
         if (c.agenda) {
           this.configAgenda = c.agenda;
-          // Re-validar la fecha si ya estaba seleccionada
           if (this.form().fecha) {
             this.advertenciaFecha.set(this.validarFecha(this.form().fecha));
           }
@@ -452,20 +451,43 @@ export class CitasComponent implements OnInit {
 
   /** Construye URL de WhatsApp a partir del teléfono de configuración */
   /** Construye URL de WhatsApp a partir del whatsapp de configuración */
+  /** Número de WhatsApp con fallbacks (prueba estructura nested O flat) */
+  get whatsappNumero(): string {
+    return (
+      this.configuracion?.contacto?.whatsapp ||
+      this.configuracion?.whatsapp ||
+      '+52 618 000 0000'
+    );
+  }
+
+  /** Correo público con fallbacks */
+  get correoPublicoConfig(): string {
+    return (
+      this.configuracion?.contacto?.correoPublico ||
+      this.configuracion?.correoPublico ||
+      this.configuracion?.correo_contacto ||
+      'info@vortizarquitectos.com'
+    );
+  }
+
+  /** Construye URL de WhatsApp a partir del número configurado */
   get whatsappContactoUrl(): string {
-    const wa = this.configuracion?.contacto?.whatsapp || '';
+    const wa = this.whatsappNumero;
     const cleaned = wa.replace(/\D/g, '');
     if (!cleaned) return '#';
     const numero = cleaned.length === 10 ? `52${cleaned}` : cleaned;
     return `https://wa.me/${numero}`;
   }
 
-  /** Dirección completa concatenada desde negocio */
+  /** Dirección completa con fallbacks (prueba nested O flat) */
   direccionCompleta(): string {
-    const neg = this.configuracion?.negocio;
+    const neg = this.configuracion?.negocio || this.configuracion;
     if (!neg) return 'Milpillas 101, La Forestal, Durango';
-    const partes = [neg.direccion, neg.ciudad, neg.estado, neg.codigoPostal]
-      .filter((p) => p && String(p).trim().length > 0);
-    return partes.length > 0 ? partes.join(', ') : 'Milpillas 101, La Forestal, Durango';
+    const partes = [neg.direccion, neg.ciudad, neg.estado, neg.codigoPostal].filter(
+      (p) => p && String(p).trim().length > 0,
+    );
+    return partes.length > 0
+      ? partes.join(', ')
+      : 'Milpillas 101, La Forestal, Durango';
   }
 }
