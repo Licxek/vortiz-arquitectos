@@ -10,11 +10,13 @@ import { EmailReportesService } from './email-reportes.service'; // 👈 NUEVO
 import { HistorialReportesService } from './historial-reportes.service'; // 👈 NUEVO
 import { ReporteGenerado } from './reporte-generado.entity'; // 👈 NUEVO
 import { AnalyticsModule } from '../analytics/analytics.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Cita, Servicio, Proyecto, ReporteGenerado]),
     AnalyticsModule,
+    MailModule,
   ],
 
   controllers: [ReportesController],
