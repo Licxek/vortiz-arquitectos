@@ -451,11 +451,21 @@ export class CitasComponent implements OnInit {
   }
 
   /** Construye URL de WhatsApp a partir del teléfono de configuración */
+  /** Construye URL de WhatsApp a partir del whatsapp de configuración */
   get whatsappContactoUrl(): string {
-    const tel = this.configuracion?.telefono || '';
-    const cleaned = tel.replace(/\D/g, '');
+    const wa = this.configuracion?.contacto?.whatsapp || '';
+    const cleaned = wa.replace(/\D/g, '');
     if (!cleaned) return '#';
     const numero = cleaned.length === 10 ? `52${cleaned}` : cleaned;
     return `https://wa.me/${numero}`;
+  }
+
+  /** Dirección completa concatenada desde negocio */
+  direccionCompleta(): string {
+    const neg = this.configuracion?.negocio;
+    if (!neg) return 'Milpillas 101, La Forestal, Durango';
+    const partes = [neg.direccion, neg.ciudad, neg.estado, neg.codigoPostal]
+      .filter((p) => p && String(p).trim().length > 0);
+    return partes.length > 0 ? partes.join(', ') : 'Milpillas 101, La Forestal, Durango';
   }
 }

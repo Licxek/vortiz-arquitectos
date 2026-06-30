@@ -6,14 +6,16 @@ import { Sesion } from './sesion.entity';
 import { parseUserAgent } from './user-agent.parser';
 import { MailService } from '../mail/mail.service';
 import { UsuariosService } from '../usuarios/usuarios.service';
+import { EmailLayoutService } from '../mail/email-layout.service';
 
 @Injectable()
 export class SesionesService {
   constructor(
     @InjectRepository(Sesion)
     private repo: Repository<Sesion>,
-    private mailService: MailService, // 👈 NUEVO
-    private usuariosService: UsuariosService, // 👈 NUEVO
+    private mailService: MailService,
+    private usuariosService: UsuariosService,
+    private emailLayout: EmailLayoutService,
   ) {}
 
   /** Hash determinístico del JWT para guardarlo (no guardamos el token en claro) */
@@ -188,13 +190,15 @@ export class SesionesService {
       const usuario = await this.usuariosService.findById(usuarioId);
       if (!usuario?.correo) return;
 
+      const ctx = await this.emailLayout.obtenerContexto();
       const html = this.crearHtmlAlertaSesion(
         usuario.nombre || 'Usuario',
         sesion,
+        ctx,
       );
       await this.mailService.enviar(
         usuario.correo,
-        '🔐 Nuevo inicio de sesión en Vortiz Arquitectos',
+        `🔐 Nuevo inicio de sesión — ${ctx.negocio.nombre}`,
         html,
       );
     } catch (err) {
@@ -202,7 +206,11 @@ export class SesionesService {
     }
   }
 
-  private crearHtmlAlertaSesion(nombre: string, sesion: Sesion): string {
+  private crearHtmlAlertaSesion(
+    nombre: string,
+    sesion: Sesion,
+    ctx: any,
+  ): string {
     const fechaHora = new Date(sesion.creadaEn).toLocaleString('es-MX', {
       dateStyle: 'full',
       timeStyle: 'short',
@@ -210,62 +218,56 @@ export class SesionesService {
     const ubicacion = sesion.ubicacion || 'Ubicación no disponible';
     const ipLimpia =
       (sesion.ip || '').replace(/^::ffff:/, '') || 'No disponible';
+    const dispositivo = `${sesion.navegador} en ${sesion.sistemaOperativo}`;
 
-    return `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 20px;">
-    <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" style="background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-        <!-- Header -->
-        <tr><td style="background:linear-gradient(135deg,#0a1f3d,#0a4d7a);padding:32px 28px;color:white;">
-          <div style="font-size:28px;margin-bottom:6px;">🔐</div>
-          <h1 style="margin:0;font-size:22px;font-weight:700;">Nuevo inicio de sesión</h1>
-          <p style="margin:6px 0 0;font-size:13px;opacity:0.85;">Detectamos acceso desde un dispositivo nuevo</p>
-        </td></tr>
+    const alertaBox = this.emailLayout.alertaSeguridad({
+      titulo: 'Detalles del acceso',
+      items: [
+        { label: 'Dispositivo', valor: dispositivo },
+        { label: 'Ubicación', valor: ubicacion },
+        { label: 'Dirección IP', valor: ipLimpia },
+        { label: 'Fecha y hora', valor: fechaHora },
+      ],
+    });
 
-        <!-- Body -->
-        <tr><td style="padding:32px 28px;">
-          <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">
-            Hola <strong style="color:#0a1f3d;">${nombre}</strong>, alguien inició sesión en tu cuenta desde un dispositivo que no habíamos visto antes.
-          </p>
+    const urlPerfil = `${process.env.FRONTEND_URL || 'https://vortizarquitectos.com.mx'}/admin/perfil`;
+    const cta = this.emailLayout.botonCta({
+      url: urlPerfil,
+      texto: 'Revisar mi cuenta',
+      variante: 'primary',
+    });
 
-          <!-- Detalles -->
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:20px;">
-            <tr><td style="padding:8px 0;font-size:13px;color:#6b7280;">📱 Dispositivo</td><td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;text-align:right;">${sesion.navegador} en ${sesion.sistemaOperativo}</td></tr>
-            <tr><td style="padding:8px 0;font-size:13px;color:#6b7280;border-top:1px solid #e5e7eb;">🌍 Ubicación</td><td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;text-align:right;border-top:1px solid #e5e7eb;">${ubicacion}</td></tr>
-            <tr><td style="padding:8px 0;font-size:13px;color:#6b7280;border-top:1px solid #e5e7eb;">🌐 IP</td><td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;text-align:right;border-top:1px solid #e5e7eb;font-family:monospace;">${ipLimpia}</td></tr>
-            <tr><td style="padding:8px 0;font-size:13px;color:#6b7280;border-top:1px solid #e5e7eb;">🕐 Fecha</td><td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;text-align:right;border-top:1px solid #e5e7eb;">${fechaHora}</td></tr>
-          </table>
+    const nombreEscaped = this.emailLayout.escape(nombre);
 
-          <p style="margin:0 0 8px;font-size:14px;color:#374151;line-height:1.6;">
-            <strong>¿Fuiste tú?</strong> No tienes que hacer nada.
-          </p>
-          <p style="margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6;">
-            <strong>¿No reconoces este acceso?</strong> Cambia tu contraseña inmediatamente y cierra todas las otras sesiones desde tu perfil.
-          </p>
-
-          <div style="text-align:center;margin:24px 0 8px;">
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:4200'}/admin/perfil" style="display:inline-block;padding:12px 28px;background:#0a4d7a;color:white;text-decoration:none;border-radius:10px;font-size:14px;font-weight:600;">
-              Revisar mi cuenta
-            </a>
-          </div>
-        </td></tr>
-
-        <!-- Footer -->
-        <tr><td style="background:#f9fafb;padding:20px 28px;border-top:1px solid #e5e7eb;text-align:center;">
-          <p style="margin:0;font-size:11px;color:#9ca3af;">
-            Este correo se envió porque iniciaste sesión en Vortiz Arquitectos.<br>
-            Si no fuiste tú, contacta al administrador del sistema.
-          </p>
-        </td></tr>
+    const contenido = `
+      <p style="margin: 0 0 16px;">
+        Hola <strong style="color: #0a4d7a;">${nombreEscaped}</strong>, detectamos un inicio de sesión en tu cuenta desde un <strong>dispositivo que no habíamos visto antes</strong>.
+      </p>
+      ${alertaBox}
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 18px 0 8px;">
+        <tr>
+          <td style="padding: 4px 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: #1a2e4a;">
+            <strong style="color: #2d7a4f;">¿Fuiste tú?</strong> No tienes que hacer nada — estás todo bien.
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; color: #1a2e4a;">
+            <strong style="color: #a83a2c;">¿No reconoces este acceso?</strong> Cambia tu contraseña <strong>de inmediato</strong> y cierra todas las sesiones desde tu perfil.
+          </td>
+        </tr>
       </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+      ${cta}
+      <p style="margin: 16px 0 0; color: #6b7a8c; font-size: 12px; font-style: italic;">
+        Te enviamos esta alerta automáticamente cuando detectamos accesos desde dispositivos o ubicaciones nuevas.
+      </p>`;
+
+    return this.emailLayout.layout({
+      eyebrow: 'Alerta de seguridad',
+      titulo: 'Nuevo inicio de sesión',
+      subtitulo: 'Detectamos acceso desde un dispositivo nuevo.',
+      contenido,
+      ctx,
+    });
   }
 
   /** Cierra la sesión asociada a un token específico (usado al hacer logout) */
