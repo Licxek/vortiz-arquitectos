@@ -2,8 +2,9 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Usuario } from '../usuarios/usuario.entity'; // ⚠️ ajusta a tu ruta
+import { Usuario } from '../usuarios/usuario.entity';
 import * as nodemailer from 'nodemailer';
+import { EmailLayoutService } from './email-layout.service';
 
 @Injectable()
 export class MailService implements OnModuleInit {
@@ -14,6 +15,7 @@ export class MailService implements OnModuleInit {
   constructor(
     private config: ConfigService,
     @InjectRepository(Usuario) private usuariosRepo: Repository<Usuario>,
+    private emailLayout: EmailLayoutService,
   ) {}
 
   onModuleInit() {
@@ -23,7 +25,7 @@ export class MailService implements OnModuleInit {
     const pass = this.config.get<string>('SMTP_PASS') || '';
     this.from =
       this.config.get<string>('SMTP_FROM') ||
-      'Vortiz Arquitectos <Admin@vortizarquitectos.com.mx>';
+      'Vortiz Arquitectos <admin@vortizarquitectos.com.mx>';
 
     if (!host || !user || !pass) {
       this.logger.warn(
@@ -59,10 +61,9 @@ export class MailService implements OnModuleInit {
     }
   }
 
-  // Obtiene los correos de los usuarios con rol admin desde la BD
   async getAdminEmails(): Promise<string[]> {
     const admins = await this.usuariosRepo.find({
-      where: { rol: 'admin' }, // ⚠️ ajusta si tu columna se llama distinto
+      where: { rol: 'admin' },
     });
     return admins.map((a) => a.correo).filter((c): c is string => !!c);
   }
@@ -78,19 +79,42 @@ export class MailService implements OnModuleInit {
     }
   }
 
+  estaConfigurado(): boolean {
+    return this.transporter !== null;
+  }
+
+  // ============================================================
+  // PLANTILLA: RECUPERACIÓN DE CONTRASEÑA
+  // ============================================================
+
   async enviarRecuperacion(correo: string, codigo: string) {
-    const subject = 'Tu código de recuperación — Vortiz Arquitectos';
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px; color: #0a1f3d;">
-        <h2 style="color: #0a4d7a; margin-bottom: 12px;">Recuperación de contraseña</h2>
-        <p>Hola,</p>
-        <p>Usa este código para restablecer tu contraseña:</p>
-        <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px; background: #f3f4f6; padding: 16px; text-align: center; border-radius: 8px; margin: 16px 0;">
-          ${codigo}
-        </p>
-        <p style="color: #6b7280; font-size: 13px;">Si tú no solicitaste este código, ignora este correo.</p>
-      </div>
-    `;
+    const ctx = await this.emailLayout.obtenerContexto();
+    const subject = `Tu código de recuperación — ${ctx.negocio.nombre}`;
+
+    const cajaCodigo = this.emailLayout.cajaCodigo({
+      codigo,
+      label: 'Código de recuperación',
+    });
+
+    const contenido = `
+      <p style="margin: 0 0 16px;">
+        Recibimos una solicitud para <strong style="color: #0a4d7a;">restablecer tu contraseña</strong>. Usa el siguiente código para continuar el proceso.
+      </p>
+      ${cajaCodigo}
+      <p style="margin: 16px 0 12px; color: #1a2e4a; font-size: 13px;">
+        Este código expira en <strong>15 minutos</strong>. Si no fuiste tú quien solicitó este cambio, puedes ignorar este correo — tu cuenta sigue segura.
+      </p>
+      <p style="margin: 0; color: #6b7a8c; font-size: 12px; font-style: italic;">
+        Por seguridad, nunca compartas este código con nadie.
+      </p>`;
+
+    const html = this.emailLayout.layout({
+      eyebrow: 'Recuperación de acceso',
+      titulo: 'Tu código de recuperación',
+      subtitulo: 'Úsalo para restablecer tu contraseña.',
+      contenido,
+      ctx,
+    });
 
     if (!this.transporter) {
       this.logger.log(`Código de recuperación para ${correo}: ${codigo}`);
@@ -99,9 +123,9 @@ export class MailService implements OnModuleInit {
     await this.enviar(correo, subject, html);
   }
 
-  estaConfigurado(): boolean {
-    return this.transporter !== null;
-  }
+  // ============================================================
+  // PLANTILLA: RESPUESTA A CONSULTA
+  // ============================================================
 
   async enviarRespuestaConsulta(opciones: {
     destinatario: string;
@@ -120,44 +144,49 @@ export class MailService implements OnModuleInit {
       consultaId,
     } = opciones;
 
-    const html = `
-    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f9fafb;">
-      <div style="background: linear-gradient(135deg, #0a4d7a 0%, #0a1f3d 100%); color: white; padding: 30px 20px; text-align: center;">
-        <h1 style="margin: 0; font-size: 24px; letter-spacing: 1px;">Vortiz Arquitectos</h1>
-        <p style="margin: 8px 0 0; font-size: 13px; opacity: 0.85;">Respuesta a tu consulta</p>
-      </div>
-      <div style="background: white; padding: 30px 25px;">
-        <p style="font-size: 16px; color: #111827; margin: 0 0 12px;">Hola ${nombreCliente},</p>
-        <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin: 0 0 20px;">
-          Gracias por contactarnos. Aquí tienes nuestra respuesta a tu consulta:
-        </p>
-        ${
-          servicio
-            ? `<p style="font-size: 13px; color: #6b7280; margin: 0 0 16px;"><strong style="color: #0a4d7a;">Servicio:</strong> ${servicio}</p>`
-            : ''
-        }
-        <div style="background: #f0f7fc; border-left: 4px solid #0a4d7a; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
-          <p style="font-size: 14px; color: #1f2937; line-height: 1.7; margin: 0; white-space: pre-line;">${respuesta}</p>
-        </div>
-        <p style="font-size: 12px; color: #9ca3af; margin: 24px 0 4px;"><strong>Tu consulta original:</strong></p>
-        <p style="font-size: 12px; color: #9ca3af; font-style: italic; line-height: 1.5; margin: 0; padding: 10px; background: #f9fafb; border-radius: 4px;">
-          ${mensajeOriginal}
-        </p>
-        <p style="font-size: 11px; color: #9ca3af; margin-top: 20px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
-          💬 Puedes responder directamente a este correo para continuar la conversación.
-        </p>
-      </div>
-      <div style="background: #0a1f3d; color: white; padding: 18px 20px; text-align: center; font-size: 11px;">
-        <p style="margin: 0 0 4px; opacity: 0.9;">Vortiz Arquitectos · Diseñamos espacios que viven contigo</p>
-        <p style="margin: 0; opacity: 0.7;">Si tienes más preguntas, responde a este correo.</p>
-      </div>
-    </div>
-  `;
+    const ctx = await this.emailLayout.obtenerContexto();
+    const nombre = nombreCliente.split(' ')[0];
 
-    // Subject con identificador visible
+    // Caja con la respuesta del admin (lo más importante, destacado)
+    const cajaRespuesta = this.emailLayout.cajaDestacada({
+      titulo: servicio
+        ? `Sobre tu consulta de ${servicio}`
+        : 'Nuestra respuesta',
+      variante: 'default',
+      items: [{ label: 'Respuesta', valor: respuesta }],
+    });
+
+    // Caja con el mensaje original del cliente (referencia subordinada)
+    const cajaOriginal = this.emailLayout.cajaMensaje(
+      'Tu mensaje original',
+      mensajeOriginal,
+    );
+
+    const contenido = `
+      <p style="margin: 0 0 16px;">
+        Hola <strong style="color: #0a4d7a;">${this.emailLayout.escape(nombre)}</strong>, gracias por contactarnos. Aquí tienes la respuesta a tu consulta.
+      </p>
+      ${cajaRespuesta}
+      ${mensajeOriginal ? cajaOriginal : ''}
+      <p style="margin: 20px 0 0; padding-top: 16px; border-top: 0.5px solid #c8d1dc; color: #6b7a8c; font-size: 13px; font-style: italic;">
+        💬 Puedes responder directamente a este correo para continuar la conversación.
+      </p>`;
+
+    const html = this.emailLayout.layout({
+      eyebrow: consultaId
+        ? `Respuesta · Consulta #${consultaId}`
+        : 'Respuesta a tu consulta',
+      titulo: 'Tenemos una respuesta para ti',
+      subtitulo: servicio
+        ? `Sobre tu interés en ${servicio}.`
+        : 'Gracias por escribirnos.',
+      contenido,
+      ctx,
+    });
+
     const subject = consultaId
       ? `[Vortiz #${consultaId}] Respuesta a tu consulta`
-      : 'Respuesta de Vortiz Arquitectos';
+      : `Respuesta de ${ctx.negocio.nombre}`;
 
     if (!this.transporter) {
       this.logger.log(
@@ -166,7 +195,7 @@ export class MailService implements OnModuleInit {
       return;
     }
 
-    // X-Header personalizado para identificación programática (la opción más robusta)
+    // X-Header para identificación programática (lo conservas para tracking)
     const headers: Record<string, string> = {};
     if (consultaId) {
       headers['X-Vortiz-Consulta-Id'] = consultaId.toString();

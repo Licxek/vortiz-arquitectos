@@ -327,4 +327,90 @@ export class EmailLayoutService {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
   }
+
+  /**
+   * Caja especial para códigos de verificación / recuperación.
+   * Renderiza el código grande en monospace con letter-spacing amplio.
+   */
+  cajaCodigo(opciones: { codigo: string; label?: string }): string {
+    const label = opciones.label || 'Tu código';
+    return `
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background: #fbfaf7; border-left: 3px solid #b8863a; padding: 22px 24px; margin: 24px 0;">
+        <tr>
+          <td align="center">
+            <p style="margin: 0 0 14px; color: #6b7a8c; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; font-family: 'Courier New', monospace;">
+              ${this.escape(label)}
+            </p>
+            <p style="margin: 0; font-family: 'Courier New', monospace; font-size: 36px; font-weight: 700; letter-spacing: 0.4em; color: #0a1f3d; line-height: 1.1;">
+              ${this.escape(opciones.codigo)}
+            </p>
+          </td>
+        </tr>
+      </table>`;
+  }
+
+  /**
+   * Botón CTA editorial — para acciones primarias como "Revisar mi cuenta"
+   */
+  botonCta(opciones: {
+    url: string;
+    texto: string;
+    variante?: 'primary' | 'amber' | 'danger';
+  }): string {
+    const variante = opciones.variante || 'primary';
+    const colores = {
+      primary: { bg: '#0a4d7a', text: '#ffffff' },
+      amber: { bg: '#b8863a', text: '#ffffff' },
+      danger: { bg: '#a83a2c', text: '#ffffff' },
+    };
+    const c = colores[variante];
+
+    return `
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 24px 0;">
+        <tr>
+          <td align="center">
+            <a href="${this.escape(opciones.url)}" target="_blank" style="display: inline-block; padding: 14px 36px; background: ${c.bg}; color: ${c.text}; text-decoration: none; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;">
+              ${this.escape(opciones.texto)}
+            </a>
+          </td>
+        </tr>
+      </table>`;
+  }
+
+  /**
+   * Caja de alerta para situaciones de seguridad / dispositivos nuevos.
+   * Estilo más serio que cajaDestacada — con icono y mensaje doble (¿fuiste tú? / ¿no?)
+   */
+  alertaSeguridad(opciones: {
+    titulo: string;
+    items: { label: string; valor: string }[];
+  }): string {
+    const filas = opciones.items
+      .map(
+        (item) => `
+        <tr>
+          <td style="padding: 8px 0; border-bottom: 0.5px solid #e3e8ee; font-family: 'Courier New', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #6b7a8c; vertical-align: top; width: 110px;">
+            ${this.escape(item.label)}
+          </td>
+          <td style="padding: 8px 0 8px 12px; border-bottom: 0.5px solid #e3e8ee; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #0a1f3d; font-weight: 500;">
+            ${this.escape(item.valor)}
+          </td>
+        </tr>`,
+      )
+      .join('');
+
+    return `
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background: #fbfaf7; border: 0.5px solid #c8d1dc; padding: 20px 22px; margin: 22px 0;">
+        <tr>
+          <td>
+            <p style="margin: 0 0 14px; color: #6b7a8c; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; font-family: 'Courier New', monospace;">
+              ${this.escape(opciones.titulo)}
+            </p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              ${filas}
+            </table>
+          </td>
+        </tr>
+      </table>`;
+  }
 }

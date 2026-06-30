@@ -1145,14 +1145,15 @@
                     WhatsApp
                   </p>
                   <p class="text-sm font-bold text-gray-900">
-                    {{ configuracion?.telefono || '+52 618 000 0000' }}
+                    {{ configuracion?.contacto?.whatsapp || '+52 618 000 0000' }}
                   </p>
                 </div>
               </a>
 
               <a
                 [href]="
-                  'mailto:' + (configuracion?.correo_contacto || 'info@vortizarquitectos.com')
+                  'mailto:' +
+                  (configuracion?.contacto?.correoPublico || 'info@vortizarquitectos.com')
                 "
                 class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition-colors group"
               >
@@ -1176,7 +1177,7 @@
                 <div>
                   <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Correo</p>
                   <p class="text-sm font-bold text-gray-900 truncate">
-                    {{ configuracion?.correo_contacto || 'info@vortizarquitectos.com' }}
+                    {{ configuracion?.contacto?.correoPublico || 'info@vortizarquitectos.com' }}
                   </p>
                 </div>
               </a>
@@ -1209,7 +1210,7 @@
                     Oficina
                   </p>
                   <p class="text-sm text-gray-700 leading-relaxed">
-                    {{ configuracion?.direccion || 'Milpillas 101, La Forestal, Durango' }}
+                    {{ direccionCompleta() }}
                   </p>
                 </div>
               </div>
