@@ -235,6 +235,7 @@ export class SesionesService {
       url: urlPerfil,
       texto: 'Revisar mi cuenta',
       variante: 'primary',
+      apariencia: ctx.apariencia,
     });
 
     const nombreEscaped = this.emailLayout.escape(nombre);

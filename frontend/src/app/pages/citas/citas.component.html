@@ -1145,16 +1145,13 @@
                     WhatsApp
                   </p>
                   <p class="text-sm font-bold text-gray-900">
-                    {{ configuracion?.contacto?.whatsapp || '+52 618 000 0000' }}
+                    {{ whatsappNumero }}
                   </p>
                 </div>
               </a>
 
               <a
-                [href]="
-                  'mailto:' +
-                  (configuracion?.contacto?.correoPublico || 'info@vortizarquitectos.com')
-                "
+                [href]="'mailto:' + correoPublicoConfig"
                 class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition-colors group"
               >
                 <div
@@ -1177,7 +1174,7 @@
                 <div>
                   <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Correo</p>
                   <p class="text-sm font-bold text-gray-900 truncate">
-                    {{ configuracion?.contacto?.correoPublico || 'info@vortizarquitectos.com' }}
+                    {{ correoPublicoConfig }}
                   </p>
                 </div>
               </a>
