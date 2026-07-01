@@ -16,6 +16,8 @@ interface DiaSemana {
   nombre: string;
   abrev: string;
   activo: boolean;
+  horaInicio?: string;
+  horaFin?: string;
 }
 
 interface DiaFeriado {
