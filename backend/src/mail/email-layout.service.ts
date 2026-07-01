@@ -83,7 +83,7 @@ export class EmailLayoutService {
           colorPrimario,
           colorSecundario,
           logoBase64: await this.cargarLogoBase64(logoUrl),
-          logoFooterBase64: await this.cargarLogoBase64(logoFooterUrl),
+          logoFooterBase64: '', // No usado en correos (muy pesado, rompe Gmail)
         },
       };
     } catch (err: any) {
@@ -122,7 +122,7 @@ export class EmailLayoutService {
    */
   private async cargarLogoBase64(logoUrl?: string): Promise<string> {
     this.logger.log(`🔍 [cargarLogoBase64] URL: "${logoUrl}"`);
-    
+
     if (!logoUrl) {
       this.logger.log('   → vacía, retorno ""');
       return '';
@@ -143,7 +143,9 @@ export class EmailLayoutService {
       }
 
       this.logger.log(`   → filePath: "${filePath}"`);
-      this.logger.log(`   → existe: ${filePath ? fs.existsSync(filePath) : 'N/A'}`);
+      this.logger.log(
+        `   → existe: ${filePath ? fs.existsSync(filePath) : 'N/A'}`,
+      );
 
       if (filePath && fs.existsSync(filePath)) {
         const buffer = fs.readFileSync(filePath);
@@ -197,180 +199,161 @@ export class EmailLayoutService {
     const cPrimary = ctx.apariencia.colorPrimario;
     const cSecondary = ctx.apariencia.colorSecundario;
 
-    // Logo para hero (light bg): usa logoUrl regular
-    // Logo para tech bar (dark bg): usa logoFooterUrl (versión clara)
-    const logoHero = ctx.apariencia.logoBase64;
-    const logoTechBar = ctx.apariencia.logoFooterBase64 || ctx.apariencia.logoBase64;
+    // Solo usar el logo regular (logoUrl) — no el footer, que es muy pesado
+    const logo = ctx.apariencia.logoBase64;
 
-    return `
-<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light dark">
-  <meta name="supported-color-schemes" content="light dark">
-  <title>${this.escape(titulo)}</title>
-  <style>
-    :root { color-scheme: light dark; supported-color-schemes: light dark; }
-    @media (prefers-color-scheme: dark) {
-      .vortiz-body { background-color: #0a1f3d !important; }
-      .vortiz-card { background-color: #1a2e4a !important; border-color: #2a4060 !important; }
-      .vortiz-text { color: #fbfaf7 !important; }
-      .vortiz-text-muted { color: #c8d1dc !important; }
-      .vortiz-paper-bg { background-color: #1f3554 !important; }
-      .vortiz-line { border-color: #2a4060 !important; }
-      .vortiz-title { color: #fbfaf7 !important; }
-      .vortiz-disclaimer { color: #8d96a3 !important; }
-      .vortiz-footer-bg { background-color: #1f3554 !important; }
-    }
-    /* Outlook.com dark mode */
-    [data-ogsc] .vortiz-body { background-color: #0a1f3d !important; }
-    [data-ogsc] .vortiz-card { background-color: #1a2e4a !important; }
-    [data-ogsc] .vortiz-text { color: #fbfaf7 !important; }
-    [data-ogsc] .vortiz-text-muted { color: #c8d1dc !important; }
-    [data-ogsc] .vortiz-paper-bg { background-color: #1f3554 !important; }
-    [data-ogsc] .vortiz-title { color: #fbfaf7 !important; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>${this.escape(titulo)}</title>
+<style>
+  body { margin: 0; padding: 0; background: #fbfaf7; }
+  @media (prefers-color-scheme: dark) {
+    .v-body { background-color: #0a1f3d !important; }
+    .v-card { background-color: #1a2e4a !important; border-color: #2a4060 !important; }
+    .v-text { color: #fbfaf7 !important; }
+    .v-muted { color: #c8d1dc !important; }
+    .v-paper { background-color: #1f3554 !important; }
+    .v-title { color: #fbfaf7 !important; }
+    .v-line { border-color: #2a4060 !important; }
+  }
+  [data-ogsc] .v-body { background-color: #0a1f3d !important; }
+  [data-ogsc] .v-card { background-color: #1a2e4a !important; }
+  [data-ogsc] .v-text { color: #fbfaf7 !important; }
+  [data-ogsc] .v-muted { color: #c8d1dc !important; }
+  [data-ogsc] .v-paper { background-color: #1f3554 !important; }
+  [data-ogsc] .v-title { color: #fbfaf7 !important; }
+</style>
 </head>
-<body class="vortiz-body" style="margin: 0; padding: 0; background: #fbfaf7; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+<body class="v-body" style="margin:0;padding:0;background:#fbfaf7;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
 
-<table class="vortiz-body" role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background: #fbfaf7; padding: 40px 16px;">
-  <tr>
-    <td align="center">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="v-body" style="background:#fbfaf7;padding:40px 16px;">
+<tr>
+<td align="center">
 
-      <!-- Container principal -->
-      <table class="vortiz-card" role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" style="max-width: 560px; width: 100%; background: #ffffff; border: 1px solid #e3e8ee;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" class="v-card" style="max-width:560px;width:100%;background:#ffffff;border:1px solid #e3e8ee;">
 
-        <!-- Tech bar superior oscura -->
-        <tr>
-          <td style="background: ${cSecondary}; padding: 12px 32px;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td style="color: #fbfaf7; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; font-family: 'Courier New', monospace;">
-                  ${
-                    logoTechBar
-                      ? `<img src="${logoTechBar}" alt="${this.escape(ctx.negocio.nombre)}" height="20" style="display: inline-block; height: 20px; vertical-align: middle;" />`
-                      : this.escape(ctx.negocio.nombre)
-                  }
-                </td>
-                <td align="right" style="color: #b8863a; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; font-family: 'Courier New', monospace;">
-                  ${this.escape(eyebrow)}
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+<tr>
+<td style="background:${cSecondary};padding:14px 32px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr>
+<td style="color:#fbfaf7;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;font-family:'Courier New',monospace;">
+${this.escape(ctx.negocio.nombre)}
+</td>
+<td align="right" style="color:#b8863a;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;font-family:'Courier New',monospace;">
+${this.escape(eyebrow)}
+</td>
+</tr>
+</table>
+</td>
+</tr>
 
-        ${
-          logoHero
-            ? `
-        <!-- Logo en hero (light bg) -->
-        <tr>
-          <td style="padding: 32px 32px 0;">
-            <img src="${logoHero}" alt="${this.escape(ctx.negocio.nombre)}" height="44" style="display: block; height: 44px; max-width: 180px;" />
-          </td>
-        </tr>`
-            : ''
-        }
+${
+  logo
+    ? `<tr>
+<td align="left" style="padding:32px 32px 0;">
+<img src="${logo}" alt="${this.escape(ctx.negocio.nombre)}" height="44" style="display:block;height:44px;max-width:180px;border:0;outline:none;text-decoration:none;" />
+</td>
+</tr>`
+    : ''
+}
 
-        <!-- Hero -->
-        <tr>
-          <td style="padding: ${logoHero ? '20px' : '48px'} 32px 32px;">
-            <p style="margin: 0 0 16px; color: #b8863a; font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; font-family: 'Courier New', monospace;">
-              ━━━ ${this.escape(eyebrow)}
-            </p>
-            <h1 class="vortiz-title" style="margin: 0 0 12px; font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: 30px; line-height: 1.1; color: ${cSecondary}; letter-spacing: -0.02em;">
-              ${this.escape(titulo)}
-            </h1>
-            ${
-              subtitulo
-                ? `<p class="vortiz-text" style="margin: 0; font-family: Georgia, serif; font-style: italic; font-size: 15px; line-height: 1.5; color: #1a2e4a;">${this.escape(subtitulo)}</p>`
-                : ''
-            }
-          </td>
-        </tr>
+<tr>
+<td style="padding:${logo ? '20px' : '48px'} 32px 32px;">
+<p style="margin:0 0 16px;color:#b8863a;font-size:11px;letter-spacing:0.35em;text-transform:uppercase;font-family:'Courier New',monospace;">
+━━━ ${this.escape(eyebrow)}
+</p>
+<h1 class="v-title" style="margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:30px;line-height:1.1;color:${cSecondary};letter-spacing:-0.02em;">
+${this.escape(titulo)}
+</h1>
+${
+  subtitulo
+    ? `<p class="v-text" style="margin:0;font-family:Georgia,serif;font-style:italic;font-size:15px;line-height:1.5;color:#1a2e4a;">${this.escape(subtitulo)}</p>`
+    : ''
+}
+</td>
+</tr>
 
-        <!-- Contenido del correo -->
-        <tr>
-          <td class="vortiz-text" style="padding: 0 32px 32px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #1a2e4a;">
-            ${contenido}
-          </td>
-        </tr>
+<tr>
+<td class="v-text" style="padding:0 32px 32px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#1a2e4a;">
+${contenido}
+</td>
+</tr>
 
-        <!-- Bloque de contacto dinámico -->
-        <tr>
-          <td style="padding: 0 32px 32px;">
-            <table class="vortiz-line" role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top: 0.5px solid #c8d1dc; padding-top: 20px;">
-              <tr>
-                <td>
-                  <p class="vortiz-text-muted" style="margin: 0 0 12px; color: #6b7a8c; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; font-family: 'Courier New', monospace;">
-                    Para cualquier duda
-                  </p>
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                    <tr>
-                      <td class="vortiz-text" style="padding: 4px 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #1a2e4a;">
-                        <strong style="color: ${cPrimary};">WhatsApp:</strong>
-                        ${
-                          ctx.contacto.whatsappUrl
-                            ? `<a href="${ctx.contacto.whatsappUrl}" class="vortiz-text" style="color: #1a2e4a; text-decoration: none;">${this.escape(ctx.contacto.whatsapp)}</a>`
-                            : this.escape(ctx.contacto.whatsapp)
-                        }
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="vortiz-text" style="padding: 4px 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #1a2e4a;">
-                        <strong style="color: ${cPrimary};">Teléfono:</strong> ${this.escape(ctx.contacto.telefono)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="vortiz-text" style="padding: 4px 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; color: #1a2e4a;">
-                        <strong style="color: ${cPrimary};">Correo:</strong>
-                        <a href="mailto:${this.escape(ctx.contacto.correoPublico)}" class="vortiz-text" style="color: #1a2e4a; text-decoration: none;">${this.escape(ctx.contacto.correoPublico)}</a>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+<tr>
+<td style="padding:0 32px 32px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="v-line" style="border-top:0.5px solid #c8d1dc;padding-top:20px;">
+<tr>
+<td>
+<p class="v-muted" style="margin:0 0 12px;color:#6b7a8c;font-size:9px;letter-spacing:0.3em;text-transform:uppercase;font-family:'Courier New',monospace;">
+Para cualquier duda
+</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr>
+<td class="v-text" style="padding:4px 0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1a2e4a;">
+<strong style="color:${cPrimary};">WhatsApp:</strong>
+${
+  ctx.contacto.whatsappUrl
+    ? `<a href="${ctx.contacto.whatsappUrl}" class="v-text" style="color:#1a2e4a;text-decoration:none;">${this.escape(ctx.contacto.whatsapp)}</a>`
+    : this.escape(ctx.contacto.whatsapp)
+}
+</td>
+</tr>
+<tr>
+<td class="v-text" style="padding:4px 0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1a2e4a;">
+<strong style="color:${cPrimary};">Teléfono:</strong> ${this.escape(ctx.contacto.telefono)}
+</td>
+</tr>
+<tr>
+<td class="v-text" style="padding:4px 0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1a2e4a;">
+<strong style="color:${cPrimary};">Correo:</strong>
+<a href="mailto:${this.escape(ctx.contacto.correoPublico)}" class="v-text" style="color:#1a2e4a;text-decoration:none;">${this.escape(ctx.contacto.correoPublico)}</a>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</td>
+</tr>
 
-        <!-- Footer -->
-        <tr>
-          <td class="vortiz-footer-bg vortiz-line" style="background: #fbfaf7; border-top: 0.5px solid #c8d1dc; padding: 20px 32px;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td style="color: ${cPrimary}; font-size: 11px; font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 0.2em;">
-                  ${this.escape(ctx.negocio.nombre.split(' ')[0].toUpperCase())}
-                </td>
-                <td align="right" class="vortiz-text-muted" style="color: #6b7a8c; font-size: 9px; font-family: 'Courier New', monospace; letter-spacing: 0.15em; text-transform: uppercase;">
-                  ${this.escape(fechaActual)}
-                </td>
-              </tr>
-              <tr>
-                <td colspan="2" class="vortiz-text-muted" style="padding-top: 8px; color: #6b7a8c; font-size: 10px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.5;">
-                  ${this.escape(ctx.negocio.direccionCompleta)}
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+<tr>
+<td class="v-paper v-line" style="background:#fbfaf7;border-top:0.5px solid #c8d1dc;padding:20px 32px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr>
+<td style="color:${cPrimary};font-size:11px;font-family:'Courier New',monospace;font-weight:700;letter-spacing:0.2em;">
+${this.escape(ctx.negocio.nombre.split(' ')[0].toUpperCase())}
+</td>
+<td align="right" class="v-muted" style="color:#6b7a8c;font-size:9px;font-family:'Courier New',monospace;letter-spacing:0.15em;text-transform:uppercase;">
+${this.escape(fechaActual)}
+</td>
+</tr>
+<tr>
+<td colspan="2" class="v-muted" style="padding-top:8px;color:#6b7a8c;font-size:10px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:1.5;">
+${this.escape(ctx.negocio.direccionCompleta)}
+</td>
+</tr>
+</table>
+</td>
+</tr>
 
-      </table>
+</table>
 
-      <!-- Disclaimer fuera del card -->
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" style="max-width: 560px; width: 100%; padding: 16px 0 0;">
-        <tr>
-          <td align="center" class="vortiz-disclaimer" style="color: #8d96a3; font-size: 11px; line-height: 1.5; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-            Correo enviado por ${this.escape(ctx.negocio.nombre)} · <br>
-            Si no esperabas este mensaje, responde y avísanos.
-          </td>
-        </tr>
-      </table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" style="max-width:560px;width:100%;padding:16px 0 0;">
+<tr>
+<td align="center" class="v-muted" style="color:#8d96a3;font-size:11px;line-height:1.5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+Correo enviado por ${this.escape(ctx.negocio.nombre)}.<br>
+Si no esperabas este mensaje, responde y avísanos.
+</td>
+</tr>
+</table>
 
-    </td>
-  </tr>
+</td>
+</tr>
 </table>
 
 </body>
