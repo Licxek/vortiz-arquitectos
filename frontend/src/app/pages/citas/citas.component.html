@@ -1228,11 +1228,7 @@
                     [class.text-gray-900]="dia.activo"
                     [class.text-red-400]="!dia.activo"
                   >
-                    {{
-                      dia.activo
-                        ? configAgenda?.horaInicio + ' - ' + configAgenda?.horaFin
-                        : 'Cerrado'
-                    }}
+                    {{ dia.activo ? dia.horaInicio + ' - ' + dia.horaFin : 'Cerrado' }}
                   </span>
                 </div>
               </div>
