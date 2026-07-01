@@ -421,41 +421,96 @@ export class CitasComponent implements OnInit {
     return '';
   }
 
-  /** Agrupa Lun-Vie en una sola línea si todos tienen el mismo estado */
-  get horariosAgrupados(): { label: string; activo: boolean }[] {
-    const dias = this.configAgenda?.diasSemana || [];
+  /**
+   * Agrupa días laborales de forma inteligente:
+   * - Si todos los días activos entre Lun-Vie comparten el MISMO horario, se muestran juntos
+   * - Sábado y Domingo siempre por separado (suelen tener horarios distintos)
+   * - Si algún día tiene horario propio distinto al resto, se separa automáticamente
+   */
+  get horariosAgrupados(): {
+    label: string;
+    activo: boolean;
+    horaInicio: string;
+    horaFin: string;
+  }[] {
+    const dias: any[] = this.configAgenda?.diasSemana || [];
+    const globalInicio = this.configAgenda?.horaInicio || '09:00';
+    const globalFin = this.configAgenda?.horaFin || '18:00';
+
+    // Helper: obtiene el horario efectivo de un día (propio o general)
+    const horarioDe = (d: any): { inicio: string; fin: string } => ({
+      inicio: d.horaInicio || globalInicio,
+      fin: d.horaFin || globalFin,
+    });
+
     if (dias.length !== 7) {
-      return dias.map((d) => ({ label: d.nombre, activo: d.activo }));
+      return dias.map((d) => {
+        const h = horarioDe(d);
+        return { label: d.nombre, activo: d.activo, horaInicio: h.inicio, horaFin: h.fin };
+      });
     }
 
-    // Lun-Vie ocupan índices 0-4, Sábado=5, Domingo=6
     const lunVie = dias.slice(0, 5);
     const sab = dias[5];
     const dom = dias[6];
 
-    const todosLunVieIguales = lunVie.every((d) => d.activo === lunVie[0].activo);
+    // Agrupar Lun-Vie SOLO si todos tienen el mismo activo Y el mismo horario
+    const todosLunVieIguales = lunVie.every((d) => {
+      const primero = lunVie[0];
+      const hd = horarioDe(d);
+      const hp = horarioDe(primero);
+      return d.activo === primero.activo && hd.inicio === hp.inicio && hd.fin === hp.fin;
+    });
 
-    const result: { label: string; activo: boolean }[] = [];
+    const result: {
+      label: string;
+      activo: boolean;
+      horaInicio: string;
+      horaFin: string;
+    }[] = [];
 
     if (todosLunVieIguales) {
-      result.push({ label: 'Lunes a viernes', activo: lunVie[0].activo });
+      const h = horarioDe(lunVie[0]);
+      result.push({
+        label: 'Lunes a viernes',
+        activo: lunVie[0].activo,
+        horaInicio: h.inicio,
+        horaFin: h.fin,
+      });
     } else {
-      lunVie.forEach((d) => result.push({ label: d.nombre, activo: d.activo }));
+      lunVie.forEach((d) => {
+        const h = horarioDe(d);
+        result.push({
+          label: d.nombre,
+          activo: d.activo,
+          horaInicio: h.inicio,
+          horaFin: h.fin,
+        });
+      });
     }
 
-    result.push({ label: 'Sábado', activo: sab.activo });
-    result.push({ label: 'Domingo', activo: dom.activo });
+    const hSab = horarioDe(sab);
+    result.push({
+      label: 'Sábado',
+      activo: sab.activo,
+      horaInicio: hSab.inicio,
+      horaFin: hSab.fin,
+    });
+
+    const hDom = horarioDe(dom);
+    result.push({
+      label: 'Domingo',
+      activo: dom.activo,
+      horaInicio: hDom.inicio,
+      horaFin: hDom.fin,
+    });
 
     return result;
   }
 
   /** Número de WhatsApp desde config pública, con fallback al teléfono */
   get whatsappNumero(): string {
-    return (
-      this.configuracion?.whatsapp ||
-      this.configuracion?.telefono ||
-      '+52 618 000 0000'
-    );
+    return this.configuracion?.whatsapp || this.configuracion?.telefono || '+52 618 000 0000';
   }
 
   /** Correo público (snake_case en endpoint público) */
@@ -480,8 +535,6 @@ export class CitasComponent implements OnInit {
       this.configuracion?.estado,
       this.configuracion?.codigo_postal,
     ].filter((p) => p && String(p).trim().length > 0);
-    return partes.length > 0
-      ? partes.join(', ')
-      : 'Milpillas 101, La Forestal, Durango';
+    return partes.length > 0 ? partes.join(', ') : 'Milpillas 101, La Forestal, Durango';
   }
 }
