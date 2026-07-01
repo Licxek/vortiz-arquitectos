@@ -163,7 +163,7 @@ export class ConfiguracionService implements OnModuleInit {
     }));
   }
 
-  async obtenerPublica() {
+ async obtenerPublica() {
     const c = await this.obtener();
     const redes: any[] = c.redes || [];
     const agenda: any = c.agenda || {};
@@ -173,6 +173,24 @@ export class ConfiguracionService implements OnModuleInit {
       .slice(0, 4)
       .map((r) => ({ nombre: r.nombre, icono: r.icono, url: r.url }));
 
+    // Generar horario dinámico basado en días laborales reales
+    const diasActivos: any[] = (agenda.diasSemana || []).filter(
+      (d: any) => d.activo,
+    );
+    let horarioTexto = `Lun - Vie ${agenda.horaInicio || '09:00'} - ${agenda.horaFin || '18:00'}`;
+    if (diasActivos.length > 0) {
+      const primerDia = diasActivos[0].abrev || diasActivos[0].nombre;
+      const ultimoDia =
+        diasActivos.length > 1
+          ? diasActivos[diasActivos.length - 1].abrev ||
+            diasActivos[diasActivos.length - 1].nombre
+          : primerDia;
+      horarioTexto =
+        diasActivos.length === 1
+          ? `${primerDia} ${agenda.horaInicio || '09:00'} - ${agenda.horaFin || '18:00'}`
+          : `${primerDia} - ${ultimoDia} ${agenda.horaInicio || '09:00'} - ${agenda.horaFin || '18:00'}`;
+    }
+
     return {
       id: c.id,
       logo_url: c.apariencia?.logoUrl || '/assets/img/logo.png',
@@ -180,10 +198,15 @@ export class ConfiguracionService implements OnModuleInit {
         c.apariencia?.logoFooterUrl || '/assets/img/logo_vortiz.png',
       favicon_url: c.apariencia?.faviconUrl || '/assets/img/logo.ico',
       telefono: c.contacto?.telefono || '',
+      whatsapp: c.contacto?.whatsapp || '', // 👈 NUEVO campo para el número de WhatsApp
       correo_contacto: c.contacto?.correoPublico || '',
       direccion: c.negocio?.direccion || '',
+      // 👇 NUEVO: campos individuales de dirección para composición flexible en frontend
+      ciudad: c.negocio?.ciudad || '',
+      estado: c.negocio?.estado || '',
+      codigo_postal: c.negocio?.codigoPostal || '',
       redes: redesPublicas,
-      horario: `Lun - Vie ${c.agenda?.horaInicio || '09:00'} - ${c.agenda?.horaFin || '18:00'}`,
+      horario: horarioTexto,
       color_primario: c.apariencia?.colorPrimario || '#0a4d7a',
       color_secundario: c.apariencia?.colorSecundario || '#0a1f3d',
       color_texto_nav: c.apariencia?.colorTextoNav || '#ffffff',
@@ -198,7 +221,6 @@ export class ConfiguracionService implements OnModuleInit {
       eslogan:
         c.negocio?.eslogan || 'Diseñamos espacios, construimos confianza.',
       mantenimiento: c.mantenimiento,
-      // 👇 NUEVO: agenda pública para validación del formulario
       agenda: {
         diasSemana: agenda.diasSemana || [],
         diasFeriados: agenda.diasFeriados || [],

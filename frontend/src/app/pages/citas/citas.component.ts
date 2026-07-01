@@ -449,28 +449,21 @@ export class CitasComponent implements OnInit {
     return result;
   }
 
-  /** Construye URL de WhatsApp a partir del teléfono de configuración */
-  /** Construye URL de WhatsApp a partir del whatsapp de configuración */
-  /** Número de WhatsApp con fallbacks (prueba estructura nested O flat) */
+  /** Número de WhatsApp desde config pública, con fallback al teléfono */
   get whatsappNumero(): string {
     return (
-      this.configuracion?.contacto?.whatsapp ||
       this.configuracion?.whatsapp ||
+      this.configuracion?.telefono ||
       '+52 618 000 0000'
     );
   }
 
-  /** Correo público con fallbacks */
+  /** Correo público (snake_case en endpoint público) */
   get correoPublicoConfig(): string {
-    return (
-      this.configuracion?.contacto?.correoPublico ||
-      this.configuracion?.correoPublico ||
-      this.configuracion?.correo_contacto ||
-      'info@vortizarquitectos.com'
-    );
+    return this.configuracion?.correo_contacto || 'info@vortizarquitectos.com';
   }
 
-  /** Construye URL de WhatsApp a partir del número configurado */
+  /** Construye URL de WhatsApp */
   get whatsappContactoUrl(): string {
     const wa = this.whatsappNumero;
     const cleaned = wa.replace(/\D/g, '');
@@ -479,13 +472,14 @@ export class CitasComponent implements OnInit {
     return `https://wa.me/${numero}`;
   }
 
-  /** Dirección completa con fallbacks (prueba nested O flat) */
+  /** Dirección completa concatenada */
   direccionCompleta(): string {
-    const neg = this.configuracion?.negocio || this.configuracion;
-    if (!neg) return 'Milpillas 101, La Forestal, Durango';
-    const partes = [neg.direccion, neg.ciudad, neg.estado, neg.codigoPostal].filter(
-      (p) => p && String(p).trim().length > 0,
-    );
+    const partes = [
+      this.configuracion?.direccion,
+      this.configuracion?.ciudad,
+      this.configuracion?.estado,
+      this.configuracion?.codigo_postal,
+    ].filter((p) => p && String(p).trim().length > 0);
     return partes.length > 0
       ? partes.join(', ')
       : 'Milpillas 101, La Forestal, Durango';

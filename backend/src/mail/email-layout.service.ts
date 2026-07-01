@@ -34,10 +34,15 @@ export class EmailLayoutService {
    */
   async obtenerContexto(): Promise<EmailContext> {
     try {
-      const config = await this.configuracionService.obtener();
+      const config: any = await this.configuracionService.obtener();
+
       const negocio = config.negocio || {};
       const contacto = config.contacto || {};
       const apariencia = config.apariencia || {};
+
+      const nombre = negocio.nombre || 'Vortiz Arquitectos';
+      const eslogan =
+        negocio.eslogan || 'Diseñamos espacios, construimos confianza';
 
       const direccionPartes = [
         negocio.direccion,
@@ -46,33 +51,45 @@ export class EmailLayoutService {
         negocio.codigoPostal,
       ].filter((p) => p && String(p).trim().length > 0);
 
-      const whatsappRaw = (contacto.whatsapp || '').replace(/\D/g, '');
+      const telefono = contacto.telefono || '+52 618 000 0000';
+      const whatsapp = contacto.whatsapp || telefono;
+      const correoPublico =
+        contacto.correoPublico || 'contacto@vortizarquitectos.com.mx';
+
+      const whatsappRaw = whatsapp.replace(/\D/g, '');
       const whatsappUrl = whatsappRaw ? `https://wa.me/${whatsappRaw}` : '';
+
+      const colorPrimario = apariencia.colorPrimario || '#0a4d7a';
+      const colorSecundario = apariencia.colorSecundario || '#0a1f3d';
+      const logoUrl = apariencia.logoUrl || '';
+      const logoFooterUrl = apariencia.logoFooterUrl || '';
 
       return {
         negocio: {
-          nombre: negocio.nombre || 'Vortiz Arquitectos',
-          eslogan: negocio.eslogan || 'Diseñamos espacios, construimos confianza',
+          nombre,
+          eslogan,
           direccionCompleta:
             direccionPartes.length > 0
               ? direccionPartes.join(', ')
               : 'Milpillas 101, La Forestal, Durango',
         },
         contacto: {
-          telefono: contacto.telefono || '+52 618 000 0000',
-          whatsapp: contacto.whatsapp || '618 000 0000',
+          telefono,
+          whatsapp,
           whatsappUrl,
-          correoPublico: contacto.correoPublico || 'contacto@vortizarquitectos.com.mx',
+          correoPublico,
         },
         apariencia: {
-          colorPrimario: apariencia.colorPrimario || '#0a4d7a',
-          colorSecundario: apariencia.colorSecundario || '#0a1f3d',
-          logoBase64: this.cargarLogoBase64(apariencia.logoUrl),
-          logoFooterBase64: this.cargarLogoBase64(apariencia.logoFooterUrl),
+          colorPrimario,
+          colorSecundario,
+          logoBase64: await this.cargarLogoBase64(logoUrl),
+          logoFooterBase64: await this.cargarLogoBase64(logoFooterUrl),
         },
       };
     } catch (err: any) {
-      this.logger.warn(`No se pudo cargar config, usando fallbacks: ${err.message}`);
+      this.logger.warn(
+        `No se pudo cargar config, usando fallbacks: ${err.message}`,
+      );
       return {
         negocio: {
           nombre: 'Vortiz Arquitectos',
@@ -96,27 +113,69 @@ export class EmailLayoutService {
   }
 
   /**
-   * Carga un logo desde /uploads/ como base64 data URI.
+   * Carga un logo como base64 data URI.
+   * Soporta 3 casos:
+   *  1. Path relativo: /uploads/marca/logo.png → lee del filesystem
+   *  2. URL absoluta al mismo dominio: https://vortiz.../uploads/... → lee del filesystem
+   *  3. URL externa http/https → descarga con fetch
    * Si el URL apunta a /assets/ (frontend) o no existe, retorna ''.
    */
-  private cargarLogoBase64(logoUrl?: string): string {
-    if (!logoUrl) return '';
-    if (!logoUrl.startsWith('/uploads/')) return '';
+  private async cargarLogoBase64(logoUrl?: string): Promise<string> {
+    this.logger.log(`🔍 [cargarLogoBase64] URL: "${logoUrl}"`);
+    
+    if (!logoUrl) {
+      this.logger.log('   → vacía, retorno ""');
+      return '';
+    }
+    if (logoUrl.includes('/assets/')) {
+      this.logger.log('   → /assets/, skip');
+      return '';
+    }
 
-    const path = `/app${logoUrl}`;
     try {
-      if (fs.existsSync(path)) {
-        const buffer = fs.readFileSync(path);
-        const ext = path.split('.').pop()?.toLowerCase() || 'png';
+      let filePath: string | null = null;
+
+      if (logoUrl.startsWith('/uploads/')) {
+        filePath = `/app${logoUrl}`;
+      } else if (logoUrl.includes('/uploads/')) {
+        const idx = logoUrl.indexOf('/uploads/');
+        filePath = `/app${logoUrl.substring(idx)}`;
+      }
+
+      this.logger.log(`   → filePath: "${filePath}"`);
+      this.logger.log(`   → existe: ${filePath ? fs.existsSync(filePath) : 'N/A'}`);
+
+      if (filePath && fs.existsSync(filePath)) {
+        const buffer = fs.readFileSync(filePath);
+        const ext = filePath.split('.').pop()?.toLowerCase() || 'png';
         const mime = ext === 'svg' ? 'image/svg+xml' : `image/${ext}`;
+        this.logger.log(`   ✅ cargado ${buffer.length} bytes`);
         return `data:${mime};base64,${buffer.toString('base64')}`;
       }
-    } catch (err) {
-      this.logger.warn(`No se pudo cargar logo de ${path}: ${err}`);
-    }
-    return '';
-  }
 
+      if (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
+        this.logger.log('   → intentando fetch remoto...');
+        const response = await fetch(logoUrl, {
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!response.ok) {
+          this.logger.warn(`   ❌ fetch falló: HTTP ${response.status}`);
+          return '';
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const contentType = response.headers.get('content-type') || 'image/png';
+        this.logger.log(`   ✅ fetched ${buffer.length} bytes`);
+        return `data:${contentType};base64,${buffer.toString('base64')}`;
+      }
+
+      this.logger.warn(`   ❌ no encontrado`);
+      return '';
+    } catch (err) {
+      this.logger.warn(`   ❌ error: ${err}`);
+      return '';
+    }
+  }
   /**
    * Layout editorial unificado con colores dinámicos + logo + dark mode.
    */
