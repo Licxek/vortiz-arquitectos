@@ -461,8 +461,10 @@ export class CitasService {
   ): Promise<{ todas: string[]; ocupadas: string[] }> {
     const config = await this.configuracionService.obtener();
     const agenda: any = config.agenda || {};
-    const horaInicio: string = agenda.horaInicio || '09:00';
-    const horaFin: string = agenda.horaFin || '18:00';
+
+    // 👇 NUEVO: usar horario específico del día (con fallback al global)
+    const { horaInicio, horaFin } = this.obtenerHorarioDelDia(fecha, agenda);
+
     const duracionCita: number = agenda.duracionCita || 60;
     const buffer: number = agenda.tiempoEntreCitas || 0;
 
@@ -541,5 +543,34 @@ export class CitasService {
       mensaje: 'Respuesta enviada correctamente',
       mensajeGuardado,
     };
+  }
+
+  /**
+   * Retorna el horario del día específico según el índice en agenda.diasSemana.
+   * Si el día tiene horaInicio/horaFin propios, los usa. Si no, cae al global.
+   * Orden en BD: 0=Lun, 1=Mar, 2=Mié, 3=Jue, 4=Vie, 5=Sáb, 6=Dom
+   * JS Date.getDay(): 0=Dom, 1=Lun, ..., 6=Sáb
+   */
+  private obtenerHorarioDelDia(
+    fecha: string,
+    agenda: any,
+  ): { horaInicio: string; horaFin: string } {
+    const globalInicio = agenda.horaInicio || '09:00';
+    const globalFin = agenda.horaFin || '18:00';
+
+    const d = new Date(fecha + 'T00:00:00');
+    const jsDay = d.getDay();
+    const arrayIdx = (jsDay + 6) % 7;
+
+    const diaConfig = (agenda.diasSemana || [])[arrayIdx];
+
+    if (diaConfig?.horaInicio && diaConfig?.horaFin) {
+      return {
+        horaInicio: diaConfig.horaInicio,
+        horaFin: diaConfig.horaFin,
+      };
+    }
+
+    return { horaInicio: globalInicio, horaFin: globalFin };
   }
 }

@@ -1025,42 +1025,76 @@
       <h3 class="text-base font-semibold text-gray-900 mb-1">Días y horarios de atención</h3>
       <p class="text-xs text-gray-500 mb-5">Cuándo aceptas citas</p>
 
-      <!-- Días -->
+      <!-- Días laborales con horarios individuales -->
       <div class="mb-6">
-        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3"
-          >Días laborales</label
-        >
-        <div class="flex flex-wrap gap-2">
-          <button
-            *ngFor="let dia of diasSemana"
-            (click)="toggleDia(dia)"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-            [class.bg-[#0a4d7a]]="dia.activo"
-            [class.text-white]="dia.activo"
-            [class.shadow-md]="dia.activo"
-            [class.bg-gray-100]="!dia.activo"
-            [class.text-gray-600]="!dia.activo"
-            [class.hover:bg-gray-200]="!dia.activo"
-          >
-            {{ dia.nombre }}
-          </button>
-        </div>
-      </div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+          Días laborales
+        </label>
+        <p class="text-xs text-gray-500 mb-3">
+          Activa cada día que trabajas. Cada día puede tener su propio horario o usar el horario
+          general.
+        </p>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Hora de inicio -->
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-            >Hora de inicio</label
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <div
+            *ngFor="let dia of diasSemana"
+            class="rounded-xl border-2 transition-all p-3"
+            [class.border-[#0a4d7a]]="dia.activo"
+            [class.bg-blue-50]="dia.activo"
+            [class.border-gray-200]="!dia.activo"
+            [class.bg-gray-50]="!dia.activo"
           >
-          <div class="relative" (click)="$event.stopPropagation()">
-            <button
-              (click)="toggleSelectorHora('inicio', $event)"
-              class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all"
+            <div class="flex items-center justify-between gap-2">
+              <span
+                class="text-sm font-semibold"
+                [class.text-[#0a4d7a]]="dia.activo"
+                [class.text-gray-500]="!dia.activo"
+              >
+                {{ dia.nombre }}
+              </span>
+              <button
+                (click)="toggleDia(dia)"
+                type="button"
+                class="relative w-9 h-5 rounded-full transition-colors shrink-0"
+                [class.bg-[#0a4d7a]]="dia.activo"
+                [class.bg-gray-300]="!dia.activo"
+                [attr.aria-label]="'Activar ' + dia.nombre"
+              >
+                <span
+                  class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
+                  [class.translate-x-4]="dia.activo"
+                ></span>
+              </button>
+            </div>
+
+            <!-- Horarios per-day (solo cuando el día está activo) -->
+            <div
+              *ngIf="dia.activo"
+              class="mt-2.5 pt-2.5 border-t border-blue-200 space-y-1.5 animate-[fadeIn_0.2s_ease-out]"
             >
-              <span class="flex items-center gap-2">
+              <div class="grid grid-cols-2 gap-1.5">
+                <input
+                  type="time"
+                  [ngModel]="dia.horaInicio || ''"
+                  (ngModelChange)="dia.horaInicio = $event"
+                  class="w-full px-2 py-1.5 bg-white border border-gray-200 rounded text-xs outline-none focus:border-[#0a4d7a] transition-colors"
+                  [title]="'Inicio (por defecto: ' + agenda.horaInicio + ')'"
+                />
+                <input
+                  type="time"
+                  [ngModel]="dia.horaFin || ''"
+                  (ngModelChange)="dia.horaFin = $event"
+                  class="w-full px-2 py-1.5 bg-white border border-gray-200 rounded text-xs outline-none focus:border-[#0a4d7a] transition-colors"
+                  [title]="'Fin (por defecto: ' + agenda.horaFin + ')'"
+                />
+              </div>
+
+              <p
+                *ngIf="!dia.horaInicio && !dia.horaFin"
+                class="text-[10px] text-gray-500 italic flex items-center gap-1"
+              >
                 <svg
-                  class="w-4 h-4 text-gray-400"
+                  class="w-3 h-3 shrink-0"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2"
@@ -1069,40 +1103,18 @@
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                {{ agenda.horaInicio }}
-              </span>
-              <svg
-                class="w-4 h-4 text-gray-500 transition-transform"
-                [class.rotate-180]="selectorHoraInicioAbierto"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+                Usa {{ agenda.horaInicio }}–{{ agenda.horaFin }}
+              </p>
 
-            <div
-              *ngIf="selectorHoraInicioAbierto"
-              class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 z-30 max-h-64 overflow-y-auto animate-[fadeIn_0.15s_ease-out]"
-            >
-              <button
-                *ngFor="let hora of horasDisponibles"
-                (click)="seleccionarHora('inicio', hora)"
-                class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
-                [class.bg-blue-50]="agenda.horaInicio === hora"
-                [class.text-blue-700]="agenda.horaInicio === hora"
-                [class.font-semibold]="agenda.horaInicio === hora"
-                [class.text-gray-700]="agenda.horaInicio !== hora"
+              <p
+                *ngIf="dia.horaInicio && dia.horaFin"
+                class="text-[10px] text-emerald-600 flex items-center gap-1 font-semibold"
               >
-                <span>{{ hora }}</span>
                 <svg
-                  *ngIf="agenda.horaInicio === hora"
-                  class="w-4 h-4"
+                  class="w-3 h-3 shrink-0"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2.5"
@@ -1110,74 +1122,173 @@
                 >
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
-              </button>
+                Horario propio
+              </p>
+
+              <p
+                *ngIf="!!dia.horaInicio !== !!dia.horaFin"
+                class="text-[10px] text-amber-600 flex items-center gap-1 font-semibold"
+              >
+                <svg
+                  class="w-3 h-3 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Completa ambas horas
+              </p>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Hora de cierre -->
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
-            >Hora de cierre</label
-          >
-          <div class="relative" (click)="$event.stopPropagation()">
-            <button
-              (click)="toggleSelectorHora('fin', $event)"
-              class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all"
+      <!-- Horario general (fallback para días sin override) -->
+      <div class="pt-4 border-t border-gray-100">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
+          Horario general
+        </label>
+        <p class="text-xs text-gray-500 mb-3">
+          Se usa como horario predeterminado para los días activos que no tengan uno propio.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Hora de inicio -->
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+              >Hora de inicio</label
             >
-              <span class="flex items-center gap-2">
+            <div class="relative" (click)="$event.stopPropagation()">
+              <button
+                (click)="toggleSelectorHora('inicio', $event)"
+                class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all"
+              >
+                <span class="flex items-center gap-2">
+                  <svg
+                    class="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  {{ agenda.horaInicio }}
+                </span>
                 <svg
-                  class="w-4 h-4 text-gray-400"
+                  class="w-4 h-4 text-gray-500 transition-transform"
+                  [class.rotate-180]="selectorHoraInicioAbierto"
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2"
                   viewBox="0 0 24 24"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                {{ agenda.horaFin }}
-              </span>
-              <svg
-                class="w-4 h-4 text-gray-500 transition-transform"
-                [class.rotate-180]="selectorHoraFinAbierto"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            <div
-              *ngIf="selectorHoraFinAbierto"
-              class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 z-30 max-h-64 overflow-y-auto animate-[fadeIn_0.15s_ease-out]"
-            >
-              <button
-                *ngFor="let hora of horasDisponibles"
-                (click)="seleccionarHora('fin', hora)"
-                class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
-                [class.bg-blue-50]="agenda.horaFin === hora"
-                [class.text-blue-700]="agenda.horaFin === hora"
-                [class.font-semibold]="agenda.horaFin === hora"
-                [class.text-gray-700]="agenda.horaFin !== hora"
-              >
-                <span>{{ hora }}</span>
-                <svg
-                  *ngIf="agenda.horaFin === hora"
-                  class="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
+
+              <div
+                *ngIf="selectorHoraInicioAbierto"
+                class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 z-30 max-h-64 overflow-y-auto animate-[fadeIn_0.15s_ease-out]"
+              >
+                <button
+                  *ngFor="let hora of horasDisponibles"
+                  (click)="seleccionarHora('inicio', hora)"
+                  class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
+                  [class.bg-blue-50]="agenda.horaInicio === hora"
+                  [class.text-blue-700]="agenda.horaInicio === hora"
+                  [class.font-semibold]="agenda.horaInicio === hora"
+                  [class.text-gray-700]="agenda.horaInicio !== hora"
+                >
+                  <span>{{ hora }}</span>
+                  <svg
+                    *ngIf="agenda.horaInicio === hora"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hora de cierre -->
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2"
+              >Hora de cierre</label
+            >
+            <div class="relative" (click)="$event.stopPropagation()">
+              <button
+                (click)="toggleSelectorHora('fin', $event)"
+                class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-white border border-gray-200 rounded-lg text-sm text-gray-800 transition-all"
+              >
+                <span class="flex items-center gap-2">
+                  <svg
+                    class="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  {{ agenda.horaFin }}
+                </span>
+                <svg
+                  class="w-4 h-4 text-gray-500 transition-transform"
+                  [class.rotate-180]="selectorHoraFinAbierto"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <div
+                *ngIf="selectorHoraFinAbierto"
+                class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 z-30 max-h-64 overflow-y-auto animate-[fadeIn_0.15s_ease-out]"
+              >
+                <button
+                  *ngFor="let hora of horasDisponibles"
+                  (click)="seleccionarHora('fin', hora)"
+                  class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
+                  [class.bg-blue-50]="agenda.horaFin === hora"
+                  [class.text-blue-700]="agenda.horaFin === hora"
+                  [class.font-semibold]="agenda.horaFin === hora"
+                  [class.text-gray-700]="agenda.horaFin !== hora"
+                >
+                  <span>{{ hora }}</span>
+                  <svg
+                    *ngIf="agenda.horaFin === hora"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>

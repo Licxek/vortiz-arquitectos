@@ -88,6 +88,11 @@ export class DiaSemanaDto {
   @IsString() nombre!: string;
   @IsString() abrev!: string;
   @IsBoolean() activo!: boolean;
+
+  // 👇 NUEVO: horarios opcionales por día.
+  // Si están vacíos, se usa el horaInicio/horaFin global de la agenda.
+  @IsOptional() @IsString() horaInicio?: string;
+  @IsOptional() @IsString() horaFin?: string;
 }
 
 export class DiaFeriadoDto {

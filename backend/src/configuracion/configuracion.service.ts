@@ -150,6 +150,38 @@ export class ConfiguracionService implements OnModuleInit {
     ) {
       throw new BadRequestException('Debes activar al menos un día laboral.');
     }
+    // 👇 NUEVO: validar horarios por día si tienen override
+    for (const dia of datos.diasSemana || []) {
+      if (!dia.activo) continue;
+
+      const tieneInicio = !!(dia.horaInicio && dia.horaInicio.trim());
+      const tieneFin = !!(dia.horaFin && dia.horaFin.trim());
+
+      if (tieneInicio !== tieneFin) {
+        throw new BadRequestException(
+          `${dia.nombre}: si defines un horario propio, debes especificar tanto inicio como fin.`,
+        );
+      }
+
+      if (tieneInicio && tieneFin) {
+        const [hIDia, mIDia] = dia.horaInicio.split(':').map(Number);
+        const [hFDia, mFDia] = dia.horaFin.split(':').map(Number);
+        const inicioDiaMin = hIDia * 60 + mIDia;
+        const finDiaMin = hFDia * 60 + mFDia;
+        const totalDia = finDiaMin - inicioDiaMin;
+
+        if (totalDia <= 0) {
+          throw new BadRequestException(
+            `${dia.nombre}: la hora de cierre debe ser posterior a la de apertura.`,
+          );
+        }
+        if (datos.duracionCita > totalDia) {
+          throw new BadRequestException(
+            `${dia.nombre}: una cita de ${datos.duracionCita} min no cabe en su horario (${dia.horaInicio}–${dia.horaFin}).`,
+          );
+        }
+      }
+    }
   }
 
   /** Aplana los errores de class-validator para que sean legibles */
