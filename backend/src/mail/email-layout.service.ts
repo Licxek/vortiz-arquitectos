@@ -82,8 +82,8 @@ export class EmailLayoutService {
         apariencia: {
           colorPrimario,
           colorSecundario,
-          logoBase64: await this.cargarLogoBase64(logoUrl),
-          logoFooterBase64: '', // No usado en correos (muy pesado, rompe Gmail)
+          logoBase64: this.normalizarUrlLogo(logoUrl), // ← ya no es base64, es URL
+          logoFooterBase64: '',
         },
       };
     } catch (err: any) {
@@ -112,72 +112,6 @@ export class EmailLayoutService {
     }
   }
 
-  /**
-   * Carga un logo como base64 data URI.
-   * Soporta 3 casos:
-   *  1. Path relativo: /uploads/marca/logo.png → lee del filesystem
-   *  2. URL absoluta al mismo dominio: https://vortiz.../uploads/... → lee del filesystem
-   *  3. URL externa http/https → descarga con fetch
-   * Si el URL apunta a /assets/ (frontend) o no existe, retorna ''.
-   */
-  private async cargarLogoBase64(logoUrl?: string): Promise<string> {
-    this.logger.log(`🔍 [cargarLogoBase64] URL: "${logoUrl}"`);
-
-    if (!logoUrl) {
-      this.logger.log('   → vacía, retorno ""');
-      return '';
-    }
-    if (logoUrl.includes('/assets/')) {
-      this.logger.log('   → /assets/, skip');
-      return '';
-    }
-
-    try {
-      let filePath: string | null = null;
-
-      if (logoUrl.startsWith('/uploads/')) {
-        filePath = `/app${logoUrl}`;
-      } else if (logoUrl.includes('/uploads/')) {
-        const idx = logoUrl.indexOf('/uploads/');
-        filePath = `/app${logoUrl.substring(idx)}`;
-      }
-
-      this.logger.log(`   → filePath: "${filePath}"`);
-      this.logger.log(
-        `   → existe: ${filePath ? fs.existsSync(filePath) : 'N/A'}`,
-      );
-
-      if (filePath && fs.existsSync(filePath)) {
-        const buffer = fs.readFileSync(filePath);
-        const ext = filePath.split('.').pop()?.toLowerCase() || 'png';
-        const mime = ext === 'svg' ? 'image/svg+xml' : `image/${ext}`;
-        this.logger.log(`   ✅ cargado ${buffer.length} bytes`);
-        return `data:${mime};base64,${buffer.toString('base64')}`;
-      }
-
-      if (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
-        this.logger.log('   → intentando fetch remoto...');
-        const response = await fetch(logoUrl, {
-          signal: AbortSignal.timeout(5000),
-        });
-        if (!response.ok) {
-          this.logger.warn(`   ❌ fetch falló: HTTP ${response.status}`);
-          return '';
-        }
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const contentType = response.headers.get('content-type') || 'image/png';
-        this.logger.log(`   ✅ fetched ${buffer.length} bytes`);
-        return `data:${contentType};base64,${buffer.toString('base64')}`;
-      }
-
-      this.logger.warn(`   ❌ no encontrado`);
-      return '';
-    } catch (err) {
-      this.logger.warn(`   ❌ error: ${err}`);
-      return '';
-    }
-  }
   /**
    * Layout editorial unificado con colores dinámicos + logo + dark mode.
    */
@@ -538,5 +472,27 @@ Si no esperabas este mensaje, responde y avísanos.
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  /**
+   * Normaliza el URL del logo a una URL absoluta accesible desde clientes de correo.
+   * - Si ya es absoluta (http/https): la usa tal cual
+   * - Si es relativa (/uploads/...): le prepende el dominio público
+   * - Si es /assets/ (default): retorna '' (no logo)
+   */
+  private normalizarUrlLogo(logoUrl?: string): string {
+    if (!logoUrl) return '';
+    if (logoUrl.includes('/assets/')) return '';
+
+    if (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
+      return logoUrl;
+    }
+
+    // Path relativo → prepender dominio público
+    const baseUrl =
+      process.env.PUBLIC_URL ||
+      process.env.FRONTEND_URL ||
+      'https://vortizarquitectos.com.mx';
+    return `${baseUrl}${logoUrl.startsWith('/') ? '' : '/'}${logoUrl}`;
   }
 }
