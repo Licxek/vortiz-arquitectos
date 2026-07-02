@@ -76,6 +76,8 @@ export class CitasComponent implements OnInit {
 
   // Advertencia de fecha inválida en modal nueva cita
   advertenciaFecha = '';
+  // Aviso informativo (día no laboral, feriado) — NO bloquea, solo informa
+  avisoFecha = '';
 
   mesActual = new Date();
   meses = [
@@ -844,6 +846,7 @@ export class CitasComponent implements OnInit {
     };
     this.errorEmpalme = '';
     this.advertenciaFecha = '';
+    this.avisoFecha = ''; // 👈 AGREGAR
     this.mostrarNuevaCita = true;
   }
 
@@ -1212,45 +1215,60 @@ export class CitasComponent implements OnInit {
    * Valida si una fecha es válida según config (días laborales + feriados).
    * Devuelve mensaje vacío si es válida, o el motivo si no.
    */
+  /**
+   * Valida si una fecha es VÁLIDA para guardar la cita (errores duros que bloquean).
+   * Solo bloquea por fecha pasada o límite diario alcanzado.
+   * Los días no laborales y feriados NO bloquean al admin — se avisan con avisoFechaAdmin().
+   */
   validarFecha(fecha: string): string {
     if (!fecha) return '';
     const d = new Date(fecha + 'T00:00:00');
 
-    // 🔒 NUEVO: No permitir fechas pasadas
+    // 🔒 HARD: No permitir fechas pasadas
     const hoy = this.fechaHoy();
     if (d.getTime() < hoy.getTime()) {
       return `No puedes agendar citas en fechas pasadas. Elige hoy o un día futuro.`;
     }
 
-    // Validar día de la semana
-    const idx = d.getDay();
-    const mapDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    const nombreDia = mapDias[idx];
-    const diaConfig = this.configAgenda?.diasSemana?.find((ds: any) => ds.nombre === nombreDia);
-    if (diaConfig && !diaConfig.activo) {
-      return `${nombreDia} no es día laboral. Cambia la fecha o ajusta tus días en Configuración → Agenda.`;
-    }
-
-    // Validar feriado (con soporte de recurrentes)
-    const feriado = this.configAgenda?.diasFeriados?.find((f: any) => {
-      if (f.recurrente) {
-        // Comparar solo mes-día (MM-DD), ignorar el año
-        return f.fecha?.substring(5) === fecha?.substring(5);
-      }
-      return f.fecha === fecha;
-    });
-    if (feriado) {
-      const sufijo = feriado.recurrente ? ' (cada año)' : '';
-      return `📅 ${feriado.motivo}${sufijo}. Si necesitas atender ese día, quita el feriado en Configuración → Agenda.`;
-    }
-
-    // 🔒 NUEVO: validar límite diario
+    // 🔒 HARD: validar límite diario
     const limite = this.configAgenda?.limiteDiario || 0;
     if (limite > 0) {
       const numCitas = this.numCitasDelDia(fecha);
       if (numCitas >= limite) {
         return `Ya hay ${numCitas} citas ese día (límite: ${limite}). Elige otra fecha o ajusta el límite en Configuración → Agenda.`;
       }
+    }
+
+    return '';
+  }
+
+  /**
+   * Avisos informativos para admin: día no laboral o feriado.
+   * NO bloquea el guardado — solo muestra un aviso al usuario.
+   */
+  avisoFechaAdmin(fecha: string): string {
+    if (!fecha) return '';
+    const d = new Date(fecha + 'T00:00:00');
+
+    // ⚠️ SOFT: día no laboral (admin puede crear igual)
+    const idx = d.getDay();
+    const mapDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const nombreDia = mapDias[idx];
+    const diaConfig = this.configAgenda?.diasSemana?.find((ds: any) => ds.nombre === nombreDia);
+    if (diaConfig && !diaConfig.activo) {
+      return `${nombreDia} no es día laboral habitual, pero como admin puedes agendar la cita.`;
+    }
+
+    // ⚠️ SOFT: feriado (con soporte de recurrentes)
+    const feriado = this.configAgenda?.diasFeriados?.find((f: any) => {
+      if (f.recurrente) {
+        return f.fecha?.substring(5) === fecha?.substring(5);
+      }
+      return f.fecha === fecha;
+    });
+    if (feriado) {
+      const sufijo = feriado.recurrente ? ' (cada año)' : '';
+      return `📅 Feriado: ${feriado.motivo}${sufijo}. Como admin puedes agendar la cita.`;
     }
 
     return '';
@@ -1538,6 +1556,7 @@ export class CitasComponent implements OnInit {
 
     this.errorEmpalme = '';
     this.advertenciaFecha = '';
+    this.avisoFecha = ''; // 👈 AGREGAR
     this.cerrarDetalle();
     this.mostrarNuevaCita = true;
     this.cdr.detectChanges();
@@ -1762,6 +1781,7 @@ export class CitasComponent implements OnInit {
 
     this.errorEmpalme = '';
     this.advertenciaFecha = '';
+    this.avisoFecha = ''; // 👈 AGREGAR
     this.menuAbiertoId = null;
     this.cerrarDetalle();
     this.mostrarNuevaCita = true;
