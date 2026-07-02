@@ -17,6 +17,7 @@ import { Type } from 'class-transformer';
 export class NegocioDto {
   @IsString() @MaxLength(100) nombre!: string;
   @IsOptional() @IsString() @MaxLength(200) eslogan?: string;
+  @IsOptional() @IsString() esloganFooter?: string; // 👈 AGREGAR
   @IsOptional() @IsString() @MaxLength(200) direccion?: string;
   @IsOptional() @IsString() @MaxLength(80) ciudad?: string;
   @IsOptional() @IsString() @MaxLength(80) estado?: string;

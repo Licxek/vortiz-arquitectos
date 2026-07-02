@@ -74,6 +74,7 @@ export class ConfiguracionComponent implements OnInit {
   negocio = {
     nombre: 'Vortiz Arquitectos',
     eslogan: 'Diseñamos espacios, construimos confianza.',
+    esloganFooter: '', // 👈 AGREGAR
     direccion: 'Milpillas 101, La Forestal',
     ciudad: 'Durango',
     estado: 'Dgo.',

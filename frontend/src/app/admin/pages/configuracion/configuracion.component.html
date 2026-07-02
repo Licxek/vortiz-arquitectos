@@ -499,6 +499,35 @@
             class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
           />
         </div>
+        <!-- 👇 NUEVO: Eslogan del footer -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-xs font-semibold uppercase tracking-wider text-gray-500">
+              Eslogan del footer
+            </label>
+            <span
+              class="text-xs font-semibold"
+              [class.text-gray-400]="(negocio.esloganFooter || '').length < 100"
+              [class.text-amber-600]="
+                (negocio.esloganFooter || '').length >= 100 &&
+                (negocio.esloganFooter || '').length < 140
+              "
+              [class.text-red-600]="(negocio.esloganFooter || '').length >= 140"
+            >
+              {{ (negocio.esloganFooter || '').length }} / 150
+            </span>
+          </div>
+          <textarea
+            [(ngModel)]="negocio.esloganFooter"
+            maxlength="150"
+            rows="2"
+            placeholder="Ej: Firma especializada en diseño arquitectónico y gestión de proyectos."
+            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"
+          ></textarea>
+          <p class="text-xs text-gray-500 mt-1.5">
+            Descripción breve que aparece bajo el logo en el pie de página
+          </p>
+        </div>
       </div>
     </div>
 

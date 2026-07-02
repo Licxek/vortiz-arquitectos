@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ChangeDetectorRef, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef, signal, inject } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -10,15 +10,25 @@ import { TelefonoFormatoPipe } from '../pipes/telefono-formato.pipe';
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule, RouterModule, RevealDirective, NgOptimizedImage, SkeletonComponent,TelefonoFormatoPipe],
+  imports: [
+    CommonModule,
+    RouterModule,
+    RevealDirective,
+    NgOptimizedImage,
+    SkeletonComponent,
+    TelefonoFormatoPipe,
+  ],
   templateUrl: './footer.component.html',
 })
-export class FooterComponent implements OnInit {
+export class FooterComponent implements OnInit, OnDestroy {
   configuracion: Configuracion | null = null;
   anio = new Date().getFullYear();
   mostrarArriba = false;
   cargando = signal(true);
   private sanitizer = inject(DomSanitizer);
+  /** Si el negocio está abierto en este momento según config de agenda */
+  estaAbiertoAhora = false;
+  private intervaloEstado: any;
 
   navLinks = [
     { label: 'Inicio', path: '/home' },
@@ -66,8 +76,54 @@ export class FooterComponent implements OnInit {
         this.mapaLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccionNueva)}`;
       }
 
+      // Recalcular estado "abierto/cerrado"
+      this.calcularEstadoAbierto();
+
       this.cargando.set(false);
       this.cdr.markForCheck();
     });
+
+    // Actualizar estado cada minuto
+    this.intervaloEstado = setInterval(() => {
+      this.calcularEstadoAbierto();
+      this.cdr.markForCheck();
+    }, 60000);
+  }
+
+  ngOnDestroy() {
+    if (this.intervaloEstado) clearInterval(this.intervaloEstado);
+  }
+
+  /**
+   * Determina si el negocio está abierto ahora mismo.
+   * Lee configuracion.agenda.diasSemana (con horarios por día) y horario global.
+   */
+  private calcularEstadoAbierto() {
+    const agenda: any = (this.configuracion as any)?.agenda;
+    if (!agenda?.diasSemana?.length) {
+      this.estaAbiertoAhora = false;
+      return;
+    }
+
+    const ahora = new Date();
+    const jsDay = ahora.getDay(); // 0=Dom, 1=Lun ... 6=Sab
+    const arrayIdx = (jsDay + 6) % 7; // BD: 0=Lun ... 6=Dom
+
+    const diaConfig = agenda.diasSemana[arrayIdx];
+    if (!diaConfig?.activo) {
+      this.estaAbiertoAhora = false;
+      return;
+    }
+
+    const horaInicio = diaConfig.horaInicio || agenda.horaInicio || '09:00';
+    const horaFin = diaConfig.horaFin || agenda.horaFin || '18:00';
+
+    const [hI, mI] = horaInicio.split(':').map(Number);
+    const [hF, mF] = horaFin.split(':').map(Number);
+    const inicioMin = hI * 60 + mI;
+    const finMin = hF * 60 + mF;
+    const ahoraMin = ahora.getHours() * 60 + ahora.getMinutes();
+
+    this.estaAbiertoAhora = ahoraMin >= inicioMin && ahoraMin < finMin;
   }
 }
