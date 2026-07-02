@@ -32,6 +32,7 @@ export interface Configuracion {
   nombre: string;
   eslogan: string;
   eslogan_footer?: string;
+  anio_fundacion?: number;
   mantenimiento?: MantenimientoConfig;
   agenda?: {
     diasSemana: { nombre: string; activo: boolean }[];

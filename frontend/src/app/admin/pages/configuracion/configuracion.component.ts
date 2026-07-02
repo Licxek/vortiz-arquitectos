@@ -75,6 +75,7 @@ export class ConfiguracionComponent implements OnInit {
     nombre: 'Vortiz Arquitectos',
     eslogan: 'Diseñamos espacios, construimos confianza.',
     esloganFooter: '', // 👈 AGREGAR
+    anioFundacion: null,
     direccion: 'Milpillas 101, La Forestal',
     ciudad: 'Durango',
     estado: 'Dgo.',

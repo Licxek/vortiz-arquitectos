@@ -23,6 +23,7 @@ export class NegocioDto {
   @IsOptional() @IsString() @MaxLength(80) estado?: string;
   @IsOptional() @IsString() @MaxLength(20) codigoPostal?: string;
   @IsOptional() @IsString() @MaxLength(30) rfc?: string;
+  @IsOptional() @IsInt() @Min(1900) @Max(2100) anioFundacion?: number;
 }
 
 // ========== CONTACTO ==========

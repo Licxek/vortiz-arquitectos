@@ -261,7 +261,9 @@ export class ConfiguracionService implements OnModuleInit {
         diasFeriados: agenda.diasFeriados || [],
         horaInicio: agenda.horaInicio || '09:00',
         horaFin: agenda.horaFin || '18:00',
+        
       },
+      anio_fundacion: c.negocio?.anioFundacion || null,
     };
   }
   private readonly INDEX_PATH = '/app/frontend-dist/index.html';
