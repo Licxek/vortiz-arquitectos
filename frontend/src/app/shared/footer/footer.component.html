@@ -460,7 +460,16 @@
       class="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs"
     >
       <div class="flex items-center gap-2 text-gray-500">
-        <span>© {{ anio }} {{ configuracion?.nombre || 'Vortiz Arquitectos' }}</span>
+        <span>
+          ©
+          <ng-container *ngIf="configuracion?.anio_fundacion as anioFund; else soloActual">
+            <ng-container *ngIf="anioFund !== anio; else soloActual">
+              {{ anioFund }}–{{ anio }}
+            </ng-container>
+          </ng-container>
+          <ng-template #soloActual>{{ anio }}</ng-template>
+          {{ configuracion?.nombre || 'Vortiz Arquitectos' }}
+        </span>
         <span class="text-gray-700">·</span>
         <span>Todos los derechos reservados</span>
       </div>

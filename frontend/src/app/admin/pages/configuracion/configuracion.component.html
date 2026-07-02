@@ -528,6 +528,20 @@
             Descripción breve que aparece bajo el logo en el pie de página
           </p>
         </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+            Año de fundación
+          </label>
+          <input
+            type="number"
+            [(ngModel)]="negocio.anioFundacion"
+            min="1900"
+            max="2100"
+            placeholder="Ej. 2020"
+            class="w-full md:w-40 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
+          />
+          <p class="text-xs text-gray-500 mt-1.5">Aparece en el copyright del footer (ej: © 2020–2026)</p>
+        </div>
       </div>
     </div>
 
