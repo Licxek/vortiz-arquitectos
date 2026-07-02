@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ContenidoService } from '../../core/services/contenido.service';
@@ -96,6 +96,24 @@ export class NosotrosComponent implements OnInit {
   equipoTitulo = '';
   equipoDescripcion = '';
   equipo: MiembroEquipo[] = [];
+
+  // ============ MODAL DE PERFIL ============
+  miembroSeleccionado: MiembroEquipo | null = null;
+
+  abrirPerfilMiembro(miembro: MiembroEquipo) {
+    this.miembroSeleccionado = miembro;
+    document.body.style.overflow = 'hidden'; // Bloquea scroll de fondo
+  }
+
+  cerrarPerfilMiembro() {
+    this.miembroSeleccionado = null;
+    document.body.style.overflow = ''; // Restaura scroll
+  }
+
+  @HostListener('document:keydown.escape')
+  cerrarConEsc() {
+    if (this.miembroSeleccionado) this.cerrarPerfilMiembro();
+  }
 
   ngOnInit() {
     // ============ HERO ============
