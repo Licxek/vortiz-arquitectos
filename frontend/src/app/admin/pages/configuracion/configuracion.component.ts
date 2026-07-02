@@ -11,6 +11,7 @@ import { combineLatest } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { MapPickerComponent, DireccionGeo } from '../../../shared/map-picker/map-picker.component';
+import { TelefonoInputComponent } from '../../../shared/telefono-input/telefono-input.component';
 
 interface DiaSemana {
   nombre: string;
@@ -39,7 +40,7 @@ interface RedSocial {
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent, MapPickerComponent],
+  imports: [CommonModule, FormsModule, ImageUploadComponent, SkeletonComponent, MapPickerComponent,TelefonoInputComponent],
   templateUrl: './configuracion.component.html',
 })
 export class ConfiguracionComponent implements OnInit {
