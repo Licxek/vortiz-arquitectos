@@ -1,14 +1,10 @@
-<!-- Divisor blueprint: transición elegante del contenido al footer -->
-<div class="relative h-16 overflow-hidden"
+<!-- Divisor elegante: línea acento con degradado limpio -->
+<div class="relative"
      [style.background]="'linear-gradient(to bottom, transparent, ' + (configuracion?.color_degradado_fin || '#0a1f3d') + ')'">
-  <svg class="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-    <defs>
-      <pattern id="blueprintGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="0.5" class="text-blue-300"/>
-      </pattern>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#blueprintGrid)" />
-  </svg>
+  <div class="h-12"></div>
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+  </div>
 </div>
 <footer
   class="text-[var(--color-texto-footer)]"
@@ -286,11 +282,10 @@
         <span>Todos los derechos reservados</span>
       </div>
       <div class="flex items-center gap-2 text-gray-500">
-        <span>Hecho con</span>
-        <svg class="w-3.5 h-3.5 text-red-400 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
         </svg>
-        <span>en Durango, México</span>
+        <span>Diseñando espacios en Durango, México</span>
       </div>
     </div>
   </div>
