@@ -9,6 +9,7 @@ import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { TelefonoInputComponent } from '../../shared/telefono-input/telefono-input.component';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { ConfiguracionService } from '../../core/services/configuracion.service';
+import { TelefonoFormatoPipe } from '../../shared/pipes/telefono-formato.pipe';
 
 interface FormCita {
   nombreCompleto: string;
@@ -31,6 +32,7 @@ interface FormCita {
     FormatoTextoPipe,
     TelefonoInputComponent,
     SkeletonComponent,
+    TelefonoFormatoPipe,
   ],
   templateUrl: './citas.component.html',
 })

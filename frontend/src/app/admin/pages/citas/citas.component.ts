@@ -9,6 +9,7 @@ import { filter } from 'rxjs/operators';
 import { ConfiguracionService } from '../../../core/services/configuracion.service'; // 👈 NUEVO
 import { TelefonoInputComponent } from '../../../shared/telefono-input/telefono-input.component';
 import { EstadoCita } from '../../../core/services/citas.service';
+import { TelefonoFormatoPipe } from '../../../shared/pipes/telefono-formato.pipe';
 
 interface Cita {
   id: number;
@@ -43,7 +44,7 @@ interface GrupoCitas {
 @Component({
   selector: 'app-citas',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, TelefonoInputComponent],
+  imports: [CommonModule, FormsModule, SkeletonComponent, TelefonoInputComponent,TelefonoFormatoPipe],
   templateUrl: './citas.component.html',
 })
 export class CitasComponent implements OnInit {
