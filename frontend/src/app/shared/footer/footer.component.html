@@ -175,7 +175,7 @@
     <!-- Columna 3 - Contacto -->
     <div [appReveal]="300">
       <h3
-        class="text-[var(--color-texto-footer)] font-semibold text-sm uppercase tracking-wider mb-4"
+        class="text-[var(--color-texto-footer)] font-semibold text-sm uppercase tracking-wider mb-4 pl-6"
       >
         Contacto
       </h3>
@@ -194,7 +194,7 @@
             <svg class="w-4 h-4 mt-0.5 text-blue-400 shrink-0" ...>
               <!-- icono teléfono -->
             </svg>
-            <span>{{ configuracion?.telefono || '+52 000-000-0000' }}</span>
+            <span>{{ configuracion?.telefono || '+52 000-000-0000' | telefonoFormato }}</span>
           </li>
 
           <li class="flex items-start gap-2">
