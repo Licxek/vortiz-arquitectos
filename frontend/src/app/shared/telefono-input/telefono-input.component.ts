@@ -81,11 +81,12 @@ const PAISES: Pais[] = [
           </svg>
         </button>
 
-        <!-- Input del número -->
+        <!-- Input del número con auto-formato -->
         <input
           type="tel"
-          [(ngModel)]="numeroLocal"
-          (ngModelChange)="emitirCambio()"
+          #inputTel
+          [value]="numeroLocal"
+          (input)="onInputNumero($event)"
           [disabled]="disabled"
           [placeholder]="placeholder"
           class="flex-1 min-w-0 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-r-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:ring-2 focus:ring-[#0a4d7a]/10 focus:bg-white transition-all disabled:cursor-not-allowed disabled:text-gray-700"
@@ -137,7 +138,7 @@ export class TelefonoInputComponent implements OnInit, OnChanges {
   @Input() valor: string = '';
   @Output() valorChange = new EventEmitter<string>();
   @Input() disabled: boolean = false;
-  @Input() placeholder: string = '000-000-0000';
+  @Input() placeholder: string = '000 000 0000';
   @Input() autoDetectar: boolean = false;
 
   private elementRef = inject(ElementRef);
@@ -145,7 +146,7 @@ export class TelefonoInputComponent implements OnInit, OnChanges {
   private geolocalizacion = inject(GeolocalizacionService);
 
   paises = PAISES;
-  ladaSeleccionada: Pais = PAISES[0]; // México por defecto
+  ladaSeleccionada: Pais = PAISES[0];
   numeroLocal: string = '';
   dropdownAbierto: boolean = false;
   busqueda: string = '';
@@ -160,21 +161,13 @@ export class TelefonoInputComponent implements OnInit, OnChanges {
     try {
       const iso = await this.geolocalizacion.detectarPais();
       if (!iso) return;
-
-      // Si el usuario ya empezó a escribir mientras llegaba la respuesta,
-      // respetamos su input y no sobreescribimos
       if (this.numeroLocal.trim() || (this.valor || '').trim()) return;
-
       const pais = PAISES.find((p) => p.iso === iso);
       if (pais) {
         this.ladaSeleccionada = pais;
         this.cdr.detectChanges();
       }
-      // Si el iso detectado no está en nuestra lista de 26 países,
-      // se queda México (default) — fallback silencioso
-    } catch {
-      // Cualquier error → México por default, sin ruido
-    }
+    } catch {}
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -183,24 +176,105 @@ export class TelefonoInputComponent implements OnInit, OnChanges {
     }
   }
 
+  /** Formatea dígitos en grupos legibles: 3-3-4 estilo internacional */
+  private formatearNumero(digitos: string): string {
+    if (!digitos) return '';
+    if (digitos.length <= 3) return digitos;
+    if (digitos.length <= 6) return `${digitos.slice(0, 3)} ${digitos.slice(3)}`;
+    if (digitos.length <= 10) {
+      return `${digitos.slice(0, 3)} ${digitos.slice(3, 6)} ${digitos.slice(6)}`;
+    }
+    // Más de 10 dígitos: 3-3-4 y el resto
+    return `${digitos.slice(0, 3)} ${digitos.slice(3, 6)} ${digitos.slice(6, 10)} ${digitos.slice(10)}`;
+  }
+
+  /** Maneja input con formato en vivo + preservación de cursor */
+  onInputNumero(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const valorEnInput = input.value;
+    const posCursorAntes = input.selectionStart ?? valorEnInput.length;
+
+    // Contar dígitos antes del cursor (para restaurar posición correctamente)
+    let digitosAntes = 0;
+    for (let i = 0; i < posCursorAntes; i++) {
+      if (/\d/.test(valorEnInput[i])) digitosAntes++;
+    }
+
+    // Extraer solo dígitos
+    let digitos = valorEnInput.replace(/\D/g, '');
+
+    // Si el usuario escribió + al inicio, intentar detectar lada de país
+    const tienePlus = valorEnInput.trimStart().startsWith('+');
+    if (tienePlus && digitos.length > 0) {
+      const conMas = '+' + digitos;
+      const ordenados = [...PAISES].sort((a, b) => b.codigo.length - a.codigo.length);
+      const pais = ordenados.find((p) => conMas.startsWith(p.codigo));
+      if (pais) {
+        this.ladaSeleccionada = pais;
+        const digitosLada = pais.codigo.length - 1; // -1 porque digitos no tiene el +
+        digitos = digitos.substring(digitosLada);
+        digitosAntes = Math.max(0, digitosAntes - digitosLada);
+      }
+    }
+
+    // Formatear los dígitos limpios
+    const formateado = this.formatearNumero(digitos);
+    this.numeroLocal = formateado;
+    input.value = formateado;
+
+    // Calcular nueva posición del cursor: justo después del N-ésimo dígito
+    let nuevaPos = 0;
+    if (digitosAntes > 0) {
+      let contador = 0;
+      let encontrado = false;
+      for (let i = 0; i < formateado.length; i++) {
+        if (/\d/.test(formateado[i])) {
+          contador++;
+          if (contador === digitosAntes) {
+            nuevaPos = i + 1;
+            encontrado = true;
+            break;
+          }
+        }
+      }
+      if (!encontrado) nuevaPos = formateado.length;
+    }
+
+    input.setSelectionRange(nuevaPos, nuevaPos);
+
+    // Emitir valor completo al padre
+    this.emitirValorAlPadre();
+    this.cdr.detectChanges();
+  }
+
+  private emitirValorAlPadre() {
+    const numero = this.numeroLocal.trim();
+    if (!numero) {
+      this.valorChange.emit('');
+      return;
+    }
+    this.valorChange.emit(`${this.ladaSeleccionada.codigo} ${numero}`);
+  }
+
   private parsearValor() {
     const v = (this.valor || '').trim();
     if (!v) {
-      // No resetear la lada cuando el valor está vacío
-      // (puede pasar después de la auto-detección que quitó el código del input)
       this.numeroLocal = '';
       return;
     }
-    // Ordenamos por longitud descendente para que +593 gane sobre +5
     const ordenados = [...PAISES].sort((a, b) => b.codigo.length - a.codigo.length);
     const pais = ordenados.find((p) => v.startsWith(p.codigo));
+    let numeroSinLada = '';
     if (pais) {
       this.ladaSeleccionada = pais;
-      this.numeroLocal = v.slice(pais.codigo.length).trim();
+      numeroSinLada = v.slice(pais.codigo.length);
     } else {
       this.ladaSeleccionada = PAISES[0];
-      this.numeroLocal = v;
+      numeroSinLada = v;
     }
+    // Formatear al cargar valor externo
+    const digitos = numeroSinLada.replace(/\D/g, '');
+    this.numeroLocal = this.formatearNumero(digitos);
   }
 
   get paisesFiltrados(): Pais[] {
@@ -220,27 +294,7 @@ export class TelefonoInputComponent implements OnInit, OnChanges {
   seleccionarPais(p: Pais) {
     this.ladaSeleccionada = p;
     this.dropdownAbierto = false;
-    this.emitirCambio();
-  }
-
-  emitirCambio() {
-    // Auto-detección: si el usuario escribió un + al inicio, detectamos lada
-    if (this.numeroLocal.startsWith('+')) {
-      const ordenados = [...PAISES].sort((a, b) => b.codigo.length - a.codigo.length);
-      const pais = ordenados.find((p) => this.numeroLocal.startsWith(p.codigo));
-      if (pais) {
-        this.ladaSeleccionada = pais;
-        this.numeroLocal = this.numeroLocal.slice(pais.codigo.length).trim();
-        this.cdr.detectChanges(); // 👈 fuerza el refresco de la bandera
-      }
-    }
-
-    const numero = this.numeroLocal.trim();
-    if (!numero) {
-      this.valorChange.emit('');
-      return;
-    }
-    this.valorChange.emit(`${this.ladaSeleccionada.codigo} ${numero}`);
+    this.emitirValorAlPadre();
   }
 
   @HostListener('document:click', ['$event'])
