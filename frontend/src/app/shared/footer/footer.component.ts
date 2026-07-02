@@ -5,11 +5,12 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ConfiguracionService, Configuracion } from '../../core/services/configuracion.service';
 import { RevealDirective } from '../../core/directives/reveal.directive';
 import { SkeletonComponent } from '../skeleton/skeleton.component';
+import { TelefonoFormatoPipe } from '../pipes/telefono-formato.pipe';
 
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule, RouterModule, RevealDirective, NgOptimizedImage, SkeletonComponent],
+  imports: [CommonModule, RouterModule, RevealDirective, NgOptimizedImage, SkeletonComponent,TelefonoFormatoPipe],
   templateUrl: './footer.component.html',
 })
 export class FooterComponent implements OnInit {
