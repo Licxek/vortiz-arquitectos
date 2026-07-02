@@ -31,6 +31,7 @@ export interface Configuracion {
   og_image_url?: string; //
   nombre: string;
   eslogan: string;
+  eslogan_footer?: string;
   mantenimiento?: MantenimientoConfig;
   agenda?: {
     diasSemana: { nombre: string; activo: boolean }[];

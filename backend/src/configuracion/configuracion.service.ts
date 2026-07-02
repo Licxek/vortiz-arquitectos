@@ -252,6 +252,9 @@ export class ConfiguracionService implements OnModuleInit {
       nombre: c.negocio?.nombre || 'Vortiz Arquitectos',
       eslogan:
         c.negocio?.eslogan || 'Diseñamos espacios, construimos confianza.',
+        eslogan_footer:
+        c.negocio?.esloganFooter ||
+        'Firma especializada en diseño arquitectónico y gestión de proyectos.', // 👈 AGREGAR
       mantenimiento: c.mantenimiento,
       agenda: {
         diasSemana: agenda.diasSemana || [],
