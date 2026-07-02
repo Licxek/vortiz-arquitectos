@@ -23,6 +23,16 @@ interface Credencial {
   anio: string;
 }
 
+interface MiembroEquipo {
+  nombre: string;
+  rol: string;
+  foto: string;
+  especialidad?: string;
+  email?: string;
+  linkedin?: string;
+  descripcion?: string;
+}
+
 @Component({
   selector: 'app-nosotros',
   standalone: true,
@@ -80,6 +90,12 @@ export class NosotrosComponent implements OnInit {
   valores: Valor[] = [];
   hitos: Hito[] = [];
   credenciales: Credencial[] = [];
+
+  // ============ EQUIPO ============
+  equipoBadge = '';
+  equipoTitulo = '';
+  equipoDescripcion = '';
+  equipo: MiembroEquipo[] = [];
 
   ngOnInit() {
     // ============ HERO ============
@@ -142,5 +158,10 @@ export class NosotrosComponent implements OnInit {
         });
       }, 600);
     });
+    // ============ EQUIPO ============
+    this.equipoBadge = this.contenidoService.getCampo('nosotros', 'equipo', 'badge');
+    this.equipoTitulo = this.contenidoService.getCampo('nosotros', 'equipo', 'titulo');
+    this.equipoDescripcion = this.contenidoService.getCampo('nosotros', 'equipo', 'descripcion');
+    this.equipo = this.contenidoService.getLista<MiembroEquipo>('nosotros', 'equipo', []);
   }
 }
