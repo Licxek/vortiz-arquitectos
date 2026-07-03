@@ -65,10 +65,12 @@ interface Plantilla {
 type ItemTemplate = {
   [key: string]: {
     label: string;
-    tipo: 'texto' | 'textarea' | 'icono';
+    tipo: 'texto' | 'textarea' | 'icono' | 'imagen';
     placeholder?: string;
     maxLength?: number;
     catalogoIconos?: 'valores' | 'servicios';
+    carpeta?: string;
+    aspectRatio?: 'square' | 'wide' | 'auto';
   };
 };
 
@@ -633,6 +635,79 @@ export class PaginasComponent implements OnInit {
             maxItems: 20,
             ayuda:
               'Hitos importantes ordenados cronológicamente. Se muestran como timeline en el sitio.',
+          },
+        ],
+      },
+      {
+        id: 'equipo',
+        nombre: 'Nuestro Equipo',
+        icono: '👥',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto', placeholder: 'Nuestro equipo' },
+          {
+            key: 'titulo',
+            label: 'Título de la sección',
+            tipo: 'texto',
+            placeholder: 'Las personas detrás de cada proyecto',
+          },
+          {
+            key: 'descripcion',
+            label: 'Descripción',
+            tipo: 'textarea',
+            placeholder: 'Descripción corta que aparece debajo del título',
+          },
+          {
+            key: 'lista',
+            label: 'Miembros del equipo',
+            tipo: 'lista',
+            itemTemplate: {
+              nombre: {
+                label: 'Nombre completo',
+                tipo: 'texto',
+                placeholder: 'Ej: Arq. María González',
+                maxLength: 80,
+              },
+              rol: {
+                label: 'Cargo / Rol',
+                tipo: 'texto',
+                placeholder: 'Ej: Arquitecta Senior',
+                maxLength: 80,
+              },
+              especialidad: {
+                label: 'Especialidad',
+                tipo: 'texto',
+                placeholder: 'Ej: Diseño residencial',
+                maxLength: 60,
+              },
+              foto: {
+                label: 'Foto',
+                tipo: 'imagen',
+                carpeta: 'equipo',
+                aspectRatio: 'auto',
+              },
+              descripcion: {
+                label: 'Descripción breve',
+                tipo: 'textarea',
+                placeholder: 'Bio corta que aparece en el modal al hacer click',
+                maxLength: 300,
+              },
+              email: {
+                label: 'Email de contacto',
+                tipo: 'texto',
+                placeholder: 'nombre@vortizarquitectos.com',
+                maxLength: 120,
+              },
+              linkedin: {
+                label: 'LinkedIn (URL)',
+                tipo: 'texto',
+                placeholder: 'https://linkedin.com/in/...',
+                maxLength: 200,
+              },
+            },
+            itemLabelKey: 'nombre',
+            maxItems: 20,
+            ayuda:
+              'Agrega los miembros del equipo. Se muestran como cards en la página. El orden se puede cambiar arrastrando.',
           },
         ],
       },

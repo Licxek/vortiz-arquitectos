@@ -3430,6 +3430,15 @@
                               [placeholder]="campo.itemTemplate![itemKey].placeholder || ''"
                               class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"
                             ></textarea>
+                            <!-- Selector visual de imagen -->
+                            <div *ngIf="campo.itemTemplate![itemKey].tipo === 'imagen'">
+                              <app-image-upload
+                                [valor]="item[itemKey] || ''"
+                                (valorChange)="actualizarItemLista(campo, i, itemKey, $event)"
+                                [carpeta]="campo.itemTemplate![itemKey].carpeta || 'equipo'"
+                                [aspectRatio]="campo.itemTemplate![itemKey].aspectRatio || 'square'"
+                              ></app-image-upload>
+                            </div>
                             <!-- Selector visual de ícono -->
                             <div
                               *ngIf="campo.itemTemplate![itemKey].tipo === 'icono'"
