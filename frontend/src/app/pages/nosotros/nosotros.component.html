@@ -400,10 +400,14 @@
     </div>
   </section>
   <!-- ============ NUESTRO EQUIPO ============ -->
-  <section id="seccion-equipo" class="py-20 md:py-28 bg-white" *ngIf="equipo.length > 0">
+  <section
+    id="seccion-equipo"
+    class="pt-4 pb-16 md:pt-6 md:pb-20 bg-white"
+    *ngIf="equipo.length > 0"
+  >
     <div class="max-w-7xl mx-auto px-4">
       <!-- Encabezado -->
-      <div class="text-center max-w-2xl mx-auto mb-16">
+      <div class="text-center max-w-2xl mx-auto mb-10 md:mb-12">
         <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-primario)]">
           {{ equipoBadge || 'Nuestro equipo' }}
         </span>
@@ -706,7 +710,7 @@
     </div>
   </section>
 
-<!-- ============ MODAL DE PERFIL DEL MIEMBRO ============ -->
+  <!-- ============ MODAL DE PERFIL DEL MIEMBRO ============ -->
   <div
     *ngIf="miembroSeleccionado"
     (click)="cerrarPerfilMiembro()"
@@ -755,7 +759,9 @@
           </svg>
         </div>
 
-        <div class="absolute inset-0 md:hidden bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+        <div
+          class="absolute inset-0 md:hidden bg-gradient-to-t from-black/80 via-black/30 to-transparent"
+        ></div>
 
         <div class="absolute inset-x-0 bottom-0 p-6 md:hidden">
           <div class="flex items-center gap-2 mb-3">
@@ -857,8 +863,8 @@
           </div>
 
           <div class="flex flex-col sm:flex-row gap-3">
-
-            <a  *ngIf="miembroSeleccionado.email"
+            <a
+              *ngIf="miembroSeleccionado.email"
               [href]="'mailto:' + miembroSeleccionado.email"
               class="flex-1 group flex items-center gap-3 px-5 py-4 bg-gradient-to-br from-[#0a4d7a] to-[#0a1f3d] hover:from-[#0a5d8f] hover:to-[#0a2f5d] text-white rounded-xl transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5"
             >
@@ -896,8 +902,8 @@
               </svg>
             </a>
 
-
-            <a  *ngIf="miembroSeleccionado.linkedin"
+            <a
+              *ngIf="miembroSeleccionado.linkedin"
               [href]="miembroSeleccionado.linkedin"
               target="_blank"
               rel="noopener"
@@ -922,7 +928,9 @@
           </div>
         </div>
 
-        <div class="mt-8 pt-6 border-t border-gray-100 flex items-center justify-center gap-3 opacity-40">
+        <div
+          class="mt-8 pt-6 border-t border-gray-100 flex items-center justify-center gap-3 opacity-40"
+        >
           <div class="h-px w-8 bg-gray-400"></div>
           <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-gray-500">
             Vortiz Arquitectos
