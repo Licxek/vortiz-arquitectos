@@ -858,7 +858,7 @@
 
           <div class="flex flex-col sm:flex-row gap-3">
 
-              *ngIf="miembroSeleccionado.email"
+            <a  *ngIf="miembroSeleccionado.email"
               [href]="'mailto:' + miembroSeleccionado.email"
               class="flex-1 group flex items-center gap-3 px-5 py-4 bg-gradient-to-br from-[#0a4d7a] to-[#0a1f3d] hover:from-[#0a5d8f] hover:to-[#0a2f5d] text-white rounded-xl transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5"
             >
@@ -897,7 +897,7 @@
             </a>
 
 
-              *ngIf="miembroSeleccionado.linkedin"
+            <a  *ngIf="miembroSeleccionado.linkedin"
               [href]="miembroSeleccionado.linkedin"
               target="_blank"
               rel="noopener"
