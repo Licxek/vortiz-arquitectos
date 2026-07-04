@@ -1167,6 +1167,26 @@ export class PaginasComponent implements OnInit {
         ],
       },
       {
+        id: 'retencion',
+        nombre: 'Tiempo de conservación',
+        icono: '⏳',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Tiempo de conservación de tus datos',
+          },
+          {
+            key: 'contenido',
+            label: 'Contenido',
+            tipo: 'textarea',
+            placeholder:
+              'Explica cuánto tiempo guardas los datos y por qué (obligaciones fiscales, etc.)',
+          },
+        ],
+      },
+      {
         id: 'cambios',
         nombre: 'Modificaciones al aviso',
         icono: '🔄',
