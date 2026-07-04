@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { mantenimientoGuard } from './core/guards/mantenimiento.guard';
 
+
 export const routes: Routes = [
   // Login y recuperación (sin layout)
   {
@@ -142,6 +143,13 @@ export const routes: Routes = [
     path: 'citas',
     canActivate: [mantenimientoGuard],
     loadComponent: () => import('./pages/citas/citas.component').then((m) => m.CitasComponent),
+  },
+  {
+    path: 'politica-privacidad',
+    loadComponent: () =>
+      import('./pages/politica-privacidad/politica-privacidad.component').then(
+        (m) => m.PoliticaPrivacidadComponent,
+      ),
   },
   // Páginas dinámicas - nueva URL
   {
