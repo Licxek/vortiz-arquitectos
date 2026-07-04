@@ -152,6 +152,7 @@ export class PaginasComponent implements OnInit {
   private readonly TTL_BORRADOR_MS = 14 * 24 * 60 * 60 * 1000; // 14 días
   private autoSaveTimer: any = null;
   private actualizadorTiempoTimer: any = null;
+
   private paginasFijas: Pagina[] = [
     {
       id: -1,
@@ -207,6 +208,17 @@ export class PaginasComponent implements OnInit {
       ultimaEdicion: '—',
       icono: 'calendar',
       color: 'pink',
+    },
+    {
+      id: -6,
+      titulo: 'Política de privacidad',
+      slug: '/politica-privacidad',
+      tipo: 'fija',
+      visible: true,
+      estado: 'publicada',
+      ultimaEdicion: '—',
+      icono: 'lock',
+      color: 'gray',
     },
   ];
 
@@ -885,6 +897,316 @@ export class PaginasComponent implements OnInit {
         ],
       },
     ],
+    politicaPrivacidad: [
+      {
+        id: 'hero',
+        nombre: 'Hero',
+        icono: '🔒',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto', default: 'Legal' },
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Política de *Privacidad*',
+            ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
+          },
+          {
+            key: 'descripcion',
+            label: 'Descripción / lema',
+            tipo: 'textarea',
+            default: 'Tu privacidad es importante para nosotros. Aquí te explicamos cómo tratamos tu información.',
+          },
+          {
+            key: 'fechaActualizacion',
+            label: 'Fecha de última actualización',
+            tipo: 'texto',
+            placeholder: 'Ej: 1 de enero de 2026',
+            ayuda: 'Actualiza esta fecha cada vez que modifiques la política',
+          },
+        ],
+      },
+      {
+        id: 'introduccion',
+        nombre: 'Introducción',
+        icono: '📖',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Introducción',
+          },
+          {
+            key: 'contenido',
+            label: 'Texto introductorio',
+            tipo: 'textarea',
+            placeholder:
+              'Explica quién es tu empresa y el compromiso con la protección de datos.',
+          },
+        ],
+      },
+      {
+        id: 'responsable',
+        nombre: 'Responsable del tratamiento',
+        icono: '🏢',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Responsable del tratamiento de datos',
+          },
+          {
+            key: 'razonSocial',
+            label: 'Razón social / Nombre comercial',
+            tipo: 'texto',
+            placeholder: 'Vortiz Arquitectos',
+          },
+          {
+            key: 'rfc',
+            label: 'RFC (opcional)',
+            tipo: 'texto',
+            placeholder: 'XAXX010101000',
+          },
+          {
+            key: 'domicilio',
+            label: 'Domicilio',
+            tipo: 'textarea',
+            placeholder: 'Milpillas 101, La Forestal, 34217 Durango, Dgo.',
+          },
+          {
+            key: 'contactoLegal',
+            label: 'Correo de contacto legal',
+            tipo: 'texto',
+            placeholder: 'privacidad@vortizarquitectos.com',
+          },
+        ],
+      },
+      {
+        id: 'datosRecopilados',
+        nombre: 'Datos que recopilamos',
+        icono: '📋',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Datos que recopilamos',
+          },
+          {
+            key: 'introduccion',
+            label: 'Párrafo introductorio',
+            tipo: 'textarea',
+            placeholder: 'Explica qué tipo de datos personales recopilas.',
+          },
+          {
+            key: 'lista',
+            label: 'Tipos de datos',
+            tipo: 'lista',
+            itemTemplate: {
+              titulo: {
+                label: 'Categoría',
+                tipo: 'texto',
+                placeholder: 'Ej: Datos de identificación',
+              },
+              descripcion: {
+                label: 'Qué incluye',
+                tipo: 'textarea',
+                placeholder: 'Nombre completo, correo electrónico, teléfono...',
+              },
+            },
+            itemLabelKey: 'titulo',
+            maxItems: 15,
+            ayuda: 'Enumera cada categoría de datos que recopilas.',
+          },
+        ],
+      },
+      {
+        id: 'finalidades',
+        nombre: 'Finalidades del uso',
+        icono: '🎯',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Para qué usamos tus datos',
+          },
+          {
+            key: 'introduccion',
+            label: 'Párrafo introductorio',
+            tipo: 'textarea',
+            placeholder: 'Explica las finalidades del tratamiento.',
+          },
+          {
+            key: 'lista',
+            label: 'Finalidades',
+            tipo: 'lista',
+            itemTemplate: {
+              titulo: {
+                label: 'Finalidad',
+                tipo: 'texto',
+                placeholder: 'Ej: Gestionar citas y consultas',
+              },
+              descripcion: {
+                label: 'Descripción',
+                tipo: 'textarea',
+                placeholder: 'Explica en qué consiste esta finalidad.',
+              },
+            },
+            itemLabelKey: 'titulo',
+            maxItems: 15,
+          },
+        ],
+      },
+      {
+        id: 'terceros',
+        nombre: 'Compartir con terceros',
+        icono: '🤝',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Con quién compartimos tu información',
+          },
+          {
+            key: 'contenido',
+            label: 'Contenido',
+            tipo: 'textarea',
+            placeholder:
+              'Explica si compartes datos con proveedores, con qué finalidad y qué medidas de protección aplican.',
+          },
+        ],
+      },
+      {
+        id: 'cookies',
+        nombre: 'Cookies y tecnologías similares',
+        icono: '🍪',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Uso de cookies',
+          },
+          {
+            key: 'contenido',
+            label: 'Contenido',
+            tipo: 'textarea',
+            placeholder:
+              'Explica qué cookies usa tu sitio (funcionales, analíticas, de marketing) y cómo el usuario puede desactivarlas.',
+          },
+        ],
+      },
+      {
+        id: 'derechosARCO',
+        nombre: 'Derechos del titular',
+        icono: '⚖️',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Tus derechos ARCO',
+          },
+          {
+            key: 'introduccion',
+            label: 'Párrafo introductorio',
+            tipo: 'textarea',
+            default:
+              'De acuerdo con la LFPDPPP, tienes derecho al Acceso, Rectificación, Cancelación y Oposición (ARCO) al tratamiento de tus datos.',
+          },
+          {
+            key: 'lista',
+            label: 'Derechos',
+            tipo: 'lista',
+            itemTemplate: {
+              titulo: {
+                label: 'Derecho',
+                tipo: 'texto',
+                placeholder: 'Ej: Acceso',
+              },
+              descripcion: {
+                label: 'Descripción',
+                tipo: 'textarea',
+                placeholder: 'Conocer qué datos personales tenemos sobre ti...',
+              },
+            },
+            itemLabelKey: 'titulo',
+            maxItems: 8,
+          },
+          {
+            key: 'comoEjercer',
+            label: '¿Cómo ejercer estos derechos?',
+            tipo: 'textarea',
+            placeholder:
+              'Envía un correo a privacidad@vortizarquitectos.com con tu solicitud, adjuntando identificación oficial...',
+          },
+        ],
+      },
+      {
+        id: 'seguridad',
+        nombre: 'Medidas de seguridad',
+        icono: '🛡️',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Cómo protegemos tu información',
+          },
+          {
+            key: 'contenido',
+            label: 'Contenido',
+            tipo: 'textarea',
+            placeholder:
+              'Describe las medidas técnicas y administrativas que aplicas para proteger los datos.',
+          },
+        ],
+      },
+      {
+        id: 'cambios',
+        nombre: 'Modificaciones al aviso',
+        icono: '🔄',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Modificaciones a este aviso',
+          },
+          {
+            key: 'contenido',
+            label: 'Contenido',
+            tipo: 'textarea',
+            default:
+              'Nos reservamos el derecho de modificar el presente aviso de privacidad en cualquier momento. Las actualizaciones se publicarán en esta misma página con la fecha correspondiente.',
+          },
+        ],
+      },
+      {
+        id: 'contacto',
+        nombre: 'Contacto',
+        icono: '📧',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: '¿Dudas sobre esta política?',
+          },
+          {
+            key: 'descripcion',
+            label: 'Descripción',
+            tipo: 'textarea',
+            default:
+              'Si tienes cualquier duda o requerimiento, contáctanos por los siguientes medios:',
+          },
+        ],
+      },
+    ],
   };
 
   // Almacén del contenido (en producción esto vendría del backend)
@@ -906,6 +1228,7 @@ export class PaginasComponent implements OnInit {
     '/proyectos': '/proyectos',
     '/servicios': '/servicios',
     '/citas': '/citas',
+    '/politica-privacidad': '/politica-privacidad',
   };
 
   get categoriaLabel() {
@@ -1362,6 +1685,7 @@ export class PaginasComponent implements OnInit {
     '/proyectos': 'proyectos',
     '/servicios': 'servicios',
     '/citas': 'citas',
+    '/politica-privacidad': 'politicaPrivacidad',
   };
 
   // ============ EDITAR / PREVISUALIZAR ============
@@ -2208,6 +2532,7 @@ export class PaginasComponent implements OnInit {
           proyectos: '/proyectos',
           servicios: '/servicios',
           citas: '/citas',
+          'politica-privacidad': '/politica-privacidad',
         };
         const slugReal = slugMap[paginaKey];
         if (slugReal) {
