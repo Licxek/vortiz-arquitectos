@@ -15,6 +15,8 @@ import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { ImageGalleryInputComponent } from '../../../shared/image-gallery-input/image-gallery-input.component';
 import { ColoresGuardadosService } from '../../../core/services/colores-guardados.service';
+import { SelectConCreacionComponent } from '../../../shared/select-con-creacion/select-con-creacion.component';
+import { CategoriasService, Categoria } from '../../../core/services/categorias.service';
 
 interface Pagina {
   id: number;
@@ -122,6 +124,7 @@ interface BorradorLocal {
     ImageUploadComponent,
     SkeletonComponent,
     ImageGalleryInputComponent,
+    SelectConCreacionComponent,
   ],
   templateUrl: './paginas.component.html',
 })
@@ -138,6 +141,7 @@ export class PaginasComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private categoriasService = inject(CategoriasService);
   vistaModo: VistaModo = 'grid';
   // Auto-save
   estadoAutoSave: EstadoAutoSave = 'oculto';
@@ -930,6 +934,7 @@ export class PaginasComponent implements OnInit {
     this.cargarPaginasDinamicas();
     this.cargarPreferenciaVista(); // 👈 NUEVO
     this.cargarColoresGuardados();
+    this.cargarCategorias();
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(() => this.aplicarParamsDeUrl());
@@ -1223,24 +1228,32 @@ export class PaginasComponent implements OnInit {
     if (idx > 0) this.seccionActiva = this.secciones[idx - 1].id;
   }
 
-  guardarPagina(publicar: boolean) {
+  guardarPagina(forzarBorrador?: boolean) {
     if (!this.formNuevaPagina.titulo.trim()) {
       this.flashMensaje('El título es requerido', 'info');
       return;
     }
 
-    // Construir payload limpio para el backend (sin campos de UI)
+    // Validar programación si aplica
+    if (this.formNuevaPagina.estado === 'programada' && !this.fechaProgramacionValida) {
+      this.flashMensaje('La fecha de programación debe ser futura', 'info');
+      return;
+    }
+
+    // Si viene forzarBorrador (retrocompatibilidad), forzamos borrador
+    // Si no, respetamos el estado elegido en la sección Configuración
+    const estadoFinal = forzarBorrador === true ? 'borrador' : this.formNuevaPagina.estado;
+
     const payload: Partial<PaginaBackend> = {
       titulo: this.formNuevaPagina.titulo.trim(),
       slug: this.formNuevaPagina.slug.trim() || undefined,
       descripcion: this.formNuevaPagina.descripcion || '',
       imagenDestacada: this.formNuevaPagina.imagenDestacada || '',
       categoria: this.formNuevaPagina.categoria,
-      estado: publicar ? 'publicada' : 'borrador',
+      estado: estadoFinal,
       visibilidad: this.formNuevaPagina.visibilidad,
       mostrarEnMenu: this.formNuevaPagina.mostrarEnMenu,
       visible: true,
-      // Stripear "expandido" (UI state) antes de mandar al backend
       bloques: this.formNuevaPagina.bloques.map((b) => {
         const { expandido, ...resto } = b;
         return resto;
@@ -1251,6 +1264,11 @@ export class PaginasComponent implements OnInit {
       color: this.formNuevaPagina.color || 'blue',
       icono: this.formNuevaPagina.icono || 'document',
     };
+
+    // Agregar fecha de publicación si es programada
+    if (estadoFinal === 'programada' && this.formNuevaPagina.fechaPublicacion) {
+      (payload as any).fechaPublicacion = this.formNuevaPagina.fechaPublicacion;
+    }
 
     this.guardandoServicio = true;
     this.cdr.markForCheck();
@@ -1264,7 +1282,6 @@ export class PaginasComponent implements OnInit {
         this.guardandoServicio = false;
         const mapeada = this.mapearBackend(data);
 
-        // 👇 NUEVO: si era custom, guardarlo en la paleta
         if (this.esColorCustom(this.formNuevaPagina.color)) {
           this.guardarColorPersonalizado(this.formNuevaPagina.color);
         }
@@ -1281,7 +1298,14 @@ export class PaginasComponent implements OnInit {
         localStorage.removeItem(this.STORAGE_BORRADOR);
         this.estadoAutoSave = 'oculto';
         this.ultimoGuardado = null;
-        this.flashMensaje(publicar ? 'Página publicada' : 'Borrador guardado');
+
+        // Mensaje personalizado según el estado
+        const mensajes = {
+          borrador: 'Borrador guardado',
+          publicada: this.paginaEditandoId ? 'Cambios guardados' : 'Página publicada',
+          programada: 'Publicación programada',
+        };
+        this.flashMensaje(mensajes[estadoFinal] || 'Guardado');
       },
       error: (err) => {
         this.guardandoServicio = false;
@@ -1800,13 +1824,6 @@ export class PaginasComponent implements OnInit {
   }
 
   // ===== CRUD de Servicios (dentro del editor de Páginas) =====
-  categoriasServicio = [
-    { value: 'tramites', label: 'Trámites' },
-    { value: 'gerencia', label: 'Gerencia' },
-    { value: 'diseno', label: 'Diseño' },
-    { value: 'construccion', label: 'Construcción' },
-    { value: 'especiales', label: 'Proyectos Especiales' },
-  ];
 
   servicioFormAbierto = false;
   servicioEditandoId: number | null = null;
@@ -1949,16 +1966,9 @@ export class PaginasComponent implements OnInit {
 
     return false;
   }
-  // ===== CRUD de Proyectos =====
-  categoriasProyecto = [
-    { value: 'corporativo', label: 'Corporativo' },
-    { value: 'industrial', label: 'Industrial' },
-    { value: 'comercial', label: 'Comercial' },
-    { value: 'residencial', label: 'Residencial' },
-    { value: 'infraestructura', label: 'Infraestructura' },
-    { value: 'institucional', label: 'Institucional' },
-  ];
 
+  categoriasServicio: Categoria[] = [];
+  categoriasProyecto: Categoria[] = [];
   proyectoFormAbierto = false;
   proyectoEditandoId: number | null = null;
   proyectoForm = this.proyectoVacio();
@@ -2316,7 +2326,7 @@ export class PaginasComponent implements OnInit {
       }
       if (this.mostrarNuevaPagina && this.formNuevaPagina.titulo.trim()) {
         event.preventDefault();
-        this.guardarPagina(false); // guarda como borrador
+        this.guardarPagina(); // guarda con el estado actual seleccionado
         return;
       }
     }
@@ -2834,5 +2844,69 @@ export class PaginasComponent implements OnInit {
         this.cargarColoresGuardados();
       },
     });
+  }
+
+  agregarCategoriaServicio(nueva: { value: string; label: string }) {
+    // Evitar duplicados locales
+    if (this.categoriasServicio.some((c) => c.value === nueva.value)) return;
+
+    this.categoriasService
+      .crear({ tipo: 'servicio', value: nueva.value, label: nueva.label })
+      .subscribe({
+        next: (cat) => {
+          this.categoriasServicio = [...this.categoriasServicio, cat];
+          this.cdr.markForCheck();
+          this.flashMensaje(`Categoría "${cat.label}" creada`);
+        },
+        error: (err) => {
+          this.flashMensaje(err?.error?.message || 'Error al crear categoría', 'info');
+        },
+      });
+  }
+
+  agregarCategoriaProyecto(nueva: { value: string; label: string }) {
+    if (this.categoriasProyecto.some((c) => c.value === nueva.value)) return;
+
+    this.categoriasService
+      .crear({ tipo: 'proyecto', value: nueva.value, label: nueva.label })
+      .subscribe({
+        next: (cat) => {
+          this.categoriasProyecto = [...this.categoriasProyecto, cat];
+          this.cdr.markForCheck();
+          this.flashMensaje(`Categoría "${cat.label}" creada`);
+        },
+        error: (err) => {
+          this.flashMensaje(err?.error?.message || 'Error al crear categoría', 'info');
+        },
+      });
+  }
+
+  private cargarCategorias() {
+    this.categoriasService.cargarServicios().subscribe({
+      next: (cats) => {
+        this.categoriasServicio = cats;
+        this.cdr.markForCheck();
+      },
+    });
+    this.categoriasService.cargarProyectos().subscribe({
+      next: (cats) => {
+        this.categoriasProyecto = cats;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  /** Label dinámico del botón principal según el estado seleccionado */
+  get labelBotonGuardar(): string {
+    switch (this.formNuevaPagina.estado) {
+      case 'borrador':
+        return 'Guardar borrador';
+      case 'publicada':
+        return this.paginaEditandoId ? 'Guardar cambios' : 'Publicar';
+      case 'programada':
+        return 'Programar publicación';
+      default:
+        return 'Guardar';
+    }
   }
 }
