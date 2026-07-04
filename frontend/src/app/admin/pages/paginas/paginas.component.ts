@@ -1253,6 +1253,7 @@ export class PaginasComponent implements OnInit {
       estado: estadoFinal,
       visibilidad: this.formNuevaPagina.visibilidad,
       mostrarEnMenu: this.formNuevaPagina.mostrarEnMenu,
+      posicionMenu: this.formNuevaPagina.posicionMenu ?? 0, // 👈 AGREGAR
       visible: true,
       bloques: this.formNuevaPagina.bloques.map((b) => {
         const { expandido, ...resto } = b;
