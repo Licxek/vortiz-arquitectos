@@ -382,7 +382,7 @@
                   {{ consultaSeleccionada.correo }}
                 </a>
                 <span *ngIf="consultaSeleccionada.telefono" class="flex items-center gap-1.5">
-                  <span>{{ consultaSeleccionada.telefono }}</span>
+                  <span>{{ consultaSeleccionada.telefono | telefonoFormato }}</span>
                   <button
                     (click)="copiarNumero()"
                     class="text-gray-400 hover:text-[#0a4d7a] transition-colors"

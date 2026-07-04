@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { InicioService, CitaBackend } from '../../../core/services/inicio.service';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
+import { TelefonoFormatoPipe } from '../../../shared/pipes/telefono-formato.pipe';
 
 interface Consulta {
   id: number;
@@ -54,7 +55,7 @@ type Filtro = 'todas' | 'pendientes' | 'urgentes' | 'resueltas' | 'archivadas';
 @Component({
   selector: 'app-consultas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SkeletonComponent],
+  imports: [CommonModule, FormsModule, RouterLink, SkeletonComponent,TelefonoFormatoPipe],
   templateUrl: './consultas.component.html',
 })
 export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
