@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { map } from 'rxjs/operators';
 
 export type EstadoPagina = 'borrador' | 'publicada' | 'programada';
 export type VisibilidadPagina = 'publica' | 'registrados' | 'contrasena';
@@ -92,5 +93,24 @@ export class PaginasService {
 
   eliminar(id: number): Observable<{ ok: boolean }> {
     return this.http.delete<{ ok: boolean }>(`${this.base}/${id}`);
+  }
+
+  /**
+   * Para el navbar: solo páginas publicadas, visibles Y con toggle "mostrar en menú".
+   * Ordenadas por posicionMenu ascendente.
+   */
+  getPaginasParaMenu(): Observable<Pagina[]> {
+    return this.getPaginasVisibles().pipe(
+      map((paginas) =>
+        paginas
+          .filter(
+            (p) =>
+              p.mostrarEnMenu === true &&
+              p.visible === true &&
+              p.estado === 'publicada',
+          )
+          .sort((a, b) => (a.posicionMenu || 999) - (b.posicionMenu || 999)),
+      ),
+    );
   }
 }
