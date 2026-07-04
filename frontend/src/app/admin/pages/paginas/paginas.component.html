@@ -3063,14 +3063,9 @@
               Siguiente →
             </button>
             <button
-              (click)="guardarPagina(false)"
-              class="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap"
-            >
-              Borrador
-            </button>
-            <button
-              (click)="guardarPagina(true)"
-              [disabled]="!formNuevaPagina.titulo.trim()"
+              (click)="guardarPagina()"
+              [disabled]="!formNuevaPagina.titulo.trim() || !fechaProgramacionValida"
+              [title]="!fechaProgramacionValida ? 'La fecha de programación no es válida' : ''"
               class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-5 py-2 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-lg text-xs sm:text-sm font-medium shadow-md transition-all hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
             >
               <svg
@@ -3082,7 +3077,7 @@
               >
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-              Publicar
+              {{ labelBotonGuardar }}
             </button>
           </div>
         </div>
@@ -3431,7 +3426,10 @@
                               class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white transition-all resize-none"
                             ></textarea>
                             <!-- Selector visual de imagen -->
-                            <div *ngIf="campo.itemTemplate![itemKey].tipo === 'imagen'">
+                            <div
+                              *ngIf="campo.itemTemplate![itemKey].tipo === 'imagen'"
+                              class="max-w-xs"
+                            >
                               <app-image-upload
                                 [valor]="item[itemKey] || ''"
                                 (valorChange)="actualizarItemLista(campo, i, itemKey, $event)"
@@ -3630,14 +3628,13 @@
                           <label class="block text-xs font-semibold text-gray-500 mb-1"
                             >Categoría</label
                           >
-                          <select
-                            [(ngModel)]="servicioForm.categoria"
-                            class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
-                          >
-                            <option *ngFor="let c of categoriasServicio" [value]="c.value">
-                              {{ c.label }}
-                            </option>
-                          </select>
+                          <app-select-con-creacion
+                            [opciones]="categoriasServicio"
+                            [value]="servicioForm.categoria"
+                            (valueChange)="servicioForm.categoria = $event"
+                            (nuevaOpcion)="agregarCategoriaServicio($event)"
+                            placeholder="Selecciona una categoría"
+                          ></app-select-con-creacion>
                         </div>
                         <div class="sm:col-span-2">
                           <label class="block text-xs font-semibold text-gray-500 mb-2"
@@ -4066,14 +4063,13 @@
                           <label class="block text-xs font-semibold text-gray-500 mb-1"
                             >Categoría</label
                           >
-                          <select
-                            [(ngModel)]="proyectoForm.categoria"
-                            class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a]"
-                          >
-                            <option *ngFor="let c of categoriasProyecto" [value]="c.value">
-                              {{ c.label }}
-                            </option>
-                          </select>
+                          <app-select-con-creacion
+                            [opciones]="categoriasProyecto"
+                            [value]="proyectoForm.categoria"
+                            (valueChange)="proyectoForm.categoria = $event"
+                            (nuevaOpcion)="agregarCategoriaProyecto($event)"
+                            placeholder="Selecciona una categoría"
+                          ></app-select-con-creacion>
                         </div>
                         <div>
                           <label class="block text-xs font-semibold text-gray-500 mb-1">Año</label>

@@ -27,6 +27,7 @@ import { ScheduleModule } from '@nestjs/schedule';  // 👈 AGREGAR import
 import { ImapModule } from './imap/imap.module';
 import { NotificacionesModule } from './notificaciones/notificaciones.module';
 import { ColoresGuardadosModule } from './colores-guardados/colores-guardados.module';
+import { CategoriasModule } from './categorias/categorias.module';
 
 @Module({
   imports: [
@@ -118,6 +119,7 @@ import { ColoresGuardadosModule } from './colores-guardados/colores-guardados.mo
     ImapModule,
     NotificacionesModule,
     ColoresGuardadosModule,
+    CategoriasModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
