@@ -109,10 +109,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.cdr.markForCheck();
     });
 
-    this.paginasService.getPaginasVisibles().subscribe({
+    this.paginasService.getPaginasParaMenu().subscribe({
       next: (data) => {
         this.paginasDinamicas = data;
-        this.generarBusquedasPopulares(); // 👈 NUEVO: ahora que tenemos catálogo
+        this.generarBusquedasPopulares();
+        this.cdr.markForCheck();
       },
       error: () => (this.paginasDinamicas = []),
     });
