@@ -339,7 +339,7 @@
             </a>
           </li>
 
-          <!-- Horario con "Abierto ahora" dinámico -->
+          <!-- Horario con "Abierto ahora" dinámico y líneas separadas -->
           <li class="flex items-start gap-2.5 mt-1 pt-3 border-t border-white/5">
             <svg
               class="w-4 h-4 mt-0.5 shrink-0"
@@ -356,8 +356,9 @@
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <div class="flex-1">
-              <div class="flex items-center gap-2 mb-1">
+            <div class="flex-1 min-w-0">
+              <!-- Badge estado dinámico -->
+              <div class="flex items-center gap-2 mb-2">
                 <span class="relative flex h-2 w-2">
                   <span
                     *ngIf="estaAbiertoAhora"
@@ -377,9 +378,31 @@
                   {{ estaAbiertoAhora ? 'Abierto ahora' : 'Cerrado ahora' }}
                 </span>
               </div>
-              <p class="text-xs text-gray-500">
-                {{ configuracion?.horario || 'Lun - Vie 9:00 - 18:00' }}
-              </p>
+
+              <!-- Líneas de horario agrupadas -->
+              <div *ngIf="lineasHorario.length > 0; else horarioFallback" class="space-y-0.5">
+                <div
+                  *ngFor="let linea of lineasHorario"
+                  class="flex items-baseline justify-between gap-3 text-xs"
+                >
+                  <span class="text-gray-500 font-medium min-w-[60px]">{{ linea.etiqueta }}</span>
+                  <span
+                    class="tabular-nums"
+                    [class.text-gray-400]="!linea.cerrado"
+                    [class.text-gray-600]="linea.cerrado"
+                    [class.italic]="linea.cerrado"
+                  >
+                    {{ linea.valor }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Fallback si no hay agenda cargada aún -->
+              <ng-template #horarioFallback>
+                <p class="text-xs text-gray-500">
+                  {{ configuracion?.horario || 'Lun – Vie 9:00 – 18:00' }}
+                </p>
+              </ng-template>
             </div>
           </li>
         </ng-container>

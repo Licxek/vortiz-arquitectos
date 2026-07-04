@@ -35,7 +35,13 @@ export interface Configuracion {
   anio_fundacion?: number;
   mantenimiento?: MantenimientoConfig;
   agenda?: {
-    diasSemana: { nombre: string; activo: boolean }[];
+    diasSemana: {
+      nombre: string;
+      abrev: string;
+      activo: boolean;
+      horaInicio?: string;
+      horaFin?: string;
+    }[];
     diasFeriados: { id?: number; fecha: string; motivo: string; recurrente?: boolean }[];
     horaInicio: string;
     horaFin: string;
@@ -90,13 +96,13 @@ export class ConfiguracionService {
           mantenimiento: { activo: false, mensaje: '', fechaEstimada: '' },
           agenda: {
             diasSemana: [
-              { nombre: 'Lunes', activo: true },
-              { nombre: 'Martes', activo: true },
-              { nombre: 'Miércoles', activo: true },
-              { nombre: 'Jueves', activo: true },
-              { nombre: 'Viernes', activo: true },
-              { nombre: 'Sábado', activo: false },
-              { nombre: 'Domingo', activo: false },
+              { nombre: 'Lunes', abrev: 'Lun', activo: true },
+              { nombre: 'Martes', abrev: 'Mar', activo: true },
+              { nombre: 'Miércoles', abrev: 'Mié', activo: true },
+              { nombre: 'Jueves', abrev: 'Jue', activo: true },
+              { nombre: 'Viernes', abrev: 'Vie', activo: true },
+              { nombre: 'Sábado', abrev: 'Sáb', activo: false },
+              { nombre: 'Domingo', abrev: 'Dom', activo: false },
             ],
             diasFeriados: [],
             horaInicio: '09:00',
