@@ -137,6 +137,12 @@ export class PoliticaPrivacidadComponent implements OnInit {
       descripcion: this.contenido.getCampo(key, 'contacto', 'descripcion'),
     });
 
+     // Retención
+    this.retencion.set({
+      titulo: this.contenido.getCampo(key, 'retencion', 'titulo'),
+      contenido: this.contenido.getCampo(key, 'retencion', 'contenido'),
+    });
+
     // Scroll top al cargar
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
@@ -145,4 +151,6 @@ export class PoliticaPrivacidadComponent implements OnInit {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  retencion = signal<{ titulo: string; contenido: string }>({ titulo: '', contenido: '' });
 }
