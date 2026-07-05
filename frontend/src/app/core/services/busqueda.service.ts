@@ -157,37 +157,35 @@ export class BusquedaService {
 
     const resultados: ResultadoBusqueda[] = [];
 
-    // 1️⃣ Páginas fijas (matching por título, descripción, keywords)
-    for (const p of this.paginasFijas) {
-      const texto = this.normalizar(`${p.titulo} ${p.descripcion} ${p.keywords}`);
-      if (this.matchesQuery(texto, q)) {
+    // 1️⃣ Páginas fijas — con prioridad al contenido interno específico
+    for (const pf of this.paginasFijas) {
+      // PRIMERO intentar match en contenido/secciones (más específico y útil)
+      const matchContenido = this.buscarEnContenidoPagina(pf.key, q);
+
+      if (matchContenido) {
+        // Match dentro de una sección específica → resultado con contexto
         resultados.push({
           tipo: 'pagina',
-          titulo: p.titulo,
-          descripcion: p.descripcion,
-          ruta: p.ruta,
+          titulo: pf.titulo,
+          descripcion: matchContenido.fragmento,
+          ruta: pf.ruta,
+          badge: 'Página',
+          contexto: `📍 En "${matchContenido.contextoSeccion}"`,
+          seccionId: matchContenido.seccionKey,
+        });
+        continue; // No duplicar con match genérico
+      }
+
+      // Si NO hubo match en contenido, buscar en título/descripción/keywords
+      const textoGenerico = this.normalizar(`${pf.titulo} ${pf.descripcion} ${pf.keywords}`);
+      if (this.matchesQuery(textoGenerico, q)) {
+        resultados.push({
+          tipo: 'pagina',
+          titulo: pf.titulo,
+          descripcion: pf.descripcion,
+          ruta: pf.ruta,
           badge: 'Página',
         });
-      }
-    }
-
-    // 2️⃣ CONTENIDO EDITABLE de páginas fijas (lo nuevo 🎯)
-    for (const pf of this.paginasFijas) {
-      const match = this.buscarEnContenidoPagina(pf.key, q);
-      if (match) {
-        // Si esa página ya se agregó por título/keywords, no duplicar
-        const yaExiste = resultados.some((r) => r.tipo === 'pagina' && r.ruta === pf.ruta);
-        if (!yaExiste) {
-          resultados.push({
-            tipo: 'pagina',
-            titulo: pf.titulo,
-            descripcion: match.fragmento,
-            ruta: pf.ruta,
-            badge: 'Página',
-            contexto: `📍 En "${match.contextoSeccion}"`,
-            seccionId: match.seccionKey, // 👈 para scrollear a la sección
-          });
-        }
       }
     }
 
@@ -277,26 +275,47 @@ export class BusquedaService {
     queryNormalizada: string,
   ): { fragmento: string; contextoSeccion: string; seccionKey: string } | null {
     const paginaData = this.contenido.getPagina(paginaKey);
-    if (!paginaData || Object.keys(paginaData).length === 0) return null;
+    const seccionesConocidas = this.nombresSecciones[paginaKey] || {};
 
-    // Nombre amigable de la página para incluirlo en el texto buscable
     const pageInfo = this.paginasFijas.find((p) => p.key === paginaKey);
     const pageName = pageInfo?.titulo || paginaKey;
 
+    // 1️⃣ PRIMERO: Buscar en los NOMBRES de sección declarados
+    // Esto garantiza que si buscas "cookies", te lleve a esa sección
+    // aunque el contenido no esté cargado o esté vacío
+    for (const seccionKey of Object.keys(seccionesConocidas)) {
+      const seccionLabel = seccionesConocidas[seccionKey];
+      const textoBusquedaNombre = this.normalizar(
+        `${pageName} ${seccionLabel} ${seccionKey}`,
+      );
+
+      if (this.matchesQuery(textoBusquedaNombre, queryNormalizada)) {
+        const seccionData = paginaData?.[seccionKey];
+        const contenidoSeccion = seccionData ? this.extraerTextoSeccion(seccionData) : '';
+        const textoSnippet = contenidoSeccion || `${pageName} → ${seccionLabel}`;
+        const fragmento = this.buildSnippet(textoSnippet, queryNormalizada);
+
+        return {
+          fragmento,
+          contextoSeccion: seccionLabel,
+          seccionKey,
+        };
+      }
+    }
+
+    // 2️⃣ DESPUÉS: Buscar dentro del contenido editable real
+    if (!paginaData || Object.keys(paginaData).length === 0) return null;
+
     for (const seccionKey of Object.keys(paginaData)) {
       const seccionData = paginaData[seccionKey];
-      const seccionLabel = this.nombresSecciones[paginaKey]?.[seccionKey] || seccionKey;
+      const seccionLabel = seccionesConocidas[seccionKey] || seccionKey;
       const contenidoSeccion = this.extraerTextoSeccion(seccionData);
 
-      // 🎯 Texto buscable = nombre de página + label de sección + contenido
-      // Permite que "proyectos del catalogo" matchee Proyectos→Catálogo
-      // y "mision" matchee Nosotros→Misión, aunque el contenido no traiga esas palabras.
       const textoOriginal = `${pageName} • ${seccionLabel}${contenidoSeccion ? ' • ' + contenidoSeccion : ''}`;
       const textoNormalizado = this.normalizar(textoOriginal);
 
       if (!this.matchesQuery(textoNormalizado, queryNormalizada)) continue;
 
-      // Snippet del contenido real (o del header si la sección no tiene texto editable)
       const textoSnippet = contenidoSeccion || `${pageName} → ${seccionLabel}`;
       const fragmento = this.buildSnippet(textoSnippet, queryNormalizada);
 
