@@ -151,6 +151,13 @@ export const routes: Routes = [
         (m) => m.PoliticaPrivacidadComponent,
       ),
   },
+  {
+    path: 'terminos-condiciones',
+    loadComponent: () =>
+      import('./pages/terminos-condiciones/terminos-condiciones.component').then(
+        (m) => m.TerminosCondicionesComponent,
+      ),
+  },
   // Páginas dinámicas - nueva URL
   {
     path: 'pagina/:slug',

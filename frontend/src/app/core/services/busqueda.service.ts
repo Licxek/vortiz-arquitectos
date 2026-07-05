@@ -67,6 +67,31 @@ export class BusquedaService {
       hero: 'Hero',
       beneficios: 'Beneficios',
     },
+    politicaPrivacidad: {
+      hero: 'Hero',
+      introduccion: 'Introducción',
+      responsable: 'Responsable del tratamiento',
+      datosRecopilados: 'Datos que recopilamos',
+      finalidades: 'Finalidades del uso',
+      terceros: 'Compartir con terceros',
+      cookies: 'Cookies',
+      derechosARCO: 'Derechos ARCO',
+      seguridad: 'Medidas de seguridad',
+      retencion: 'Conservación de datos',
+      cambios: 'Modificaciones al aviso',
+      contacto: 'Contacto',
+    },
+    terminosCondiciones: {
+      hero: 'Hero',
+      aceptacion: 'Aceptación de términos',
+      usoSitio: 'Uso del sitio',
+      servicios: 'Servicios profesionales',
+      propiedadIntelectual: 'Propiedad intelectual',
+      responsabilidad: 'Limitación de responsabilidad',
+      modificaciones: 'Modificaciones',
+      legislacion: 'Legislación aplicable',
+      contacto: 'Contacto',
+    },
   };
 
   private paginasFijas: PaginaFija[] = [
@@ -104,6 +129,22 @@ export class BusquedaService {
       ruta: '/citas',
       descripcion: 'Agenda una cita con nosotros',
       keywords: 'citas agendar contacto reunión consulta cotización',
+    },
+    {
+      key: 'politicaPrivacidad',
+      titulo: 'Política de privacidad',
+      ruta: '/politica-privacidad',
+      descripcion: 'Cómo tratamos, protegemos y usamos tu información personal',
+      keywords:
+        'privacidad datos personales politica aviso legal LFPDPPP ARCO derechos cookies proteccion informacion confidencialidad',
+    },
+    {
+      key: 'terminosCondiciones',
+      titulo: 'Términos y condiciones',
+      ruta: '/terminos-condiciones',
+      descripcion: 'Términos que regulan el uso del sitio y nuestros servicios',
+      keywords:
+        'terminos condiciones legal aviso uso sitio servicios responsabilidad propiedad intelectual diseños contrato',
     },
   ];
 
