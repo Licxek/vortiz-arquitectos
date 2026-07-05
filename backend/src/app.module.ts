@@ -28,6 +28,7 @@ import { ImapModule } from './imap/imap.module';
 import { NotificacionesModule } from './notificaciones/notificaciones.module';
 import { ColoresGuardadosModule } from './colores-guardados/colores-guardados.module';
 import { CategoriasModule } from './categorias/categorias.module';
+import { PaginasFijasModule } from './paginas-fijas/paginas-fijas.module';
 
 @Module({
   imports: [
@@ -120,6 +121,7 @@ import { CategoriasModule } from './categorias/categorias.module';
     NotificacionesModule,
     ColoresGuardadosModule,
     CategoriasModule,
+    PaginasFijasModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
