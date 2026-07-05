@@ -193,15 +193,14 @@ export class PoliticaPrivacidadComponent implements OnInit {
         // Elemento encontrado, hacer scroll suave
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-        // Limpiar el query param DESPUÉS del scroll (espera 1 segundo para que termine la animación)
+        // Limpiar el query param SIN que Angular haga scroll al top
+        // Usamos history.replaceState directamente porque router.navigate
+        // dispara el scrollPositionRestoration que resetea el scroll
         setTimeout(() => {
-          this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { seccion: null },
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-          });
-        }, 1000);
+          const url = new URL(window.location.href);
+          url.searchParams.delete('seccion');
+          window.history.replaceState({}, '', url.toString());
+        }, 1500);
         return;
       }
 
