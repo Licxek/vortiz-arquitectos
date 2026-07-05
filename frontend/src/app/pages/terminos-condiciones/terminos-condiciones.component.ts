@@ -82,12 +82,14 @@ export class TerminosCondicionesComponent implements OnInit {
     // Scroll top al cargar
     window.scrollTo({ top: 0, behavior: 'auto' });
 
-    // 🎯 Scroll a sección específica si viene ?seccion=X del buscador
-    // Solo lee UNA vez el snapshot, evita subscribe repetido y race conditions
-    const seccionInicial = this.route.snapshot.queryParamMap.get('seccion');
-    if (seccionInicial) {
-      this.intentarScrollASeccion(seccionInicial, 0);
-    }
+    // 🎯 Escuchar cambios de query params para hacer scroll a sección
+    // Funciona tanto al entrar por primera vez como al re-buscar estando en la misma página
+    this.route.queryParamMap.subscribe((params) => {
+      const seccion = params.get('seccion');
+      if (seccion) {
+        this.intentarScrollASeccion(seccion, 0);
+      }
+    });
 
     // Ajustar sidebar según altura real del navbar
     setTimeout(() => this.ajustarSidebar(), 100);
@@ -112,12 +114,19 @@ export class TerminosCondicionesComponent implements OnInit {
     }
   }
 
+  private scrollTimer: any = null;
+
   /** Intenta scrollear a la sección con retries por si el DOM aún no está listo */
   private intentarScrollASeccion(seccion: string, intento: number) {
     const MAX_INTENTOS = 15;
     const DELAY_MS = 150;
 
-    setTimeout(() => {
+    // Cancelar cualquier scroll previo pendiente (por si el usuario hace click rápido en varias secciones)
+    if (intento === 0 && this.scrollTimer) {
+      clearTimeout(this.scrollTimer);
+    }
+
+    this.scrollTimer = setTimeout(() => {
       const el = document.getElementById(seccion);
 
       if (el) {
@@ -125,8 +134,6 @@ export class TerminosCondicionesComponent implements OnInit {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         // Limpiar el query param SIN que Angular haga scroll al top
-        // Usamos history.replaceState directamente porque router.navigate
-        // dispara el scrollPositionRestoration que resetea el scroll
         setTimeout(() => {
           const url = new URL(window.location.href);
           url.searchParams.delete('seccion');
