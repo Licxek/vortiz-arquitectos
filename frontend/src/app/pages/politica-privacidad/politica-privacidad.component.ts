@@ -154,17 +154,7 @@ export class PoliticaPrivacidadComponent implements OnInit {
     this.route.queryParams.subscribe((params) => {
       const seccion = params['seccion'];
       if (!seccion) return;
-      setTimeout(() => {
-        const el = document.getElementById(seccion);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        // Limpiar el query param para no re-scrollear al refrescar
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { seccion: null },
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        });
-      }, 600);
+      this.intentarScrollASeccion(seccion, 0);
     });
 
     // Ajustar sidebar según altura real del navbar
@@ -190,5 +180,35 @@ export class PoliticaPrivacidadComponent implements OnInit {
       const alturaNavbar = navbar.getBoundingClientRect().height;
       this.offsetTopSidebar = Math.ceil(alturaNavbar) + 24; // +24 de margen
     }
+  }
+  /** Intenta scrollear a la sección con retries porque el DOM puede tardar en montarse */
+  private intentarScrollASeccion(seccion: string, intento: number) {
+    const MAX_INTENTOS = 10;
+    const DELAY = 200;
+
+    setTimeout(() => {
+      const el = document.getElementById(seccion);
+
+      if (el) {
+        // 🎯 Elemento encontrado, hacer scroll
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Limpiar el query param
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { seccion: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+        return;
+      }
+
+      // No se encontró, reintentar
+      if (intento < MAX_INTENTOS) {
+        this.intentarScrollASeccion(seccion, intento + 1);
+      } else {
+        console.warn(`No se pudo scrollear a la sección "${seccion}" después de ${MAX_INTENTOS} intentos`);
+      }
+    }, DELAY);
   }
 }
