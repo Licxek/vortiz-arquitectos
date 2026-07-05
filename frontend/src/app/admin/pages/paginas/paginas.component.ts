@@ -17,6 +17,7 @@ import { ImageGalleryInputComponent } from '../../../shared/image-gallery-input/
 import { ColoresGuardadosService } from '../../../core/services/colores-guardados.service';
 import { SelectConCreacionComponent } from '../../../shared/select-con-creacion/select-con-creacion.component';
 import { CategoriasService, Categoria } from '../../../core/services/categorias.service';
+import { PaginasFijasService } from '../../../core/services/paginas-fijas.service';
 
 interface Pagina {
   id: number;
@@ -152,6 +153,7 @@ export class PaginasComponent implements OnInit {
   private readonly TTL_BORRADOR_MS = 14 * 24 * 60 * 60 * 1000; // 14 días
   private autoSaveTimer: any = null;
   private actualizadorTiempoTimer: any = null;
+  private paginasFijasService = inject(PaginasFijasService);
 
   private paginasFijas: Pagina[] = [
     {
@@ -1278,6 +1280,7 @@ export class PaginasComponent implements OnInit {
     this.cargarPreferenciaVista(); // 👈 NUEVO
     this.cargarColoresGuardados();
     this.cargarCategorias();
+    this.cargarConfigPaginasFijas();
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(() => this.aplicarParamsDeUrl());
@@ -1379,17 +1382,24 @@ export class PaginasComponent implements OnInit {
 
   toggleVisibilidad(pagina: Pagina) {
     this.menuAbiertoId = null;
+    const nuevoVisible = !pagina.visible;
 
     if (pagina.tipo === 'fija') {
-      // Las fijas son rutas de Angular - solo local, sin persistir.
-      // (Si en futuro quieres ocultar fijas del menú, agrega columna en BD)
-      pagina.visible = !pagina.visible;
-      this.cdr.markForCheck();
+      // Persistir en la tabla paginas_fijas_config
+      this.paginasFijasService.actualizarVisibilidad(pagina.slug, nuevoVisible).subscribe({
+        next: () => {
+          pagina.visible = nuevoVisible;
+          this.cdr.markForCheck();
+          this.flashMensaje(nuevoVisible ? 'Página visible' : 'Página oculta');
+        },
+        error: () => {
+          this.flashMensaje('Error al cambiar visibilidad', 'info');
+        },
+      });
       return;
     }
 
-    // Personalizada → persistir al backend
-    const nuevoVisible = !pagina.visible;
+    // Personalizada → persistir al backend de páginas normales
     this.paginasService.actualizar(pagina.id, { visible: nuevoVisible }).subscribe({
       next: () => {
         pagina.visible = nuevoVisible;
@@ -3254,5 +3264,19 @@ export class PaginasComponent implements OnInit {
       default:
         return 'Guardar';
     }
+  }
+  private cargarConfigPaginasFijas() {
+    this.paginasFijasService.listar().subscribe({
+      next: (configs) => {
+        // Aplicar visibilidad guardada a cada página fija
+        configs.forEach((config) => {
+          const pagina = this.paginasFijas.find((p) => p.slug === config.slug);
+          if (pagina) {
+            pagina.visible = config.visible;
+          }
+        });
+        this.cdr.markForCheck();
+      },
+    });
   }
 }

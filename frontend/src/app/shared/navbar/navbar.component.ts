@@ -15,6 +15,7 @@ import { ConfiguracionService, Configuracion } from '../../core/services/configu
 import { PaginasService, Pagina } from '../../core/services/paginas.service';
 import { BusquedaService, ResultadoBusqueda } from '../../core/services/busqueda.service';
 import { SkeletonComponent } from '../skeleton/skeleton.component';
+import { PaginasFijasService, PaginaFijaConfig } from '../../core/services/paginas-fijas.service';
 
 interface NavItem {
   label: string;
@@ -43,6 +44,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   resultadosBusqueda = signal<ResultadoBusqueda[]>([]);
   busquedasRecientes = signal<string[]>([]);
   private busquedaTimer: any = null;
+  private paginasFijasService = inject(PaginasFijasService);
+  private paginasFijasConfig: PaginaFijaConfig[] = [];
 
   fixedLinks: NavItem[] = [
     { label: 'Inicio', path: '/home' },
@@ -122,6 +125,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     this.ngZone.runOutsideAngular(() => {
       window.addEventListener('scroll', this.scrollHandler, { passive: true });
+    });
+
+    // Cargar config de páginas fijas para filtrar el navbar
+    this.paginasFijasService.listar().subscribe({
+      next: (configs) => {
+        this.paginasFijasConfig = configs;
+        this.cdr.markForCheck();
+      },
     });
   }
 
@@ -323,5 +334,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.masAbierto = false;
       this.cdr.markForCheck();
     }, 200);
+  }
+
+  /** Devuelve si una página fija debe mostrarse en el navbar */
+  esFijaVisible(path: string): boolean {
+    const slug = path === '/home' ? '/' : path;
+    const config = this.paginasFijasConfig.find((c) => c.slug === slug);
+    return config ? config.visible : true;
   }
 }
