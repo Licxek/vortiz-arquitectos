@@ -35,7 +35,11 @@
 
       <!-- SIDEBAR: Índice de secciones -->
       <aside class="hidden lg:block">
-        <div class="sticky top-24 overflow-y-auto pr-2" style="max-height: calc(100vh - 7rem)">
+        <div
+          class="sticky overflow-y-auto pr-2 scrollbar-thin"
+          [style.top.px]="offsetTopSidebar"
+          [style.max-height]="'calc(100vh - ' + (offsetTopSidebar + 32) + 'px)'"
+        >
           <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">En esta página</p>
           <nav class="flex flex-col gap-1 text-sm pb-4">
             <button (click)="scrollASeccion('aceptacion')" class="text-left px-3 py-2 text-gray-600 hover:text-[#0a4d7a] hover:bg-blue-50 rounded-lg transition-colors">Aceptación</button>

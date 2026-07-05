@@ -15,6 +15,7 @@ export class TerminosCondicionesComponent implements OnInit {
   private contenido = inject(ContenidoService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  offsetTopSidebar = 96; // valor default, se ajusta dinámicamente
 
   // Hero
   heroBadge = signal('');
@@ -96,10 +97,27 @@ export class TerminosCondicionesComponent implements OnInit {
         });
       }, 600);
     });
+
+    // Ajustar sidebar según altura real del navbar
+    setTimeout(() => this.ajustarSidebar(), 100);
+    window.addEventListener('resize', () => this.ajustarSidebar());
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('resize', () => this.ajustarSidebar());
   }
 
   scrollASeccion(id: string) {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  private ajustarSidebar() {
+    // Medir la altura real del navbar y ajustar
+    const navbar = document.querySelector('app-navbar') as HTMLElement;
+    if (navbar) {
+      const alturaNavbar = navbar.getBoundingClientRect().height;
+      this.offsetTopSidebar = Math.ceil(alturaNavbar) + 24; // +24 de margen
+    }
   }
 }
