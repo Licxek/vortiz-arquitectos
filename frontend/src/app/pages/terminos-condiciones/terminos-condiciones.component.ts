@@ -83,20 +83,11 @@ export class TerminosCondicionesComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'auto' });
 
     // 🎯 Scroll a sección específica si viene ?seccion=X del buscador
-    this.route.queryParams.subscribe((params) => {
-      const seccion = params['seccion'];
-      if (!seccion) return;
-      setTimeout(() => {
-        const el = document.getElementById(seccion);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { seccion: null },
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        });
-      }, 600);
-    });
+    // Solo lee UNA vez el snapshot, evita subscribe repetido y race conditions
+    const seccionInicial = this.route.snapshot.queryParamMap.get('seccion');
+    if (seccionInicial) {
+      this.intentarScrollASeccion(seccionInicial, 0);
+    }
 
     // Ajustar sidebar según altura real del navbar
     setTimeout(() => this.ajustarSidebar(), 100);
@@ -119,5 +110,38 @@ export class TerminosCondicionesComponent implements OnInit {
       const alturaNavbar = navbar.getBoundingClientRect().height;
       this.offsetTopSidebar = Math.ceil(alturaNavbar) + 24; // +24 de margen
     }
+  }
+
+  /** Intenta scrollear a la sección con retries por si el DOM aún no está listo */
+  private intentarScrollASeccion(seccion: string, intento: number) {
+    const MAX_INTENTOS = 15;
+    const DELAY_MS = 150;
+
+    setTimeout(() => {
+      const el = document.getElementById(seccion);
+
+      if (el) {
+        // Elemento encontrado, hacer scroll suave
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Limpiar el query param DESPUÉS del scroll (espera 1 segundo para que termine la animación)
+        setTimeout(() => {
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { seccion: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+        }, 1000);
+        return;
+      }
+
+      // No se encontró aún, reintentar
+      if (intento < MAX_INTENTOS) {
+        this.intentarScrollASeccion(seccion, intento + 1);
+      } else {
+        console.warn(`No se pudo scrollear a la sección "${seccion}" tras ${MAX_INTENTOS} intentos`);
+      }
+    }, DELAY_MS);
   }
 }
