@@ -222,6 +222,17 @@ export class PaginasComponent implements OnInit {
       icono: 'lock',
       color: 'gray',
     },
+    {
+      id: -7,
+      titulo: 'Términos y condiciones',
+      slug: '/terminos-condiciones',
+      tipo: 'fija',
+      visible: true,
+      estado: 'publicada',
+      ultimaEdicion: '—',
+      icono: 'document',
+      color: 'gray',
+    },
   ];
 
   /** Páginas dinámicas — vienen del backend. */
@@ -1229,6 +1240,137 @@ export class PaginasComponent implements OnInit {
         ],
       },
     ],
+    terminosCondiciones: [
+      {
+        id: 'hero',
+        nombre: 'Hero',
+        icono: '📄',
+        campos: [
+          { key: 'badge', label: 'Badge', tipo: 'texto', default: 'Aviso legal' },
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Términos y *Condiciones*',
+            ayuda: 'Usa *palabra* para itálica y ~palabra~ para azul',
+          },
+          {
+            key: 'descripcion',
+            label: 'Descripción / lema',
+            tipo: 'textarea',
+            default:
+              'Estos términos regulan el uso de nuestro sitio web y los servicios que ofrecemos. Léelos con atención.',
+          },
+          {
+            key: 'fechaActualizacion',
+            label: 'Fecha de última actualización',
+            tipo: 'texto',
+            placeholder: 'Ej: 3 de julio de 2026',
+          },
+        ],
+      },
+      {
+        id: 'aceptacion',
+        nombre: 'Aceptación de términos',
+        icono: '✅',
+        campos: [
+          { key: 'titulo', label: 'Título', tipo: 'texto', default: 'Aceptación de los términos' },
+          {
+            key: 'contenido',
+            label: 'Contenido',
+            tipo: 'textarea',
+          },
+        ],
+      },
+      {
+        id: 'usoSitio',
+        nombre: 'Uso del sitio',
+        icono: '🌐',
+        campos: [
+          { key: 'titulo', label: 'Título', tipo: 'texto', default: 'Uso permitido del sitio' },
+          { key: 'contenido', label: 'Contenido', tipo: 'textarea' },
+        ],
+      },
+      {
+        id: 'servicios',
+        nombre: 'Servicios profesionales',
+        icono: '🏗️',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Alcance de nuestros servicios',
+          },
+          { key: 'contenido', label: 'Contenido', tipo: 'textarea' },
+        ],
+      },
+      {
+        id: 'propiedadIntelectual',
+        nombre: 'Propiedad intelectual',
+        icono: '©️',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Propiedad intelectual y diseños',
+          },
+          { key: 'contenido', label: 'Contenido', tipo: 'textarea' },
+        ],
+      },
+      {
+        id: 'responsabilidad',
+        nombre: 'Limitación de responsabilidad',
+        icono: '⚖️',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Limitación de responsabilidad',
+          },
+          { key: 'contenido', label: 'Contenido', tipo: 'textarea' },
+        ],
+      },
+      {
+        id: 'modificaciones',
+        nombre: 'Modificaciones',
+        icono: '🔄',
+        campos: [
+          { key: 'titulo', label: 'Título', tipo: 'texto', default: 'Modificaciones a los términos' },
+          { key: 'contenido', label: 'Contenido', tipo: 'textarea' },
+        ],
+      },
+      {
+        id: 'legislacion',
+        nombre: 'Legislación aplicable',
+        icono: '🇲🇽',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Legislación aplicable y jurisdicción',
+          },
+          { key: 'contenido', label: 'Contenido', tipo: 'textarea' },
+        ],
+      },
+      {
+        id: 'contacto',
+        nombre: 'Contacto',
+        icono: '📧',
+        campos: [
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: '¿Dudas sobre estos términos?',
+          },
+          { key: 'descripcion', label: 'Descripción', tipo: 'textarea' },
+        ],
+      },
+    ],
   };
 
   // Almacén del contenido (en producción esto vendría del backend)
@@ -1251,6 +1393,7 @@ export class PaginasComponent implements OnInit {
     '/servicios': '/servicios',
     '/citas': '/citas',
     '/politica-privacidad': '/politica-privacidad',
+    '/terminos-condiciones': '/terminos-condiciones',
   };
 
   get categoriaLabel() {
@@ -1716,6 +1859,7 @@ export class PaginasComponent implements OnInit {
     '/servicios': 'servicios',
     '/citas': 'citas',
     '/politica-privacidad': 'politicaPrivacidad',
+    '/terminos-condiciones': 'terminosCondiciones',
   };
 
   // ============ EDITAR / PREVISUALIZAR ============
@@ -2563,6 +2707,7 @@ export class PaginasComponent implements OnInit {
           servicios: '/servicios',
           citas: '/citas',
           'politica-privacidad': '/politica-privacidad',
+          'terminos-condiciones': '/terminos-condiciones',
         };
         const slugReal = slugMap[paginaKey];
         if (slugReal) {

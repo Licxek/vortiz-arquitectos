@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ContenidoService } from '../../core/services/contenido.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
+import { ActivatedRoute, Router } from '@angular/router';
 
 interface ItemLista {
   titulo?: string;
@@ -17,6 +18,8 @@ interface ItemLista {
 })
 export class PoliticaPrivacidadComponent implements OnInit {
   private contenido = inject(ContenidoService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   // Hero
   heroBadge = signal('');
@@ -137,7 +140,7 @@ export class PoliticaPrivacidadComponent implements OnInit {
       descripcion: this.contenido.getCampo(key, 'contacto', 'descripcion'),
     });
 
-     // Retención
+    // Retención
     this.retencion.set({
       titulo: this.contenido.getCampo(key, 'retencion', 'titulo'),
       contenido: this.contenido.getCampo(key, 'retencion', 'contenido'),
@@ -145,6 +148,23 @@ export class PoliticaPrivacidadComponent implements OnInit {
 
     // Scroll top al cargar
     window.scrollTo({ top: 0, behavior: 'auto' });
+
+    // 🎯 Scroll a sección específica si viene ?seccion=X del buscador
+    this.route.queryParams.subscribe((params) => {
+      const seccion = params['seccion'];
+      if (!seccion) return;
+      setTimeout(() => {
+        const el = document.getElementById(seccion);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Limpiar el query param para no re-scrollear al refrescar
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { seccion: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }, 600);
+    });
   }
 
   scrollASeccion(id: string) {
