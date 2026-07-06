@@ -224,6 +224,12 @@ export class ConfiguracionComponent implements OnInit {
           this.mantenimiento = { ...this.mantenimiento, ...c.mantenimiento };
         }
         this.capturarTodosLosSnapshots();
+        // 🔒 Forzar email como único canal hasta que WhatsApp Business esté listo
+        if (this.notificaciones.canalRecordatorio !== 'email') {
+          this.notificaciones.canalRecordatorio = 'email';
+        }
+
+        this.capturarTodosLosSnapshots();
         this.cargando.set(false); // 👈 NUEVO
         this.cdr.markForCheck();
       },
