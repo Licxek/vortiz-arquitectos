@@ -22,6 +22,11 @@ import { HealthModule } from './health/health.module';
 import { ReportesModule } from './reportes/reportes.module';
 import { SesionesModule } from './sesiones/sesiones.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+// 📌 WhatsApp Business API — inactivo por ahora
+//    Se activa automáticamente cuando existan las variables:
+//    - WHATSAPP_TOKEN (permanente, generado en developers.facebook.com)
+//    - WHATSAPP_PHONE_ID (Phone Number ID de la WABA)
+//    Ver docs: /docs/whatsapp-activation.md
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 import { ScheduleModule } from '@nestjs/schedule';  // 👈 AGREGAR import
 import { ImapModule } from './imap/imap.module';
