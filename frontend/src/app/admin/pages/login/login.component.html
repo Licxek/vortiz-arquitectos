@@ -43,7 +43,8 @@
   }
 
   @keyframes vortizHalo {
-    0%, 100% {
+    0%,
+    100% {
       transform: scale(1);
       opacity: 0.5;
     }
@@ -57,8 +58,13 @@
   }
 
   @keyframes vortizIconBounce {
-    0%, 100% { transform: translateY(-50%) scale(1); }
-    50% { transform: translateY(-50%) scale(1.15); }
+    0%,
+    100% {
+      transform: translateY(-50%) scale(1);
+    }
+    50% {
+      transform: translateY(-50%) scale(1.15);
+    }
   }
   .vortiz-icon-bounce {
     animation: vortizIconBounce 0.4s ease-out;
@@ -76,12 +82,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.25),
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
     transition: left 0.6s ease;
     pointer-events: none;
   }
@@ -106,25 +107,32 @@
 
   /* ============ RELOJ PARPADEO ============ */
   @keyframes vortizBlink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
   }
   .vortiz-blink {
     animation: vortizBlink 1s infinite;
   }
 </style>
 
-<div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-vortiz-login">
+<div
+  class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-vortiz-login"
+>
   <!-- ============ ELEMENTOS DECORATIVOS DEL FONDO ============ -->
 
   <!-- Blobs de color difuminados -->
   <div
     class="absolute -top-32 -right-32 w-96 h-96 rounded-full pointer-events-none blur-3xl"
-    style="background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);"
+    style="background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)"
   ></div>
   <div
     class="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full pointer-events-none blur-3xl"
-    style="background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);"
+    style="background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%)"
   ></div>
 
   <!-- Líneas guía técnicas SVG -->
@@ -134,16 +142,48 @@
     viewBox="0 0 100 100"
     aria-hidden="true"
   >
-    <line x1="0" y1="15" x2="100" y2="15" stroke="#0a4d7a" stroke-width="0.1" stroke-dasharray="1 0.5" />
-    <line x1="0" y1="85" x2="100" y2="85" stroke="#0a4d7a" stroke-width="0.1" stroke-dasharray="1 0.5" />
-    <line x1="15" y1="0" x2="15" y2="100" stroke="#0a4d7a" stroke-width="0.1" stroke-dasharray="1 0.5" />
-    <line x1="85" y1="0" x2="85" y2="100" stroke="#0a4d7a" stroke-width="0.1" stroke-dasharray="1 0.5" />
+    <line
+      x1="0"
+      y1="15"
+      x2="100"
+      y2="15"
+      stroke="#0a4d7a"
+      stroke-width="0.1"
+      stroke-dasharray="1 0.5"
+    />
+    <line
+      x1="0"
+      y1="85"
+      x2="100"
+      y2="85"
+      stroke="#0a4d7a"
+      stroke-width="0.1"
+      stroke-dasharray="1 0.5"
+    />
+    <line
+      x1="15"
+      y1="0"
+      x2="15"
+      y2="100"
+      stroke="#0a4d7a"
+      stroke-width="0.1"
+      stroke-dasharray="1 0.5"
+    />
+    <line
+      x1="85"
+      y1="0"
+      x2="85"
+      y2="100"
+      stroke="#0a4d7a"
+      stroke-width="0.1"
+      stroke-dasharray="1 0.5"
+    />
   </svg>
 
   <!-- Marcas técnicas — esquina superior izquierda -->
   <div
     class="absolute top-6 left-6 md:top-8 md:left-8 font-mono text-[10px] tracking-widest pointer-events-none select-none hidden sm:block"
-    style="color: rgba(10, 77, 122, 0.4);"
+    style="color: rgba(10, 77, 122, 0.4)"
   >
     <div>A—01</div>
     <div class="mt-1">ESC 1:100</div>
@@ -152,7 +192,7 @@
   <!-- Marcas técnicas — esquina superior derecha CON RELOJ -->
   <div
     class="absolute top-6 right-6 md:top-8 md:right-8 font-mono text-[10px] tracking-widest text-right pointer-events-none select-none hidden sm:block"
-    style="color: rgba(10, 77, 122, 0.4);"
+    style="color: rgba(10, 77, 122, 0.4)"
   >
     <div class="flex items-center justify-end gap-1.5">
       <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full vortiz-blink"></span>
@@ -164,23 +204,26 @@
   <!-- Marca norte — esquina inferior izquierda -->
   <div
     class="absolute bottom-6 left-6 md:bottom-8 md:left-8 flex items-center gap-2 font-mono text-[9px] tracking-widest pointer-events-none select-none hidden sm:flex"
-    style="color: rgba(10, 77, 122, 0.35);"
+    style="color: rgba(10, 77, 122, 0.35)"
   >
-    <div class="w-5 h-px" style="background: rgba(10, 77, 122, 0.3);"></div>
+    <div class="w-5 h-px" style="background: rgba(10, 77, 122, 0.3)"></div>
     <span>N ↑</span>
   </div>
 
   <!-- Marca versión — esquina inferior derecha -->
   <div
     class="absolute bottom-6 right-6 md:bottom-8 md:right-8 font-mono text-[9px] tracking-widest pointer-events-none select-none hidden sm:block"
-    style="color: rgba(10, 77, 122, 0.35);"
+    style="color: rgba(10, 77, 122, 0.35)"
   >
     VORTIZ · CTRL · v2.0
   </div>
 
   <!-- ============ CARD PRINCIPAL DEL LOGIN ============ -->
   <div
-    class="w-full max-w-5xl grid md:grid-cols-2 min-h-[560px] bg-white rounded-2xl overflow-hidden shadow-[0_20px_60px_-15px_rgba(10,31,61,0.25)] relative z-10 vortiz-card-entrada"
+    class="w-full max-w-5xl grid md:grid-cols-2 min-h-[560px] bg-white rounded-2xl overflow-hidden shadow-[0_20px_60px_-15px_rgba(10,31,61,0.25)] relative z-10 vortiz-card-entrada transition-transform duration-200 ease-out"
+    [style.transform]="transformCard"
+    (mousemove)="onMouseMove($event)"
+    (mouseleave)="onMouseLeave()"
   >
     <!-- ============ PANEL IZQUIERDO: Branding ============ -->
     <div
@@ -198,7 +241,10 @@
       <!-- Patrón de puntos sutil -->
       <div
         class="absolute inset-0 opacity-10 pointer-events-none"
-        style="background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 32px 32px;"
+        style="
+          background-image: radial-gradient(circle, white 1px, transparent 1px);
+          background-size: 32px 32px;
+        "
       ></div>
 
       <!-- Contenido superior: logo + branding -->
@@ -209,7 +255,7 @@
             <!-- Halo pulsante detrás del logo -->
             <div
               class="absolute inset-0 rounded-2xl vortiz-halo pointer-events-none"
-              style="background: rgba(255, 255, 255, 0.3);"
+              style="background: rgba(255, 255, 255, 0.3)"
             ></div>
 
             <div
@@ -242,7 +288,7 @@
 
         <p
           class="text-xs font-semibold uppercase tracking-widest mb-2 opacity-80"
-          style="color: #93c5fd;"
+          style="color: #93c5fd"
         >
           Panel administrativo
         </p>
@@ -294,9 +340,7 @@
       <form (ngSubmit)="iniciarSesion()" class="space-y-5">
         <!-- Correo -->
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-2">
-            Correo electrónico
-          </label>
+          <label class="block text-xs font-semibold text-gray-600 mb-2"> Correo electrónico </label>
           <div class="relative">
             <svg
               class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors"
@@ -349,7 +393,8 @@
           <div class="flex items-center justify-between mb-2">
             <label class="text-xs font-semibold text-gray-600">Contraseña</label>
 
-            <a  routerLink="/admin/recuperar"
+            <a
+              routerLink="/admin/recuperar"
               class="text-xs font-medium hover:underline transition-colors"
               [style.color]="colorPrimario"
             >
@@ -379,7 +424,9 @@
               name="password"
               placeholder="Tu contraseña"
               class="w-full pl-12 pr-12 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 outline-none transition-all"
-              (focus)="passwordEnfocado = true; $any($event.target).style.borderColor = colorPrimario"
+              (focus)="
+                passwordEnfocado = true; $any($event.target).style.borderColor = colorPrimario
+              "
               (blur)="passwordEnfocado = false; $any($event.target).style.borderColor = ''"
               required
             />
@@ -422,6 +469,16 @@
                 />
               </svg>
             </button>
+          </div>
+          <!-- 🔒 Aviso de Caps Lock activo -->
+          <div
+            *ngIf="capsLockActivo() && passwordEnfocado"
+            class="flex items-center gap-2 mt-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg animate-[fadeIn_0.2s_ease-out]"
+          >
+            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+            </svg>
+            <span class="text-xs text-amber-800 font-medium">Bloqueo mayúsculas activo</span>
           </div>
           <!-- Micro-hint sutil -->
           <p
@@ -517,16 +574,17 @@
         <!-- Keyboard hint sutil -->
         <p class="text-xs text-gray-400 text-center flex items-center justify-center gap-1.5">
           Presiona
-          <kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded text-[10px] font-mono text-gray-600">Enter</kbd>
+          <kbd
+            class="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded text-[10px] font-mono text-gray-600"
+            >Enter</kbd
+          >
           para acceder
         </p>
       </form>
 
       <!-- Footer -->
       <div class="mt-8 pt-6 border-t border-gray-100 text-center">
-        <p class="text-xs text-gray-400">
-          © {{ anio }} · {{ nombreEmpresa }} · Panel v2.0
-        </p>
+        <p class="text-xs text-gray-400">© {{ anio }} · {{ nombreEmpresa }} · Panel v2.0</p>
       </div>
     </div>
   </div>

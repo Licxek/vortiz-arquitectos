@@ -1,4 +1,12 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, signal, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectorRef,
+  signal,
+  inject,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
@@ -30,6 +38,13 @@ export class LoginComponent implements OnInit, OnDestroy {
   correoEnfocado = false;
   passwordEnfocado = false;
 
+  // 🔒 Detector de Caps Lock
+  capsLockActivo = signal<boolean>(false);
+
+  // 🌗 Modo del card (para efecto tilt 3D)
+  tiltX = signal<number>(0);
+  tiltY = signal<number>(0);
+
   private route = inject(ActivatedRoute);
 
   constructor(
@@ -47,7 +62,6 @@ export class LoginComponent implements OnInit, OnDestroy {
       },
     });
 
-    // Detectar redirect por sesión expirada/cerrada
     const params = this.route.snapshot.queryParamMap;
     if (params.get('expired') === 'true') {
       this.mensajeSesion.set(
@@ -55,7 +69,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       );
     }
 
-    // 🕐 Iniciar reloj arquitectónico
+    // 🕐 Iniciar reloj
     this.actualizarHora();
     this.relojInterval = setInterval(() => {
       this.actualizarHora();
@@ -73,6 +87,15 @@ export class LoginComponent implements OnInit, OnDestroy {
     const m = String(ahora.getMinutes()).padStart(2, '0');
     const s = String(ahora.getSeconds()).padStart(2, '0');
     this.horaActual.set(`${h}:${m}:${s}`);
+  }
+
+  // 🔒 Detectar Caps Lock
+  @HostListener('document:keydown', ['$event'])
+  @HostListener('document:keyup', ['$event'])
+  detectarCapsLock(event: KeyboardEvent) {
+    if (event.getModifierState) {
+      this.capsLockActivo.set(event.getModifierState('CapsLock'));
+    }
   }
 
   // ============================================================
@@ -148,6 +171,32 @@ export class LoginComponent implements OnInit, OnDestroy {
     g = Math.max(0, Math.min(255, Math.floor(g * factor)));
     b = Math.max(0, Math.min(255, Math.floor(b * factor)));
     return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+  }
+
+  // ============================================================
+  // EFECTO TILT 3D
+  // ============================================================
+
+  onMouseMove(event: MouseEvent) {
+    const card = event.currentTarget as HTMLElement;
+    const rect = card.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateY = ((x - centerX) / centerX) * 3; // max 3deg
+    const rotateX = ((centerY - y) / centerY) * 3;
+    this.tiltX.set(rotateX);
+    this.tiltY.set(rotateY);
+  }
+
+  onMouseLeave() {
+    this.tiltX.set(0);
+    this.tiltY.set(0);
+  }
+
+  get transformCard(): string {
+    return `perspective(1200px) rotateX(${this.tiltX()}deg) rotateY(${this.tiltY()}deg)`;
   }
 
   // ============================================================
