@@ -1,4 +1,5 @@
 <style>
+  /* ============ FONDO BLUEPRINT ============ */
   .bg-vortiz-login {
     background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #f0f9ff 100%);
     position: relative;
@@ -25,6 +26,92 @@
       linear-gradient(90deg, rgba(10, 77, 122, 0.12) 1px, transparent 1px);
     background-size: 160px 160px;
   }
+
+  /* ============ ANIMACIONES ============ */
+  @keyframes vortizEntrada {
+    from {
+      opacity: 0;
+      transform: translateY(24px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  .vortiz-card-entrada {
+    animation: vortizEntrada 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes vortizHalo {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.5;
+    }
+    50% {
+      transform: scale(1.15);
+      opacity: 0.2;
+    }
+  }
+  .vortiz-halo {
+    animation: vortizHalo 3s ease-in-out infinite;
+  }
+
+  @keyframes vortizIconBounce {
+    0%, 100% { transform: translateY(-50%) scale(1); }
+    50% { transform: translateY(-50%) scale(1.15); }
+  }
+  .vortiz-icon-bounce {
+    animation: vortizIconBounce 0.4s ease-out;
+  }
+
+  /* ============ BOTÓN CON SHINE ============ */
+  .vortiz-btn-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .vortiz-btn-shine::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.25),
+      transparent
+    );
+    transition: left 0.6s ease;
+    pointer-events: none;
+  }
+  .vortiz-btn-shine:hover::before {
+    left: 100%;
+  }
+
+  /* ============ CHECKMARK PULSE ============ */
+  @keyframes vortizCheckPulse {
+    from {
+      opacity: 0;
+      transform: translateY(-50%) scale(0.5);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+    }
+  }
+  .vortiz-check-pulse {
+    animation: vortizCheckPulse 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ============ RELOJ PARPADEO ============ */
+  @keyframes vortizBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .vortiz-blink {
+    animation: vortizBlink 1s infinite;
+  }
 </style>
 
 <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-vortiz-login">
@@ -40,7 +127,7 @@
     style="background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);"
   ></div>
 
-  <!-- Líneas guía técnicas SVG (márgenes del plano) -->
+  <!-- Líneas guía técnicas SVG -->
   <svg
     class="absolute inset-0 w-full h-full pointer-events-none opacity-15"
     preserveAspectRatio="none"
@@ -53,7 +140,7 @@
     <line x1="85" y1="0" x2="85" y2="100" stroke="#0a4d7a" stroke-width="0.1" stroke-dasharray="1 0.5" />
   </svg>
 
-  <!-- Marcas técnicas tipo plano — esquina superior izquierda -->
+  <!-- Marcas técnicas — esquina superior izquierda -->
   <div
     class="absolute top-6 left-6 md:top-8 md:left-8 font-mono text-[10px] tracking-widest pointer-events-none select-none hidden sm:block"
     style="color: rgba(10, 77, 122, 0.4);"
@@ -62,13 +149,16 @@
     <div class="mt-1">ESC 1:100</div>
   </div>
 
-  <!-- Marcas técnicas — esquina superior derecha -->
+  <!-- Marcas técnicas — esquina superior derecha CON RELOJ -->
   <div
     class="absolute top-6 right-6 md:top-8 md:right-8 font-mono text-[10px] tracking-widest text-right pointer-events-none select-none hidden sm:block"
     style="color: rgba(10, 77, 122, 0.4);"
   >
-    <div>V·{{ anio }}</div>
-    <div class="mt-1">ACCESO</div>
+    <div class="flex items-center justify-end gap-1.5">
+      <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full vortiz-blink"></span>
+      <span>{{ horaActual() }}</span>
+    </div>
+    <div class="mt-1">V·{{ anio }} · ACCESO</div>
   </div>
 
   <!-- Marca norte — esquina inferior izquierda -->
@@ -90,7 +180,7 @@
 
   <!-- ============ CARD PRINCIPAL DEL LOGIN ============ -->
   <div
-    class="w-full max-w-5xl grid md:grid-cols-2 min-h-[560px] bg-white rounded-2xl overflow-hidden shadow-[0_20px_60px_-15px_rgba(10,31,61,0.25)] relative z-10"
+    class="w-full max-w-5xl grid md:grid-cols-2 min-h-[560px] bg-white rounded-2xl overflow-hidden shadow-[0_20px_60px_-15px_rgba(10,31,61,0.25)] relative z-10 vortiz-card-entrada"
   >
     <!-- ============ PANEL IZQUIERDO: Branding ============ -->
     <div
@@ -114,32 +204,39 @@
       <!-- Contenido superior: logo + branding -->
       <div class="relative z-10">
         <div class="mb-6">
-          <div
-            class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg overflow-hidden"
-          >
-            <!-- Logo cargado -->
-            <img
-              *ngIf="tieneLogo"
-              [src]="logoUrl"
-              [alt]="nombreEmpresa"
-              class="w-full h-full object-contain p-2"
-            />
-            <!-- Icono de compás arquitectónico como fallback -->
-            <svg
-              *ngIf="!tieneLogo"
-              class="w-9 h-9"
-              [style.color]="colorInicio"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
+          <!-- Logo/Compás con HALO PULSANTE -->
+          <div class="relative inline-block">
+            <!-- Halo pulsante detrás del logo -->
+            <div
+              class="absolute inset-0 rounded-2xl vortiz-halo pointer-events-none"
+              style="background: rgba(255, 255, 255, 0.3);"
+            ></div>
+
+            <div
+              class="relative inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg overflow-hidden"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+              <img
+                *ngIf="tieneLogo"
+                [src]="logoUrl"
+                [alt]="nombreEmpresa"
+                class="w-full h-full object-contain p-2"
               />
-            </svg>
+              <svg
+                *ngIf="!tieneLogo"
+                class="w-9 h-9"
+                [style.color]="colorInicio"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                />
+              </svg>
+            </div>
           </div>
         </div>
 
@@ -202,7 +299,10 @@
           </label>
           <div class="relative">
             <svg
-              class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+              class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors"
+              [class.text-gray-400]="!correoEnfocado"
+              [class.vortiz-icon-bounce]="correoEnfocado"
+              [style.color]="correoEnfocado ? colorPrimario : ''"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -219,11 +319,28 @@
               [(ngModel)]="correo"
               name="correo"
               placeholder="nombre@vortizarquitectos.com.mx"
-              class="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 outline-none transition-all"
-              (focus)="$any($event.target).style.borderColor = colorPrimario"
-              (blur)="$any($event.target).style.borderColor = ''"
+              class="w-full pl-12 pr-11 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 outline-none transition-all"
+              (focus)="correoEnfocado = true; $any($event.target).style.borderColor = colorPrimario"
+              (blur)="correoEnfocado = false; $any($event.target).style.borderColor = ''"
               required
             />
+            <!-- Checkmark verde cuando el correo es válido -->
+            <div
+              *ngIf="correoValido"
+              class="absolute right-4 top-1/2 -translate-y-1/2 vortiz-check-pulse"
+            >
+              <div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center">
+                <svg
+                  class="w-4 h-4 text-emerald-600"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -241,7 +358,10 @@
           </div>
           <div class="relative">
             <svg
-              class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+              class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors"
+              [class.text-gray-400]="!passwordEnfocado"
+              [class.vortiz-icon-bounce]="passwordEnfocado"
+              [style.color]="passwordEnfocado ? colorPrimario : ''"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -259,8 +379,8 @@
               name="password"
               placeholder="Tu contraseña"
               class="w-full pl-12 pr-12 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 outline-none transition-all"
-              (focus)="$any($event.target).style.borderColor = colorPrimario"
-              (blur)="$any($event.target).style.borderColor = ''"
+              (focus)="passwordEnfocado = true; $any($event.target).style.borderColor = colorPrimario"
+              (blur)="passwordEnfocado = false; $any($event.target).style.borderColor = ''"
               required
             />
             <button
@@ -303,6 +423,17 @@
               </svg>
             </button>
           </div>
+          <!-- Micro-hint sutil -->
+          <p
+            *ngIf="password && !passwordValido"
+            class="text-xs text-amber-600 mt-1.5 flex items-center gap-1 animate-[fadeIn_0.2s_ease-out]"
+          >
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" opacity="0.3" />
+              <path d="M11 7h2v6h-2zm0 8h2v2h-2z" />
+            </svg>
+            Mínimo 6 caracteres
+          </p>
         </div>
 
         <!-- Mensaje de sesión expirada -->
@@ -347,13 +478,13 @@
           <span>{{ errorMensaje }}</span>
         </div>
 
-        <!-- Botón -->
+        <!-- Botón con efecto SHINE -->
         <button
           type="submit"
           [disabled]="cargando"
           [style.background]="gradientBoton"
           [style.boxShadow]="'0 4px 12px ' + colorPrimario + '40'"
-          class="w-full py-3.5 text-white font-semibold text-base rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:brightness-110 hover:-translate-y-0.5"
+          class="vortiz-btn-shine w-full py-3.5 text-white font-semibold text-base rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:brightness-110 hover:-translate-y-0.5"
         >
           <svg *ngIf="cargando" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
             <circle
@@ -382,6 +513,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>
         </button>
+
+        <!-- Keyboard hint sutil -->
+        <p class="text-xs text-gray-400 text-center flex items-center justify-center gap-1.5">
+          Presiona
+          <kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded text-[10px] font-mono text-gray-600">Enter</kbd>
+          para acceder
+        </p>
       </form>
 
       <!-- Footer -->
