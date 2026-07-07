@@ -16,7 +16,6 @@ export class LoginComponent implements OnInit {
   configuracion: Configuracion | null = null;
   correo = '';
   password = '';
-  mantenerSesion = false;
   mostrarPassword = false;
   cargando = false;
   errorMensaje = '';
@@ -49,7 +48,39 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  /** Colores de la configuración con fallback */
+  // ============================================================
+  // GETTERS COMPUTADOS
+  // ============================================================
+
+  /** Nombre de la empresa con fallback */
+  get nombreEmpresa(): string {
+    return this.configuracion?.nombre || 'Vortiz Arquitectos';
+  }
+
+  /** Eslogan con fallback */
+  get eslogan(): string {
+    return this.configuracion?.eslogan || 'Diseñamos espacios, construimos confianza.';
+  }
+
+  /** URL del logo o cadena vacía */
+  get logoUrl(): string {
+    return this.configuracion?.logo_url || '';
+  }
+
+  /** Si hay logo para mostrar */
+  get tieneLogo(): boolean {
+    return !!this.logoUrl;
+  }
+
+  /** Inicial del nombre para el avatar fallback (por si el compás no encaja) */
+  get inicialNombre(): string {
+    return this.nombreEmpresa.charAt(0).toUpperCase();
+  }
+
+  // ============================================================
+  // GETTERS DE COLORES DESDE CONFIGURACIÓN
+  // ============================================================
+
   get colorInicio(): string {
     return this.configuracion?.color_degradado_inicio || '#0a1f3d';
   }
@@ -86,10 +117,9 @@ export class LoginComponent implements OnInit {
     return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
   }
 
-  /** Inicial del nombre para el mini avatar */
-  get inicialNombre(): string {
-    return (this.configuracion?.nombre || 'V').charAt(0).toUpperCase();
-  }
+  // ============================================================
+  // ACCIONES
+  // ============================================================
 
   togglePassword() {
     this.mostrarPassword = !this.mostrarPassword;
