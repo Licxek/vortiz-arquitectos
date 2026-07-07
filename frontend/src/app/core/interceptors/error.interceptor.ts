@@ -34,7 +34,21 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((err: HttpErrorResponse) => {
       const mensajeBackend = err.error?.message || err.statusText;
 
-      // Si el backend manda un mensaje específico custom, lo respetamos
+      // 🎯 Detección de conexión offline (status 0 + navigator.onLine === false)
+      if (err.status === 0 && !navigator.onLine) {
+        const errorSinInternet = new HttpErrorResponse({
+          error: {
+            ...err.error,
+            message: 'Sin conexión a internet. Verifica tu red e intenta de nuevo.',
+          },
+          headers: err.headers,
+          status: 0,
+          statusText: 'Offline',
+          url: err.url || undefined,
+        });
+        return throwError(() => errorSinInternet);
+      }
+
       const esGenerico =
         !mensajeBackend ||
         MENSAJES_GENERICOS.has(mensajeBackend) ||

@@ -27,7 +27,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   mostrarPassword = false;
   cargando = false;
   errorMensaje = '';
-  mensajeSesion = signal<string>('');
   anio = new Date().getFullYear();
 
   // 🕐 Reloj arquitectónico
@@ -55,6 +54,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    // 🌐 Detectar cambios de conexión
+    window.addEventListener('online', this.actualizarConexion);
+    window.addEventListener('offline', this.actualizarConexion);
+    this.actualizarConexion();
+
     this.configuracionService.getConfiguracion().subscribe({
       next: (data) => {
         this.configuracion = data;
@@ -62,11 +66,13 @@ export class LoginComponent implements OnInit, OnDestroy {
       },
     });
 
+    // 🧹 Limpiar cualquier ?expired=true residual de la URL
+    // (el modal ya se encarga de explicar cuando la sesión expira)
     const params = this.route.snapshot.queryParamMap;
-    if (params.get('expired') === 'true') {
-      this.mensajeSesion.set(
-        'Tu sesión fue cerrada desde otro dispositivo o expiró. Por favor inicia sesión de nuevo.',
-      );
+    if (params.get('expired')) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('expired');
+      window.history.replaceState({}, '', url.toString());
     }
 
     // 🕐 Iniciar reloj
@@ -79,6 +85,8 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.relojInterval) clearInterval(this.relojInterval);
+    window.removeEventListener('online', this.actualizarConexion);
+    window.removeEventListener('offline', this.actualizarConexion);
   }
 
   private actualizarHora() {
@@ -208,6 +216,17 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   iniciarSesion() {
+    // 🌐 Validar conexión antes de intentar
+    if (!navigator.onLine) {
+      this.errorMensaje = 'Sin conexión a internet. Verifica tu red e intenta de nuevo.';
+      return;
+    }
+
+    if (!this.correo || !this.password) {
+      this.errorMensaje = 'Por favor completa todos los campos';
+      return;
+    }
+    // ... resto del método
     if (!this.correo || !this.password) {
       this.errorMensaje = 'Por favor completa todos los campos';
       return;
@@ -236,4 +255,11 @@ export class LoginComponent implements OnInit, OnDestroy {
         },
       });
   }
+  // 🌐 Estado de conexión
+  sinInternet = signal<boolean>(false);
+
+  private actualizarConexion = () => {
+    this.sinInternet.set(!navigator.onLine);
+    this.cdr.markForCheck();
+  };
 }

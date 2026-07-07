@@ -170,14 +170,18 @@ export class NuevaPasswordComponent implements OnInit {
       return;
     }
     this.cargando = true;
+    this.cdr.detectChanges();
+
     this.authService.restablecer(this.correo, this.codigo, this.password).subscribe({
       next: () => {
         this.cargando = false;
         this.exitoso = true;
+        this.cdr.detectChanges(); // 👈 fuerza el re-render
       },
       error: (e) => {
         this.cargando = false;
         this.errorMensaje = e.error?.message || 'No se pudo cambiar la contraseña.';
+        this.cdr.detectChanges(); // 👈 fuerza el re-render
       },
     });
   }

@@ -19,8 +19,12 @@ export class SessionExpiredService {
   confirmar() {
     this.visible.set(false);
     this.authService.logoutLocal(); // limpia sin llamar al backend
-    this.router.navigate(['/admin/login'], {
-      queryParams: { expired: 'true' },
-    });
+    // 🎯 Ya no pasamos ?expired=true porque el modal ya explicó todo
+    this.router.navigate(['/admin/login']);
+  }
+
+  /** Ocultar sin navegar (uso interno) */
+  ocultar() {
+    this.visible.set(false);
   }
 }
