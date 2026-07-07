@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
@@ -12,7 +12,7 @@ import { timeout } from 'rxjs/operators';
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './login.component.html',
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   configuracion: Configuracion | null = null;
   correo = '';
   password = '';
@@ -21,6 +21,14 @@ export class LoginComponent implements OnInit {
   errorMensaje = '';
   mensajeSesion = signal<string>('');
   anio = new Date().getFullYear();
+
+  // 🕐 Reloj arquitectónico
+  horaActual = signal<string>('');
+  private relojInterval: any = null;
+
+  // Estados de focus para animaciones
+  correoEnfocado = false;
+  passwordEnfocado = false;
 
   private route = inject(ActivatedRoute);
 
@@ -46,33 +54,60 @@ export class LoginComponent implements OnInit {
         'Tu sesión fue cerrada desde otro dispositivo o expiró. Por favor inicia sesión de nuevo.',
       );
     }
+
+    // 🕐 Iniciar reloj arquitectónico
+    this.actualizarHora();
+    this.relojInterval = setInterval(() => {
+      this.actualizarHora();
+      this.cdr.markForCheck();
+    }, 1000);
+  }
+
+  ngOnDestroy() {
+    if (this.relojInterval) clearInterval(this.relojInterval);
+  }
+
+  private actualizarHora() {
+    const ahora = new Date();
+    const h = String(ahora.getHours()).padStart(2, '0');
+    const m = String(ahora.getMinutes()).padStart(2, '0');
+    const s = String(ahora.getSeconds()).padStart(2, '0');
+    this.horaActual.set(`${h}:${m}:${s}`);
+  }
+
+  // ============================================================
+  // VALIDACIÓN VISUAL EN TIEMPO REAL
+  // ============================================================
+
+  get correoValido(): boolean {
+    if (!this.correo) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.correo);
+  }
+
+  get passwordValido(): boolean {
+    return this.password.length >= 6;
   }
 
   // ============================================================
   // GETTERS COMPUTADOS
   // ============================================================
 
-  /** Nombre de la empresa con fallback */
   get nombreEmpresa(): string {
     return this.configuracion?.nombre || 'Vortiz Arquitectos';
   }
 
-  /** Eslogan con fallback */
   get eslogan(): string {
     return this.configuracion?.eslogan || 'Diseñamos espacios, construimos confianza.';
   }
 
-  /** URL del logo o cadena vacía */
   get logoUrl(): string {
     return this.configuracion?.logo_url || '';
   }
 
-  /** Si hay logo para mostrar */
   get tieneLogo(): boolean {
     return !!this.logoUrl;
   }
 
-  /** Inicial del nombre para el avatar fallback (por si el compás no encaja) */
   get inicialNombre(): string {
     return this.nombreEmpresa.charAt(0).toUpperCase();
   }
@@ -93,12 +128,10 @@ export class LoginComponent implements OnInit {
     return this.configuracion?.color_primario || '#0a4d7a';
   }
 
-  /** Gradient del panel izquierdo */
   get gradientPanel(): string {
     return `linear-gradient(135deg, ${this.colorInicio} 0%, ${this.colorFin} 100%)`;
   }
 
-  /** Gradient del botón */
   get gradientBoton(): string {
     return `linear-gradient(135deg, ${this.colorPrimario}, ${this.oscurecerHex(this.colorPrimario, -15)})`;
   }
