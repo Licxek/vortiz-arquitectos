@@ -220,7 +220,7 @@ export class PaginasComponent implements OnInit {
       estado: 'publicada',
       ultimaEdicion: '—',
       icono: 'lock',
-      color: 'purple', // 👈 morado
+      color: 'teal', // 👈 turquesa (privacidad/seguridad)
     },
     {
       id: -7,
@@ -230,8 +230,8 @@ export class PaginasComponent implements OnInit {
       visible: true,
       estado: 'publicada',
       ultimaEdicion: '—',
-      icono: 'info', // 👈 icono info
-      color: 'orange', // 👈 naranja
+      icono: 'info',
+      color: 'slate', // 👈 pizarra (formalidad legal)
     },
   ];
 
