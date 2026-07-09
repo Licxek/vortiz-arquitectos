@@ -1,11 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ContenidoService } from '../../core/services/contenido.service';
 import { CatalogoService, Servicio, Proyecto } from '../../core/services/catalogo.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
-import { signal } from '@angular/core'; // si no estaba
 import { ProjectShowcaseComponent } from '../../shared/project-showcase/project-showcase.component';
 
 interface Paso {
@@ -172,6 +171,37 @@ export class HomeComponent implements OnInit {
     return this.catalogo.etiquetaCategoriaServicio(cat);
   }
   proyectoSeleccionado = signal<Proyecto | null>(null);
+
+  // ============ MODAL DE SERVICIO ============
+  servicioActivo = signal<Servicio | null>(null);
+  private scrollPosBeforeModal = 0;
+
+  serviciosRelacionados = computed(() => {
+    const actual = this.servicioActivo();
+    if (!actual) return [];
+    // Solo relacionados de los servicios visibles en INICIO, no del catálogo completo
+    return this.serviciosVisibles
+      .filter((s) => s.categoria === actual.categoria && s.id !== actual.id)
+      .slice(0, 3);
+  });
+
+  categoriaLabel(id: string): string {
+    return this.catalogo.etiquetaCategoriaServicio(id);
+  }
+
+  abrirServicio(s: Servicio) {
+    this.scrollPosBeforeModal = window.scrollY;
+    this.servicioActivo.set(s);
+    document.body.style.overflow = 'hidden';
+  }
+
+  cerrarModal() {
+    this.servicioActivo.set(null);
+    document.body.style.overflow = '';
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: this.scrollPosBeforeModal, behavior: 'instant' as ScrollBehavior });
+    });
+  }
 
   abrirShowcase(p: Proyecto) {
     this.proyectoSeleccionado.set(p);
