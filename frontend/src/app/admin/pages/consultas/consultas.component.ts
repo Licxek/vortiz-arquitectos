@@ -43,6 +43,7 @@ interface Consulta {
   ultimoMensajeFecha?: string;
   ultimoMensajeMetodo?: 'email' | 'whatsapp' | 'guardado' | 'inbound';
   tieneRespuestaNoLeida: boolean;
+  estado?: string; // 👈 AGREGAR
 }
 
 interface MensajeChat {
@@ -492,6 +493,7 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
       ultimoMensajeFecha: ultimo?.createdAt,
       ultimoMensajeMetodo: ultimo?.metodo,
       tieneRespuestaNoLeida,
+      estado: (c as any).estado || 'pendiente', // 👈 AGREGAR
     };
   }
 
@@ -954,5 +956,21 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
         this.cdr.detectChanges();
       },
     });
+  }
+  estadoLabel(estado: string): string {
+    const map: Record<string, string> = {
+      pendiente: 'Pendiente',
+      confirmada: 'Confirmada',
+      completada: 'Completada',
+      cancelada: 'Cancelada',
+    };
+    return map[estado] || estado;
+  }
+
+  estadoColor(estado: string): string {
+    if (estado === 'confirmada') return 'bg-green-50 text-green-700';
+    if (estado === 'completada') return 'bg-blue-50 text-blue-700';
+    if (estado === 'cancelada') return 'bg-red-50 text-red-700';
+    return 'bg-amber-50 text-amber-700'; // pendiente (default)
   }
 }
