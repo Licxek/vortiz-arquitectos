@@ -23,6 +23,7 @@ export class ImageCarouselComponent implements OnInit, OnDestroy {
   @Input() set imagenes(v: string[]) {
     this._imagenes.set((v || []).filter((x) => !!x && x.trim().length > 0));
     this.indiceActual.set(0);
+    this.dragOffset.set(0);
   }
   @Input() alt = '';
   @Input() aspectRatio: 'wide' | 'square' | '4:3' | 'tall' = 'wide';
@@ -40,23 +41,38 @@ export class ImageCarouselComponent implements OnInit, OnDestroy {
   protected _imagenes = signal<string[]>([]);
   indiceActual = signal(0);
 
-  // Touch state (no signal, no necesita re-render)
+  // Touch/drag state
   private touchStartX = 0;
-  private touchEndX = 0;
+  private touchCurrentX = 0;
+  arrastrando = false;
+  dragOffset = signal(0); // pixels de arrastre durante el swipe
+  private containerWidth = 0;
   private autoplayInterval: any = null;
-
-  imagenActual = computed(() => {
-    const list = this._imagenes();
-    if (list.length === 0) return this.placeholder || this.defaultPlaceholder;
-    return list[this.indiceActual()] || list[0];
-  });
 
   total = computed(() => this._imagenes().length);
   tieneMultiples = computed(() => this.total() > 1);
 
+  // Cálculo del transform: mueve el track según índice + offset de arrastre
+  translateXTotal = computed(() => {
+    const n = this.total();
+    if (n === 0) return '0px';
+    // Cada imagen ocupa (100 / n)% del track
+    // Para mostrar la imagen i, movemos -(i * (100/n))%
+    const percentPorImagen = 100 / n;
+    const basePercent = -this.indiceActual() * percentPorImagen;
+    const offset = this.dragOffset();
+    if (offset !== 0 && this.containerWidth > 0) {
+      // Convertir el offset en pixels a % del track completo
+      // Track total = n * containerWidth; offset% = offset / (n * containerWidth) * 100
+      const offsetPercent = (offset / (n * this.containerWidth)) * 100;
+      return `${basePercent + offsetPercent}%`;
+    }
+    return `${basePercent}%`;
+  });
+
   aspectClass = computed(() => {
     const map = {
-      wide: 'aspect-video', // 16:9
+      wide: 'aspect-video',
       square: 'aspect-square',
       '4:3': 'aspect-[4/3]',
       tall: 'aspect-[3/4]',
@@ -64,7 +80,7 @@ export class ImageCarouselComponent implements OnInit, OnDestroy {
     return map[this.aspectRatio] || map.wide;
   });
 
-  private defaultPlaceholder =
+  defaultPlaceholder =
     'data:image/svg+xml;utf8,' +
     encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250">' +
@@ -109,23 +125,44 @@ export class ImageCarouselComponent implements OnInit, OnDestroy {
   }
 
   onClickImagen() {
+    // No emitir click si el usuario estaba arrastrando
+    if (this.arrastrando) return;
     if (this.clickable) {
       this.imageClick.emit(this.indiceActual());
     }
   }
 
-  // ============ TOUCH ============
+  // ============ TOUCH con drag en vivo ============
   onTouchStart(event: TouchEvent) {
+    if (!this.tieneMultiples()) return;
     this.touchStartX = event.touches[0].clientX;
+    this.touchCurrentX = this.touchStartX;
+    this.arrastrando = true;
+    // Guardar el ancho del contenedor para calcular el porcentaje del drag
+    const target = event.currentTarget as HTMLElement;
+    this.containerWidth = target.getBoundingClientRect().width;
   }
 
-  onTouchEnd(event: TouchEvent) {
-    this.touchEndX = event.changedTouches[0].clientX;
-    const diff = this.touchStartX - this.touchEndX;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) this.siguiente();
+  onTouchMove(event: TouchEvent) {
+    if (!this.arrastrando) return;
+    this.touchCurrentX = event.touches[0].clientX;
+    const delta = this.touchCurrentX - this.touchStartX;
+    this.dragOffset.set(delta);
+  }
+
+  onTouchEnd(_event: TouchEvent) {
+    if (!this.arrastrando) return;
+    const delta = this.touchCurrentX - this.touchStartX;
+    const umbral = this.containerWidth * 0.15; // 15% del ancho = cambio de imagen
+
+    this.arrastrando = false;
+    this.dragOffset.set(0);
+
+    if (Math.abs(delta) > umbral) {
+      if (delta < 0) this.siguiente();
       else this.anterior();
     }
+    // Si no supera el umbral, se anima de regreso a la posición actual (por el transition-transform)
   }
 
   // ============ AUTOPLAY ============
@@ -148,7 +185,7 @@ export class ImageCarouselComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ============ KEYBOARD (accesibilidad) ============
+  // ============ KEYBOARD ============
   @HostListener('keydown', ['$event'])
   onKeydown(event: KeyboardEvent) {
     if (!this.tieneMultiples()) return;

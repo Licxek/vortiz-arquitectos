@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router} from '@angular/router';
 import { InicioService, ProyectoBackend } from '../../../core/services/inicio.service';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { ImageCarouselComponent } from '../../../shared/image-carousel/image-carousel.component';
@@ -28,7 +28,6 @@ interface Proyecto {
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     SkeletonComponent,
     ImageCarouselComponent,
     ImageGalleryInputComponent,
@@ -282,5 +281,30 @@ export class ProyectosDetalleComponent implements OnInit {
       Finalizado: 100,
     };
     this.proyecto.progreso = sugerencias[this.proyecto.estado] ?? 0;
+  }
+  // Dropdown de estado bonito
+  dropdownEstadoAbierto = false;
+
+  estadosDetalle = [
+    { value: 'En diseño', label: 'En diseño', color: 'orange', descripcion: 'Trabajando en los planos iniciales' },
+    { value: 'En proceso', label: 'En proceso', color: 'blue', descripcion: 'Ejecución activa del proyecto' },
+    { value: 'En revisión', label: 'En revisión', color: 'amber', descripcion: 'Ajustes y validación final' },
+    { value: 'Pausado', label: 'Pausado', color: 'gray', descripcion: 'Temporalmente detenido' },
+    { value: 'Finalizado', label: 'Finalizado', color: 'green', descripcion: 'Proyecto completado' },
+  ];
+
+  toggleDropdownEstado(event: Event) {
+    event.stopPropagation();
+    this.dropdownEstadoAbierto = !this.dropdownEstadoAbierto;
+  }
+
+  seleccionarEstado(valor: string) {
+    if (!this.proyecto) return;
+    this.proyecto.estado = valor;
+    this.dropdownEstadoAbierto = false;
+  }
+  @HostListener('document:click')
+  cerrarDropdown() {
+    this.dropdownEstadoAbierto = false;
   }
 }

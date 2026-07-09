@@ -3,25 +3,50 @@
   [class.rounded-2xl]="rounded"
   [class]="aspectClass()"
   (touchstart)="onTouchStart($event)"
+  (touchmove)="onTouchMove($event)"
   (touchend)="onTouchEnd($event)"
   tabindex="0"
 >
-  <!-- Imagen actual con transición -->
+  <!-- Track deslizante con todas las imágenes -->
+  <div
+    *ngIf="_imagenes().length > 0"
+    class="flex h-full will-change-transform"
+    [class.transition-transform]="!arrastrando"
+    [class.duration-500]="!arrastrando"
+    [class.ease-out]="!arrastrando"
+    [style.transform]="'translateX(' + translateXTotal() + ')'"
+    [style.width.%]="_imagenes().length * 100"
+  >
+    <div
+      *ngFor="let img of _imagenes(); let i = index"
+      class="h-full shrink-0"
+      [style.width.%]="100 / _imagenes().length"
+      (click)="onClickImagen()"
+    >
+      <img
+        [src]="img"
+        [alt]="alt + ' ' + (i + 1)"
+        class="w-full h-full pointer-events-none select-none"
+        [class.object-cover]="objectFit === 'cover'"
+        [class.object-contain]="objectFit === 'contain'"
+        [class.cursor-pointer]="clickable"
+        draggable="false"
+      />
+    </div>
+  </div>
+
+  <!-- Placeholder si no hay imágenes -->
   <img
-    [src]="imagenActual()"
+    *ngIf="_imagenes().length === 0"
+    [src]="placeholder || defaultPlaceholder"
     [alt]="alt"
-    class="w-full h-full transition-all duration-300"
-    [class.object-cover]="objectFit === 'cover'"
-    [class.object-contain]="objectFit === 'contain'"
-    [class.cursor-pointer]="clickable"
-    [class.group-hover:scale-105]="clickable"
-    (click)="onClickImagen()"
+    class="w-full h-full object-cover"
   />
 
   <!-- Contador X / Y (esquina superior derecha) -->
   <div
     *ngIf="tieneMultiples()"
-    class="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-1 rounded-full backdrop-blur-sm"
+    class="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-1 rounded-full backdrop-blur-sm pointer-events-none z-10"
   >
     {{ indiceActual() + 1 }} / {{ total() }}
   </div>
@@ -30,7 +55,7 @@
   <button
     *ngIf="tieneMultiples() && showArrows"
     (click)="anterior($event)"
-    class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+    class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 z-10"
     aria-label="Imagen anterior"
   >
     <svg
@@ -48,7 +73,7 @@
   <button
     *ngIf="tieneMultiples() && showArrows"
     (click)="siguiente($event)"
-    class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+    class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 z-10"
     aria-label="Imagen siguiente"
   >
     <svg
@@ -65,13 +90,13 @@
   <!-- Dots indicadores -->
   <div
     *ngIf="tieneMultiples() && showDots"
-    class="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1.5"
+    class="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1.5 z-10"
   >
     <button
       *ngFor="let _ of _imagenes(); let i = index"
       (click)="irA(i, $event)"
-      class="rounded-full transition-all duration-200"
-      [class.w-4]="indiceActual() === i"
+      class="rounded-full transition-all duration-300"
+      [class.w-5]="indiceActual() === i"
       [class.w-1.5]="indiceActual() !== i"
       [class.h-1.5]="true"
       [class.bg-white]="indiceActual() === i"
