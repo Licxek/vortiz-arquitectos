@@ -545,7 +545,8 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+    // Solo enfocar buscador si NO estamos en un input
+    if (event.key === '/' && !enInput) {
       event.preventDefault();
       setTimeout(() => {
         this.inputBusqueda?.nativeElement.focus();

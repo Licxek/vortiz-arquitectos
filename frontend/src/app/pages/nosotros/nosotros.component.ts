@@ -33,6 +33,11 @@ interface MiembroEquipo {
   descripcion?: string;
 }
 
+interface StatArquitecto {
+  numero: string;
+  titulo: string;
+}
+
 @Component({
   selector: 'app-nosotros',
   standalone: true,
@@ -90,6 +95,7 @@ export class NosotrosComponent implements OnInit {
   valores: Valor[] = [];
   hitos: Hito[] = [];
   credenciales: Credencial[] = [];
+  statsArquitecto: StatArquitecto[] = [];
 
   // ============ EQUIPO ============
   equipoBadge = '';
@@ -181,5 +187,8 @@ export class NosotrosComponent implements OnInit {
     this.equipoTitulo = this.contenidoService.getCampo('nosotros', 'equipo', 'titulo');
     this.equipoDescripcion = this.contenidoService.getCampo('nosotros', 'equipo', 'descripcion');
     this.equipo = this.contenidoService.getLista<MiembroEquipo>('nosotros', 'equipo', []);
+
+    // ============ STATS DEL ARQUITECTO (lista) ============
+    this.statsArquitecto = this.contenidoService.getLista<StatArquitecto>('nosotros', 'statsArquitecto', []);
   }
 }

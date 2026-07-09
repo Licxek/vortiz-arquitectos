@@ -34,7 +34,7 @@
   </div>
 
   <!-- Stats expandidas -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+   <div *ngIf="totalReportes() > 0" class="grid grid-cols-2 md:grid-cols-4 gap-3">
     <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
       <div class="flex items-center gap-2 mb-1">
         <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
@@ -125,7 +125,7 @@
   </div>
 
   <!-- Filtros completos -->
-  <div class="bg-white rounded-2xl p-3 shadow-sm border border-gray-100">
+  <div *ngIf="totalReportes() > 0" class="bg-white rounded-2xl p-3 shadow-sm border border-gray-100">
     <div class="flex flex-col lg:flex-row gap-2">
       <!-- Búsqueda -->
       <div class="relative flex-1 min-w-0">
@@ -147,7 +147,7 @@
           type="text"
           [ngModel]="busqueda()"
           (ngModelChange)="busqueda.set($event); paginaActual.set(1)"
-          placeholder="Buscar por título... (Ctrl+K)"
+          placeholder="Buscar por título... (presiona /)"
           class="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-[#0a4d7a] focus:bg-white transition-all"
         />
       </div>
