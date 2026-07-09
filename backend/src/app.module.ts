@@ -34,6 +34,7 @@ import { NotificacionesModule } from './notificaciones/notificaciones.module';
 import { ColoresGuardadosModule } from './colores-guardados/colores-guardados.module';
 import { CategoriasModule } from './categorias/categorias.module';
 import { PaginasFijasModule } from './paginas-fijas/paginas-fijas.module';
+import { ConsultaSnapshotsModule } from './consulta-snapshots/consulta-snapshots.module';
 
 @Module({
   imports: [
@@ -127,6 +128,7 @@ import { PaginasFijasModule } from './paginas-fijas/paginas-fijas.module';
     ColoresGuardadosModule,
     CategoriasModule,
     PaginasFijasModule,
+    ConsultaSnapshotsModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
