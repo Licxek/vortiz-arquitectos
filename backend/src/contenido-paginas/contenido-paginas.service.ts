@@ -9,6 +9,8 @@ const PAGINAS_PERMITIDAS = [
   'proyectos',
   'servicios',
   'citas',
+  'politicaPrivacidad',
+  'terminosCondiciones',
 ];
 
 @Injectable()

@@ -2205,7 +2205,7 @@ export class PaginasComponent implements OnInit {
     const key = this.slugASchema[this.paginaEditando.slug];
     if (!key) return;
 
-    // 👇 Filtrar la sección __apariencia (no es contenido, es solo UI para color/ícono)
+    // Filtrar la sección __apariencia (no es contenido, es solo UI para color/ícono)
     const contenidoLimpio: Record<string, any> = {};
     Object.keys(this.contenidoPaginas[key] || {}).forEach((seccionId) => {
       if (seccionId !== '__apariencia') {
@@ -2213,12 +2213,71 @@ export class PaginasComponent implements OnInit {
       }
     });
 
-    // 1) Contenido de la página (siempre, sin __apariencia)
-    const guardados: Observable<any>[] = [
-      this.contenidoService.guardarPagina(key, contenidoLimpio),
-    ];
+    // Detectar cambios de apariencia
+    const colorCambio = this.paginaEditando.color !== this.snapshotColorFijo;
+    const iconoCambio = this.paginaEditando.icono !== this.snapshotIconoFijo;
 
-    // 2) Si es página de catálogo, agregar su sincronización
+    // Contadores para saber si TODO salió bien
+    let totalOperaciones = 1; // Contenido siempre
+    let operacionesCompletadas = 0;
+    let huboError = false;
+    const errores: string[] = [];
+
+    if (colorCambio || iconoCambio) totalOperaciones++;
+    if (key === 'servicios') totalOperaciones++;
+    if (key === 'proyectos') totalOperaciones++;
+
+    this.guardandoServicio = true;
+    this.cdr.markForCheck();
+
+    const onCompletar = (fuente: string, exito: boolean, error?: any) => {
+      operacionesCompletadas++;
+      if (!exito) {
+        huboError = true;
+        errores.push(fuente);
+        console.error(`[GUARDAR] Error en ${fuente}:`, error);
+      }
+
+      // Cuando todas las operaciones terminaron
+      if (operacionesCompletadas === totalOperaciones) {
+        this.guardandoServicio = false;
+
+        if (huboError) {
+          this.flashMensaje(`Error al guardar: ${errores.join(', ')}`, 'info');
+        } else {
+          if (key === 'servicios') this.catalogo.cargarServicios();
+          if (key === 'proyectos') this.catalogo.cargarProyectos();
+          this.capturarSnapshot();
+          this.snapshotColorFijo = this.paginaEditando!.color;
+          this.snapshotIconoFijo = this.paginaEditando!.icono;
+          this.paginaEditando!.ultimaEdicion = 'Hace unos segundos';
+          this.flashMensaje('Cambios guardados correctamente');
+        }
+        this.cdr.markForCheck();
+      }
+    };
+
+    // 1) Guardar contenido
+    this.contenidoService.guardarPagina(key, contenidoLimpio).subscribe({
+      next: () => onCompletar('contenido', true),
+      error: (err) => onCompletar('contenido', false, err),
+    });
+
+    // 2) Guardar personalización (color/ícono) si cambió
+    if (colorCambio || iconoCambio) {
+      this.paginasFijasService
+        .actualizarPersonalizacion(
+          this.paginaEditando.slug,
+          this.paginaEditando.color,
+          this.paginaEditando.icono,
+        )
+        .subscribe({
+          next: () => onCompletar('apariencia', true),
+          error: (err) => onCompletar('apariencia', false, err),
+        });
+    }
+
+    // 3) Sincronizar servicios si aplica
     if (key === 'servicios') {
       const payload = this.serviciosDraft.map((s, i) => ({
         id: s.id && s.id > 0 ? s.id : undefined,
@@ -2229,8 +2288,14 @@ export class PaginasComponent implements OnInit {
         imagen: s.imagen,
         orden: i + 1,
       }));
-      guardados.push(this.catalogo.sincronizarServicios(payload));
-    } else if (key === 'proyectos') {
+      this.catalogo.sincronizarServicios(payload).subscribe({
+        next: () => onCompletar('servicios', true),
+        error: (err) => onCompletar('servicios', false, err),
+      });
+    }
+
+    // 4) Sincronizar proyectos si aplica
+    if (key === 'proyectos') {
       const payload = this.proyectosDraft.map((p, i) => ({
         id: p.id && p.id > 0 ? p.id : undefined,
         nombre: p.nombre,
@@ -2244,45 +2309,14 @@ export class PaginasComponent implements OnInit {
         cliente: p.cliente,
         imagenesPublicas: p.imagenesPublicas,
         videoUrl: p.videoUrl,
-        publicado: true, // 👈 CRÍTICO
+        publicado: true,
         orden: i + 1,
-      })) as any[]; // 👈 cast (publicado no está en interface)
-      guardados.push(this.catalogo.sincronizarProyectos(payload));
+      })) as any[];
+      this.catalogo.sincronizarProyectos(payload).subscribe({
+        next: () => onCompletar('proyectos', true),
+        error: (err) => onCompletar('proyectos', false, err),
+      });
     }
-
-    // Si cambiaron el color o el ícono, agregar la actualización de personalización
-    const colorCambio = this.paginaEditando.color !== this.snapshotColorFijo;
-    const iconoCambio = this.paginaEditando.icono !== this.snapshotIconoFijo;
-    if (colorCambio || iconoCambio) {
-      guardados.push(
-        this.paginasFijasService.actualizarPersonalizacion(
-          this.paginaEditando.slug,
-          this.paginaEditando.color,
-          this.paginaEditando.icono,
-        ),
-      );
-    }
-
-    this.guardandoServicio = true;
-    this.cdr.markForCheck();
-
-    forkJoin(guardados).subscribe({
-      next: () => {
-        if (key === 'servicios') this.catalogo.cargarServicios();
-        if (key === 'proyectos') this.catalogo.cargarProyectos();
-        this.guardandoServicio = false;
-        this.capturarSnapshot();
-        // Actualizar snapshots de apariencia
-        this.snapshotColorFijo = this.paginaEditando!.color;
-        this.snapshotIconoFijo = this.paginaEditando!.icono;
-        this.paginaEditando!.ultimaEdicion = 'Hace unos segundos';
-        this.flashMensaje('Cambios guardados correctamente');
-      },
-      error: () => {
-        this.guardandoServicio = false;
-        this.flashMensaje('Error al guardar los cambios', 'info');
-      },
-    });
   }
 
   onIframeCargado(event: Event) {
