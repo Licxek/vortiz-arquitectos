@@ -628,7 +628,7 @@ export class PaginasComponent implements OnInit {
         icono: '📊',
         campos: [
           {
-            key: 'statsArquitecto',
+            key: 'lista',    // ✅ BIEN — igual que credenciales, hitos, valores
             label: 'Estadísticas destacadas',
             tipo: 'lista',
             ayuda: 'Los 3 números grandes que aparecen debajo de la bio del arquitecto',
