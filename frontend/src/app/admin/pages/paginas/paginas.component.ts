@@ -623,6 +623,34 @@ export class PaginasComponent implements OnInit {
         ],
       },
       {
+        id: 'statsArquitecto',
+        nombre: 'Stats del arquitecto',
+        icono: '📊',
+        campos: [
+          {
+            key: 'statsArquitecto',
+            label: 'Estadísticas destacadas',
+            tipo: 'lista',
+            ayuda: 'Los 3 números grandes que aparecen debajo de la bio del arquitecto',
+            maxItems: 3,
+            itemTemplate: {
+              numero: {
+                label: 'Número',
+                tipo: 'texto',
+                placeholder: '15+',
+                maxLength: 10,
+              },
+              titulo: {
+                label: 'Etiqueta',
+                tipo: 'texto',
+                placeholder: 'Años de experiencia',
+                maxLength: 40,
+              },
+            },
+          },
+        ],
+      },
+      {
         id: 'credenciales',
         nombre: 'Credenciales',
         icono: '🎓',
