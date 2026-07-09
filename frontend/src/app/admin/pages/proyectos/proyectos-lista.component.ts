@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router} from '@angular/router';
 import { InicioService, ProyectoBackend } from '../../../core/services/inicio.service';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { ImageCarouselComponent } from '../../../shared/image-carousel/image-carousel.component';
@@ -28,7 +28,7 @@ type EstadoFiltro = 'todos' | 'En diseño' | 'En proceso' | 'En revisión' | 'Pa
 @Component({
   selector: 'app-proyectos-lista',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SkeletonComponent, ImageCarouselComponent],
+  imports: [CommonModule, FormsModule, SkeletonComponent, ImageCarouselComponent],
   templateUrl: './proyectos-lista.component.html',
 })
 export class ProyectosListaComponent implements OnInit {
