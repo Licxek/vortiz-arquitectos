@@ -16,7 +16,6 @@ import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { TelefonoFormatoPipe } from '../../../shared/pipes/telefono-formato.pipe';
 import { ConsultaSnapshotsService, ConsultaSnapshot } from '../../../core/services/consulta-snapshots.service';
 import { Router } from '@angular/router';
-import jsPDF from 'jspdf';
 
 interface Consulta {
   id: number;
@@ -189,13 +188,22 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     let resultado = this.consultas;
 
     if (this.filtro === 'pendientes') {
-      resultado = resultado.filter((c) => !c.resuelta && !c.archivada);
+      // Pendientes = SOLO las de hoy y mañana (que serían urgentes/recientes)
+      // Las pasadas se van automáticamente a historial
+      resultado = resultado.filter(
+        (c) => !c.resuelta && !c.archivada && !this.esCitaPasada(c.fechaCitaRaw),
+      );
     } else if (this.filtro === 'urgentes') {
-      resultado = resultado.filter((c) => c.urgente && !c.resuelta && !c.archivada);
+      resultado = resultado.filter(
+        (c) => c.urgente && !c.resuelta && !c.archivada && !this.esCitaPasada(c.fechaCitaRaw),
+      );
     } else if (this.filtro === 'resueltas') {
       resultado = resultado.filter((c) => c.resuelta && !c.archivada);
     } else if (this.filtro === 'archivadas') {
       resultado = resultado.filter((c) => c.archivada);
+    } else if (this.filtro === 'historial') {
+      // El historial se maneja aparte con snapshots, no aquí
+      resultado = [];
     }
 
     if (this.busqueda.trim()) {
@@ -217,12 +225,25 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     return resultado;
   }
 
+  // Helper: determina si una cita ya pasó (fecha < hoy)
+  private esCitaPasada(fechaCita: string): boolean {
+    if (!fechaCita) return false;
+    const cita = new Date(fechaCita + 'T00:00:00');
+    const ahora = new Date();
+    ahora.setHours(0, 0, 0, 0);
+    return cita.getTime() < ahora.getTime();
+  }
+
   get conteoPendientes(): number {
-    return this.consultas.filter((c) => !c.resuelta && !c.archivada).length;
+    return this.consultas.filter(
+      (c) => !c.resuelta && !c.archivada && !this.esCitaPasada(c.fechaCitaRaw),
+    ).length;
   }
 
   get conteoUrgentes(): number {
-    return this.consultas.filter((c) => c.urgente && !c.resuelta && !c.archivada).length;
+    return this.consultas.filter(
+      (c) => c.urgente && !c.resuelta && !c.archivada && !this.esCitaPasada(c.fechaCitaRaw),
+    ).length;
   }
 
   get conteoResueltas(): number {
@@ -650,6 +671,8 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
         this.snapshots = data;
         this.cargandoSnapshots = false;
         this.cdr.detectChanges();
+        // Después de tener ambas listas, intentar auto-archivar
+        this.autoArchivarCitasPasadas();
       },
       error: () => {
         this.snapshots = [];
@@ -724,195 +747,27 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     return 'bg-blue-100 text-blue-700';
   }
 
-  // ============ PDF DEL SNAPSHOT ============
   descargarSnapshotPDF(s: ConsultaSnapshot) {
-    const doc = new jsPDF({
-      unit: 'mm',
-      format: 'letter',
+    this.snapshotsService.descargarPdf(s.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const nombre = `snapshot-${s.id}-${s.clienteSnapshot.nombre.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = nombre;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        this.mostrarFlashSnapshot('✓ PDF descargado');
+      },
+      error: (err) => {
+        console.error('Error descargando PDF:', err);
+        this.mostrarFlashSnapshot('⚠ No se pudo descargar');
+        this.cdr.detectChanges();
+      },
     });
-
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15;
-    let y = margin;
-
-    // Helper: nueva página si nos pasamos
-    const checkPageBreak = (needed: number) => {
-      if (y + needed > pageHeight - margin) {
-        doc.addPage();
-        y = margin;
-      }
-    };
-
-    // Helper: envolver texto largo
-    const drawWrapped = (texto: string, maxWidth: number, lineHeight: number, fontSize: number) => {
-      doc.setFontSize(fontSize);
-      const lineas = doc.splitTextToSize(texto, maxWidth);
-      for (const linea of lineas) {
-        checkPageBreak(lineHeight);
-        doc.text(linea, margin, y);
-        y += lineHeight;
-      }
-    };
-
-    // ============ HEADER ============
-    doc.setFillColor(10, 77, 122); // #0a4d7a
-    doc.rect(0, 0, pageWidth, 25, 'F');
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('VORTIZ ARQUITECTOS', margin, 12);
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Registro oficial de conversación con cliente', margin, 18);
-
-    // Fecha de emisión (esquina derecha)
-    doc.setFontSize(8);
-    const fechaEmision = this.formatearFechaCompleta(s.createdAt);
-    doc.text(`Emitido: ${fechaEmision}`, pageWidth - margin, 12, { align: 'right' });
-    doc.text(`ID: SNAP-${s.id.toString().padStart(6, '0')}`, pageWidth - margin, 18, { align: 'right' });
-
-    y = 35;
-
-    // ============ TÍTULO ============
-    doc.setTextColor(30, 30, 30);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Historial de Consulta', margin, y);
-    y += 6;
-
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Motivo del registro: ${this.motivoLabel(s.motivo)}`, margin, y);
-    y += 10;
-
-    // ============ DATOS DEL CLIENTE ============
-    doc.setDrawColor(230, 230, 230);
-    doc.setFillColor(248, 249, 251);
-    doc.roundedRect(margin, y, pageWidth - margin * 2, 30, 2, 2, 'F');
-
-    doc.setTextColor(10, 77, 122);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DATOS DEL CLIENTE', margin + 4, y + 6);
-
-    doc.setTextColor(30, 30, 30);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Nombre: ${s.clienteSnapshot.nombre}`, margin + 4, y + 13);
-    doc.text(`Correo: ${s.clienteSnapshot.correo}`, margin + 4, y + 19);
-    doc.text(`Teléfono: ${s.clienteSnapshot.telefono || '—'}`, margin + 4, y + 25);
-    y += 36;
-
-    // ============ DATOS DE LA CONSULTA ============
-    checkPageBreak(35);
-    doc.setFillColor(248, 249, 251);
-    doc.roundedRect(margin, y, pageWidth - margin * 2, 30, 2, 2, 'F');
-
-    doc.setTextColor(10, 77, 122);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DETALLES DE LA CONSULTA', margin + 4, y + 6);
-
-    doc.setTextColor(30, 30, 30);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    const fechaCita = this.formatearFechaCompleta(s.consultaSnapshot.fecha + 'T' + (s.consultaSnapshot.hora || '00:00'));
-    doc.text(`Servicio: ${s.consultaSnapshot.servicio || 'Consulta general'}`, margin + 4, y + 13);
-    doc.text(`Fecha de la cita: ${fechaCita}`, margin + 4, y + 19);
-    doc.text(`Total de mensajes: ${s.totalMensajes}   |   Duración: ${s.duracionDias || 0} días`, margin + 4, y + 25);
-    y += 36;
-
-    // ============ MOTIVO ORIGINAL ============
-    if (s.consultaSnapshot.motivo) {
-      checkPageBreak(15);
-      doc.setTextColor(10, 77, 122);
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
-      doc.text('MOTIVO ORIGINAL DEL CLIENTE', margin, y);
-      y += 5;
-      doc.setTextColor(60, 60, 60);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      drawWrapped(s.consultaSnapshot.motivo, pageWidth - margin * 2, 5, 10);
-      y += 4;
-    }
-
-    // ============ MENSAJES ============
-    checkPageBreak(15);
-    doc.setDrawColor(10, 77, 122);
-    doc.setLineWidth(0.3);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 5;
-
-    doc.setTextColor(10, 77, 122);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CONVERSACIÓN', margin, y);
-    y += 8;
-
-    if (s.mensajesSnapshot.length === 0) {
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'italic');
-      doc.setTextColor(150, 150, 150);
-      doc.text('(Sin mensajes registrados en esta consulta)', margin, y);
-      y += 8;
-    }
-
-    for (const msg of s.mensajesSnapshot) {
-      checkPageBreak(20);
-      const esAdmin = msg.autor === 'admin';
-      const label = esAdmin
-        ? `VORTIZ (${this.metodoLabel(msg.metodo || '')}):`
-        : `${s.clienteSnapshot.nombre.toUpperCase()}:`;
-
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(esAdmin ? 10 : 80, esAdmin ? 77 : 80, esAdmin ? 122 : 80);
-      doc.text(label, margin, y);
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(140, 140, 140);
-      doc.text(this.formatearFechaCompleta(msg.createdAt), pageWidth - margin, y, { align: 'right' });
-      y += 5;
-
-      doc.setTextColor(40, 40, 40);
-      drawWrapped(msg.texto, pageWidth - margin * 2, 5, 10);
-      y += 4;
-    }
-
-    // ============ FOOTER LEGAL ============
-    checkPageBreak(30);
-    y += 5;
-    doc.setDrawColor(230, 230, 230);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 6;
-
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(120, 120, 120);
-    const disclaimer = 'Este documento es un registro fiel del intercambio entre Vortiz Arquitectos y el cliente en la fecha señalada. Los mensajes se conservan tal como fueron enviados y no han sido modificados. Este archivo puede utilizarse como respaldo interno de la relación con el cliente.';
-    drawWrapped(disclaimer, pageWidth - margin * 2, 4, 7);
-
-    y += 3;
-    doc.setFontSize(7);
-    doc.text(`Documento generado automáticamente por el sistema Vortiz — ${new Date().toLocaleString('es-MX')}`, margin, y);
-
-    // ============ NÚMEROS DE PÁGINA ============
-    const totalPages = doc.internal.pages.length - 1;
-    for (let i = 1; i <= totalPages; i++) {
-      doc.setPage(i);
-      doc.setFontSize(7);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
-    }
-
-    // ============ DESCARGAR ============
-    const nombreArchivo = `snapshot-${s.id}-${s.clienteSnapshot.nombre.toLowerCase().replace(/\s+/g, '-')}.pdf`;
-    doc.save(nombreArchivo);
   }
 
   metodoLabel(metodo: string): string {
@@ -972,5 +827,46 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     if (estado === 'completada') return 'bg-blue-50 text-blue-700';
     if (estado === 'cancelada') return 'bg-red-50 text-red-700';
     return 'bg-amber-50 text-amber-700'; // pendiente (default)
+  }
+
+  /**
+   * Al cargar la lista, revisa qué citas ya pasaron de fecha y NO tienen snapshot.
+   * Si les falta, genera uno automático de tipo "automatico_archivado".
+   * Esto libera el tab de Pendientes de citas viejas.
+   */
+  private autoArchivarCitasPasadas() {
+    if (!this.consultas.length) return;
+
+    const citasPasadas = this.consultas.filter(
+      (c) => this.esCitaPasada(c.fechaCitaRaw) && !c.archivada,
+    );
+
+    // IDs que ya tienen snapshot para no duplicar
+    const idsConSnapshot = new Set(this.snapshots.map((s) => s.citaId));
+    const pendientesDeArchivar = citasPasadas.filter((c) => !idsConSnapshot.has(c.id));
+
+    if (pendientesDeArchivar.length === 0) return;
+
+    console.log(`[auto-archivar] ${pendientesDeArchivar.length} citas pasadas sin snapshot`);
+
+    // Generar snapshots en secuencia (no todos al mismo tiempo para no saturar el backend)
+    let procesadas = 0;
+    pendientesDeArchivar.forEach((c) => {
+      this.snapshotsService.crear(c.id, 'automatico_archivado').subscribe({
+        next: (snap) => {
+          this.snapshots = [snap, ...this.snapshots];
+          this.idsArchivados.add(c.id);
+          procesadas++;
+          if (procesadas === pendientesDeArchivar.length) {
+            this.guardar(this.STORAGE_ARCHIVADAS, this.idsArchivados);
+            this.cdr.detectChanges();
+          }
+        },
+        error: (err) => {
+          console.error(`Error auto-archivando cita ${c.id}:`, err);
+          procesadas++;
+        },
+      });
+    });
   }
 }
