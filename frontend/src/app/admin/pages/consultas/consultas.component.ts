@@ -15,6 +15,7 @@ import { Router, RouterLink } from '@angular/router';
 import { InicioService, CitaBackend } from '../../../core/services/inicio.service';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { TelefonoFormatoPipe } from '../../../shared/pipes/telefono-formato.pipe';
+import { ConsultaSnapshotsService, ConsultaSnapshot } from '../../../core/services/consulta-snapshots.service';
 
 interface Consulta {
   id: number;
@@ -50,7 +51,7 @@ interface MensajeChat {
   metodo?: 'email' | 'whatsapp' | 'guardado' | 'inbound';
 }
 
-type Filtro = 'todas' | 'pendientes' | 'urgentes' | 'resueltas' | 'archivadas';
+type Filtro = 'todas' | 'pendientes' | 'urgentes' | 'resueltas' | 'archivadas' | 'historial';
 
 @Component({
   selector: 'app-consultas',
@@ -62,6 +63,7 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
   private inicioService = inject(InicioService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private snapshotsService = inject(ConsultaSnapshotsService);
 
   @ViewChild('chatContainer') chatContainer?: ElementRef<HTMLDivElement>;
   @ViewChild('cardContainer') cardContainer?: ElementRef<HTMLDivElement>;
@@ -83,6 +85,13 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
   cargandoMensajes = false;
   private intervalPolling: any = null;
 
+  // ============ SNAPSHOTS ============
+  snapshots: ConsultaSnapshot[] = [];
+  cargandoSnapshots = false;
+  snapshotSeleccionado: ConsultaSnapshot | null = null;
+  guardandoSnapshot = false;
+  flashSnapshot = '';
+
   private bodyOverflowAnterior = '';
   private readonly STORAGE_LEIDAS = 'vortiz_consultas_leidas';
   private idsLeidos = new Set<string>();
@@ -93,6 +102,7 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarLocalStorage();
     this.cargar();
     this.iniciarPollingLista(); // ← NUEVO
+    this.cargarSnapshots();
   }
 
   ngAfterViewInit() {
@@ -377,12 +387,22 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
   marcarResuelta() {
     if (!this.consultaSeleccionada) return;
     const id = this.consultaSeleccionada.id;
-    if (this.consultaSeleccionada.resuelta) {
+    const eraResuelta = this.consultaSeleccionada.resuelta;
+
+    if (eraResuelta) {
       this.idsResueltos.delete(id);
       this.consultaSeleccionada.resuelta = false;
     } else {
       this.idsResueltos.add(id);
       this.consultaSeleccionada.resuelta = true;
+      // 📸 Snapshot automático al marcar como resuelta
+      this.snapshotsService.crear(id, 'automatico_resuelto').subscribe({
+        next: (snap) => {
+          this.snapshots = [snap, ...this.snapshots];
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Error snapshot auto:', err),
+      });
     }
     this.guardar(this.STORAGE_RESUELTAS, this.idsResueltos);
     const idx = this.consultas.findIndex((c) => c.id === id);
@@ -394,6 +414,14 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     const id = this.consultaSeleccionada.id;
     this.idsArchivados.add(id);
     this.consultaSeleccionada.archivada = true;
+    // 📸 Snapshot automático al archivar
+    this.snapshotsService.crear(id, 'automatico_archivado').subscribe({
+      next: (snap) => {
+        this.snapshots = [snap, ...this.snapshots];
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error snapshot auto:', err),
+    });
     this.guardar(this.STORAGE_ARCHIVADAS, this.idsArchivados);
     const idx = this.consultas.findIndex((c) => c.id === id);
     if (idx >= 0) this.consultas[idx] = { ...this.consultaSeleccionada };
@@ -611,5 +639,85 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
       clearInterval(this.intervalPollingLista);
       this.intervalPollingLista = null;
     }
+  }
+  cargarSnapshots() {
+    this.cargandoSnapshots = true;
+    this.snapshotsService.listarTodos().subscribe({
+      next: (data) => {
+        this.snapshots = data;
+        this.cargandoSnapshots = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.snapshots = [];
+        this.cargandoSnapshots = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  get conteoHistorial(): number {
+    return this.snapshots.length;
+  }
+  guardarSnapshotManual() {
+    if (!this.consultaSeleccionada || this.guardandoSnapshot) return;
+    const id = this.consultaSeleccionada.id;
+    this.guardandoSnapshot = true;
+    this.snapshotsService.crear(id, 'manual').subscribe({
+      next: (snap) => {
+        this.snapshots = [snap, ...this.snapshots];
+        this.guardandoSnapshot = false;
+        this.mostrarFlashSnapshot('✓ Historial guardado');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error guardando snapshot:', err);
+        this.guardandoSnapshot = false;
+        this.mostrarFlashSnapshot('⚠ No se pudo guardar');
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private mostrarFlashSnapshot(texto: string) {
+    this.flashSnapshot = texto;
+    setTimeout(() => {
+      this.flashSnapshot = '';
+      this.cdr.detectChanges();
+    }, 2500);
+  }
+  seleccionarSnapshot(s: ConsultaSnapshot) {
+    this.snapshotSeleccionado = s;
+  }
+
+  cerrarSnapshotDetalle() {
+    this.snapshotSeleccionado = null;
+  }
+
+  formatearFechaCompleta(iso: string): string {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-MX', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  motivoLabel(motivo: string): string {
+    const map: Record<string, string> = {
+      automatico_resuelto: 'Al marcar resuelta',
+      automatico_archivado: 'Al archivar',
+      manual: 'Guardado manual',
+    };
+    return map[motivo] || motivo;
+  }
+
+  motivoColor(motivo: string): string {
+    if (motivo === 'automatico_resuelto') return 'bg-green-100 text-green-700';
+    if (motivo === 'automatico_archivado') return 'bg-gray-100 text-gray-700';
+    return 'bg-blue-100 text-blue-700';
   }
 }
