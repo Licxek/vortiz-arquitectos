@@ -401,7 +401,7 @@ export class PaginasComponent implements OnInit {
   paginaEditando: Pagina | null = null;
   seccionEditandoActiva = '';
   mensajeGuardado = '';
-  tipoMensaje: 'exito' | 'info' = 'exito';
+  tipoMensaje: 'exito' | 'info' | 'error' = 'exito';
 
   // Schemas: qué se puede editar en cada página
   schemasPaginas: Record<string, SeccionEditable[]> = {
@@ -1551,7 +1551,7 @@ export class PaginasComponent implements OnInit {
           this.flashMensaje(nuevoVisible ? 'Página visible' : 'Página oculta');
         },
         error: () => {
-          this.flashMensaje('Error al cambiar visibilidad', 'info');
+          this.flashMensaje('Error al cambiar visibilidad', 'error');
         },
       });
       return;
@@ -1593,7 +1593,7 @@ export class PaginasComponent implements OnInit {
       },
       error: () => {
         this.paginaAEliminar = null;
-        this.flashMensaje('Error al eliminar la página', 'info');
+        this.flashMensaje('Error al eliminar la página', 'error');
         this.cdr.markForCheck();
       },
     });
@@ -1821,7 +1821,7 @@ export class PaginasComponent implements OnInit {
       },
       error: (err) => {
         this.guardandoServicio = false;
-        this.flashMensaje(err?.error?.message || 'Error al guardar', 'info');
+        this.flashMensaje(err?.error?.message || 'Error al guardar', 'error');
         this.cdr.markForCheck();
       },
     });
@@ -1965,7 +1965,7 @@ export class PaginasComponent implements OnInit {
           this.cdr.markForCheck();
         },
         error: () => {
-          this.flashMensaje('No se pudo cargar la página', 'info');
+          this.flashMensaje('No se pudo cargar la página', 'error');
         },
       });
       return;
@@ -2243,7 +2243,7 @@ export class PaginasComponent implements OnInit {
         this.guardandoServicio = false;
 
         if (huboError) {
-          this.flashMensaje(`Error al guardar: ${errores.join(', ')}`, 'info');
+          this.flashMensaje(`Error al guardar: ${errores.join(', ')}`, 'error');
         } else {
           if (key === 'servicios') this.catalogo.cargarServicios();
           if (key === 'proyectos') this.catalogo.cargarProyectos();
@@ -2475,14 +2475,16 @@ export class PaginasComponent implements OnInit {
     this.servicioAEliminar = null;
   }
 
-  private flashMensaje(texto: string, tipo: 'exito' | 'info' = 'exito') {
+  private flashMensaje(texto: string, tipo: 'exito' | 'info' | 'error' = 'exito') {
     this.mensajeGuardado = texto;
     this.tipoMensaje = tipo;
     this.cdr.markForCheck();
+    // Los errores permanecen 5s en lugar de 3s para dar tiempo a leerlos
+    const duracion = tipo === 'error' ? 5000 : 3000;
     setTimeout(() => {
       this.mensajeGuardado = '';
       this.cdr.markForCheck();
-    }, 3000);
+    }, duracion);
   }
 
   reordenarServicio(event: CdkDragDrop<Servicio[]>) {
@@ -3265,12 +3267,12 @@ export class PaginasComponent implements OnInit {
             this.flashMensaje(`"${payload.titulo}" creada como borrador`);
           },
           error: () => {
-            this.flashMensaje('Error al duplicar la página', 'info');
+            this.flashMensaje('Error al duplicar la página', 'error');
           },
         });
       },
       error: () => {
-        this.flashMensaje('No se pudo cargar la página origen', 'info');
+        this.flashMensaje('No se pudo cargar la página origen', 'error');
       },
     });
   }
@@ -3444,7 +3446,7 @@ export class PaginasComponent implements OnInit {
           this.flashMensaje(`Categoría "${cat.label}" creada`);
         },
         error: (err) => {
-          this.flashMensaje(err?.error?.message || 'Error al crear categoría', 'info');
+          this.flashMensaje(err?.error?.message || 'Error al crear categoría', 'error');
         },
       });
   }
@@ -3461,7 +3463,7 @@ export class PaginasComponent implements OnInit {
           this.flashMensaje(`Categoría "${cat.label}" creada`);
         },
         error: (err) => {
-          this.flashMensaje(err?.error?.message || 'Error al crear categoría', 'info');
+          this.flashMensaje(err?.error?.message || 'Error al crear categoría', 'error');
         },
       });
   }
