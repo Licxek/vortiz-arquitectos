@@ -3213,10 +3213,245 @@
                   <span class="text-3xl">{{ seccionActualSchema.icono }}</span>
                   <h3 class="text-2xl font-bold text-gray-900">{{ seccionActualSchema.nombre }}</h3>
                 </div>
-                <p class="text-sm text-gray-500">Edita los textos e imágenes de esta sección</p>
+                <p class="text-sm text-gray-500">
+                  {{ seccionActualSchema.id === '__apariencia' ? 'Personaliza cómo se ve esta página en el panel' : 'Edita los textos e imágenes de esta sección' }}
+                </p>
               </div>
 
-              <div class="space-y-5">
+              <!-- ============ SECCIÓN ESPECIAL: APARIENCIA ============ -->
+              <div *ngIf="seccionActualSchema.id === '__apariencia' && paginaEditando" class="space-y-6">
+                <!-- Preview de la card -->
+                <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                  <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Vista previa</p>
+                  <div class="max-w-xs mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div
+                      class="h-32 flex items-center justify-center relative overflow-hidden"
+                      [style.background]="gradientePagina(paginaEditando.color)"
+                    >
+                      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full"></div>
+                      <div class="absolute -left-2 -top-2 w-16 h-16 bg-white/10 rounded-full"></div>
+                      <div class="w-16 h-16 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center relative z-10">
+                        <ng-container [ngSwitch]="paginaEditando.icono">
+                          <svg *ngSwitchCase="'home'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                          <svg *ngSwitchCase="'users'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                          <svg *ngSwitchCase="'building'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                          <svg *ngSwitchCase="'briefcase'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                          <svg *ngSwitchCase="'calendar'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                          <svg *ngSwitchCase="'document'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                          <svg *ngSwitchCase="'chart'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                          <svg *ngSwitchCase="'trophy'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19h6m-3-4v4m-7-7a8 8 0 0114-5 8 8 0 01-3 6 4 4 0 01-3 1H8a4 4 0 01-3-1 8 8 0 01-2-5z"/></svg>
+                          <svg *ngSwitchCase="'pencil'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                          <svg *ngSwitchCase="'tag'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                          <svg *ngSwitchCase="'star'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                          <svg *ngSwitchCase="'phone'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                          <svg *ngSwitchCase="'map'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                          <svg *ngSwitchCase="'info'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                          <svg *ngSwitchCase="'lock'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </ng-container>
+                      </div>
+                    </div>
+                    <div class="p-4">
+                      <h3 class="font-semibold text-gray-900 truncate">{{ paginaEditando.titulo }}</h3>
+                      <p class="text-xs text-gray-500 truncate font-mono mt-1">{{ paginaEditando.slug }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Color de portada -->
+                <div>
+                  <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                    Color de portada
+                    <span class="text-gray-400 font-normal normal-case">— se ve en la tarjeta del grid</span>
+                  </label>
+
+                  <!-- Presets -->
+                  <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Colores rápidos</p>
+                  <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
+                    <button
+                      *ngFor="let c of coloresDisponibles"
+                      type="button"
+                      (click)="paginaEditando.color = c.id"
+                      [title]="c.label"
+                      class="group flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all hover:-translate-y-0.5"
+                      [class.border-[#0a4d7a]]="paginaEditando.color === c.id"
+                      [class.bg-blue-50]="paginaEditando.color === c.id"
+                      [class.border-gray-200]="paginaEditando.color !== c.id"
+                      [class.hover:border-gray-300]="paginaEditando.color !== c.id"
+                    >
+                      <div
+                        class="w-10 h-10 rounded-lg shadow-sm transition-all group-hover:shadow-md"
+                        [style.background]="gradientePagina(c.id)"
+                      >
+                        <div *ngIf="paginaEditando.color === c.id" class="w-full h-full flex items-center justify-center">
+                          <svg class="w-5 h-5 text-white drop-shadow" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      </div>
+                      <span
+                        class="text-[10px] font-semibold"
+                        [class.text-[#0a4d7a]]="paginaEditando.color === c.id"
+                        [class.text-gray-600]="paginaEditando.color !== c.id"
+                      >
+                        {{ c.label }}
+                      </span>
+                    </button>
+                  </div>
+
+                  <!-- Colores guardados del admin -->
+                  <div *ngIf="coloresGuardados.length > 0" class="mb-3">
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-1.5">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                      Tus colores guardados
+                      <span class="text-gray-400 normal-case font-normal">({{ coloresGuardados.length }})</span>
+                    </p>
+                    <div class="grid grid-cols-6 sm:grid-cols-12 gap-2">
+                      <div *ngFor="let hex of coloresGuardados; trackBy: trackByHex" class="group relative">
+                        <button
+                          type="button"
+                          (click)="paginaEditando.color = hex"
+                          [title]="hex"
+                          class="w-full aspect-square rounded-lg border-2 transition-all hover:-translate-y-0.5 hover:shadow-md flex items-center justify-center"
+                          [class.border-[#0a4d7a]]="paginaEditando.color === hex"
+                          [class.ring-2]="paginaEditando.color === hex"
+                          [class.ring-blue-200]="paginaEditando.color === hex"
+                          [class.border-white]="paginaEditando.color !== hex"
+                          [style.background]="gradientePagina(hex)"
+                        >
+                          <svg *ngIf="paginaEditando.color === hex" class="w-4 h-4 text-white drop-shadow" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          (click)="eliminarColorGuardado(hex, $event)"
+                          class="absolute -top-1 -right-1 w-4 h-4 bg-white border border-gray-300 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:border-red-500 hover:text-white shadow-sm"
+                          title="Eliminar este color"
+                        >
+                          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Color personalizado -->
+                  <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                    O elige uno personalizado
+                  </p>
+                  <div
+                    class="flex items-center gap-3 p-3 rounded-xl border-2 transition-all"
+                    [class.border-[#0a4d7a]]="esColorCustom(paginaEditando.color)"
+                    [class.bg-blue-50]="esColorCustom(paginaEditando.color)"
+                    [class.border-gray-200]="!esColorCustom(paginaEditando.color)"
+                    [class.bg-gray-50]="!esColorCustom(paginaEditando.color)"
+                  >
+                    <label class="relative cursor-pointer shrink-0 group">
+                      <input
+                        type="color"
+                        [(ngModel)]="colorCustomTemp"
+                        (input)="seleccionarColorCustomFijo(colorCustomTemp)"
+                        class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                        title="Elige cualquier color"
+                      />
+                      <div
+                        class="w-12 h-12 rounded-lg border-2 border-white shadow-md transition-all group-hover:scale-105"
+                        [style.background]="gradientePagina(esColorCustom(paginaEditando.color) ? paginaEditando.color : colorCustomTemp)"
+                      >
+                        <div *ngIf="esColorCustom(paginaEditando.color)" class="w-full h-full flex items-center justify-center">
+                          <svg class="w-5 h-5 text-white drop-shadow" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full border border-gray-200 flex items-center justify-center shadow-sm">
+                        <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </div>
+                    </label>
+
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-gray-900">
+                        {{ esColorCustom(paginaEditando.color) ? 'Color personalizado activo' : 'Color personalizado' }}
+                      </p>
+                      <p class="text-xs text-gray-500 mt-0.5 font-mono uppercase">
+                        {{ esColorCustom(paginaEditando.color) ? paginaEditando.color : 'Click el cuadro para elegir' }}
+                      </p>
+                    </div>
+
+                    <button
+                      *ngIf="esColorCustom(paginaEditando.color)"
+                      type="button"
+                      (click)="paginaEditando.color = 'blue'; colorCustomTemp = '#0a4d7a'"
+                      class="text-[11px] text-gray-500 hover:text-red-600 underline shrink-0 font-semibold"
+                      title="Volver a colores predefinidos"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Ícono -->
+                <div>
+                  <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                    Ícono
+                    <span class="text-gray-400 font-normal normal-case">— aparece dentro del color de portada</span>
+                  </label>
+                  <div class="grid grid-cols-5 gap-2">
+                    <button
+                      *ngFor="let ic of iconosPaginasDisponibles"
+                      type="button"
+                      (click)="paginaEditando.icono = ic.id"
+                      [title]="ic.uso"
+                      class="group flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all hover:-translate-y-0.5"
+                      [class.border-[#0a4d7a]]="paginaEditando.icono === ic.id"
+                      [class.bg-blue-50]="paginaEditando.icono === ic.id"
+                      [class.border-gray-200]="paginaEditando.icono !== ic.id"
+                      [class.hover:border-gray-300]="paginaEditando.icono !== ic.id"
+                    >
+                      <div
+                        class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
+                        [class.bg-[#0a4d7a]]="paginaEditando.icono === ic.id"
+                        [class.text-white]="paginaEditando.icono === ic.id"
+                        [class.bg-gray-100]="paginaEditando.icono !== ic.id"
+                        [class.text-gray-600]="paginaEditando.icono !== ic.id"
+                      >
+                        <ng-container [ngSwitch]="ic.id">
+                          <svg *ngSwitchCase="'document'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                          <svg *ngSwitchCase="'home'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                          <svg *ngSwitchCase="'users'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                          <svg *ngSwitchCase="'building'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                          <svg *ngSwitchCase="'briefcase'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                          <svg *ngSwitchCase="'calendar'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                          <svg *ngSwitchCase="'chart'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                          <svg *ngSwitchCase="'trophy'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19h6m-3-4v4m-7-7a8 8 0 0114-5 8 8 0 01-3 6 4 4 0 01-3 1H8a4 4 0 01-3-1 8 8 0 01-2-5z"/></svg>
+                          <svg *ngSwitchCase="'pencil'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                          <svg *ngSwitchCase="'tag'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                          <svg *ngSwitchCase="'star'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                          <svg *ngSwitchCase="'phone'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                          <svg *ngSwitchCase="'map'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                          <svg *ngSwitchCase="'info'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                          <svg *ngSwitchCase="'lock'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </ng-container>
+                      </div>
+                      <span
+                        class="text-[10px] font-semibold text-center leading-tight"
+                        [class.text-[#0a4d7a]]="paginaEditando.icono === ic.id"
+                        [class.text-gray-600]="paginaEditando.icono !== ic.id"
+                      >
+                        {{ ic.label }}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============ CAMPOS NORMALES (SI NO ES APARIENCIA) ============ -->
+              <div *ngIf="seccionActualSchema.id !== '__apariencia'" class="space-y-5">
                 <div *ngFor="let campo of seccionActualSchema.campos">
                   <label
                     class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2"

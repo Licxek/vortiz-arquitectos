@@ -1418,12 +1418,27 @@ export class PaginasComponent implements OnInit {
     this.mostrarMenuBloques = false;
   }
 
+  private inyectarSeccionApariencia() {
+    Object.keys(this.schemasPaginas).forEach((key) => {
+      // Solo agregar si no existe ya
+      if (!this.schemasPaginas[key].find((s) => s.id === '__apariencia')) {
+        this.schemasPaginas[key].push({
+          id: '__apariencia',
+          nombre: 'Apariencia',
+          icono: '🎨',
+          campos: [], // Es un caso especial, se renderiza distinto
+        });
+      }
+    });
+  }
+
   ngOnInit() {
     this.cargarPaginasDinamicas();
     this.cargarPreferenciaVista(); // 👈 NUEVO
     this.cargarColoresGuardados();
     this.cargarCategorias();
     this.cargarConfigPaginasFijas();
+    this.inyectarSeccionApariencia();
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(() => this.aplicarParamsDeUrl());
@@ -1958,6 +1973,9 @@ export class PaginasComponent implements OnInit {
 
     // Fija → flujo existente del schema editor
     this.paginaEditando = pagina;
+    // Capturar snapshot de apariencia para detectar cambios
+    this.snapshotColorFijo = pagina.color;
+    this.snapshotIconoFijo = pagina.icono;
     const schemaKey = this.slugASchema[pagina.slug];
     if (!schemaKey) return;
 
@@ -2012,6 +2030,8 @@ export class PaginasComponent implements OnInit {
     this.paginaEditando = null;
     this.seccionEditandoActiva = '';
     this.mensajeGuardado = '';
+    this.snapshotColorFijo = '';
+    this.snapshotIconoFijo = '';
   }
 
   pedirCerrarEditarPagina() {
@@ -2220,6 +2240,19 @@ export class PaginasComponent implements OnInit {
       guardados.push(this.catalogo.sincronizarProyectos(payload));
     }
 
+    // Si cambiaron el color o el ícono, agregar la actualización de personalización
+    const colorCambio = this.paginaEditando.color !== this.snapshotColorFijo;
+    const iconoCambio = this.paginaEditando.icono !== this.snapshotIconoFijo;
+    if (colorCambio || iconoCambio) {
+      guardados.push(
+        this.paginasFijasService.actualizarPersonalizacion(
+          this.paginaEditando.slug,
+          this.paginaEditando.color,
+          this.paginaEditando.icono,
+        ),
+      );
+    }
+
     this.guardandoServicio = true;
     this.cdr.markForCheck();
 
@@ -2229,6 +2262,9 @@ export class PaginasComponent implements OnInit {
         if (key === 'proyectos') this.catalogo.cargarProyectos();
         this.guardandoServicio = false;
         this.capturarSnapshot();
+        // Actualizar snapshots de apariencia
+        this.snapshotColorFijo = this.paginaEditando!.color;
+        this.snapshotIconoFijo = this.paginaEditando!.icono;
         this.paginaEditando!.ultimaEdicion = 'Hace unos segundos';
         this.flashMensaje('Cambios guardados correctamente');
       },
@@ -2448,6 +2484,10 @@ export class PaginasComponent implements OnInit {
 
     const contenidoActual = JSON.stringify(this.contenidoPaginas[key] || {});
     if (contenidoActual !== this.snapshotContenido) return true;
+
+    // Cambios de apariencia (color/ícono)
+    if (this.paginaEditando.color !== this.snapshotColorFijo) return true;
+    if (this.paginaEditando.icono !== this.snapshotIconoFijo) return true;
 
     if (key === 'servicios') {
       const serviciosActual = JSON.stringify(
@@ -3311,7 +3351,7 @@ export class PaginasComponent implements OnInit {
   }
 
   /** Guarda un color custom en la lista del backend (sincronizado entre dispositivos) */
-  private guardarColorPersonalizado(hex: string) {
+  guardarColorPersonalizado(hex: string) {
     if (!hex || !hex.startsWith('#')) return;
 
     this.coloresService.guardar(hex).subscribe({
@@ -3413,15 +3453,33 @@ export class PaginasComponent implements OnInit {
   private cargarConfigPaginasFijas() {
     this.paginasFijasService.listar().subscribe({
       next: (configs) => {
-        // Aplicar visibilidad guardada a cada página fija
+        // Aplicar visibilidad, color e ícono guardados a cada página fija
         configs.forEach((config) => {
           const pagina = this.paginasFijas.find((p) => p.slug === config.slug);
           if (pagina) {
             pagina.visible = config.visible;
+            if (config.color) pagina.color = config.color;
+            if (config.icono) pagina.icono = config.icono;
           }
         });
         this.cdr.markForCheck();
       },
     });
+  }
+  /** Snapshot de color/ícono al abrir el editor de página fija (para saber si hubo cambios) */
+  snapshotColorFijo = '';
+  snapshotIconoFijo = '';
+
+  /** Selecciona un color custom para una página fija */
+  seleccionarColorCustomFijo(hex: string) {
+    if (!this.paginaEditando) return;
+    this.colorCustomTemp = hex;
+    this.paginaEditando.color = hex;
+
+    if (this.colorSaveTimer) clearTimeout(this.colorSaveTimer);
+    this.colorSaveTimer = setTimeout(() => {
+      this.guardarColorPersonalizado(hex);
+      this.cdr.markForCheck();
+    }, 800);
   }
 }
