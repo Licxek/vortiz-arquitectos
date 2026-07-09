@@ -158,7 +158,6 @@ export class InicioService {
     const citas = await this.citasRepo.find({
       where: {
         tipo: 'consulta',
-        estado: 'pendiente',
       },
       order: { createdAt: 'DESC' },
       relations: ['servicio'],
