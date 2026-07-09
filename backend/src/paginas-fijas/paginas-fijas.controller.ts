@@ -12,12 +12,22 @@ export class PaginasFijasController {
     return this.service.listar();
   }
 
-  // 🔒 Protegido — solo admin
+  // 🔒 Protegido — solo admin: toggle de visibilidad
   @UseGuards(JwtAuthGuard)
   @Patch(':slug')
   actualizar(@Param('slug') slug: string, @Body('visible') visible: boolean) {
-    // Decodificar el slug (viene URL-encoded desde el frontend)
     const slugDecodificado = decodeURIComponent(slug);
     return this.service.actualizarVisibilidad(slugDecodificado, visible);
+  }
+
+  // 🔒 Protegido — solo admin: personalización visual (color + ícono)
+  @UseGuards(JwtAuthGuard)
+  @Patch(':slug/personalizacion')
+  actualizarPersonalizacion(
+    @Param('slug') slug: string,
+    @Body() body: { color?: string | null; icono?: string | null },
+  ) {
+    const slugDecodificado = decodeURIComponent(slug);
+    return this.service.actualizarPersonalizacion(slugDecodificado, body.color, body.icono);
   }
 }
