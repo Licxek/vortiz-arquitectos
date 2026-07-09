@@ -11,11 +11,12 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
 import { InicioService, CitaBackend } from '../../../core/services/inicio.service';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { TelefonoFormatoPipe } from '../../../shared/pipes/telefono-formato.pipe';
 import { ConsultaSnapshotsService, ConsultaSnapshot } from '../../../core/services/consulta-snapshots.service';
+import { Router } from '@angular/router';
+import jsPDF from 'jspdf';
 
 interface Consulta {
   id: number;
@@ -56,7 +57,7 @@ type Filtro = 'todas' | 'pendientes' | 'urgentes' | 'resueltas' | 'archivadas' |
 @Component({
   selector: 'app-consultas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SkeletonComponent,TelefonoFormatoPipe],
+  imports: [CommonModule, FormsModule, SkeletonComponent, TelefonoFormatoPipe],
   templateUrl: './consultas.component.html',
 })
 export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
@@ -719,5 +720,239 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     if (motivo === 'automatico_resuelto') return 'bg-green-100 text-green-700';
     if (motivo === 'automatico_archivado') return 'bg-gray-100 text-gray-700';
     return 'bg-blue-100 text-blue-700';
+  }
+
+  // ============ PDF DEL SNAPSHOT ============
+  descargarSnapshotPDF(s: ConsultaSnapshot) {
+    const doc = new jsPDF({
+      unit: 'mm',
+      format: 'letter',
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    let y = margin;
+
+    // Helper: nueva página si nos pasamos
+    const checkPageBreak = (needed: number) => {
+      if (y + needed > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+    };
+
+    // Helper: envolver texto largo
+    const drawWrapped = (texto: string, maxWidth: number, lineHeight: number, fontSize: number) => {
+      doc.setFontSize(fontSize);
+      const lineas = doc.splitTextToSize(texto, maxWidth);
+      for (const linea of lineas) {
+        checkPageBreak(lineHeight);
+        doc.text(linea, margin, y);
+        y += lineHeight;
+      }
+    };
+
+    // ============ HEADER ============
+    doc.setFillColor(10, 77, 122); // #0a4d7a
+    doc.rect(0, 0, pageWidth, 25, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('VORTIZ ARQUITECTOS', margin, 12);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Registro oficial de conversación con cliente', margin, 18);
+
+    // Fecha de emisión (esquina derecha)
+    doc.setFontSize(8);
+    const fechaEmision = this.formatearFechaCompleta(s.createdAt);
+    doc.text(`Emitido: ${fechaEmision}`, pageWidth - margin, 12, { align: 'right' });
+    doc.text(`ID: SNAP-${s.id.toString().padStart(6, '0')}`, pageWidth - margin, 18, { align: 'right' });
+
+    y = 35;
+
+    // ============ TÍTULO ============
+    doc.setTextColor(30, 30, 30);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Historial de Consulta', margin, y);
+    y += 6;
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Motivo del registro: ${this.motivoLabel(s.motivo)}`, margin, y);
+    y += 10;
+
+    // ============ DATOS DEL CLIENTE ============
+    doc.setDrawColor(230, 230, 230);
+    doc.setFillColor(248, 249, 251);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 30, 2, 2, 'F');
+
+    doc.setTextColor(10, 77, 122);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DATOS DEL CLIENTE', margin + 4, y + 6);
+
+    doc.setTextColor(30, 30, 30);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Nombre: ${s.clienteSnapshot.nombre}`, margin + 4, y + 13);
+    doc.text(`Correo: ${s.clienteSnapshot.correo}`, margin + 4, y + 19);
+    doc.text(`Teléfono: ${s.clienteSnapshot.telefono || '—'}`, margin + 4, y + 25);
+    y += 36;
+
+    // ============ DATOS DE LA CONSULTA ============
+    checkPageBreak(35);
+    doc.setFillColor(248, 249, 251);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 30, 2, 2, 'F');
+
+    doc.setTextColor(10, 77, 122);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DETALLES DE LA CONSULTA', margin + 4, y + 6);
+
+    doc.setTextColor(30, 30, 30);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const fechaCita = this.formatearFechaCompleta(s.consultaSnapshot.fecha + 'T' + (s.consultaSnapshot.hora || '00:00'));
+    doc.text(`Servicio: ${s.consultaSnapshot.servicio || 'Consulta general'}`, margin + 4, y + 13);
+    doc.text(`Fecha de la cita: ${fechaCita}`, margin + 4, y + 19);
+    doc.text(`Total de mensajes: ${s.totalMensajes}   |   Duración: ${s.duracionDias || 0} días`, margin + 4, y + 25);
+    y += 36;
+
+    // ============ MOTIVO ORIGINAL ============
+    if (s.consultaSnapshot.motivo) {
+      checkPageBreak(15);
+      doc.setTextColor(10, 77, 122);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text('MOTIVO ORIGINAL DEL CLIENTE', margin, y);
+      y += 5;
+      doc.setTextColor(60, 60, 60);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      drawWrapped(s.consultaSnapshot.motivo, pageWidth - margin * 2, 5, 10);
+      y += 4;
+    }
+
+    // ============ MENSAJES ============
+    checkPageBreak(15);
+    doc.setDrawColor(10, 77, 122);
+    doc.setLineWidth(0.3);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 5;
+
+    doc.setTextColor(10, 77, 122);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CONVERSACIÓN', margin, y);
+    y += 8;
+
+    if (s.mensajesSnapshot.length === 0) {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(150, 150, 150);
+      doc.text('(Sin mensajes registrados en esta consulta)', margin, y);
+      y += 8;
+    }
+
+    for (const msg of s.mensajesSnapshot) {
+      checkPageBreak(20);
+      const esAdmin = msg.autor === 'admin';
+      const label = esAdmin
+        ? `VORTIZ (${this.metodoLabel(msg.metodo || '')}):`
+        : `${s.clienteSnapshot.nombre.toUpperCase()}:`;
+
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(esAdmin ? 10 : 80, esAdmin ? 77 : 80, esAdmin ? 122 : 80);
+      doc.text(label, margin, y);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(140, 140, 140);
+      doc.text(this.formatearFechaCompleta(msg.createdAt), pageWidth - margin, y, { align: 'right' });
+      y += 5;
+
+      doc.setTextColor(40, 40, 40);
+      drawWrapped(msg.texto, pageWidth - margin * 2, 5, 10);
+      y += 4;
+    }
+
+    // ============ FOOTER LEGAL ============
+    checkPageBreak(30);
+    y += 5;
+    doc.setDrawColor(230, 230, 230);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 6;
+
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(120, 120, 120);
+    const disclaimer = 'Este documento es un registro fiel del intercambio entre Vortiz Arquitectos y el cliente en la fecha señalada. Los mensajes se conservan tal como fueron enviados y no han sido modificados. Este archivo puede utilizarse como respaldo interno de la relación con el cliente.';
+    drawWrapped(disclaimer, pageWidth - margin * 2, 4, 7);
+
+    y += 3;
+    doc.setFontSize(7);
+    doc.text(`Documento generado automáticamente por el sistema Vortiz — ${new Date().toLocaleString('es-MX')}`, margin, y);
+
+    // ============ NÚMEROS DE PÁGINA ============
+    const totalPages = doc.internal.pages.length - 1;
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
+    }
+
+    // ============ DESCARGAR ============
+    const nombreArchivo = `snapshot-${s.id}-${s.clienteSnapshot.nombre.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+    doc.save(nombreArchivo);
+  }
+
+  metodoLabel(metodo: string): string {
+    const map: Record<string, string> = {
+      email: 'por correo',
+      whatsapp: 'por WhatsApp',
+      guardado: 'nota interna',
+      inbound: 'respuesta del cliente',
+    };
+    return map[metodo] || metodo || 'sin especificar';
+  }
+
+  // Eliminar snapshot con confirmación
+  snapshotAEliminar: ConsultaSnapshot | null = null;
+
+  pedirEliminarSnapshot(s: ConsultaSnapshot) {
+    this.snapshotAEliminar = s;
+  }
+
+  cancelarEliminarSnapshot() {
+    this.snapshotAEliminar = null;
+  }
+
+  confirmarEliminarSnapshot() {
+    if (!this.snapshotAEliminar) return;
+    const id = this.snapshotAEliminar.id;
+    this.snapshotsService.eliminar(id).subscribe({
+      next: () => {
+        this.snapshots = this.snapshots.filter((s) => s.id !== id);
+        if (this.snapshotSeleccionado?.id === id) {
+          this.snapshotSeleccionado = null;
+        }
+        this.snapshotAEliminar = null;
+        this.mostrarFlashSnapshot('✓ Snapshot eliminado');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error eliminando snapshot:', err);
+        this.snapshotAEliminar = null;
+        this.mostrarFlashSnapshot('⚠ No se pudo eliminar');
+        this.cdr.detectChanges();
+      },
+    });
   }
 }
