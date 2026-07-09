@@ -1981,6 +1981,8 @@ export class PaginasComponent implements OnInit {
 
     this.contenidoPaginas[schemaKey] = {};
     this.schemasPaginas[schemaKey].forEach((seccion) => {
+      // 👇 Saltar la sección de apariencia (no tiene campos que cargar)
+      if (seccion.id === '__apariencia') return;
       this.contenidoPaginas[schemaKey][seccion.id] = {};
       seccion.campos.forEach((campo) => {
         if (campo.tipo === 'catalogo') return;
@@ -2203,9 +2205,17 @@ export class PaginasComponent implements OnInit {
     const key = this.slugASchema[this.paginaEditando.slug];
     if (!key) return;
 
-    // 1) Contenido de la página (siempre)
+    // 👇 Filtrar la sección __apariencia (no es contenido, es solo UI para color/ícono)
+    const contenidoLimpio: Record<string, any> = {};
+    Object.keys(this.contenidoPaginas[key] || {}).forEach((seccionId) => {
+      if (seccionId !== '__apariencia') {
+        contenidoLimpio[seccionId] = this.contenidoPaginas[key][seccionId];
+      }
+    });
+
+    // 1) Contenido de la página (siempre, sin __apariencia)
     const guardados: Observable<any>[] = [
-      this.contenidoService.guardarPagina(key, this.contenidoPaginas[key]),
+      this.contenidoService.guardarPagina(key, contenidoLimpio),
     ];
 
     // 2) Si es página de catálogo, agregar su sincronización
@@ -2270,7 +2280,7 @@ export class PaginasComponent implements OnInit {
       },
       error: () => {
         this.guardandoServicio = false;
-        this.flashMensaje('Error al guardar los cambios');
+        this.flashMensaje('Error al guardar los cambios', 'info');
       },
     });
   }
