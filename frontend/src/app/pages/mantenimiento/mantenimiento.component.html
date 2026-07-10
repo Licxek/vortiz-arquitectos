@@ -113,26 +113,32 @@
         {{ mensaje() }}
       </p>
 
-      <!-- Progress bar animado -->
+      <!-- Progress bar sincronizado con tiempo real -->
       <div class="max-w-md mx-auto mb-8">
         <div class="flex items-center justify-between mb-2">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-blue-300/80">
-            Progreso de obra
+          <p class="text-[10px] font-bold uppercase tracking-widest text-blue-300/80 flex items-center gap-2">
+            <span>Progreso de obra</span>
+            <span class="text-white/40" *ngIf="progreso().tieneReal">·</span>
+            <span class="text-white/60 normal-case tracking-normal font-medium" *ngIf="progreso().tieneReal">
+              {{ labelProgreso() }}
+            </span>
           </p>
-          <p class="text-[10px] font-mono font-bold text-white/80">
-            {{ progreso() }}%
+          <p class="text-[11px] font-mono font-bold text-white/80">
+            {{ progreso().porcentaje }}%
           </p>
         </div>
         <div class="relative h-2 bg-white/[0.06] rounded-full overflow-hidden border border-white/10">
-          <!-- Barra de progreso -->
           <div
             class="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 rounded-full transition-all duration-1000 ease-out shadow-lg shadow-blue-500/50"
-            [style.width.%]="progreso()"
+            [style.width.%]="progreso().porcentaje"
           >
-            <!-- Shimmer effect -->
             <div class="absolute inset-0 bg-shimmer"></div>
           </div>
         </div>
+        <!-- Indicador si es progreso real -->
+        <p *ngIf="progreso().tieneReal" class="text-[9px] text-white/30 mt-1.5 font-medium uppercase tracking-wider text-center">
+          Basado en el tiempo estimado de mantenimiento
+        </p>
       </div>
 
       <!-- Countdown en vivo -->

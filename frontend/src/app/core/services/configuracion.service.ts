@@ -7,6 +7,7 @@ export interface MantenimientoConfig {
   activo: boolean;
   mensaje: string;
   fechaEstimada?: string;
+  activadoEn?: string | null; // 👈 NUEVO
 }
 
 export interface Configuracion {

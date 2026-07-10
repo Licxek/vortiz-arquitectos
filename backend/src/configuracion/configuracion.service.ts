@@ -63,23 +63,36 @@ export class ConfiguracionService implements OnModuleInit {
     if (!this.secciones.includes(seccion)) {
       throw new BadRequestException('Sección de configuración inválida');
     }
-
     await this.validarShape(seccion, datos);
-
     // 👇 NUEVO: validar coherencia para agenda
     if (seccion === 'agenda') {
       this.validarCoherenciaAgenda(datos);
     }
-
     const config = await this.obtener();
+
+    // 🔥 NUEVO: gestionar activadoEn de mantenimiento automáticamente
+    if (seccion === 'mantenimiento') {
+      const estabaActivo = config.mantenimiento?.activo ?? false;
+      const seVaAActivar = datos?.activo ?? false;
+
+      if (seVaAActivar && !estabaActivo) {
+        // Se ACTIVA ahora → guardar timestamp
+        datos.activadoEn = new Date().toISOString();
+      } else if (!seVaAActivar && estabaActivo) {
+        // Se DESACTIVA → limpiar
+        datos.activadoEn = null;
+      } else if (seVaAActivar && estabaActivo) {
+        // Sigue activo (solo actualiza mensaje/fecha) → mantener timestamp original
+        datos.activadoEn = config.mantenimiento?.activadoEn || new Date().toISOString();
+      }
+    }
+
     (config as any)[seccion] = datos;
     await this.repo.save(config);
-
-    // 👇 NUEVO: actualizar index.html cuando cambien meta tags
+    // 👇 actualizar index.html cuando cambien meta tags
     if (seccion === 'seo' || seccion === 'negocio') {
       this.actualizarIndexHtml().catch(() => {});
     }
-
     return { message: 'Guardado', [seccion]: datos };
   }
 

@@ -73,6 +73,7 @@ export class MantenimientoDto {
   @IsBoolean() activo!: boolean;
   @IsString() @MaxLength(200) mensaje!: string;
   @IsOptional() @IsString() fechaEstimada?: string;
+  @IsOptional() activadoEn?: string | null; // 👈 NUEVO — gestionado por el service
 }
 
 // ========== REDES (array) ==========
