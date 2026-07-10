@@ -224,27 +224,241 @@
               </svg>
             </button>
 
-            <!-- 👇 EL MODAL DE PERFIL VA AQUÍ (te lo doy en el mensaje 2) -->
-            <!-- Por ahora, dejo el modal simple actual como placeholder -->
+            <!-- ============ MODAL DE PERFIL PREMIUM ============ -->
             <div
-              class="absolute right-0 top-full mt-2 w-64 text-gray-800 rounded-xl shadow-2xl overflow-hidden transition-all duration-200 origin-top-right z-50 ring-1 ring-black/5"
+              class="absolute right-0 top-full mt-3 w-[340px] rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 origin-top-right z-50"
               [class.opacity-0]="!menuUsuarioAbierto"
               [class.scale-95]="!menuUsuarioAbierto"
+              [class.translate-y-2]="!menuUsuarioAbierto"
               [class.opacity-100]="menuUsuarioAbierto"
               [class.scale-100]="menuUsuarioAbierto"
+              [class.translate-y-0]="menuUsuarioAbierto"
               [class.pointer-events-none]="!menuUsuarioAbierto"
+              (click)="$event.stopPropagation()"
             >
-              <div class="px-4 py-4 bg-gradient-to-br from-[#0a1f3d] to-[#1a3a5c] text-white">
-                <p class="text-sm font-semibold">{{ usuario?.nombre }} {{ usuario?.apellidos }}</p>
-                <p class="text-xs text-gray-300 truncate mt-0.5">{{ usuario?.correo }}</p>
+              <!-- Header con gradient -->
+              <div class="relative bg-gradient-to-br from-[#0a1630] via-[#0f2447] to-[#1e3a8a] p-5 text-white overflow-hidden">
+                <!-- Decoración de fondo -->
+                <div class="absolute top-0 right-0 w-40 h-40 bg-blue-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-cyan-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+                <!-- Grid decorativo -->
+                <div class="absolute inset-0 opacity-[0.04]"
+                  style="background-image: linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+                <div class="relative flex items-start gap-4">
+                  <!-- Foto grande con status ring -->
+                  <div class="relative shrink-0">
+                    <!-- Ring pulsante externo -->
+                    <span
+                      class="absolute inset-0 rounded-full animate-ping opacity-30"
+                      [class.bg-green-400]="statusSitio === 'online'"
+                      [class.bg-amber-400]="statusSitio === 'mantenimiento'"
+                    ></span>
+                    <!-- Ring gradient -->
+                    <div
+                      class="relative w-16 h-16 rounded-full p-[3px] bg-gradient-to-br"
+                      [class.from-green-400]="statusSitio === 'online'"
+                      [class.to-emerald-500]="statusSitio === 'online'"
+                      [class.from-amber-400]="statusSitio === 'mantenimiento'"
+                      [class.to-orange-500]="statusSitio === 'mantenimiento'"
+                    >
+                      <div class="w-full h-full rounded-full bg-[#0a1630] p-[3px]">
+                        <img
+                          *ngIf="tienesFotoPerfil"
+                          [src]="fotoPerfilUrl"
+                          [alt]="usuario?.nombre"
+                          class="w-full h-full rounded-full object-cover"
+                        />
+                        <div
+                          *ngIf="!tienesFotoPerfil"
+                          class="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-lg font-bold text-white"
+                        >
+                          {{ iniciales }}
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Dot de status en esquina -->
+                    <span
+                      class="absolute bottom-0 right-0 w-4 h-4 rounded-full ring-[3px] ring-[#0f2447]"
+                      [class.bg-green-400]="statusSitio === 'online'"
+                      [class.bg-amber-400]="statusSitio === 'mantenimiento'"
+                      [class.bg-red-400]="statusSitio === 'offline'"
+                    ></span>
+                  </div>
+
+                  <!-- Nombre y datos -->
+                  <div class="flex-1 min-w-0 pt-1">
+                    <p class="text-base font-bold leading-tight truncate">
+                      {{ usuario?.nombre }} {{ usuario?.apellidos }}
+                    </p>
+                    <p class="text-xs text-blue-200/80 truncate mt-1">
+                      {{ usuario?.correo }}
+                    </p>
+                    <div class="mt-2 flex items-center gap-1.5">
+                      <span
+                        class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                        [class.bg-green-500/20]="statusSitio === 'online'"
+                        [class.text-green-300]="statusSitio === 'online'"
+                        [class.bg-amber-500/20]="statusSitio === 'mantenimiento'"
+                        [class.text-amber-300]="statusSitio === 'mantenimiento'"
+                      >
+                        <span
+                          class="w-1.5 h-1.5 rounded-full"
+                          [class.bg-green-400]="statusSitio === 'online'"
+                          [class.bg-amber-400]="statusSitio === 'mantenimiento'"
+                        ></span>
+                        {{ statusSitio === 'online' ? 'En línea' : 'Mantenimiento' }}
+                      </span>
+                      <span class="text-[10px] text-blue-200/60 uppercase tracking-wider font-semibold">
+                        Administrador
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card de sesión activa -->
+                <div class="relative mt-4 flex items-center gap-3 p-2.5 bg-white/[0.06] backdrop-blur-sm rounded-xl border border-white/10">
+                  <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-[10px] text-blue-200/60 uppercase tracking-wider font-semibold">Sesión activa</p>
+                    <p class="text-xs font-semibold text-white">Iniciada a las {{ horaInicioSesion() }}</p>
+                  </div>
+                </div>
               </div>
+
+              <!-- Cuerpo blanco -->
               <div class="bg-white">
-                <a routerLink="/admin/perfil" (click)="menuUsuarioAbierto = false" class="px-4 py-3 text-sm hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100">
-                  <span>Mi perfil</span>
-                </a>
-                <button (click)="cerrarSesion()" class="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3">
-                  Cerrar sesión
-                </button>
+                <!-- Accesos rápidos (grid 2x2) -->
+                <div class="p-3 grid grid-cols-2 gap-2 border-b border-gray-100">
+
+                  <a  routerLink="/admin/perfil"
+                    (click)="menuUsuarioAbierto = false"
+                    class="group flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-blue-50 transition-colors"
+                  >
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 group-hover:bg-blue-500 flex items-center justify-center transition-colors">
+                      <svg class="w-5 h-5 text-blue-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                      </svg>
+                    </div>
+                    <span class="text-xs font-semibold text-gray-700 group-hover:text-blue-700 transition-colors">Mi perfil</span>
+                  </a>
+
+
+                  <a  routerLink="/admin/configuracion"
+                    (click)="menuUsuarioAbierto = false"
+                    class="group flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-purple-50 transition-colors"
+                  >
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 group-hover:bg-purple-500 flex items-center justify-center transition-colors">
+                      <svg class="w-5 h-5 text-purple-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      </svg>
+                    </div>
+                    <span class="text-xs font-semibold text-gray-700 group-hover:text-purple-700 transition-colors">Ajustes</span>
+                  </a>
+
+
+                  <a  routerLink="/admin/consultas"
+                    (click)="menuUsuarioAbierto = false"
+                    class="group flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-green-50 transition-colors"
+                  >
+                    <div class="w-10 h-10 rounded-xl bg-green-100 group-hover:bg-green-500 flex items-center justify-center transition-colors">
+                      <svg class="w-5 h-5 text-green-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                      </svg>
+                    </div>
+                    <span class="text-xs font-semibold text-gray-700 group-hover:text-green-700 transition-colors">Consultas</span>
+                  </a>
+
+
+                  <a  routerLink="/admin/reportes"
+                    (click)="menuUsuarioAbierto = false"
+                    class="group flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-amber-50 transition-colors"
+                  >
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 group-hover:bg-amber-500 flex items-center justify-center transition-colors">
+                      <svg class="w-5 h-5 text-amber-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                      </svg>
+                    </div>
+                    <span class="text-xs font-semibold text-gray-700 group-hover:text-amber-700 transition-colors">Reportes</span>
+                  </a>
+                </div>
+
+                <!-- Toggle de tema -->
+                <div class="p-4 border-b border-gray-100">
+                  <div class="flex items-center justify-between mb-3">
+                    <div>
+                      <p class="text-xs font-bold uppercase tracking-wider text-gray-500">Apariencia</p>
+                      <p class="text-[11px] text-gray-400 mt-0.5">Elige tu tema preferido</p>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl">
+                    <button
+                      (click)="cambiarTema('claro')"
+                      class="relative flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all"
+                      [class.bg-white]="temaActual === 'claro'"
+                      [class.shadow-sm]="temaActual === 'claro'"
+                      [class.text-gray-900]="temaActual === 'claro'"
+                      [class.text-gray-500]="temaActual !== 'claro'"
+                      [class.hover:text-gray-800]="temaActual !== 'claro'"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                      </svg>
+                      Claro
+                    </button>
+                    <button
+                      (click)="cambiarTema('oscuro')"
+                      class="relative flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all"
+                      [class.bg-[#0a1630]]="temaActual === 'oscuro'"
+                      [class.shadow-sm]="temaActual === 'oscuro'"
+                      [class.text-white]="temaActual === 'oscuro'"
+                      [class.text-gray-500]="temaActual !== 'oscuro'"
+                      [class.hover:text-gray-800]="temaActual !== 'oscuro'"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                      </svg>
+                      Oscuro
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Enlaces adicionales -->
+                <div class="py-1">
+
+                  <a  routerLink="/"
+                    target="_blank"
+                    (click)="menuUsuarioAbierto = false"
+                    class="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                  >
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    <span class="flex-1">Ver sitio público</span>
+                    <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </a>
+                </div>
+
+                <!-- Cerrar sesión -->
+                <div class="p-3 border-t border-gray-100">
+                  <button
+                    (click)="cerrarSesion()"
+                    class="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-xl text-sm font-semibold transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    Cerrar sesión
+                  </button>
+                </div>
               </div>
             </div>
           </div>

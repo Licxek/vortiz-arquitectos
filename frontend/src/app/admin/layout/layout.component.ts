@@ -270,4 +270,24 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   onWindowScroll(_event: Event) {
     this.scrollHeader.set(window.scrollY > 20);
   }
+
+  // ============ MODAL DE PERFIL ============
+  temaActual: 'claro' | 'oscuro' = 'oscuro'; // Placeholder, se conecta al service en el paso 3
+  horaInicioSesion = signal(this.formatearHora(new Date()));
+
+  private formatearHora(d: Date): string {
+    const hora = d.getHours().toString().padStart(2, '0');
+    const min = d.getMinutes().toString().padStart(2, '0');
+    return `${hora}:${min}`;
+  }
+
+  get tiempoOnline(): string {
+    // Placeholder — en el futuro puede calcularse contra el login real
+    return 'ahora';
+  }
+
+  cambiarTema(nuevo: 'claro' | 'oscuro') {
+    this.temaActual = nuevo;
+    // En el mensaje 3 conectamos esto al ThemeService
+  }
 }
