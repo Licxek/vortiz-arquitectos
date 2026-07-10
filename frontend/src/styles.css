@@ -118,3 +118,78 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* ============ VARIABLES DE TEMA ============ */
+
+/* Tema OSCURO (default) */
+:root,
+[data-tema="oscuro"] {
+  /* Fondos */
+  --admin-bg-base: #f5f7fa;
+  --admin-bg-surface: #ffffff;
+  --admin-bg-sidebar: #1e293b;
+  --admin-bg-sidebar-hover: rgba(255, 255, 255, 0.05);
+  --admin-header-from: #050b18;
+  --admin-header-via: #0a1630;
+  --admin-header-to: #0f2447;
+
+  /* Textos del sidebar */
+  --admin-sidebar-text: #cbd5e1;
+  --admin-sidebar-text-active: #ffffff;
+  --admin-sidebar-icon-active: #60a5fa;
+  --admin-sidebar-border: rgba(255, 255, 255, 0.05);
+
+  /* Textos generales */
+  --admin-text-primary: #111827;
+  --admin-text-secondary: #6b7280;
+  --admin-text-tertiary: #9ca3af;
+
+  /* Acentos */
+  --admin-accent: #0a4d7a;
+  --admin-accent-hover: #0a5d8f;
+}
+
+/* Tema CLARO */
+[data-tema="claro"] {
+  /* Fondos */
+  --admin-bg-base: #f9fafb;
+  --admin-bg-surface: #ffffff;
+  --admin-bg-sidebar: #ffffff;
+  --admin-bg-sidebar-hover: rgba(10, 77, 122, 0.06);
+  --admin-header-from: #ffffff;
+  --admin-header-via: #f8fafc;
+  --admin-header-to: #eff6ff;
+
+  /* Textos del sidebar (invertidos) */
+  --admin-sidebar-text: #4b5563;
+  --admin-sidebar-text-active: #0a4d7a;
+  --admin-sidebar-icon-active: #0a4d7a;
+  --admin-sidebar-border: rgba(0, 0, 0, 0.06);
+
+  /* Textos generales */
+  --admin-text-primary: #111827;
+  --admin-text-secondary: #4b5563;
+  --admin-text-tertiary: #9ca3af;
+
+  /* Acentos */
+  --admin-accent: #0a4d7a;
+  --admin-accent-hover: #0a5d8f;
+}
+
+/* Transición suave global al cambiar tema */
+body,
+main,
+aside,
+.transicion-tema,
+.transicion-tema * {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* Prevenir flash de transición en la primera carga */
+body.sin-transicion,
+body.sin-transicion * {
+  transition: none !important;
+}

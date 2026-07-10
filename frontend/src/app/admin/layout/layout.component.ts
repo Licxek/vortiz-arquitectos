@@ -7,6 +7,7 @@ import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { BuscadorAdminComponent } from '../../shared/buscador-admin/buscador-admin.component';
 import { FormsModule } from '@angular/forms';
 import { NotificacionesBellComponent } from '../../shared/notificaciones-bell/notificaciones-bell.component';
+import { ModoTemaService, ModoTema } from '../../core/services/modo-tema.service';
 
 interface MenuItem {
   label: string;
@@ -79,6 +80,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     private router: Router,
     private configuracionService: ConfiguracionService,
     private cdr: ChangeDetectorRef,
+    public modoTemaService: ModoTemaService, // 👈 NUEVO
   ) {}
 
   ngOnInit() {
@@ -277,7 +279,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   // ============ MODAL DE PERFIL ============
-  temaActual: 'claro' | 'oscuro' = 'oscuro'; // Placeholder, se conecta al service en el paso 3
   horaInicioSesion = signal(this.formatearHora(new Date()));
 
   private formatearHora(d: Date): string {
@@ -291,10 +292,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     return 'ahora';
   }
 
-  cambiarTema(nuevo: 'claro' | 'oscuro') {
-    this.temaActual = nuevo;
-    // En el mensaje 3 conectamos esto al ThemeService
-  }
+
 
   // ============ BUSCADOR COLAPSABLE ============
   buscadorExpandido = signal(false);
