@@ -54,3 +54,53 @@ header * {
   transition-property: background-color, border-color, color, opacity, transform, box-shadow;
   transition-duration: 200ms;
 }
+
+/* Ocultar títulos de grupo en colapsado */
+.sidebar-collapsed .grupo-titulo {
+  display: none;
+}
+
+.sidebar-collapsed .grupo-separador {
+  display: block !important;
+}
+
+/* Espaciado uniforme entre grupos en colapsado */
+.sidebar-collapsed nav > div {
+  margin-bottom: 0.5rem;
+}
+
+/* Ajustar user card en colapsado */
+.sidebar-collapsed .nav-text {
+  max-width: 0;
+  opacity: 0;
+  transition:
+    max-width 0.3s ease 0s,
+    opacity 0.1s ease 0s;
+}
+
+/* Scrollbar personalizado para el sidebar */
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Animación pulse para badges */
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.animate-pulse {
+  animation: pulse-badge 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

@@ -7,11 +7,20 @@ import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { BuscadorAdminComponent } from '../../shared/buscador-admin/buscador-admin.component';
 import { FormsModule } from '@angular/forms';
 import { NotificacionesBellComponent } from '../../shared/notificaciones-bell/notificaciones-bell.component';
+import { NotificacionesService } from '../../core/services/notificaciones.service';
 
 interface MenuItem {
   label: string;
   icon: string;
   path: string;
+  color: string; // color hex del acento del grupo
+  badge?: 'consultas' | 'citas'; // qué contador mostrar
+}
+
+interface MenuGrupo {
+  titulo: string;
+  color: string; // color de acento del grupo
+  items: MenuItem[];
 }
 
 @Component({
@@ -42,14 +51,39 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   statusSitio: 'online' | 'mantenimiento' | 'offline' = 'online';
   scrollHeader = signal(false); // para animar el header al hacer scroll
 
-  menuItems: MenuItem[] = [
-    { label: 'Inicio', icon: 'home', path: '/admin/inicio' },
-    { label: 'Páginas', icon: 'pages', path: '/admin/paginas' },
-    { label: 'Proyectos', icon: 'folder', path: '/admin/proyectos' },
-    { label: 'Perfil', icon: 'user', path: '/admin/perfil' },
-    { label: 'Citas', icon: 'calendar', path: '/admin/citas' },
-    { label: 'Consultas', icon: 'message', path: '/admin/consultas' },
-    { label: 'Reportes', icon: 'history', path: '/admin/reportes' },
+  // Grupos con color de acento por sección
+  menuGrupos: MenuGrupo[] = [
+    {
+      titulo: 'Panel',
+      color: '#38bdf8', // sky-400
+      items: [
+        { label: 'Inicio', icon: 'home', path: '/admin/inicio', color: '#38bdf8' },
+      ],
+    },
+    {
+      titulo: 'Contenido',
+      color: '#a78bfa', // violet-400
+      items: [
+        { label: 'Páginas', icon: 'pages', path: '/admin/paginas', color: '#a78bfa' },
+        { label: 'Proyectos', icon: 'folder', path: '/admin/proyectos', color: '#a78bfa' },
+      ],
+    },
+    {
+      titulo: 'Comunicación',
+      color: '#34d399', // emerald-400
+      items: [
+        { label: 'Consultas', icon: 'message', path: '/admin/consultas', color: '#34d399', badge: 'consultas' },
+        { label: 'Citas', icon: 'calendar', path: '/admin/citas', color: '#34d399', badge: 'citas' },
+      ],
+    },
+    {
+      titulo: 'Análisis',
+      color: '#fbbf24', // amber-400
+      items: [
+        { label: 'Reportes', icon: 'history', path: '/admin/reportes', color: '#fbbf24' },
+        { label: 'Perfil', icon: 'user', path: '/admin/perfil', color: '#fbbf24' },
+      ],
+    },
   ];
 
   confirmModal = {
@@ -79,6 +113,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     private router: Router,
     private configuracionService: ConfiguracionService,
     private cdr: ChangeDetectorRef,
+    public notifService: NotificacionesService,
   ) {}
 
   ngOnInit() {
@@ -318,5 +353,16 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     } else {
       this.expandirBuscador();
     }
+  }
+  /** Retorna el contador de badge para un item (0 si no aplica) */
+  obtenerBadge(item: MenuItem): number {
+    if (item.badge === 'consultas') return this.notifService.noLeidasConsultas();
+    if (item.badge === 'citas') return this.notifService.noLeidasCitas();
+    return 0;
+  }
+
+  /** Verifica si algún item de un grupo tiene badges (para colapsado) */
+  grupoTieneBadges(grupo: MenuGrupo): boolean {
+    return grupo.items.some(item => this.obtenerBadge(item) > 0);
   }
 }
