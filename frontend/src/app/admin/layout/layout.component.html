@@ -287,11 +287,6 @@
             >
               <!-- Avatar con status ring -->
               <div class="relative">
-                <span
-                  class="absolute inset-0 rounded-full animate-ping opacity-40"
-                  [class.bg-green-400]="statusSitio === 'online'"
-                  [class.bg-amber-400]="statusSitio === 'mantenimiento'"
-                ></span>
                 <div
                   class="relative w-9 h-9 rounded-full p-[2px]"
                   [class.bg-gradient-to-br]="true"
@@ -382,12 +377,7 @@
                 <div class="relative flex items-start gap-4">
                   <!-- Foto grande con status ring -->
                   <div class="relative shrink-0">
-                    <!-- Ring pulsante externo -->
-                    <span
-                      class="absolute inset-0 rounded-full animate-ping opacity-30"
-                      [class.bg-green-400]="statusSitio === 'online'"
-                      [class.bg-amber-400]="statusSitio === 'mantenimiento'"
-                    ></span>
+
                     <!-- Ring gradient -->
                     <div
                       class="relative w-16 h-16 rounded-full p-[3px] bg-gradient-to-br"
@@ -946,7 +936,6 @@
           >
             <!-- Avatar mini con status ring -->
             <div class="relative shrink-0">
-              <span class="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-30"></span>
               <div class="relative w-9 h-9 rounded-full p-[2px] bg-gradient-to-br from-green-400 to-emerald-500">
                 <div class="w-full h-full rounded-full bg-slate-900 p-[2px]">
                   <img
