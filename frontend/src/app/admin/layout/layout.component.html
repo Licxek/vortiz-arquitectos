@@ -675,195 +675,319 @@
 
   <!-- Contenedor principal -->
   <div class="flex flex-1 relative overflow-hidden">
-    <!-- Sidebar escritorio -->
+    <!-- ============ SIDEBAR DESKTOP PREMIUM ============ -->
     <aside
-      class="hidden md:flex flex-col bg-slate-800 text-gray-300 transition-all duration-300 ease-in-out shadow-xl shrink-0 h-full overflow-x-hidden"
+      class="hidden md:flex flex-col bg-gradient-to-b from-slate-900 to-slate-800 text-gray-300 transition-all duration-300 ease-in-out shadow-2xl shrink-0 h-full overflow-x-hidden relative"
       [class.w-64]="!sidebarColapsado"
       [class.w-20]="sidebarColapsado"
       [class.sidebar-collapsed]="sidebarColapsado"
     >
-      <!-- Botón colapsar con icono de menú -->
-      <button
-        (click)="toggleSidebar()"
-        class="flex items-center gap-4 px-3 py-3 mx-3 my-3 rounded-lg hover:bg-white/5 transition-all duration-200"
-      >
-        <svg
-          class="w-6 h-6 shrink-0"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          viewBox="0 0 24 24"
+      <!-- Toggle superior con línea decorativa -->
+      <div class="relative shrink-0">
+        <button
+          (click)="toggleSidebar()"
+          class="w-full flex items-center gap-4 px-3 py-3.5 mx-3 my-3 rounded-lg hover:bg-white/[0.06] transition-all duration-200 group"
         >
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-        <span class="text-sm font-medium nav-text"> Menú </span>
-      </button>
-
-      <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4">
-        <ul class="flex flex-col gap-1 px-3">
-          <li *ngFor="let item of menuItems">
-            <a
-              [routerLink]="item.path"
-              routerLinkActive="active-menu-item"
-              class="group relative flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-white/5 transition-all duration-200"
+          <div class="relative">
+            <svg
+              class="w-6 h-6 shrink-0 text-gray-400 group-hover:text-white transition-colors"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
             >
-              <span
-                class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-blue-400 rounded-r transition-all duration-200 group-[.active-menu-item]:h-8"
-              ></span>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-widest text-gray-500 group-hover:text-gray-300 nav-text transition-colors">
+            Menú
+          </span>
+        </button>
+      </div>
 
-              <ng-container [ngSwitch]="item.icon">
-                <svg
-                  *ngSwitchCase="'home'"
-                  class="w-6 h-6 shrink-0 transition-colors group-[.active-menu-item]:text-blue-400"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                  />
-                </svg>
-                <svg
-                  *ngSwitchCase="'pages'"
-                  class="w-6 h-6 shrink-0 transition-colors group-[.active-menu-item]:text-blue-400"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <svg
-                  *ngSwitchCase="'folder'"
-                  class="w-6 h-6 shrink-0 transition-colors group-[.active-menu-item]:text-blue-400"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                  />
-                </svg>
-                <svg
-                  *ngSwitchCase="'user'"
-                  class="w-6 h-6 shrink-0 transition-colors group-[.active-menu-item]:text-blue-400"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-                <svg
-                  *ngSwitchCase="'calendar'"
-                  class="w-6 h-6 shrink-0 transition-colors group-[.active-menu-item]:text-blue-400"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <svg
-                  *ngSwitchCase="'message'"
-                  class="w-6 h-6 shrink-0 transition-colors group-[.active-menu-item]:text-blue-400"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-                <svg
-                  *ngSwitchCase="'history'"
-                  class="w-6 h-6 shrink-0 group-[.active-menu-item]:text-blue-400"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </ng-container>
+      <!-- Navegación con grupos -->
+      <nav class="flex-1 overflow-y-auto overflow-x-hidden py-2 sidebar-nav">
+        <div *ngFor="let grupo of menuGrupos; let ultimo = last" class="px-3 mb-4">
+          <!-- Título del grupo (oculto en colapsado) -->
+          <div class="grupo-titulo mb-2 px-2">
+            <p
+              class="text-[10px] font-bold uppercase tracking-widest transition-colors"
+              [style.color]="grupo.color"
+              style="opacity: 0.7;"
+            >
+              {{ grupo.titulo }}
+            </p>
+          </div>
 
-              <span class="text-sm font-medium nav-text group-[.active-menu-item]:text-white">
-                {{ item.label }}
-              </span>
+          <!-- Línea separadora en colapsado -->
+          <div class="grupo-separador hidden mx-2 mb-2 h-px bg-white/5"></div>
 
-              <span
-                *ngIf="sidebarColapsado"
-                class="absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg z-50"
+          <!-- Items del grupo -->
+          <ul class="flex flex-col gap-0.5">
+            <li *ngFor="let item of grupo.items">
+
+              <a  [routerLink]="item.path"
+                routerLinkActive="active-menu-item"
+                class="group relative flex items-center gap-4 px-3 py-2.5 rounded-lg hover:bg-white/[0.06] transition-all duration-200"
               >
-                {{ item.label }}
-              </span>
-            </a>
-          </li>
-        </ul>
+                <!-- Barra lateral activa con color del grupo -->
+                <span
+                  class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 rounded-r-full transition-all duration-300 group-[.active-menu-item]:h-8 group-[.active-menu-item]:shadow-lg"
+                  [style.background]="item.color"
+                  [style.box-shadow]="'0 0 12px ' + item.color + '80'"
+                ></span>
+
+                <!-- Icono -->
+                <div class="relative shrink-0">
+                  <ng-container [ngSwitch]="item.icon">
+                    <svg
+                      *ngSwitchCase="'home'"
+                      class="w-5 h-5 transition-all duration-200 group-hover:scale-110"
+                      [class.text-gray-400]="true"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                      />
+                    </svg>
+                    <svg
+                      *ngSwitchCase="'pages'"
+                      class="w-5 h-5 transition-all duration-200 group-hover:scale-110"
+                      [class.text-gray-400]="true"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    <svg
+                      *ngSwitchCase="'folder'"
+                      class="w-5 h-5 transition-all duration-200 group-hover:scale-110"
+                      [class.text-gray-400]="true"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                      />
+                    </svg>
+                    <svg
+                      *ngSwitchCase="'user'"
+                      class="w-5 h-5 transition-all duration-200 group-hover:scale-110"
+                      [class.text-gray-400]="true"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                    <svg
+                      *ngSwitchCase="'calendar'"
+                      class="w-5 h-5 transition-all duration-200 group-hover:scale-110"
+                      [class.text-gray-400]="true"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <svg
+                      *ngSwitchCase="'message'"
+                      class="w-5 h-5 transition-all duration-200 group-hover:scale-110"
+                      [class.text-gray-400]="true"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      />
+                    </svg>
+                    <svg
+                      *ngSwitchCase="'history'"
+                      class="w-5 h-5 transition-all duration-200 group-hover:scale-110"
+                      [class.text-gray-400]="true"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </ng-container>
+
+                  <!-- Badge dinámico en modo colapsado -->
+                  <span
+                    *ngIf="sidebarColapsado && obtenerBadge(item) > 0"
+                    class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full ring-2 ring-slate-900 animate-pulse"
+                    [style.background]="item.color"
+                  ></span>
+                </div>
+
+                <!-- Texto -->
+                <span class="text-sm font-medium nav-text flex-1 text-gray-300 group-[.active-menu-item]:text-white transition-colors">
+                  {{ item.label }}
+                </span>
+
+                <!-- Badge dinámico en modo expandido -->
+                <span
+                  *ngIf="!sidebarColapsado && obtenerBadge(item) > 0"
+                  class="nav-text text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center text-white shadow-lg animate-pulse"
+                  [style.background]="item.color"
+                  [style.box-shadow]="'0 0 8px ' + item.color + '60'"
+                >
+                  {{ obtenerBadge(item) > 99 ? '99+' : obtenerBadge(item) }}
+                </span>
+
+                <!-- Tooltip para modo colapsado -->
+                <span
+                  *ngIf="sidebarColapsado"
+                  class="absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none shadow-2xl z-50 flex items-center gap-2"
+                  [style.border-left]="'3px solid ' + item.color"
+                >
+                  {{ item.label }}
+                  <span
+                    *ngIf="obtenerBadge(item) > 0"
+                    class="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white"
+                    [style.background]="item.color"
+                  >
+                    {{ obtenerBadge(item) }}
+                  </span>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </div>
       </nav>
 
-      <div class="border-t border-white/5 py-3 shrink-0">
-        <a
-          routerLink="/admin/configuracion"
-          routerLinkActive="active-menu-item"
-          class="group relative flex items-center gap-4 px-3 py-3 mx-3 rounded-lg hover:bg-white/5 transition-all duration-200"
-        >
-          <span
-            class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-blue-400 rounded-r transition-all duration-200 group-[.active-menu-item]:h-8"
-          ></span>
-          <svg
-            class="w-6 h-6 shrink-0 transition-colors group-[.active-menu-item]:text-blue-400"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
+      <!-- ============ USER CARD FOOTER ============ -->
+      <div class="border-t border-white/5 shrink-0 relative">
+        <!-- Configuración -->
+        <div class="p-2">
+
+          <a  routerLink="/admin/configuracion"
+            routerLinkActive="active-menu-item"
+            class="group relative flex items-center gap-4 px-3 py-2.5 rounded-lg hover:bg-white/[0.06] transition-all duration-200"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-            />
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
-          <span class="text-sm font-medium nav-text group-[.active-menu-item]:text-white">
-            Configuración
-          </span>
-          <span
-            *ngIf="sidebarColapsado"
-            class="absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg z-50"
+            <span
+              class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 rounded-r-full transition-all duration-300 group-[.active-menu-item]:h-8 bg-slate-400"
+            ></span>
+            <svg
+              class="w-5 h-5 shrink-0 text-gray-400 transition-all group-hover:scale-110"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <span class="text-sm font-medium nav-text text-gray-300 group-[.active-menu-item]:text-white transition-colors">
+              Configuración
+            </span>
+            <!-- Tooltip para colapsado -->
+            <span
+              *ngIf="sidebarColapsado"
+              class="absolute left-full ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-2xl z-50"
+            >
+              Configuración
+            </span>
+          </a>
+        </div>
+
+        <!-- Mini user card -->
+        <div class="p-2 pt-1 border-t border-white/5">
+
+          <a  routerLink="/admin/perfil"
+            class="group flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.06] transition-all duration-200"
           >
-            Configuración
-          </span>
-        </a>
+            <!-- Avatar mini con status ring -->
+            <div class="relative shrink-0">
+              <span class="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-30"></span>
+              <div class="relative w-9 h-9 rounded-full p-[2px] bg-gradient-to-br from-green-400 to-emerald-500">
+                <div class="w-full h-full rounded-full bg-slate-900 p-[2px]">
+                  <img
+                    *ngIf="tienesFotoPerfil"
+                    [src]="fotoPerfilUrl"
+                    [alt]="usuario?.nombre"
+                    class="w-full h-full rounded-full object-cover"
+                  />
+                  <div
+                    *ngIf="!tienesFotoPerfil"
+                    class="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white"
+                  >
+                    {{ iniciales }}
+                  </div>
+                </div>
+              </div>
+              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-400 ring-2 ring-slate-900"></span>
+            </div>
+
+            <!-- Info del usuario -->
+            <div class="flex-1 min-w-0 nav-text">
+              <p class="text-xs font-semibold text-white truncate leading-tight">
+                {{ usuario?.nombre || 'Admin' }}
+              </p>
+              <p class="text-[10px] text-gray-500 truncate leading-tight mt-0.5">
+                {{ usuario?.correo }}
+              </p>
+            </div>
+
+            <!-- Chevron indicando link -->
+            <svg
+              class="w-3.5 h-3.5 text-gray-500 nav-text group-hover:text-gray-300 group-hover:translate-x-0.5 transition-all"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
       </div>
     </aside>
 
@@ -907,123 +1031,67 @@
         </div>
 
         <nav class="flex-1 py-4 overflow-y-auto">
-          <ul class="flex flex-col gap-1 px-3">
-            <li *ngFor="let item of menuItems">
-              <a
-                [routerLink]="item.path"
-                (click)="menuMovilAbierto = false"
-                routerLinkActive="active-menu-item"
-                class="group relative flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-white/5 transition-all duration-200"
-              >
-                <span
-                  class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-blue-400 rounded-r transition-all duration-200 group-[.active-menu-item]:h-8"
-                ></span>
-                <ng-container [ngSwitch]="item.icon">
-                  <svg
-                    *ngSwitchCase="'home'"
-                    class="w-6 h-6 shrink-0 group-[.active-menu-item]:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    viewBox="0 0 24 24"
+          <div *ngFor="let grupo of menuGrupos" class="px-3 mb-4">
+            <p
+              class="text-[10px] font-bold uppercase tracking-widest mb-2 px-2"
+              [style.color]="grupo.color"
+              style="opacity: 0.7;"
+            >
+              {{ grupo.titulo }}
+            </p>
+            <ul class="flex flex-col gap-0.5">
+              <li *ngFor="let item of grupo.items">
+
+                <a  [routerLink]="item.path"
+                  (click)="menuMovilAbierto = false"
+                  routerLinkActive="active-menu-item"
+                  class="group relative flex items-center gap-4 px-3 py-2.5 rounded-lg hover:bg-white/[0.06] transition-all duration-200"
+                >
+                  <span
+                    class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 rounded-r-full transition-all group-[.active-menu-item]:h-8"
+                    [style.background]="item.color"
+                    [style.box-shadow]="'0 0 12px ' + item.color + '80'"
+                  ></span>
+
+                  <ng-container [ngSwitch]="item.icon">
+                    <svg *ngSwitchCase="'home'" class="w-5 h-5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <svg *ngSwitchCase="'pages'" class="w-5 h-5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <svg *ngSwitchCase="'folder'" class="w-5 h-5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                    <svg *ngSwitchCase="'user'" class="w-5 h-5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <svg *ngSwitchCase="'calendar'" class="w-5 h-5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <svg *ngSwitchCase="'message'" class="w-5 h-5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <svg *ngSwitchCase="'history'" class="w-5 h-5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </ng-container>
+
+                  <span class="text-sm font-medium flex-1 text-gray-300 group-[.active-menu-item]:text-white">
+                    {{ item.label }}
+                  </span>
+
+                  <span
+                    *ngIf="obtenerBadge(item) > 0"
+                    class="text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center text-white animate-pulse"
+                    [style.background]="item.color"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'pages'"
-                    class="w-6 h-6 shrink-0 group-[.active-menu-item]:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'folder'"
-                    class="w-6 h-6 shrink-0 transition-colors group-[.active-menu-item]:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'user'"
-                    class="w-6 h-6 shrink-0 group-[.active-menu-item]:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'calendar'"
-                    class="w-6 h-6 shrink-0 group-[.active-menu-item]:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'message'"
-                    class="w-6 h-6 shrink-0 transition-colors group-[.active-menu-item]:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'history'"
-                    class="w-6 h-6 shrink-0 group-[.active-menu-item]:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </ng-container>
-                <span class="text-sm font-medium group-[.active-menu-item]:text-white">{{
-                  item.label
-                }}</span>
-              </a>
-            </li>
-          </ul>
+                    {{ obtenerBadge(item) > 99 ? '99+' : obtenerBadge(item) }}
+                  </span>
+                </a>
+              </li>
+            </ul>
+          </div>
         </nav>
 
         <div class="border-t border-white/5 p-3">
