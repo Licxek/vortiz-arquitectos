@@ -27,6 +27,13 @@ export interface Sesion {
   esActual: boolean;
 }
 
+export interface MetricasMes {
+  consultas: number;
+  citas: number;
+  paginas: number;
+  mes: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PerfilService {
   private http = inject(HttpClient);
@@ -81,5 +88,9 @@ export class PerfilService {
       proyectosTotales: number;
       clientesAtendidos: number;
     }>(`${this.base}/estadisticas`);
+  }
+
+  obtenerMetricasMes(): Observable<MetricasMes> {
+    return this.http.get<MetricasMes>(`${this.base}/metricas-mes`);
   }
 }

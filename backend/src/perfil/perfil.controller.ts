@@ -39,6 +39,12 @@ export class PerfilController {
     return this.servicio.obtenerEstadisticas();
   }
 
+  // ====== GET /perfil/metricas-mes — métricas del mes actual para el modal ======
+  @Get('metricas-mes')
+  metricasMes() {
+    return this.servicio.obtenerMetricasMes();
+  }
+
   // ====== PATCH /perfil — actualizar (exige código si cambia correo) ======
   @Patch()
   async actualizar(
