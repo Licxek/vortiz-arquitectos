@@ -1910,9 +1910,10 @@ export class PaginasComponent implements OnInit {
     this.menuAbiertoId = null;
     const ruta = this.rutasPublicas[pagina.slug] || pagina.slug;
     this.paginaPrevisualizando = pagina;
-    this.urlPreviewSegura = this.sanitizer.bypassSecurityTrustResourceUrl(
-      window.location.origin + ruta,
-    );
+    // 🔓 Añadir ?admin-preview=1 para saltarse el guard de mantenimiento
+    const separador = ruta.includes('?') ? '&' : '?';
+    const urlConBypass = `${window.location.origin}${ruta}${separador}admin-preview=1`;
+    this.urlPreviewSegura = this.sanitizer.bypassSecurityTrustResourceUrl(urlConBypass);
     this.dispositivoPreview = 'desktop';
     this.mostrarPreviewPagina = true;
   }
@@ -1926,7 +1927,9 @@ export class PaginasComponent implements OnInit {
     if (!this.paginaPrevisualizando) return;
     const ruta =
       this.rutasPublicas[this.paginaPrevisualizando.slug] || this.paginaPrevisualizando.slug;
-    window.open(window.location.origin + ruta, '_blank');
+    const separador = ruta.includes('?') ? '&' : '?';
+    // 🔓 También en pestaña nueva para consistencia
+    window.open(`${window.location.origin}${ruta}${separador}admin-preview=1`, '_blank');
   }
 
   get anchoPreview(): string {
@@ -1939,9 +1942,9 @@ export class PaginasComponent implements OnInit {
     if (!this.paginaPrevisualizando) return '';
     const ruta =
       this.rutasPublicas[this.paginaPrevisualizando.slug] || this.paginaPrevisualizando.slug;
-    return window.location.origin + ruta;
+    const separador = ruta.includes('?') ? '&' : '?';
+    return `${window.location.origin}${ruta}${separador}admin-preview=1`;
   }
-
   editarPagina(pagina: Pagina) {
     this.menuAbiertoId = null;
 

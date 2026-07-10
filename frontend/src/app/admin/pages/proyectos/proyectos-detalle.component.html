@@ -124,7 +124,7 @@
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="grid grid-cols-1 md:grid-cols-5 gap-0">
         <!-- Imagen (2/5) -->
-        <div class="md:col-span-2 bg-gray-100 relative">
+        <div class="md:col-span-2 bg-gray-100 relative [&_.rounded-2xl]:!rounded-none md:[&_.rounded-2xl]:!rounded-r-none md:[&_.rounded-2xl]:!rounded-l-2xl">
           <app-image-carousel
             [imagenes]="imagenesDelProyecto()"
             [alt]="proyecto.nombre"
