@@ -274,6 +274,11 @@ export class PerfilComponent implements OnInit {
     this.perfilService.actualizar({ avatar: this.avatarTemp || null }).subscribe({
       next: (actualizado) => {
         this.perfil.avatar = actualizado.avatar || '';
+         // 🔥 NUEVO: propagar la actualización al AuthService para que el header/modal se enteren
+        const usuarioActual = this.authService.getUser();
+        if (usuarioActual) {
+          this.authService.setUser({ ...usuarioActual, avatar: actualizado.avatar || null });
+        }
         this.guardandoFoto = false;
         this.mostrarModalFoto = false;
         this.mensajeExito = 'Foto actualizada correctamente';
