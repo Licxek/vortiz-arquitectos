@@ -24,3 +24,33 @@
     max-width 0.3s ease 0s,
     opacity 0.1s ease 0s;
 }
+
+/* ============ NUEVO HEADER PREMIUM ============ */
+
+/* Animación del ring pulsante del avatar */
+@keyframes ping-slow {
+  75%, 100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+.animate-ping-slow {
+  animation: ping-slow 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Backdrop blur más marcado */
+.backdrop-blur-xl {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Buscador con glow al focus */
+input[data-buscador-trigger]:focus {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+/* Suavizar transiciones globales del header */
+header * {
+  transition-property: background-color, border-color, color, opacity, transform, box-shadow;
+  transition-duration: 200ms;
+}
