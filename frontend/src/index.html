@@ -60,27 +60,6 @@
         anonymize_ip: true,
       });
     </script>
-    <script>
-      (function() {
-        try {
-          var modo = localStorage.getItem('vortiz_modo_tema') || 'claro'; // 👈 CAMBIO
-          var efectivo = modo;
-          if (modo === 'sistema') {
-            efectivo = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
-          }
-          document.documentElement.setAttribute('data-tema', efectivo);
-          if (efectivo === 'oscuro') {
-            document.documentElement.classList.add('dark');
-          }
-          document.body && document.body.classList.add('sin-transicion');
-          window.addEventListener('load', function() {
-            setTimeout(function() {
-              document.body.classList.remove('sin-transicion');
-            }, 100);
-          });
-        } catch (e) {}
-      })();
-    </script>
   </head>
   <body>
     <app-root></app-root>

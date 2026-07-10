@@ -1,8 +1,8 @@
-<div class="h-screen flex flex-col overflow-hidden transicion-tema" style="background: var(--admin-bg-base);">
+<div class="h-screen bg-[#f5f7fa] flex flex-col overflow-hidden">
   <!-- ============ HEADER PREMIUM ============ -->
   <header class="relative shrink-0 z-30 text-white">
     <!-- Fondo con gradient rico + puntos de luz decorativos -->
-    <div class="absolute inset-0" style="background: linear-gradient(to bottom right, var(--admin-header-from), var(--admin-header-via), var(--admin-header-to));">
+    <div class="absolute inset-0 bg-gradient-to-br from-[#050b18] via-[#0a1630] to-[#0f2447]">
       <!-- Orbes de luz -->
       <div
         class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"
@@ -606,108 +606,6 @@
                   </a>
                 </div>
 
-                <!-- Toggle de tema -->
-                <div class="p-4 border-b border-gray-100">
-                  <div class="flex items-center justify-between mb-3">
-                    <div>
-                      <p class="text-xs font-bold uppercase tracking-wider text-gray-500">
-                        Apariencia
-                      </p>
-                      <p class="text-[11px] text-gray-400 mt-0.5">Elige tu tema preferido</p>
-                    </div>
-                  </div>
-
-                  <div class="grid grid-cols-3 gap-1 p-1 bg-gray-100 rounded-xl">
-                    <button
-                      (click)="modoTemaService.cambiarModo('claro')"
-                      class="relative flex flex-col items-center gap-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all"
-                      [class.bg-white]="modoTemaService.modoUsuario() === 'claro'"
-                      [class.shadow-sm]="modoTemaService.modoUsuario() === 'claro'"
-                      [class.text-gray-900]="modoTemaService.modoUsuario() === 'claro'"
-                      [class.text-gray-500]="modoTemaService.modoUsuario() !== 'claro'"
-                      [class.hover:text-gray-800]="modoTemaService.modoUsuario() !== 'claro'"
-                    >
-                      <svg
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                        />
-                      </svg>
-                      Claro
-                    </button>
-                    <button
-                      (click)="modoTemaService.cambiarModo('oscuro')"
-                      class="relative flex flex-col items-center gap-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all"
-                      [class.text-white]="modoTemaService.modoUsuario() === 'oscuro'"
-                      [class.shadow-sm]="modoTemaService.modoUsuario() === 'oscuro'"
-                      [class.text-gray-500]="modoTemaService.modoUsuario() !== 'oscuro'"
-                      [class.hover:text-gray-800]="modoTemaService.modoUsuario() !== 'oscuro'"
-                      [style.background]="
-                        modoTemaService.modoUsuario() === 'oscuro' ? '#0a1630' : 'transparent'
-                      "
-                    >
-                      <svg
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                        />
-                      </svg>
-                      Oscuro
-                    </button>
-                    <button
-                      (click)="modoTemaService.cambiarModo('sistema')"
-                      class="relative flex flex-col items-center gap-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all"
-                      [class.shadow-sm]="modoTemaService.modoUsuario() === 'sistema'"
-                      [class.text-white]="modoTemaService.modoUsuario() === 'sistema'"
-                      [class.text-gray-500]="modoTemaService.modoUsuario() !== 'sistema'"
-                      [class.hover:text-gray-800]="modoTemaService.modoUsuario() !== 'sistema'"
-                      [style.background]="
-                        modoTemaService.modoUsuario() === 'sistema'
-                          ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)'
-                          : 'transparent'
-                      "
-                    >
-                      <svg
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                      </svg>
-                      Auto
-                    </button>
-                  </div>
-                  <p class="text-[10px] text-gray-400 mt-2 text-center">
-                    {{
-                      modoTemaService.modoUsuario() === 'sistema'
-                        ? 'Sigue la preferencia de tu sistema'
-                        : modoTemaService.modoUsuario() === 'oscuro'
-                          ? 'Modo oscuro activo'
-                          : 'Modo claro activo'
-                    }}
-                  </p>
-                </div>
-
                 <!-- Enlaces adicionales -->
                 <div class="py-1">
                   <a
@@ -779,8 +677,7 @@
   <div class="flex flex-1 relative overflow-hidden">
     <!-- Sidebar escritorio -->
     <aside
-      class="hidden md:flex flex-col transition-all duration-300 ease-in-out shadow-xl shrink-0 h-full overflow-x-hidden transicion-tema"
-      style="background: var(--admin-bg-sidebar); color: var(--admin-sidebar-text);"
+      class="hidden md:flex flex-col bg-slate-800 text-gray-300 transition-all duration-300 ease-in-out shadow-xl shrink-0 h-full overflow-x-hidden"
       [class.w-64]="!sidebarColapsado"
       [class.w-20]="sidebarColapsado"
       [class.sidebar-collapsed]="sidebarColapsado"
@@ -981,8 +878,7 @@
       ></div>
 
       <aside
-        class="fixed top-0 left-0 z-50 w-72 h-full flex flex-col transform transition-transform duration-300 ease-out transicion-tema"
-        style="background: var(--admin-bg-sidebar); color: var(--admin-sidebar-text);"
+        class="fixed top-0 left-0 z-50 w-72 h-full bg-slate-800 text-gray-300 flex flex-col transform transition-transform duration-300 ease-out"
         [class.-translate-x-full]="!menuMovilAbierto"
         [class.translate-x-0]="menuMovilAbierto"
       >
