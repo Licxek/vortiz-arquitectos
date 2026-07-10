@@ -121,23 +121,38 @@
 
 /* ============ VARIABLES DE TEMA ============ */
 
-/* Tema OSCURO (default) */
+/* Tema CLARO = Vortiz identidad original (default) */
 :root,
-[data-tema="oscuro"] {
-  /* Fondos */
+[data-tema="claro"] {
+  /* Fondos base */
   --admin-bg-base: #f5f7fa;
   --admin-bg-surface: #ffffff;
+
+  /* Sidebar */
   --admin-bg-sidebar: #1e293b;
   --admin-bg-sidebar-hover: rgba(255, 255, 255, 0.05);
-  --admin-header-from: #050b18;
-  --admin-header-via: #0a1630;
-  --admin-header-to: #0f2447;
-
-  /* Textos del sidebar */
   --admin-sidebar-text: #cbd5e1;
   --admin-sidebar-text-active: #ffffff;
   --admin-sidebar-icon-active: #60a5fa;
   --admin-sidebar-border: rgba(255, 255, 255, 0.05);
+  --admin-sidebar-accent: #60a5fa;
+
+  /* Header */
+  --admin-header-from: #050b18;
+  --admin-header-via: #0a1630;
+  --admin-header-to: #0f2447;
+  --admin-header-orb-1: rgba(59, 130, 246, 0.1);
+  --admin-header-orb-2: rgba(6, 182, 212, 0.05);
+  --admin-header-avatar-bg: #0a1630;
+  --admin-header-separator: rgba(255, 255, 255, 0.1);
+  --admin-header-input-bg: rgba(255, 255, 255, 0.06);
+  --admin-header-input-hover: rgba(255, 255, 255, 0.12);
+  --admin-header-text-muted: rgba(255, 255, 255, 0.7);
+
+  /* Cards y superficies */
+  --admin-card-bg: #ffffff;
+  --admin-card-border: #e5e7eb;
+  --admin-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
   /* Textos generales */
   --admin-text-primary: #111827;
@@ -147,33 +162,50 @@
   /* Acentos */
   --admin-accent: #0a4d7a;
   --admin-accent-hover: #0a5d8f;
+  --admin-accent-glow: rgba(10, 77, 122, 0.15);
 }
 
-/* Tema CLARO */
-[data-tema="claro"] {
-  /* Fondos */
-  --admin-bg-base: #f9fafb;
-  --admin-bg-surface: #ffffff;
-  --admin-bg-sidebar: #ffffff;
-  --admin-bg-sidebar-hover: rgba(10, 77, 122, 0.06);
-  --admin-header-from: #ffffff;
-  --admin-header-via: #f8fafc;
-  --admin-header-to: #eff6ff;
+/* Tema OSCURO = negro cinematográfico con matices azul */
+[data-tema="oscuro"] {
+  /* Fondos base */
+  --admin-bg-base: #050810;
+  --admin-bg-surface: #0a0e1a;
 
-  /* Textos del sidebar (invertidos) */
-  --admin-sidebar-text: #4b5563;
-  --admin-sidebar-text-active: #0a4d7a;
-  --admin-sidebar-icon-active: #0a4d7a;
-  --admin-sidebar-border: rgba(0, 0, 0, 0.06);
+  /* Sidebar */
+  --admin-bg-sidebar: #050810;
+  --admin-bg-sidebar-hover: rgba(59, 130, 246, 0.08);
+  --admin-sidebar-text: #94a3b8;
+  --admin-sidebar-text-active: #ffffff;
+  --admin-sidebar-icon-active: #3b82f6;
+  --admin-sidebar-border: rgba(59, 130, 246, 0.08);
+  --admin-sidebar-accent: #3b82f6;
+
+  /* Header */
+  --admin-header-from: #000000;
+  --admin-header-via: #05080f;
+  --admin-header-to: #0a0e1a;
+  --admin-header-orb-1: rgba(59, 130, 246, 0.18);
+  --admin-header-orb-2: rgba(6, 182, 212, 0.1);
+  --admin-header-avatar-bg: #05080f;
+  --admin-header-separator: rgba(59, 130, 246, 0.15);
+  --admin-header-input-bg: rgba(59, 130, 246, 0.08);
+  --admin-header-input-hover: rgba(59, 130, 246, 0.15);
+  --admin-header-text-muted: rgba(255, 255, 255, 0.75);
+
+  /* Cards y superficies */
+  --admin-card-bg: #0a0e1a;
+  --admin-card-border: rgba(59, 130, 246, 0.1);
+  --admin-card-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.05);
 
   /* Textos generales */
-  --admin-text-primary: #111827;
-  --admin-text-secondary: #4b5563;
-  --admin-text-tertiary: #9ca3af;
+  --admin-text-primary: #f1f5f9;
+  --admin-text-secondary: #94a3b8;
+  --admin-text-tertiary: #64748b;
 
-  /* Acentos */
-  --admin-accent: #0a4d7a;
-  --admin-accent-hover: #0a5d8f;
+  /* Acentos vibrantes */
+  --admin-accent: #3b82f6;
+  --admin-accent-hover: #60a5fa;
+  --admin-accent-glow: rgba(59, 130, 246, 0.25);
 }
 
 /* Transición suave global al cambiar tema */
@@ -193,3 +225,63 @@ body.sin-transicion,
 body.sin-transicion * {
   transition: none !important;
 }
+
+/* ============ AJUSTES PARA MODO OSCURO ============ */
+
+/* Cards que usan bg-white → fondo oscuro con borde vibrante */
+[data-tema="oscuro"] .bg-white:not(.bg-white\/10):not(.bg-white\/5):not(.bg-white\/20):not(.bg-white\/30):not(.bg-white\/40):not(.bg-white\/60):not(.bg-white\/80):not(.bg-white\/90) {
+  background-color: #0a0e1a !important;
+  color: #f1f5f9;
+  border-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Textos oscuros → claros */
+[data-tema="oscuro"] .text-gray-900 {
+  color: #f1f5f9 !important;
+}
+[data-tema="oscuro"] .text-gray-800 {
+  color: #e2e8f0 !important;
+}
+[data-tema="oscuro"] .text-gray-700 {
+  color: #cbd5e1 !important;
+}
+[data-tema="oscuro"] .text-gray-600 {
+  color: #94a3b8 !important;
+}
+[data-tema="oscuro"] .text-gray-500 {
+  color: #64748b !important;
+}
+
+/* Bordes grises → azules sutiles */
+[data-tema="oscuro"] .border-gray-100,
+[data-tema="oscuro"] .border-gray-200 {
+  border-color: rgba(59, 130, 246, 0.08) !important;
+}
+
+/* Fondos gris claro → oscuro */
+[data-tema="oscuro"] .bg-gray-50 {
+  background-color: #05080f !important;
+}
+[data-tema="oscuro"] .bg-gray-100 {
+  background-color: #0f1524 !important;
+}
+
+/* Inputs y textareas en modo oscuro */
+[data-tema="oscuro"] input:not([type="color"]):not([type="range"]),
+[data-tema="oscuro"] textarea,
+[data-tema="oscuro"] select {
+  background-color: #0a0e1a;
+  color: #f1f5f9;
+  border-color: rgba(59, 130, 246, 0.15);
+}
+
+[data-tema="oscuro"] input:not([type="color"]):not([type="range"]):focus,
+[data-tema="oscuro"] textarea:focus,
+[data-tema="oscuro"] select:focus {
+  background-color: #0f1524;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+/* Placeholder más visible en oscuro */
+[data-tema="oscuro"]

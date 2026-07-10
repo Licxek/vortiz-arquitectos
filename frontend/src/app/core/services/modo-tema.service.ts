@@ -10,7 +10,7 @@ export class ModoTemaService {
   modoUsuario = signal<ModoTema>(this.cargarPreferencia());
 
   /** Modo efectivo aplicado (solo 'claro' u 'oscuro', resuelve 'sistema') */
-  modoEfectivo = signal<'claro' | 'oscuro'>('oscuro');
+  modoEfectivo = signal<'claro' | 'oscuro'>('claro'); // 👈 CAMBIO
 
   constructor() {
     // Aplicar modo inicial y reaccionar a cambios de preferencia
@@ -45,12 +45,12 @@ export class ModoTemaService {
   }
 
   private cargarPreferencia(): ModoTema {
-    if (typeof localStorage === 'undefined') return 'oscuro';
+    if (typeof localStorage === 'undefined') return 'claro'; // 👈 CAMBIO
     const guardado = localStorage.getItem(this.STORAGE_KEY) as ModoTema | null;
     if (guardado === 'claro' || guardado === 'oscuro' || guardado === 'sistema') {
       return guardado;
     }
-    return 'oscuro';
+    return 'claro'; // 👈 CAMBIO
   }
 
   private resolverModo(preferencia: ModoTema): 'claro' | 'oscuro' {

@@ -63,7 +63,7 @@
     <script>
       (function() {
         try {
-          var modo = localStorage.getItem('vortiz_modo_tema') || 'oscuro';
+          var modo = localStorage.getItem('vortiz_modo_tema') || 'claro'; // 👈 CAMBIO
           var efectivo = modo;
           if (modo === 'sistema') {
             efectivo = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
