@@ -150,7 +150,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   @HostListener('document:click')
   onDocumentClick() {
     this.menuUsuarioAbierto = false;
-    this.buscadorAdminAbierto = false;
+    // Si el buscador está expandido pero vacío, colapsar al hacer clic fuera
+    if (this.buscadorExpandido() && !this.queryBuscador) {
+      this.colapsarBuscador();
+    }
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -162,18 +165,20 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Ctrl+K abre el buscador (lo que ya tienes)
+    // Esc colapsa el buscador si está expandido
+    if (event.key === 'Escape' && this.buscadorExpandido()) {
+      event.preventDefault();
+      this.colapsarBuscador();
+      return;
+    }
+
+    // Ctrl+K abre/cierra el buscador expandido
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
-      this.buscadorAdminAbierto = !this.buscadorAdminAbierto;
-      this.menuUsuarioAbierto = false;
-      if (this.buscadorAdminAbierto) {
-        setTimeout(() => {
-          const input = document.querySelector('[data-buscador-trigger]') as HTMLInputElement;
-          input?.focus();
-        }, 50);
+      if (this.buscadorExpandido()) {
+        this.colapsarBuscador();
       } else {
-        this.queryBuscador = '';
+        this.expandirBuscador();
       }
     }
   }
@@ -260,11 +265,11 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   get tienesFotoPerfil(): boolean {
-    return !!(this.usuario as any)?.foto_url;
+    return !!(this.usuario as any)?.avatar;
   }
 
   get fotoPerfilUrl(): string {
-    return (this.usuario as any)?.foto_url || '';
+    return (this.usuario as any)?.avatar || '';
   }
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(_event: Event) {
@@ -289,5 +294,33 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   cambiarTema(nuevo: 'claro' | 'oscuro') {
     this.temaActual = nuevo;
     // En el mensaje 3 conectamos esto al ThemeService
+  }
+
+  // ============ BUSCADOR COLAPSABLE ============
+  buscadorExpandido = signal(false);
+
+  expandirBuscador() {
+    this.buscadorExpandido.set(true);
+    this.buscadorAdminAbierto = true;
+    this.menuUsuarioAbierto = false;
+    setTimeout(() => {
+      const input = document.querySelector('[data-buscador-trigger]') as HTMLInputElement;
+      input?.focus();
+    }, 150); // esperar a que termine la animación de expansión
+  }
+
+  colapsarBuscador() {
+    this.buscadorExpandido.set(false);
+    this.buscadorAdminAbierto = false;
+    this.queryBuscador = '';
+  }
+
+  toggleBuscadorExpandido(event: Event) {
+    event.stopPropagation();
+    if (this.buscadorExpandido()) {
+      this.colapsarBuscador();
+    } else {
+      this.expandirBuscador();
+    }
   }
 }
