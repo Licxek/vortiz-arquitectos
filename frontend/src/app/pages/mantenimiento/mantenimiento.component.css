@@ -1,0 +1,235 @@
+/* ============ FONDO CINEMATOGRÁFICO ============ */
+.mantenimiento-wrapper {
+  background: radial-gradient(ellipse at top, #0a1630 0%, #050b18 50%, #000000 100%);
+}
+
+/* Aurora animada con orbes */
+.fondo-aurora {
+  overflow: hidden;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: moverOrb 20s ease-in-out infinite;
+}
+
+.orb-1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
+  top: -100px;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #06b6d4 0%, transparent 70%);
+  bottom: -100px;
+  right: -100px;
+  animation-delay: -7s;
+}
+
+.orb-3 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.2;
+  animation-delay: -14s;
+}
+
+@keyframes moverOrb {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(50px, -30px) scale(1.1);
+  }
+  66% {
+    transform: translate(-30px, 40px) scale(0.9);
+  }
+}
+
+.orb-3 {
+  animation: moverOrb3 25s ease-in-out infinite;
+}
+
+@keyframes moverOrb3 {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-40%, -60%) scale(1.2);
+  }
+}
+
+/* ============ GRID DE BLUEPRINT ============ */
+.blueprint-grid {
+  background-image:
+    linear-gradient(rgba(96, 165, 250, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridDrift 30s linear infinite;
+}
+
+@keyframes gridDrift {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+
+/* ============ LÍNEAS TÉCNICAS FLOTANTES ============ */
+.linea {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.4), transparent);
+  animation: flotarLinea 15s linear infinite;
+}
+
+.linea-1 {
+  width: 200px;
+  top: 20%;
+  left: -200px;
+  animation-delay: 0s;
+}
+
+.linea-2 {
+  width: 150px;
+  top: 60%;
+  left: -150px;
+  animation-delay: -5s;
+  animation-duration: 20s;
+}
+
+.linea-3 {
+  width: 300px;
+  top: 80%;
+  left: -300px;
+  animation-delay: -10s;
+  animation-duration: 25s;
+}
+
+@keyframes flotarLinea {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(100vw + 300px)); }
+}
+
+/* ============ ANIMACIÓN DOTS ============ */
+.dot {
+  display: inline-block;
+  animation: dotBounce 1.5s infinite;
+}
+
+@keyframes dotBounce {
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}
+
+/* ============ FLOTAR SUAVE ============ */
+.animate-flotar {
+  animation: flotarSuave 3s ease-in-out infinite;
+}
+
+@keyframes flotarSuave {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ============ PULSE LENTO ============ */
+.animate-pulse-slow {
+  animation: pulseSlow 3s ease-in-out infinite;
+}
+
+@keyframes pulseSlow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+/* ============ COUNTDOWN CARDS ============ */
+.countdown-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  padding: 12px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.countdown-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(96, 165, 250, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.countdown-card:hover::before {
+  opacity: 1;
+}
+
+@media (min-width: 768px) {
+  .countdown-card {
+    min-width: 90px;
+    padding: 16px 12px;
+  }
+}
+
+/* ============ SHIMMER EFFECT PROGRESS ============ */
+.bg-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 640px) {
+  .orb {
+    filter: blur(60px);
+    opacity: 0.3;
+  }
+  .blueprint-grid {
+    background-size: 30px 30px;
+  }
+}
+
+/* ============ REDUCED MOTION ============ */
+@media (prefers-reduced-motion: reduce) {
+  .orb,
+  .blueprint-grid,
+  .linea,
+  .animate-flotar,
+  .animate-pulse-slow,
+  .bg-shimmer {
+    animation: none;
+  }
+}
