@@ -228,42 +228,46 @@ body.sin-transicion * {
 
 /* ============ AJUSTES PARA MODO OSCURO ============ */
 
-/* Cards que usan bg-white → fondo oscuro con borde vibrante */
-[data-tema="oscuro"] .bg-white:not(.bg-white\/10):not(.bg-white\/5):not(.bg-white\/20):not(.bg-white\/30):not(.bg-white\/40):not(.bg-white\/60):not(.bg-white\/80):not(.bg-white\/90) {
-  background-color: #0a0e1a !important;
+/* Cards blancas → fondo oscuro con borde vibrante */
+[data-tema="oscuro"] .bg-white {
+  background-color: #0a0e1a;
   color: #f1f5f9;
-  border-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Excepciones: cuando bg-white se usa con opacidad, respetar */
+[data-tema="oscuro"] [class*="bg-white/"] {
+  background-color: rgba(255, 255, 255, var(--tw-bg-opacity, 0.05));
 }
 
 /* Textos oscuros → claros */
 [data-tema="oscuro"] .text-gray-900 {
-  color: #f1f5f9 !important;
+  color: #f1f5f9;
 }
 [data-tema="oscuro"] .text-gray-800 {
-  color: #e2e8f0 !important;
+  color: #e2e8f0;
 }
 [data-tema="oscuro"] .text-gray-700 {
-  color: #cbd5e1 !important;
+  color: #cbd5e1;
 }
 [data-tema="oscuro"] .text-gray-600 {
-  color: #94a3b8 !important;
+  color: #94a3b8;
 }
 [data-tema="oscuro"] .text-gray-500 {
-  color: #64748b !important;
+  color: #64748b;
 }
 
 /* Bordes grises → azules sutiles */
 [data-tema="oscuro"] .border-gray-100,
 [data-tema="oscuro"] .border-gray-200 {
-  border-color: rgba(59, 130, 246, 0.08) !important;
+  border-color: rgba(59, 130, 246, 0.08);
 }
 
 /* Fondos gris claro → oscuro */
 [data-tema="oscuro"] .bg-gray-50 {
-  background-color: #05080f !important;
+  background-color: #05080f;
 }
 [data-tema="oscuro"] .bg-gray-100 {
-  background-color: #0f1524 !important;
+  background-color: #0f1524;
 }
 
 /* Inputs y textareas en modo oscuro */
@@ -284,4 +288,30 @@ body.sin-transicion * {
 }
 
 /* Placeholder más visible en oscuro */
-[data-tema="oscuro"]
+[data-tema="oscuro"] input::placeholder,
+[data-tema="oscuro"] textarea::placeholder {
+  color: #64748b;
+}
+
+/* Hover en items grises → sutilmente azul en oscuro */
+[data-tema="oscuro"] .hover\:bg-gray-50:hover,
+[data-tema="oscuro"] .hover\:bg-gray-100:hover {
+  background-color: rgba(59, 130, 246, 0.08);
+}
+
+/* Sombras más dramáticas en oscuro */
+[data-tema="oscuro"] .shadow-sm {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+[data-tema="oscuro"] .shadow-md {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.05);
+}
+[data-tema="oscuro"] .shadow-lg {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.08);
+}
+[data-tema="oscuro"] .shadow-xl {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 40px rgba(59, 130, 246, 0.08);
+}
+[data-tema="oscuro"] .shadow-2xl {
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), 0 0 60px rgba(59, 130, 246, 0.1);
+}
