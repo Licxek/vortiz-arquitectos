@@ -78,24 +78,15 @@ header * {
     opacity 0.1s ease 0s;
 }
 
-/* Scrollbar personalizado para el sidebar */
+/* Scrollbar oculto del sidebar (mantiene funcionalidad) */
+.sidebar-nav {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
 .sidebar-nav::-webkit-scrollbar {
-  width: 4px;
+  display: none; /* Chrome/Safari */
 }
-
-.sidebar-nav::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar-nav::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-}
-
-.sidebar-nav::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
 /* Animación pulse para badges */
 @keyframes pulse-badge {
   0%, 100% { opacity: 1; }
