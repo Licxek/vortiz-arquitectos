@@ -9,6 +9,7 @@ export interface MantenimientoConfig {
   activo: boolean;
   mensaje: string;
   fechaEstimada?: string;
+  activadoEn?: string | null; // 👈 NUEVO — ISO date del momento en que se activó
 }
 
 @Entity({ name: 'configuracion' })

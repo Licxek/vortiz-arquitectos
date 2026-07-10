@@ -24,35 +24,31 @@ export class MantenimientoComponent implements OnInit, OnDestroy {
 
   config = toSignal(this.configService.configPublica$, { initialValue: null });
 
-  // Signals reactivos
   ahora = computed(() => new Date().getFullYear());
   horaActual = signal(this.formatearHora(new Date()));
   countdown = signal<Countdown | null>(null);
-  progreso = signal(23); // porcentaje aleatorio inicial
 
-  // Intervals
+  // 🔥 Progreso REAL basado en tiempo transcurrido
+  tickProgreso = signal(0); // fuerza recomputación cada minuto
+
   private intervalReloj: any = null;
   private intervalCountdown: any = null;
   private intervalProgreso: any = null;
 
   ngOnInit() {
-    // Reloj en vivo
+    // Reloj cada segundo
     this.intervalReloj = setInterval(() => {
       this.horaActual.set(this.formatearHora(new Date()));
     }, 1000);
 
-    // Countdown en vivo
+    // Countdown cada segundo
     this.actualizarCountdown();
     this.intervalCountdown = setInterval(() => this.actualizarCountdown(), 1000);
 
-    // Progreso animado (sube lento aleatoriamente entre 15% y 87%)
+    // Progreso se recalcula cada minuto (no necesita ser más frecuente)
     this.intervalProgreso = setInterval(() => {
-      const actual = this.progreso();
-      // Incremento aleatorio entre -1 y +3
-      const delta = Math.floor(Math.random() * 5) - 1;
-      const nuevo = Math.max(15, Math.min(87, actual + delta));
-      this.progreso.set(nuevo);
-    }, 2500);
+      this.tickProgreso.set(Date.now());
+    }, 60000);
   }
 
   ngOnDestroy() {
@@ -81,13 +77,7 @@ export class MantenimientoComponent implements OnInit, OnDestroy {
       const diff = objetivo - ahora;
 
       if (diff <= 0) {
-        this.countdown.set({
-          dias: 0,
-          horas: 0,
-          minutos: 0,
-          segundos: 0,
-          vencido: true,
-        });
+        this.countdown.set({ dias: 0, horas: 0, minutos: 0, segundos: 0, vencido: true });
         return;
       }
 
@@ -101,6 +91,53 @@ export class MantenimientoComponent implements OnInit, OnDestroy {
       this.countdown.set(null);
     }
   }
+
+  // 🔥 PROGRESO REAL: entre fecha activación y fecha estimada
+  progreso = computed(() => {
+    this.tickProgreso(); // dependencia para forzar recomputación
+    const m = this.config()?.mantenimiento;
+
+    // Si no hay fechas, mostrar progreso indeterminado (50% decorativo)
+    if (!m?.activadoEn || !m?.fechaEstimada) {
+      return { porcentaje: 50, tieneReal: false };
+    }
+
+    try {
+      const inicio = new Date(m.activadoEn).getTime();
+      const fin = new Date(m.fechaEstimada).getTime();
+      const ahora = Date.now();
+
+      if (isNaN(inicio) || isNaN(fin) || fin <= inicio) {
+        return { porcentaje: 50, tieneReal: false };
+      }
+
+      const total = fin - inicio;
+      const transcurrido = ahora - inicio;
+      const porcentaje = (transcurrido / total) * 100;
+
+      // Cap entre 1% y 99% para que siempre se vea "en progreso"
+      return {
+        porcentaje: Math.max(1, Math.min(99, Math.round(porcentaje))),
+        tieneReal: true,
+      };
+    } catch {
+      return { porcentaje: 50, tieneReal: false };
+    }
+  });
+
+  // 🔥 Label dinámico según el porcentaje
+  labelProgreso = computed(() => {
+    const { porcentaje, tieneReal } = this.progreso();
+    if (!tieneReal) return 'Trabajando en el sitio';
+
+    if (porcentaje >= 99) return 'Acabados finales';
+    if (porcentaje >= 90) return 'Últimos ajustes';
+    if (porcentaje >= 70) return 'Detalles finales';
+    if (porcentaje >= 50) return 'Levantando muros';
+    if (porcentaje >= 30) return 'Cimentando estructura';
+    if (porcentaje >= 15) return 'Iniciando remodelación';
+    return 'Preparando el terreno';
+  });
 
   nombre = computed(() => this.config()?.nombre || 'Vortiz Arquitectos');
 
