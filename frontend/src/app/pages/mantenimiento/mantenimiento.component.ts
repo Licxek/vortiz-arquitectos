@@ -28,12 +28,12 @@ export class MantenimientoComponent implements OnInit, OnDestroy {
   horaActual = signal(this.formatearHora(new Date()));
   countdown = signal<Countdown | null>(null);
 
-  // 🔥 Progreso REAL basado en tiempo transcurrido
-  tickProgreso = signal(0); // fuerza recomputación cada minuto
+  // 🔥 Signal que se actualiza CADA SEGUNDO para forzar recálculo del progreso
+  private tickTiempo = signal(Date.now());
 
   private intervalReloj: any = null;
   private intervalCountdown: any = null;
-  private intervalProgreso: any = null;
+  private intervalTick: any = null;
 
   ngOnInit() {
     // Reloj cada segundo
@@ -45,16 +45,16 @@ export class MantenimientoComponent implements OnInit, OnDestroy {
     this.actualizarCountdown();
     this.intervalCountdown = setInterval(() => this.actualizarCountdown(), 1000);
 
-    // Progreso se recalcula cada minuto (no necesita ser más frecuente)
-    this.intervalProgreso = setInterval(() => {
-      this.tickProgreso.set(Date.now());
-    }, 60000);
+    // 🔥 Tick de tiempo cada segundo para que el progreso se recalcule EN VIVO
+    this.intervalTick = setInterval(() => {
+      this.tickTiempo.set(Date.now());
+    }, 1000);
   }
 
   ngOnDestroy() {
     if (this.intervalReloj) clearInterval(this.intervalReloj);
     if (this.intervalCountdown) clearInterval(this.intervalCountdown);
-    if (this.intervalProgreso) clearInterval(this.intervalProgreso);
+    if (this.intervalTick) clearInterval(this.intervalTick);
   }
 
   private formatearHora(d: Date): string {
@@ -92,40 +92,40 @@ export class MantenimientoComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 🔥 PROGRESO REAL: entre fecha activación y fecha estimada
+  // 🔥 PROGRESO REAL con precisión de segundos (para que se vea en vivo)
   progreso = computed(() => {
-    this.tickProgreso(); // dependencia para forzar recomputación
+    const ahora = this.tickTiempo(); // 👈 dependencia que fuerza recálculo cada segundo
     const m = this.config()?.mantenimiento;
 
-    // Si no hay fechas, mostrar progreso indeterminado (50% decorativo)
     if (!m?.activadoEn || !m?.fechaEstimada) {
-      return { porcentaje: 50, tieneReal: false };
+      return { porcentaje: 50, tieneReal: false, porcentajeExacto: 50 };
     }
 
     try {
       const inicio = new Date(m.activadoEn).getTime();
       const fin = new Date(m.fechaEstimada).getTime();
-      const ahora = Date.now();
 
       if (isNaN(inicio) || isNaN(fin) || fin <= inicio) {
-        return { porcentaje: 50, tieneReal: false };
+        return { porcentaje: 50, tieneReal: false, porcentajeExacto: 50 };
       }
 
       const total = fin - inicio;
       const transcurrido = ahora - inicio;
-      const porcentaje = (transcurrido / total) * 100;
+      const porcentajeExacto = (transcurrido / total) * 100;
 
-      // Cap entre 1% y 99% para que siempre se vea "en progreso"
+      // Cap entre 1% y 99%
+      const capped = Math.max(1, Math.min(99, porcentajeExacto));
+
       return {
-        porcentaje: Math.max(1, Math.min(99, Math.round(porcentaje))),
+        porcentaje: Math.round(capped),
+        porcentajeExacto: capped, // 👈 con decimales para transición suave del ancho
         tieneReal: true,
       };
     } catch {
-      return { porcentaje: 50, tieneReal: false };
+      return { porcentaje: 50, tieneReal: false, porcentajeExacto: 50 };
     }
   });
 
-  // 🔥 Label dinámico según el porcentaje
   labelProgreso = computed(() => {
     const { porcentaje, tieneReal } = this.progreso();
     if (!tieneReal) return 'Trabajando en el sitio';
