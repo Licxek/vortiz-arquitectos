@@ -7,10 +7,12 @@ import { MailModule } from '../mail/mail.module'; // ⚠️ ajusta la ruta a tu 
 import { PerfilController } from './perfil.controller';
 import { PerfilService } from './perfil.service';
 import { VerificacionService } from './verificacion.service';
+import { Cita } from '../citas/cita.entity';
+import { Pagina } from '../paginas/pagina.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Usuario, CodigoVerificacion,Proyecto]),
+    TypeOrmModule.forFeature([Usuario, CodigoVerificacion,Proyecto, Cita, Pagina]),
     MailModule,
   ],
   controllers: [PerfilController],

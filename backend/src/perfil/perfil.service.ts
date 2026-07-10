@@ -9,12 +9,17 @@ import { Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { Usuario } from '../usuarios/usuario.entity'; // ⚠️ ajusta la ruta
 import { Proyecto } from '../proyectos/proyecto.entity'; // 👈 NUEVO
+import { Between } from 'typeorm';
+import { Cita } from '../citas/cita.entity';
+import { Pagina } from '../paginas/pagina.entity';
 
 @Injectable()
 export class PerfilService {
   constructor(
     @InjectRepository(Usuario) private usuariosRepo: Repository<Usuario>,
     @InjectRepository(Proyecto) private proyectosRepo: Repository<Proyecto>,
+    @InjectRepository(Cita) private citasRepo: Repository<Cita>, // 👈 NUEVO
+    @InjectRepository(Pagina) private paginasRepo: Repository<Pagina>,
   ) {}
 
   async obtener(userId: number) {
@@ -112,6 +117,56 @@ export class PerfilService {
     return {
       proyectosTotales,
       clientesAtendidos: parseInt(clientesResult?.total || '0', 10),
+    };
+  }
+  /**
+   * Obtiene métricas del mes actual para el modal de perfil del admin.
+   * Consultas + citas del mes actual + páginas publicadas totales.
+   */
+  async obtenerMetricasMes() {
+    const ahora = new Date();
+    const primerDia = new Date(ahora.getFullYear(), ahora.getMonth(), 1, 0, 0, 0);
+    const ultimoDia = new Date(
+      ahora.getFullYear(),
+      ahora.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+    );
+
+    // Primer y último día como strings para comparar con columnas type: 'date'
+    const primerDiaStr = primerDia.toISOString().split('T')[0];
+    const ultimoDiaStr = ultimoDia.toISOString().split('T')[0];
+
+    const [consultas, citas, paginas] = await Promise.all([
+      // Consultas del mes (todas las citas creadas este mes)
+      this.citasRepo.count({
+        where: { createdAt: Between(primerDia, ultimoDia) },
+      }),
+      // Citas con fecha_cita en el mes actual
+      this.citasRepo
+        .createQueryBuilder('c')
+        .where('c.fecha_cita >= :desde', { desde: primerDiaStr })
+        .andWhere('c.fecha_cita <= :hasta', { hasta: ultimoDiaStr })
+        .getCount(),
+      // Páginas publicadas (total actual, no del mes)
+      this.paginasRepo.count({
+        where: { estado: 'publicada' },
+      }),
+    ]);
+
+    const meses = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+    ];
+    const etiquetaMes = `${meses[ahora.getMonth()]} ${ahora.getFullYear()}`;
+
+    return {
+      consultas,
+      citas,
+      paginas,
+      mes: etiquetaMes,
     };
   }
 }

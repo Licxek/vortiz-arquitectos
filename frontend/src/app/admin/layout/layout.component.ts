@@ -8,6 +8,8 @@ import { BuscadorAdminComponent } from '../../shared/buscador-admin/buscador-adm
 import { FormsModule } from '@angular/forms';
 import { NotificacionesBellComponent } from '../../shared/notificaciones-bell/notificaciones-bell.component';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
+import { PerfilService, MetricasMes } from '../../core/services/perfil.service';
+// (Si no está importado ya)
 
 interface MenuItem {
   label: string;
@@ -114,6 +116,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     private configuracionService: ConfiguracionService,
     private cdr: ChangeDetectorRef,
     public notifService: NotificacionesService,
+    private perfilService: PerfilService, // 👈 NUEVO
   ) {}
 
   ngOnInit() {
@@ -174,7 +177,12 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   toggleMenuUsuario(event: Event) {
     event.stopPropagation();
     this.menuUsuarioAbierto = !this.menuUsuarioAbierto;
-    this.buscadorAdminAbierto = false; // cierra el buscador si estaba abierto
+    this.buscadorAdminAbierto = false;
+
+    // 🔥 Cargar métricas al abrir por primera vez
+    if (this.menuUsuarioAbierto && !this.metricasCargadas) {
+      this.cargarMetricasMes();
+    }
   }
 
   toggleSidebar() {
@@ -364,5 +372,50 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   /** Verifica si algún item de un grupo tiene badges (para colapsado) */
   grupoTieneBadges(grupo: MenuGrupo): boolean {
     return grupo.items.some(item => this.obtenerBadge(item) > 0);
+  }
+
+  // ============ MÉTRICAS DEL MES (MODAL PERFIL) ============
+  metricasMes = signal<MetricasMes>({ consultas: 0, citas: 0, paginas: 0, mes: '' });
+  metricasCargadas = false;
+  cargandoMetricas = signal(false);
+
+  private cargarMetricasMes() {
+    this.cargandoMetricas.set(true);
+    this.perfilService.obtenerMetricasMes().subscribe({
+      next: (data) => {
+        this.metricasCargadas = true;
+        this.cargandoMetricas.set(false);
+        // Guardar el mes de inmediato
+        this.metricasMes.set({ consultas: 0, citas: 0, paginas: 0, mes: data.mes });
+        // Animar contadores
+        this.animarContadores(data);
+      },
+      error: () => {
+        this.cargandoMetricas.set(false);
+      },
+    });
+  }
+
+  private animarContadores(destino: MetricasMes) {
+    const duracion = 1200; // 1.2 segundos
+    const inicio = Date.now();
+
+    const animar = () => {
+      const transcurrido = Date.now() - inicio;
+      const t = Math.min(transcurrido / duracion, 1);
+      // Ease out cubic para desaceleración suave al final
+      const eased = 1 - Math.pow(1 - t, 3);
+
+      this.metricasMes.set({
+        consultas: Math.round(destino.consultas * eased),
+        citas: Math.round(destino.citas * eased),
+        paginas: Math.round(destino.paginas * eased),
+        mes: destino.mes,
+      });
+
+      if (t < 1) requestAnimationFrame(animar);
+    };
+
+    requestAnimationFrame(animar);
   }
 }
