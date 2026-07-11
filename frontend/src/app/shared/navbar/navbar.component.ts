@@ -100,16 +100,30 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (newScrolled !== this.scrolled) {
       this.ngZone.run(() => {
         this.scrolled = newScrolled;
+        this.actualizarAlturaNavbar(); // 👈 NUEVO
         this.cdr.markForCheck();
       });
     }
   };
+
+  // 👇 NUEVO método
+  private actualizarAlturaNavbar() {
+    // Guardar altura del navbar en una CSS variable
+    setTimeout(() => {
+      const nav = document.querySelector('nav.sticky') as HTMLElement;
+      if (nav) {
+        const altura = nav.offsetHeight;
+        document.documentElement.style.setProperty('--navbar-altura', `${altura}px`);
+      }
+    }, 50);
+  }
 
   ngOnInit() {
     this.configuracionService.configPublica$.subscribe((c) => {
       this.configuracion = c;
       this.cargando.set(false);
       this.cdr.markForCheck();
+      setTimeout(() => this.actualizarAlturaNavbar(), 100); // 👈 NUEVO
     });
 
     this.paginasService.getPaginasParaMenu().subscribe({
@@ -379,4 +393,5 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.expandirBuscadorInline();
     }
   }
+
 }

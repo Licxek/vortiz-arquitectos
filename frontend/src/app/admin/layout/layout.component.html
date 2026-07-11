@@ -152,13 +152,10 @@
           <div class="relative buscador-admin-wrapper hidden md:block" (click)="$event.stopPropagation()">
             <div
               class="flex items-center overflow-hidden transition-all duration-300 ease-in-out rounded-full"
-              [class.w-10]="!buscadorExpandido()"
-              [class.md:w-80]="buscadorExpandido()"
-              [class.lg:w-[420px]]="buscadorExpandido()"
-              [class.bg-white/10]="buscadorExpandido()"
-              [class.backdrop-blur-xl]="buscadorExpandido()"
-              [class.border]="buscadorExpandido()"
-              [class.border-white/15]="buscadorExpandido()"
+              [ngClass]="{
+                'w-10': !buscadorExpandido(),
+                'w-80 lg:w-[420px] bg-white/10 backdrop-blur-xl border border-white/15': buscadorExpandido()
+              }"
             >
               <button
                 (click)="toggleBuscadorExpandido($event)"
