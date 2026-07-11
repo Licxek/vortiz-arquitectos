@@ -8,13 +8,14 @@
     ')'
   "
 >
-  <!-- Barra principal escritorio -->
+  <!-- ============ BARRA PRINCIPAL ESCRITORIO ============ -->
   <div
-    class="navbar-container w-full hidden md:flex items-center justify-between transition-all duration-300"
-    [ngClass]="scrolled ? 'px-6 lg:px-8 py-3' : 'px-6 lg:px-16 py-4 lg:py-6'"
+    class="navbar-container relative w-full hidden md:flex items-center justify-between transition-all duration-500 ease-out"
+    [ngClass]="scrolled ? 'px-6 lg:px-8 py-3 backdrop-blur-xl bg-white/5 border-b border-white/10' : 'px-6 lg:px-16 py-4 lg:py-6'"
   >
-    <a routerLink="/" class="flex items-center gap-3 lg:gap-4 min-w-0">
-      <!-- Skeleton del logo -->
+    <!-- Logo con glow premium -->
+    <a routerLink="/" class="flex items-center gap-3 lg:gap-4 min-w-0 group relative">
+      <!-- Skeleton -->
       <ng-container *ngIf="cargando()">
         <app-skeleton variant="rect" width="80px" height="80px" />
         <div class="space-y-1.5">
@@ -25,24 +26,28 @@
 
       <!-- Contenido real -->
       <ng-container *ngIf="!cargando()">
-        <img
-          [ngSrc]="configuracion?.logo_url || '/assets/img/logo.png'"
-          width="200"
-          height="200"
-          alt="Vortiz Arquitectos"
-          class="w-auto transition-all duration-300 shrink-0"
-          [ngClass]="scrolled ? 'h-12 lg:h-14' : 'h-16 md:h-20 lg:h-28'"
-          priority
-        />
-        <div class="transition-all duration-300 min-w-0">
+        <div class="relative shrink-0">
+          <!-- Glow al hover -->
+          <div class="absolute inset-0 bg-gradient-to-br from-blue-400/40 to-cyan-400/40 rounded-2xl blur-xl opacity-0 group-hover:opacity-70 transition-opacity duration-500"></div>
+          <img
+            [ngSrc]="configuracion?.logo_url || '/assets/img/logo.png'"
+            width="200"
+            height="200"
+            alt="Vortiz Arquitectos"
+            class="relative w-auto transition-all duration-500 group-hover:scale-105"
+            [ngClass]="scrolled ? 'h-12 lg:h-14' : 'h-16 md:h-20 lg:h-24'"
+            priority
+          />
+        </div>
+        <div class="transition-all duration-500 min-w-0">
           <span
-            class="font-bold block transition-all duration-300 truncate"
+            class="font-bold block transition-all duration-500 truncate tracking-tight"
             [ngClass]="scrolled ? 'text-base lg:text-xl' : 'text-lg md:text-xl lg:text-3xl'"
           >
             {{ configuracion?.nombre || 'Vortiz Arquitectos' }}
           </span>
           <p
-            class="text-gray-400 transition-all duration-300 truncate"
+            class="text-gray-400 transition-all duration-500 truncate"
             [ngClass]="scrolled ? 'text-[10px] lg:text-xs' : 'text-xs md:text-sm lg:text-base'"
           >
             {{ configuracion?.eslogan || 'Diseñamos espacios, construimos confianza.' }}
@@ -51,362 +56,244 @@
       </ng-container>
     </a>
 
-    <ul class="flex items-center gap-4 lg:gap-10 text-sm lg:text-base font-medium shrink-0">
-      <li *ngFor="let link of fixedLinks" [class.hidden]="!esFijaVisible(link.path)">
+    <!-- Links + Buscador (todo en la misma fila) -->
+    <div class="flex items-center gap-6 lg:gap-10 shrink-0">
+      <!-- Links de navegación -->
+      <ul class="flex items-center gap-5 lg:gap-8 text-sm lg:text-[15px] font-medium">
+        <li *ngFor="let link of fixedLinks" [class.hidden]="!esFijaVisible(link.path)">
 
-        <a  [routerLink]="link.path"
-          routerLinkActive="text-blue-400"
-          class="relative inline-block transition-all duration-300 hover:text-blue-400 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(96,165,250,0.5)] after:content-[''] after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-blue-400 after:transition-all after:duration-300 hover:after:w-full"
-        >
-          {{ link.label }}
-        </a>
-      </li>
-
-      <li *ngFor="let p of inlineDynamic">
-        <a
-          [routerLink]="['/p', p.slug]"
-          routerLinkActive="text-blue-400"
-          class="relative inline-block transition-all duration-300 hover:text-blue-400 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(96,165,250,0.5)] after:content-[''] after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0 after:bg-blue-400 after:transition-all after:duration-300 hover:after:w-full"
-        >
-          {{ p.titulo }}
-        </a>
-      </li>
-
-      <li
-        *ngIf="hasOverflow"
-        class="mas-dropdown relative"
-        (mouseenter)="abrirMasHover()"
-        (mouseleave)="cerrarMasHover()"
-      >
-        <button
-          (click)="toggleMas($event)"
-          class="relative inline-flex items-center gap-1 transition-all duration-300 hover:text-blue-400 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]"
-        >
-          Más
-          <svg
-            class="w-4 h-4 transition-transform duration-200"
-            [class.rotate-180]="masAbierto"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          <a  [routerLink]="link.path"
+            routerLinkActive="link-activo"
+            class="relative inline-block py-1 transition-all duration-300 hover:text-blue-400 tracking-wide after:content-[''] after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:w-0 after:bg-gradient-to-r after:from-blue-400 after:to-cyan-400 after:transition-all after:duration-300 hover:after:w-full after:shadow-[0_0_10px_rgba(96,165,250,0.6)]"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </button>
+            {{ link.label }}
+          </a>
+        </li>
 
-        <!-- 🎨 MEGA MENÚ -->
-        <!-- 🎨 MEGA MENÚ -->
-        <div
-          class="absolute right-0 top-full mt-3 z-[60] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top-right"
-          [class.opacity-0]="!masAbierto"
-          [class.scale-95]="!masAbierto"
-          [class.opacity-100]="masAbierto"
-          [class.scale-100]="masAbierto"
-          [class.pointer-events-none]="!masAbierto"
-          [class.w-[420px]]="overflowPages.length <= 4"
-          [class.w-[640px]]="overflowPages.length > 4"
-        >
-          <!-- Header -->
-          <div class="px-5 pt-5 pb-2">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-              Más en Vortiz
-            </p>
-            <p class="text-xs text-gray-500 mt-0.5">Explora otras secciones del sitio</p>
-          </div>
+        <li *ngFor="let p of inlineDynamic">
 
-          <!-- Grid de páginas -->
-          <div
-            class="px-3 pb-3 pt-3 grid gap-1"
-            [class.grid-cols-1]="overflowPages.length <= 4"
-            [class.grid-cols-2]="overflowPages.length > 4"
+          <a  [routerLink]="['/p', p.slug]"
+            routerLinkActive="link-activo"
+            class="relative inline-block py-1 transition-all duration-300 hover:text-blue-400 tracking-wide after:content-[''] after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:w-0 after:bg-gradient-to-r after:from-blue-400 after:to-cyan-400 after:transition-all after:duration-300 hover:after:w-full after:shadow-[0_0_10px_rgba(96,165,250,0.6)]"
           >
-            <a
-              *ngFor="let p of overflowPages"
-              [routerLink]="['/p', p.slug]"
-              (click)="masAbierto = false"
-              class="group flex items-start gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-all"
+            {{ p.titulo }}
+          </a>
+        </li>
+
+        <!-- Menú "Más" -->
+        <li
+          *ngIf="hasOverflow"
+          class="mas-dropdown relative"
+          (mouseenter)="abrirMasHover()"
+          (mouseleave)="cerrarMasHover()"
+        >
+          <button
+            (click)="toggleMas($event)"
+            class="relative inline-flex items-center gap-1 py-1 transition-all duration-300 hover:text-blue-400 tracking-wide"
+          >
+            Más
+            <svg
+              class="w-4 h-4 transition-transform duration-200"
+              [class.rotate-180]="masAbierto"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <!-- Ícono con gradiente -->
-              <div
-                class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110"
-                [style.background]="iconoBgPagina(p)"
-              >
-                <ng-container [ngSwitch]="p.icono">
-                  <svg
-                    *ngSwitchCase="'document'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'home'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'users'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'building'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'briefcase'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'calendar'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'chart'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'trophy'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 19h6m-3-4v4m-7-7a8 8 0 0114-5 8 8 0 01-3 6 4 4 0 01-3 1H8a4 4 0 01-3-1 8 8 0 01-2-5z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'pencil'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'tag'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'star'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'phone'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'map'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'info'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <svg
-                    *ngSwitchCase="'lock'"
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                  <!-- Fallback -->
-                  <svg
-                    *ngSwitchDefault
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                </ng-container>
-              </div>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
 
-              <!-- Texto -->
-              <div class="flex-1 min-w-0">
-                <p
-                  class="text-sm font-semibold text-gray-900 group-hover:text-[#0a4d7a] transition-colors truncate"
-                >
-                  {{ p.titulo }}
-                </p>
-                <p
-                  *ngIf="p.descripcion"
-                  class="text-xs text-gray-500 mt-0.5 leading-snug line-clamp-2"
-                >
-                  {{ p.descripcion }}
-                </p>
-              </div>
-
-              <!-- Flecha que aparece en hover -->
-              <svg
-                class="w-4 h-4 text-gray-300 group-hover:text-[#0a4d7a] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all self-center shrink-0"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
-          </div>
-
-          <!-- Footer del mega menú -->
+          <!-- Mega menú -->
           <div
-            class="px-5 py-2.5 border-t border-gray-100 bg-gray-50/60 flex items-center justify-between"
+            class="absolute right-0 top-full mt-3 z-[60] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top-right"
+            [class.opacity-0]="!masAbierto"
+            [class.scale-95]="!masAbierto"
+            [class.opacity-100]="masAbierto"
+            [class.scale-100]="masAbierto"
+            [class.pointer-events-none]="!masAbierto"
+            [class.w-[420px]]="overflowPages.length <= 4"
+            [class.w-[640px]]="overflowPages.length > 4"
           >
-            <p class="text-[11px] text-gray-500">
-              {{ overflowPages.length }}
-              {{ overflowPages.length === 1 ? 'página adicional' : 'páginas adicionales' }}
-            </p>
-            <span class="text-[10px] text-gray-400 font-mono">ESC para cerrar</span>
+            <!-- Header del mega menú -->
+            <div class="px-5 pt-5 pb-2">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Más en Vortiz</p>
+              <p class="text-xs text-gray-500 mt-0.5">Explora otras secciones del sitio</p>
+            </div>
+
+            <!-- Grid de páginas (mismo contenido que ya tenías) -->
+            <div
+              class="px-3 pb-3 pt-3 grid gap-1"
+              [class.grid-cols-1]="overflowPages.length <= 4"
+              [class.grid-cols-2]="overflowPages.length > 4"
+            >
+
+              <a  *ngFor="let p of overflowPages"
+                [routerLink]="['/p', p.slug]"
+                (click)="masAbierto = false"
+                class="group flex items-start gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition-all"
+              >
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110" [style.background]="iconoBgPagina(p)">
+                  <ng-container [ngSwitch]="p.icono">
+                    <!-- Aquí pega los mismos SVGs que ya tenías del mega menú actual -->
+                    <svg *ngSwitchCase="'document'" class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <svg *ngSwitchCase="'home'" class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <svg *ngSwitchCase="'users'" class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    <svg *ngSwitchCase="'building'" class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <svg *ngSwitchCase="'briefcase'" class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    <svg *ngSwitchCase="'calendar'" class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <svg *ngSwitchDefault class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  </ng-container>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-gray-900 group-hover:text-[#0a4d7a] transition-colors truncate">{{ p.titulo }}</p>
+                  <p *ngIf="p.descripcion" class="text-xs text-gray-500 mt-0.5 leading-snug line-clamp-2">{{ p.descripcion }}</p>
+                </div>
+                <svg class="w-4 h-4 text-gray-300 group-hover:text-[#0a4d7a] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all self-center shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-5 py-2.5 border-t border-gray-100 bg-gray-50/60 flex items-center justify-between">
+              <p class="text-[11px] text-gray-500">
+                {{ overflowPages.length }} {{ overflowPages.length === 1 ? 'página adicional' : 'páginas adicionales' }}
+              </p>
+              <span class="text-[10px] text-gray-400 font-mono">ESC para cerrar</span>
+            </div>
+          </div>
+        </li>
+      </ul>
+
+      <!-- Separador vertical sutil -->
+      <div class="w-px h-6 bg-white/15"></div>
+
+      <!-- ============ BUSCADOR INLINE (icono lupa que expande) ============ -->
+      <div class="buscador-inline relative" (click)="$event.stopPropagation()">
+        <div
+          class="flex items-center overflow-hidden transition-all duration-300 ease-in-out"
+          [class.w-10]="!buscadorInlineExpandido()"
+          [class.w-64]="buscadorInlineExpandido()"
+          [class.lg:w-80]="buscadorInlineExpandido()"
+        >
+          <!-- Icono lupa (siempre visible) -->
+          <button
+            (click)="toggleBuscadorInline($event)"
+            [title]="buscadorInlineExpandido() ? 'Cerrar búsqueda (Esc)' : 'Buscar'"
+            class="w-10 h-10 shrink-0 flex items-center justify-center text-white/80 hover:text-white transition-all rounded-full z-10 relative"
+            [class.hover:bg-white/10]="!buscadorInlineExpandido()"
+          >
+            <svg class="w-5 h-5 transition-transform duration-300" [class.rotate-90]="buscadorInlineExpandido()" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path *ngIf="!buscadorInlineExpandido()" stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              <path *ngIf="buscadorInlineExpandido()" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+
+          <!-- Input expandido -->
+          <div
+            class="relative flex-1 min-w-0 transition-opacity duration-200"
+            [class.opacity-0]="!buscadorInlineExpandido()"
+            [class.opacity-100]="buscadorInlineExpandido()"
+            [class.pointer-events-none]="!buscadorInlineExpandido()"
+          >
+            <input
+              type="text"
+              [value]="queryBusqueda()"
+              (input)="onInputBusqueda($event)"
+              placeholder="Buscar en el sitio..."
+              data-buscador-navbar
+              class="w-full pl-2 pr-16 h-10 bg-white/10 backdrop-blur-xl hover:bg-white/15 focus:bg-white text-white focus:text-gray-900 placeholder-white/50 focus:placeholder-gray-400 rounded-r-full text-sm outline-none border border-l-0 border-white/10 focus:border-blue-400 transition-all"
+            />
           </div>
         </div>
-      </li>
-    </ul>
+
+        <!-- Panel de resultados del buscador inline -->
+        <div
+          class="absolute right-0 top-full mt-3 z-50 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden w-96 max-h-[70vh] overflow-y-auto transition-all duration-200 origin-top-right"
+          [class.opacity-0]="!buscadorEscritorioAbierto"
+          [class.scale-95]="!buscadorEscritorioAbierto"
+          [class.opacity-100]="buscadorEscritorioAbierto"
+          [class.scale-100]="buscadorEscritorioAbierto"
+          [class.pointer-events-none]="!buscadorEscritorioAbierto"
+        >
+          <!-- Aquí pega TODO el contenido del panel de resultados que ya tenías -->
+          <!-- Estado: CON RESULTADOS, SIN RESULTADOS, y SIN QUERY (sugerencias + recientes + populares) -->
+          <!-- Copia íntegro el bloque interno del panel actual -->
+
+          <ng-container *ngIf="!queryBusqueda().trim()">
+            <div *ngIf="busquedasRecientes().length > 0" class="px-5 py-4 border-b border-gray-100">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Búsquedas recientes</p>
+                <button (click)="limpiarTodasRecientes()" class="text-[10px] text-gray-400 hover:text-red-500 transition-colors">Limpiar</button>
+              </div>
+              <ul class="flex flex-col">
+                <li *ngFor="let r of busquedasRecientes()" class="group flex items-center justify-between py-1.5 px-2 hover:bg-gray-50 rounded-lg">
+                  <button (click)="buscarRapido(r)" class="flex items-center gap-2 flex-1 text-left">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-sm text-gray-700">{{ r }}</span>
+                  </button>
+                  <button (click)="eliminarReciente($event, r)" class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <div class="px-5 py-4 border-b border-gray-100">
+              <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Sugerencias</p>
+              <ul class="flex flex-col">
+                <li><a routerLink="/servicios" (click)="colapsarBuscadorInline()" class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg><span class="text-sm text-gray-700">Servicios de arquitectura</span></a></li>
+                <li><a routerLink="/proyectos" (click)="colapsarBuscadorInline()" class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg><span class="text-sm text-gray-700">Proyectos realizados</span></a></li>
+                <li><a routerLink="/citas" (click)="colapsarBuscadorInline()" class="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-gray-50"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg><span class="text-sm text-gray-700">Agendar una cita</span></a></li>
+              </ul>
+            </div>
+
+            <div class="px-5 py-4">
+              <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Búsquedas populares</p>
+              <div class="flex flex-wrap gap-2">
+                <button *ngFor="let p of busquedasPopulares" (click)="buscarRapido(p)" class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 rounded-full text-gray-700 transition-colors">{{ p }}</button>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Estado: CON RESULTADOS -->
+          <div *ngIf="queryBusqueda().trim() && resultadosBusqueda().length > 0" class="py-2">
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 px-5 py-2">
+              {{ resultadosBusqueda().length }} {{ resultadosBusqueda().length === 1 ? 'resultado' : 'resultados' }}
+            </p>
+            <button *ngFor="let r of resultadosBusqueda()" (click)="abrirResultado(r, $event); colapsarBuscadorInline()" class="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors text-left">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" [class.bg-blue-100]="r.tipo === 'pagina'" [class.bg-green-100]="r.tipo === 'servicio'" [class.bg-purple-100]="r.tipo === 'proyecto'" [class.bg-orange-100]="r.tipo === 'pagina-dinamica'">
+                <svg *ngIf="r.tipo === 'pagina'" class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <svg *ngIf="r.tipo === 'servicio'" class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <svg *ngIf="r.tipo === 'proyecto'" class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <svg *ngIf="r.tipo === 'pagina-dinamica'" class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <p class="text-sm font-semibold text-gray-900 truncate">{{ r.titulo }}</p>
+                  <span *ngIf="r.badge" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded shrink-0">{{ r.badge }}</span>
+                </div>
+                <p *ngIf="r.contexto" class="text-[10px] text-blue-600 font-semibold mt-0.5">{{ r.contexto }}</p>
+                <p *ngIf="r.descripcion" class="text-xs text-gray-500 truncate mt-0.5">{{ r.descripcion }}</p>
+              </div>
+              <svg class="w-4 h-4 text-gray-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+
+          <!-- Estado: SIN RESULTADOS -->
+          <div *ngIf="queryBusqueda().trim() && resultadosBusqueda().length === 0" class="py-10 text-center">
+            <div class="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+            </div>
+            <p class="text-sm font-semibold text-gray-700">No encontramos nada para «{{ queryBusqueda() }}»</p>
+            <p class="text-xs text-gray-500 mt-1">Prueba con otras palabras</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- ❌ ELIMINA por completo el bloque "Buscador escritorio" que estaba en fila aparte -->
 
   <!-- Barra principal móvil -->
   <div class="md:hidden flex items-center justify-between px-2 py-4 gap-2">
@@ -1438,3 +1325,22 @@
     </div>
   </aside>
 </div>
+<style>
+  /* Link activo con barra siempre visible */
+  .link-activo {
+    color: rgb(96, 165, 250);
+    font-weight: 600;
+  }
+  .link-activo::after {
+    width: 100% !important;
+    box-shadow: 0 0 12px rgba(96, 165, 250, 0.7);
+  }
+
+  /* Glassmorphism al scroll */
+  .navbar-container.backdrop-blur-xl {
+    background: rgba(10, 22, 48, 0.7);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+</style>
