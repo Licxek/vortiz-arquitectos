@@ -418,4 +418,23 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
     requestAnimationFrame(animar);
   }
+
+  // ============ BUSCADOR MÓVIL FULL-SCREEN ============
+  buscadorMovilAbierto = signal(false);
+
+  abrirBuscadorMovil() {
+    this.buscadorMovilAbierto.set(true);
+    this.buscadorAdminAbierto = true;
+    setTimeout(() => {
+      const input = document.querySelector('[data-buscador-movil]') as HTMLInputElement;
+      input?.focus();
+    }, 200);
+  }
+
+  cerrarBuscadorMovil() {
+    this.buscadorMovilAbierto.set(false);
+    this.buscadorAdminAbierto = false;
+    this.queryBuscador = '';
+    this.onQueryBuscadorChange('');
+  }
 }

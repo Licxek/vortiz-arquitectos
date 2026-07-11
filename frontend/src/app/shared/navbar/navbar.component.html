@@ -1,15 +1,12 @@
 <!-- 🎨 Wrapper con altura fija para evitar el parpadeo del glassmorphism -->
 <nav
-  class="sticky top-0 z-30 text-[var(--color-texto-nav)] transition-colors duration-300"
-  [class.navbar-glass]="scrolled"
+  class="sticky top-0 z-30 text-[var(--color-texto-nav)] shadow-lg transition-all duration-300"
   [style.background]="
-    !scrolled
-      ? 'linear-gradient(to bottom, ' +
-        (configuracion?.color_degradado_inicio || '#000000') +
-        ', ' +
-        (configuracion?.color_degradado_fin || '#0a1f3d') +
-        ')'
-      : 'transparent'
+    'linear-gradient(to bottom, ' +
+    (configuracion?.color_degradado_inicio || '#000000') +
+    ', ' +
+    (configuracion?.color_degradado_fin || '#0a1f3d') +
+    ')'
   "
 >
   <!-- ============ BARRA PRINCIPAL ESCRITORIO ============ -->
@@ -517,13 +514,5 @@
   .link-activo::after {
     width: 100% !important;
     box-shadow: 0 0 12px rgba(96, 165, 250, 0.7);
-  }
-
-  /* 🌫️ Glassmorphism al scroll — aplicado al <nav> completo para evitar parpadeo */
-  .navbar-glass {
-    background: rgba(10, 22, 48, 0.6) !important;
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   }
 </style>

@@ -146,14 +146,13 @@
 
         <!-- ============ ACCIONES A LA DERECHA ============ -->
         <div class="flex items-center gap-1 md:gap-1.5 shrink-0">
-          <!-- 🔍 Buscador estilo navbar (redondeado full + blur unificado) -->
-          <div class="relative buscador-admin-wrapper" (click)="$event.stopPropagation()">
-            <!-- Contenedor que se expande -->
+          <!-- 🔍 Buscador (desktop: inline expandible / móvil: botón + overlay full-screen) -->
+
+          <!-- === DESKTOP: inline expandible === -->
+          <div class="relative buscador-admin-wrapper hidden md:block" (click)="$event.stopPropagation()">
             <div
               class="flex items-center overflow-hidden transition-all duration-300 ease-in-out rounded-full"
               [class.w-10]="!buscadorExpandido()"
-              [class.w-52]="buscadorExpandido()"
-              [class.sm:w-64]="buscadorExpandido()"
               [class.md:w-80]="buscadorExpandido()"
               [class.lg:w-[420px]]="buscadorExpandido()"
               [class.bg-white/10]="buscadorExpandido()"
@@ -161,37 +160,17 @@
               [class.border]="buscadorExpandido()"
               [class.border-white/15]="buscadorExpandido()"
             >
-              <!-- Icono lupa (siempre visible) -->
               <button
                 (click)="toggleBuscadorExpandido($event)"
                 [title]="buscadorExpandido() ? 'Cerrar búsqueda (Esc)' : 'Buscar (Ctrl+K)'"
                 class="w-10 h-10 shrink-0 flex items-center justify-center text-white/80 hover:text-white transition-all rounded-full z-10 relative"
                 [class.hover:bg-white/10]="!buscadorExpandido()"
               >
-                <svg
-                  class="w-5 h-5 transition-transform duration-300"
-                  [class.rotate-90]="buscadorExpandido()"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    *ngIf="!buscadorExpandido()"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                  <path
-                    *ngIf="buscadorExpandido()"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                <svg class="w-5 h-5 transition-transform duration-300" [class.rotate-90]="buscadorExpandido()" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path *ngIf="!buscadorExpandido()" stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  <path *ngIf="buscadorExpandido()" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
               </button>
-
-              <!-- Input (aparece con fade cuando se expande) -->
               <input
                 type="text"
                 [ngModel]="queryBuscador"
@@ -205,14 +184,23 @@
                 [class.pointer-events-none]="!buscadorExpandido()"
               />
             </div>
-
-            <!-- Panel de resultados (dropdown app-buscador-admin) -->
             <app-buscador-admin
               [abierto]="buscadorAdminAbierto"
               [query]="queryBuscador"
               (cerrar)="colapsarBuscador()"
             />
           </div>
+
+          <!-- === MÓVIL: solo botón que abre overlay full-screen === -->
+          <button
+            (click)="abrirBuscadorMovil()"
+            class="md:hidden w-10 h-10 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+            title="Buscar"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </button>
 
 
           <!-- 🔔 Notificaciones -->
@@ -1355,6 +1343,66 @@
           {{ confirmModal.textoConfirmar }}
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ============ BUSCADOR MÓVIL FULL-SCREEN ============ -->
+  <div
+    class="md:hidden fixed inset-0 z-[100] bg-white transition-all duration-300 ease-out"
+    [class.translate-y-0]="buscadorMovilAbierto()"
+    [class.opacity-100]="buscadorMovilAbierto()"
+    [class.-translate-y-4]="!buscadorMovilAbierto()"
+    [class.opacity-0]="!buscadorMovilAbierto()"
+    [class.pointer-events-none]="!buscadorMovilAbierto()"
+  >
+    <!-- Header con gradient premium -->
+    <div class="relative bg-gradient-to-br from-[#050b18] via-[#0a1630] to-[#0f2447] px-3 py-3 flex items-center gap-2 overflow-hidden">
+      <!-- Orbe de luz decorativo -->
+      <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Botón cerrar -->
+      <button
+        (click)="cerrarBuscadorMovil()"
+        class="relative p-2 text-white shrink-0 hover:bg-white/10 rounded-full transition-colors"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+
+      <!-- Input full-width -->
+      <div class="relative flex-1 flex items-center bg-white rounded-full px-4 py-2 shadow-md">
+        <svg class="w-5 h-5 text-gray-400 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+        </svg>
+        <input
+          type="text"
+          [ngModel]="queryBuscador"
+          (ngModelChange)="onQueryBuscadorChange($event)"
+          placeholder="Buscar en el panel..."
+          data-buscador-movil
+          class="flex-1 text-gray-800 text-sm bg-transparent outline-none"
+        />
+        <button
+          *ngIf="queryBuscador"
+          (click)="onQueryBuscadorChange('')"
+          class="text-gray-400 hover:text-gray-700 ml-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Contenido: resultados del buscador -->
+    <div class="overflow-y-auto h-[calc(100vh-72px)] bg-white">
+      <!-- Componente de resultados del admin -->
+      <app-buscador-admin
+        [abierto]="true"
+        [query]="queryBuscador"
+        (cerrar)="cerrarBuscadorMovil()"
+      />
     </div>
   </div>
 </div>
