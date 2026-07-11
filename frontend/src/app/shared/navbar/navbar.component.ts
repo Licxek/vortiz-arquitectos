@@ -273,8 +273,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (!target.closest('.mas-dropdown')) {
       this.masAbierto = false;
     }
-    if (!target.closest('.buscador-escritorio')) {
+    if (!target.closest('.buscador-escritorio') && !target.closest('.buscador-inline')) {
       this.buscadorEscritorioAbierto = false;
+      // Si el buscador inline está expandido y no hay query, colapsar
+      if (this.buscadorInlineExpandido() && !this.queryBusqueda().trim()) {
+        this.buscadorInlineExpandido.set(false);
+      }
     }
   }
 
@@ -284,6 +288,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.buscadorAbierto = false;
     this.masAbierto = false;
     this.buscadorEscritorioAbierto = false;
+    this.buscadorInlineExpandido.set(false);
   }
 
   /** Genera el gradient del icono de una página dinámica en el mega menú */
@@ -345,5 +350,33 @@ export class NavbarComponent implements OnInit, OnDestroy {
     const slug = path === '/home' ? '/' : path;
     const config = this.paginasFijasConfig.find((c) => c.slug === slug);
     return config ? config.visible : true;
+  }
+  // ============ BUSCADOR INLINE (estilo Gmail) ============
+  buscadorInlineExpandido = signal(false);
+
+  expandirBuscadorInline() {
+    this.buscadorInlineExpandido.set(true);
+    this.buscadorEscritorioAbierto = true;
+    this.busquedasRecientes.set(this.busquedaService.obtenerRecientes());
+    setTimeout(() => {
+      const input = document.querySelector('[data-buscador-navbar]') as HTMLInputElement;
+      input?.focus();
+    }, 200);
+  }
+
+  colapsarBuscadorInline() {
+    this.buscadorInlineExpandido.set(false);
+    this.buscadorEscritorioAbierto = false;
+    this.queryBusqueda.set('');
+    this.resultadosBusqueda.set([]);
+  }
+
+  toggleBuscadorInline(event: Event) {
+    event.stopPropagation();
+    if (this.buscadorInlineExpandido()) {
+      this.colapsarBuscadorInline();
+    } else {
+      this.expandirBuscadorInline();
+    }
   }
 }
