@@ -24,7 +24,7 @@
 
     <!-- ============ MINI BARRA SUPERIOR (28px) ============ -->
     <div class="relative border-b border-white/5">
-      <div class="px-4 md:px-6 h-7 flex items-center justify-between text-[11px]">
+      <div class="px-3 md:px-6 h-7 flex items-center justify-between text-[10px] md:text-[11px]">
         <!-- Izquierda: breadcrumb contextual con separador -->
         <div class="flex items-center gap-2 text-white/60 min-w-0">
           <span class="hidden md:inline-flex items-center gap-1.5">
@@ -146,21 +146,27 @@
 
         <!-- ============ ACCIONES A LA DERECHA ============ -->
         <div class="flex items-center gap-1 md:gap-1.5 shrink-0">
-          <!-- 🔍 Buscador estilo Gmail (empuja iconos hacia la derecha al expandir) -->
-          <div class="relative" (click)="$event.stopPropagation()">
+          <!-- 🔍 Buscador estilo navbar (redondeado full + blur unificado) -->
+          <div class="relative buscador-admin-wrapper" (click)="$event.stopPropagation()">
+            <!-- Contenedor que se expande -->
             <div
-              class="flex items-center overflow-hidden transition-all duration-300 ease-in-out"
+              class="flex items-center overflow-hidden transition-all duration-300 ease-in-out rounded-full"
               [class.w-10]="!buscadorExpandido()"
-              [class.w-72]="buscadorExpandido()"
+              [class.w-52]="buscadorExpandido()"
+              [class.sm:w-64]="buscadorExpandido()"
               [class.md:w-80]="buscadorExpandido()"
               [class.lg:w-[420px]]="buscadorExpandido()"
+              [class.bg-white/10]="buscadorExpandido()"
+              [class.backdrop-blur-xl]="buscadorExpandido()"
+              [class.border]="buscadorExpandido()"
+              [class.border-white/15]="buscadorExpandido()"
             >
               <!-- Icono lupa (siempre visible) -->
               <button
                 (click)="toggleBuscadorExpandido($event)"
                 [title]="buscadorExpandido() ? 'Cerrar búsqueda (Esc)' : 'Buscar (Ctrl+K)'"
-                class="w-10 h-10 shrink-0 flex items-center justify-center text-white/70 hover:text-white transition-all rounded-lg z-10 relative"
-                [class.hover:bg-white/5]="!buscadorExpandido()"
+                class="w-10 h-10 shrink-0 flex items-center justify-center text-white/80 hover:text-white transition-all rounded-full z-10 relative"
+                [class.hover:bg-white/10]="!buscadorExpandido()"
               >
                 <svg
                   class="w-5 h-5 transition-transform duration-300"
@@ -185,31 +191,22 @@
                 </svg>
               </button>
 
-              <!-- Input expandido (aparece con fade) -->
-              <div
-                class="relative flex-1 min-w-0 transition-opacity duration-200"
+              <!-- Input (aparece con fade cuando se expande) -->
+              <input
+                type="text"
+                [ngModel]="queryBuscador"
+                (ngModelChange)="onQueryBuscadorChange($event)"
+                (click)="$event.stopPropagation()"
+                placeholder="Buscar en el panel..."
+                data-buscador-trigger
+                class="flex-1 min-w-0 pl-1 pr-4 h-10 bg-transparent text-white placeholder-white/50 text-sm outline-none transition-opacity duration-200"
                 [class.opacity-0]="!buscadorExpandido()"
                 [class.opacity-100]="buscadorExpandido()"
                 [class.pointer-events-none]="!buscadorExpandido()"
-              >
-                <input
-                  type="text"
-                  [ngModel]="queryBuscador"
-                  (ngModelChange)="onQueryBuscadorChange($event)"
-                  placeholder="Buscar en el panel..."
-                  data-buscador-trigger
-                  class="w-full pl-2 pr-16 h-10 bg-white/[0.08] backdrop-blur-xl hover:bg-white/[0.12] focus:bg-white text-white focus:text-gray-900 placeholder-white/40 focus:placeholder-gray-400 rounded-r-lg text-sm outline-none border border-l-0 border-white/10 focus:border-blue-400 transition-all"
-                />
-                <!-- Shortcut ESC dentro del input -->
-                <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                  <kbd class="px-1.5 py-0.5 text-[10px] font-mono text-white/50 bg-white/10 rounded border border-white/10">
-                    ESC
-                  </kbd>
-                </div>
-              </div>
+              />
             </div>
 
-            <!-- Dropdown de resultados -->
+            <!-- Panel de resultados (dropdown app-buscador-admin) -->
             <app-buscador-admin
               [abierto]="buscadorAdminAbierto"
               [query]="queryBuscador"
@@ -1067,28 +1064,89 @@
         [class.-translate-x-full]="!menuMovilAbierto"
         [class.translate-x-0]="menuMovilAbierto"
       >
-        <div
-          class="bg-gradient-to-b from-black via-[#071020] to-[#0a1f3d] px-4 py-4 flex items-center justify-between"
-        >
-          <div class="flex items-center gap-3">
-            <img
-              [src]="configuracion?.logo_url || '/assets/img/logo.png'"
-              alt="Logo"
-              class="h-10 w-auto"
-            />
-            <span class="font-semibold text-sm text-white">Menú</span>
+        <!-- Header estilo principal (mismo gradient + orbes + grid + status) -->
+        <div class="relative px-4 py-4 text-white overflow-hidden">
+          <!-- Gradient de fondo IDÉNTICO al header principal -->
+          <div class="absolute inset-0 bg-gradient-to-br from-[#050b18] via-[#0a1630] to-[#0f2447]">
+            <!-- Orbe de luz -->
+            <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
+            <!-- Grid decorativo sutil -->
+            <div
+              class="absolute inset-0 opacity-[0.04]"
+              style="
+                background-image:
+                  linear-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px);
+                background-size: 24px 24px;
+              "
+            ></div>
           </div>
-          <button (click)="menuMovilAbierto = false" class="text-white">
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
+
+          <!-- Contenido -->
+          <div class="relative flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <div class="relative shrink-0">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-xl blur-md"></div>
+                <img
+                  [src]="configuracion?.logo_url || '/assets/img/logo.png'"
+                  alt="Vortiz"
+                  class="relative h-10 w-auto"
+                />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm font-bold leading-tight tracking-tight truncate">
+                  {{ configuracion?.nombre || 'Vortiz Arquitectos' }}
+                </p>
+                <p class="text-[10px] text-blue-300/60 uppercase tracking-widest font-semibold mt-0.5">
+                  Panel de control
+                </p>
+              </div>
+            </div>
+
+            <button
+              (click)="menuMovilAbierto = false"
+              class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors shrink-0"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Mini status del sitio abajo del header (opcional, muy premium) -->
+          <div class="relative mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-[10px]">
+            <div class="flex items-center gap-1.5">
+              <span class="relative flex h-2 w-2">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                  [class.bg-green-400]="statusSitio === 'online'"
+                  [class.bg-amber-400]="statusSitio === 'mantenimiento'"
+                  [class.bg-red-400]="statusSitio === 'offline'"
+                ></span>
+                <span
+                  class="relative inline-flex rounded-full h-2 w-2"
+                  [class.bg-green-400]="statusSitio === 'online'"
+                  [class.bg-amber-400]="statusSitio === 'mantenimiento'"
+                  [class.bg-red-400]="statusSitio === 'offline'"
+                ></span>
+              </span>
+              <span
+                class="uppercase tracking-widest font-bold"
+                [class.text-green-300]="statusSitio === 'online'"
+                [class.text-amber-300]="statusSitio === 'mantenimiento'"
+                [class.text-red-300]="statusSitio === 'offline'"
+              >
+                {{
+                  statusSitio === 'online'
+                    ? 'Sitio en vivo'
+                    : statusSitio === 'mantenimiento'
+                      ? 'Mantenimiento'
+                      : 'Offline'
+                }}
+              </span>
+            </div>
+            <span class="text-white/50 font-mono tracking-wider">{{ fechaActual() }}</span>
+          </div>
         </div>
 
         <nav class="flex-1 py-4 overflow-y-auto">
