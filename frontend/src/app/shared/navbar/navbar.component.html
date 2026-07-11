@@ -1,20 +1,24 @@
 <nav
-  class="sticky top-0 z-30 text-[var(--color-texto-nav)] shadow-lg transition-all duration-300"
+  class="sticky top-0 z-30 text-[var(--color-texto-nav)] transition-all duration-300"
+  [class.shadow-lg]="!scrolled"
   [style.background]="
-    'linear-gradient(to bottom, ' +
-    (configuracion?.color_degradado_inicio || '#000000') +
-    ', ' +
-    (configuracion?.color_degradado_fin || '#0a1f3d') +
-    ')'
+    !scrolled
+      ? 'linear-gradient(to bottom, ' +
+        (configuracion?.color_degradado_inicio || '#000000') +
+        ', ' +
+        (configuracion?.color_degradado_fin || '#0a1f3d') +
+        ')'
+      : 'transparent'
   "
 >
   <!-- ============ BARRA PRINCIPAL ESCRITORIO ============ -->
   <div
     class="navbar-container relative w-full hidden md:flex items-center justify-between transition-all duration-500 ease-out"
-    [ngClass]="scrolled ? 'px-6 lg:px-8 py-3 backdrop-blur-xl bg-white/5 border-b border-white/10' : 'px-6 lg:px-16 py-4 lg:py-6'"
+    [ngClass]="scrolled ? 'px-6 lg:px-8 py-3 navbar-scrolled' : 'px-6 lg:px-16 py-4 lg:py-6'"
   >
     <!-- Logo con glow premium -->
-    <a routerLink="/" class="flex items-center gap-3 lg:gap-4 min-w-0 group relative">
+    <!-- Logo limpio -->
+    <a routerLink="/" class="flex items-center gap-3 lg:gap-4 min-w-0">
       <!-- Skeleton -->
       <ng-container *ngIf="cargando()">
         <app-skeleton variant="rect" width="80px" height="80px" />
@@ -26,15 +30,13 @@
 
       <!-- Contenido real -->
       <ng-container *ngIf="!cargando()">
-        <div class="relative shrink-0">
-          <!-- Glow al hover -->
-          <div class="absolute inset-0 bg-gradient-to-br from-blue-400/40 to-cyan-400/40 rounded-2xl blur-xl opacity-0 group-hover:opacity-70 transition-opacity duration-500"></div>
+        <<div class="relative shrink-0">
           <img
             [ngSrc]="configuracion?.logo_url || '/assets/img/logo.png'"
             width="200"
             height="200"
             alt="Vortiz Arquitectos"
-            class="relative w-auto transition-all duration-500 group-hover:scale-105"
+            class="relative w-auto transition-all duration-500"
             [ngClass]="scrolled ? 'h-12 lg:h-14' : 'h-16 md:h-20 lg:h-24'"
             priority
           />
@@ -996,11 +998,11 @@
     box-shadow: 0 0 12px rgba(96, 165, 250, 0.7);
   }
 
-  /* Glassmorphism al scroll */
-  .navbar-container.backdrop-blur-xl {
-    background: rgba(10, 22, 48, 0.7);
+  /* 🌫️ Glassmorphism al scroll (CSS puro, garantizado) */
+  .navbar-scrolled {
+    background: rgba(10, 22, 48, 0.6) !important;
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
 </style>
