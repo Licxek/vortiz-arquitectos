@@ -349,9 +349,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   colapsarBuscador() {
-    this.buscadorExpandido.set(false);
+    this.buscadorExpandido.set(false); // 👈 FALTABA ESTO
     this.buscadorAdminAbierto = false;
     this.queryBuscador = '';
+    this.onQueryBuscadorChange(''); // limpia también el subject/signal interno
   }
 
   toggleBuscadorExpandido(event: Event) {
