@@ -106,16 +106,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   };
 
-  // 👇 NUEVO método
+  private resizeObserver: ResizeObserver | null = null;
+
   private actualizarAlturaNavbar() {
-    // Guardar altura del navbar en una CSS variable
-    setTimeout(() => {
-      const nav = document.querySelector('nav.sticky') as HTMLElement;
-      if (nav) {
-        const altura = nav.offsetHeight;
-        document.documentElement.style.setProperty('--navbar-altura', `${altura}px`);
-      }
-    }, 50);
+    const nav = document.querySelector('nav.sticky') as HTMLElement;
+    if (nav) {
+      const altura = nav.offsetHeight;
+      document.documentElement.style.setProperty('--navbar-altura', `${altura}px`);
+    }
   }
 
   ngOnInit() {
@@ -123,7 +121,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.configuracion = c;
       this.cargando.set(false);
       this.cdr.markForCheck();
-      setTimeout(() => this.actualizarAlturaNavbar(), 100); // 👈 NUEVO
+      // Actualizar altura después del render
+      setTimeout(() => {
+        this.actualizarAlturaNavbar();
+        this.observarAlturaNavbar(); // 👈 NUEVO
+      }, 100);
     });
 
     this.paginasService.getPaginasParaMenu().subscribe({
@@ -150,9 +152,22 @@ export class NavbarComponent implements OnInit, OnDestroy {
     });
   }
 
+  // 👇 NUEVO método
+  private observarAlturaNavbar() {
+    const nav = document.querySelector('nav.sticky') as HTMLElement;
+    if (nav && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        const altura = nav.offsetHeight;
+        document.documentElement.style.setProperty('--navbar-altura', `${altura}px`);
+      });
+      this.resizeObserver.observe(nav);
+    }
+  }
+
   ngOnDestroy() {
     window.removeEventListener('scroll', this.scrollHandler);
     if (this.busquedaTimer) clearTimeout(this.busquedaTimer);
+    if (this.resizeObserver) this.resizeObserver.disconnect(); // 👈 NUEVO
   }
 
   /** Si hay 1-2 dinámicas → inline. Si hay 3+ → todas al mega menú. */
@@ -393,5 +408,4 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.expandirBuscadorInline();
     }
   }
-
 }
