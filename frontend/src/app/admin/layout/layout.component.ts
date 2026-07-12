@@ -358,6 +358,9 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.buscadorExpandido.set(false);
     this.buscadorAdminAbierto = false;
     this.queryBuscador = '';
+    // 🔥 Quitar foco del input para evitar líneas residuales
+    const input = document.querySelector('[data-buscador-trigger]') as HTMLInputElement;
+    input?.blur();
   }
 
   toggleBuscadorExpandido(event: Event) {

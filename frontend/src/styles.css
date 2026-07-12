@@ -118,3 +118,9 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* 🔥 Fix del sidebar móvil que se corta al scrollear en el navegador */
+.sidebar-movil-safe {
+  height: 100vh;
+  height: 100dvh; /* dynamic viewport height - se ajusta a la UI del navegador */
+}
