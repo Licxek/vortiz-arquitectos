@@ -142,3 +142,24 @@ a, button, [role="button"] {
   -webkit-user-select: none;
   user-select: none;
 }
+
+/* 🔥 Quitar el efecto azul de overscroll en Chrome Android (glow effect) */
+html,
+body {
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+}
+
+/* Cuando el sidebar está abierto, bloquear el overscroll del body detrás */
+body:has(.sidebar-movil-safe.translate-x-0) {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+/* Los contenedores scrollables también */
+.sidebar-movil-safe,
+.sidebar-nav,
+main.overflow-y-auto {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
