@@ -164,8 +164,7 @@
         <div
           class="flex items-center overflow-hidden transition-all duration-300 ease-in-out rounded-full"
           [class.w-10]="!buscadorInlineExpandido()"
-          [class.w-64]="buscadorInlineExpandido()"
-          [class.lg:w-80]="buscadorInlineExpandido()"
+          [class.w-96]="buscadorInlineExpandido()"
           [class.bg-white/10]="buscadorInlineExpandido()"
           [class.backdrop-blur-xl]="buscadorInlineExpandido()"
           [class.border]="buscadorInlineExpandido()"
@@ -326,7 +325,7 @@
   ></div>
 
   <aside
-    class="fixed top-0 left-0 z-50 w-80 max-w-[85vw] h-full bg-white text-gray-800 flex flex-col shadow-2xl transform transition-transform duration-300 ease-out"
+    class="fixed top-0 left-0 z-50 w-80 max-w-[85vw] bg-white text-gray-800 flex flex-col shadow-2xl transform transition-transform duration-300 ease-out sidebar-movil-safe"
     [class.-translate-x-full]="!menuAbierto"
     [class.translate-x-0]="menuAbierto"
   >
