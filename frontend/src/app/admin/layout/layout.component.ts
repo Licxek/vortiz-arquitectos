@@ -172,6 +172,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   toggleMenuMovil() {
     this.menuMovilAbierto = !this.menuMovilAbierto;
+    // 🔥 Bloquear scroll del body cuando el sidebar está abierto
+    document.body.style.overflow = this.menuMovilAbierto ? 'hidden' : '';
   }
 
   toggleMenuUsuario(event: Event) {

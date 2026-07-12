@@ -188,6 +188,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   toggleMenu() {
     this.menuAbierto = !this.menuAbierto;
     if (this.menuAbierto) this.buscadorAbierto = false;
+    // 🔥 Bloquear scroll del body cuando el sidebar está abierto
+    document.body.style.overflow = this.menuAbierto ? 'hidden' : '';
   }
 
   toggleBuscador() {
