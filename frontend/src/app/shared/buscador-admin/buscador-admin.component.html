@@ -1,7 +1,10 @@
 <div
   *ngIf="abierto"
-  class="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col text-gray-800 vortiz-buscador-entrada"
-  style="max-height: 70vh; z-index: 60"
+  [ngClass]="modoMovil
+    ? 'relative w-full bg-white flex flex-col text-gray-800 vortiz-buscador-entrada'
+    : 'absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col text-gray-800 vortiz-buscador-entrada'"
+  [style.max-height]="modoMovil ? 'none' : '70vh'"
+  [style.z-index]="modoMovil ? 'auto' : 60"
 >
   <!-- Estado: cargando -->
   <div *ngIf="cargando()" class="p-12 text-center">
