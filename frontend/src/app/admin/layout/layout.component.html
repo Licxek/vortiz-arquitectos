@@ -1403,14 +1403,13 @@
     </div>
 
     <!-- Contenido: componente de resultados -->
-    <div class="flex-1 overflow-y-auto bg-white relative">
-      <div class="buscador-movil-wrapper">
-        <app-buscador-admin
-          [abierto]="true"
-          [query]="queryBuscador"
-          (cerrar)="cerrarBuscadorMovil()"
-        />
-      </div>
+    <div class="flex-1 overflow-y-auto bg-white">
+      <app-buscador-admin
+        [abierto]="buscadorMovilAbierto()"
+        [query]="queryBuscador"
+        [modoMovil]="true"
+        (cerrar)="cerrarBuscadorMovil()"
+      />
     </div>
   </div>
 </div>

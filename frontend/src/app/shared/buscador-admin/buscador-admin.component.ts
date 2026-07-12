@@ -32,6 +32,7 @@ import { obtenerCategoriaConfig, CategoriaConfig } from '../../core/services/cat
 export class BuscadorAdminComponent implements OnChanges, OnDestroy {
   @Input() abierto = false;
   @Input() query = '';
+  @Input() modoMovil = false; // 👈 NUEVO: modo bottom sheet móvil
   @Output() cerrar = new EventEmitter<void>();
   trackById = (_i: number, item: ResultadoBusqueda) => item.id;
   trackByKey = (_i: number, entry: any) => entry.key;
@@ -142,6 +143,7 @@ export class BuscadorAdminComponent implements OnChanges, OnDestroy {
   @HostListener('document:click', ['$event'])
   onClickFuera(event: MouseEvent) {
     if (!this.abierto) return;
+    if (this.modoMovil) return; // 👈 en móvil, el bottom sheet maneja el cierre
     const target = event.target as HTMLElement;
     if (this.elementRef.nativeElement.contains(target)) return;
     if (target.closest('[data-buscador-trigger]')) return;

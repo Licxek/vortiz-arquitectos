@@ -124,3 +124,21 @@
   height: 100vh;
   height: 100dvh; /* dynamic viewport height - se ajusta a la UI del navegador */
 }
+
+/* 🔥 Quitar el tap highlight azul en móvil */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Asegurar que enlaces y botones no muestren el highlight al scrollear */
+a, button, [role="button"] {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-touch-callout: none;
+}
+
+/* Prevenir selección accidental al scrollear en sidebars */
+.sidebar-movil-safe a,
+.sidebar-movil-safe button {
+  -webkit-user-select: none;
+  user-select: none;
+}

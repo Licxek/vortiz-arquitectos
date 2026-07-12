@@ -96,33 +96,3 @@ header * {
 .animate-pulse {
   animation: pulse-badge 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-
-/* 🔥 Fix del app-buscador-admin dentro del bottom sheet móvil */
-.buscador-movil-wrapper {
-  width: 100%;
-  min-height: 100%;
-}
-
-.buscador-movil-wrapper ::ng-deep app-buscador-admin,
-.buscador-movil-wrapper ::ng-deep app-buscador-admin > * {
-  display: block;
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-/* Forzar dropdown flotante a renderizarse inline en móvil */
-.buscador-movil-wrapper ::ng-deep [class*="absolute"] {
-  position: static !important;
-  transform: none !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  border: none !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  top: auto !important;
-  right: auto !important;
-  left: auto !important;
-}
