@@ -1343,24 +1343,32 @@
     </div>
   </div>
 
-  <!-- ============ BUSCADOR MÓVIL FULL-SCREEN ============ -->
+  <!-- ============ BUSCADOR MÓVIL BOTTOM SHEET (estilo Mercado Libre) ============ -->
+  <!-- Backdrop oscuro -->
   <div
-    class="md:hidden fixed inset-0 z-[100] bg-white transition-all duration-300 ease-out"
-    [class.translate-y-0]="buscadorMovilAbierto()"
-    [class.opacity-100]="buscadorMovilAbierto()"
-    [class.-translate-y-4]="!buscadorMovilAbierto()"
+    class="md:hidden fixed inset-0 z-[99] bg-black/50 transition-opacity duration-300"
     [class.opacity-0]="!buscadorMovilAbierto()"
+    [class.opacity-100]="buscadorMovilAbierto()"
+    [class.pointer-events-none]="!buscadorMovilAbierto()"
+    (click)="cerrarBuscadorMovil()"
+  ></div>
+
+  <!-- Sheet completo -->
+  <div
+    class="md:hidden fixed inset-0 z-[100] bg-white flex flex-col transition-transform duration-300 ease-out"
+    [class.translate-y-0]="buscadorMovilAbierto()"
+    [class.translate-y-full]="!buscadorMovilAbierto()"
     [class.pointer-events-none]="!buscadorMovilAbierto()"
   >
     <!-- Header con gradient premium -->
-    <div class="relative bg-gradient-to-br from-[#050b18] via-[#0a1630] to-[#0f2447] px-3 py-3 flex items-center gap-2 overflow-hidden">
-      <!-- Orbe de luz decorativo -->
+    <div class="relative bg-gradient-to-br from-[#050b18] via-[#0a1630] to-[#0f2447] px-3 py-3 flex items-center gap-2 overflow-hidden shrink-0 shadow-lg">
       <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute top-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <!-- Botón cerrar -->
+      <!-- Botón cerrar (flecha atrás) -->
       <button
         (click)="cerrarBuscadorMovil()"
-        class="relative p-2 text-white shrink-0 hover:bg-white/10 rounded-full transition-colors"
+        class="relative w-10 h-10 flex items-center justify-center text-white shrink-0 hover:bg-white/10 rounded-full transition-colors"
       >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -1368,22 +1376,22 @@
       </button>
 
       <!-- Input full-width -->
-      <div class="relative flex-1 flex items-center bg-white rounded-full px-4 py-2 shadow-md">
+      <div class="relative flex-1 flex items-center bg-white rounded-full pl-4 pr-2 h-11 shadow-lg">
         <svg class="w-5 h-5 text-gray-400 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
         </svg>
         <input
           type="text"
-          [ngModel]="queryBuscador"
-          (ngModelChange)="onQueryBuscadorChange($event)"
+          [value]="queryBuscador"
+          (input)="onQueryBuscadorMovilChange($any($event.target).value)"
           placeholder="Buscar en el panel..."
           data-buscador-movil
-          class="flex-1 text-gray-800 text-sm bg-transparent outline-none"
+          class="flex-1 text-gray-800 text-sm bg-transparent outline-none min-w-0"
         />
         <button
           *ngIf="queryBuscador"
-          (click)="onQueryBuscadorChange('')"
-          class="text-gray-400 hover:text-gray-700 ml-2"
+          (click)="onQueryBuscadorMovilChange('')"
+          class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors shrink-0"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -1392,11 +1400,10 @@
       </div>
     </div>
 
-    <!-- Contenido: resultados del buscador -->
-    <div class="overflow-y-auto h-[calc(100vh-72px)] bg-white">
-      <!-- Componente de resultados del admin -->
+    <!-- Contenido: componente de resultados -->
+    <div class="flex-1 overflow-y-auto bg-white relative">
       <app-buscador-admin
-        [abierto]="true"
+        [abierto]="buscadorMovilAbierto()"
         [query]="queryBuscador"
         (cerrar)="cerrarBuscadorMovil()"
       />
