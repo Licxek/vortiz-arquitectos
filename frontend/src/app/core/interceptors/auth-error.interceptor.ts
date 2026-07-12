@@ -18,7 +18,19 @@ export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
         const esLogin = req.url.includes('/auth/login');
 
         if (!enLogin && !esLogin) {
-          sessionExpired.mostrar('cerrada-remota');
+          // 🎯 Leer el código del backend para diferenciar
+          const code = error.error?.code;
+
+          if (code === 'SESION_CERRADA_REMOTA') {
+            // Alguien cerró tu sesión desde otro dispositivo (o admin la revocó)
+            sessionExpired.mostrar('cerrada-remota');
+          } else {
+            // TOKEN_EXPIRADO (JWT vencido por tiempo)
+            // TOKEN_INVALIDO (JWT alterado)
+            // NO_AUTENTICADO (sin token)
+            // O cualquier otro 401 sin code
+            sessionExpired.mostrar('expirada');
+          }
         }
       }
       return throwError(() => error);

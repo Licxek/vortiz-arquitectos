@@ -25,9 +25,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
       if (estado === 'cerrada') {
         // 🔒 La sesión fue cerrada explícitamente → rechazar
-        throw new UnauthorizedException(
-          'Tu sesión fue cerrada. Vuelve a iniciar sesión.',
-        );
+        throw new UnauthorizedException({
+          message: 'Tu sesión fue cerrada. Vuelve a iniciar sesión.',
+          code: 'SESION_CERRADA_REMOTA',
+        });
       }
 
       if (estado === 'no_existe') {
@@ -67,4 +68,5 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
     return req.ip || req.connection?.remoteAddress || '';
   }
+  
 }
