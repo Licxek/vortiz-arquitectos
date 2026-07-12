@@ -193,8 +193,23 @@ export class NavbarComponent implements OnInit, OnDestroy {
   toggleBuscador() {
     this.buscadorAbierto = !this.buscadorAbierto;
     if (this.buscadorAbierto) {
+      this.menuAbierto = false; // 👈 cierra menú móvil si estaba abierto
       this.busquedasRecientes.set(this.busquedaService.obtenerRecientes());
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => {
+        const input = document.querySelector('[data-buscador-movil-navbar]') as HTMLInputElement;
+        input?.focus();
+      }, 300);
+    } else {
+      document.body.style.overflow = '';
     }
+  }
+
+  cerrarBuscadorMovil() {
+    this.buscadorAbierto = false;
+    this.queryBusqueda.set('');
+    this.resultadosBusqueda.set([]);
+    document.body.style.overflow = ''; // 🔥 libera scroll
   }
 
   toggleMas(event: Event) {
@@ -314,6 +329,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
   @HostListener('document:keydown.escape')
   cerrarTodo() {
     this.menuAbierto = false;
+    if (this.buscadorAbierto) {
+      document.body.style.overflow = ''; // 👈 libera scroll al cerrar con Esc
+    }
     this.buscadorAbierto = false;
     this.masAbierto = false;
     this.buscadorEscritorioAbierto = false;
@@ -408,4 +426,5 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.expandirBuscadorInline();
     }
   }
+
 }

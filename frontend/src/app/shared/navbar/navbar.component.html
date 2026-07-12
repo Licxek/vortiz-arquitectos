@@ -302,82 +302,16 @@
       </ng-container>
     </a>
 
-    <!-- Buscador móvil: mismo estilo que desktop (icono + expande) -->
-    <div class="buscador-inline relative shrink-0" (click)="$event.stopPropagation()">
-      <div
-        class="flex items-center overflow-hidden transition-all duration-300 ease-in-out rounded-full"
-        [class.w-10]="!buscadorInlineExpandido()"
-        [class.w-52]="buscadorInlineExpandido()"
-        [class.bg-white/10]="buscadorInlineExpandido()"
-        [class.backdrop-blur-xl]="buscadorInlineExpandido()"
-        [class.border]="buscadorInlineExpandido()"
-        [class.border-white/15]="buscadorInlineExpandido()"
-      >
-        <button
-          (click)="toggleBuscadorInline($event)"
-          class="w-10 h-10 shrink-0 flex items-center justify-center text-white/80 hover:text-white transition-all rounded-full z-10 relative"
-          [class.hover:bg-white/10]="!buscadorInlineExpandido()"
-        >
-          <svg class="w-5 h-5 transition-transform duration-300" [class.rotate-90]="buscadorInlineExpandido()" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path *ngIf="!buscadorInlineExpandido()" stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            <path *ngIf="buscadorInlineExpandido()" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-        <input
-          type="text"
-          [value]="queryBusqueda()"
-          (input)="onInputBusqueda($event)"
-          (click)="$event.stopPropagation()"
-          placeholder="Buscar..."
-          class="flex-1 min-w-0 pl-1 pr-3 h-10 bg-transparent text-white placeholder-white/50 text-sm outline-none transition-opacity duration-200"
-          [class.opacity-0]="!buscadorInlineExpandido()"
-          [class.opacity-100]="buscadorInlineExpandido()"
-          [class.pointer-events-none]="!buscadorInlineExpandido()"
-        />
-      </div>
-
-      <!-- Panel de resultados móvil (dropdown compacto) -->
-      <div
-        class="fixed left-3 right-3 top-16 z-[55] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-h-[70vh] overflow-y-auto transition-all duration-200"
-        [class.opacity-0]="!buscadorEscritorioAbierto"
-        [class.scale-95]="!buscadorEscritorioAbierto"
-        [class.opacity-100]="buscadorEscritorioAbierto"
-        [class.scale-100]="buscadorEscritorioAbierto"
-        [class.pointer-events-none]="!buscadorEscritorioAbierto"
-      >
-        <ng-container *ngIf="!queryBusqueda().trim()">
-          <div class="px-4 py-3 border-b border-gray-100">
-            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Sugerencias</p>
-            <ul class="flex flex-col">
-              <li><a routerLink="/servicios" (click)="colapsarBuscadorInline()" class="flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-gray-50"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg><span class="text-sm text-gray-700">Servicios</span></a></li>
-              <li><a routerLink="/proyectos" (click)="colapsarBuscadorInline()" class="flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-gray-50"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg><span class="text-sm text-gray-700">Proyectos</span></a></li>
-              <li><a routerLink="/citas" (click)="colapsarBuscadorInline()" class="flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-gray-50"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg><span class="text-sm text-gray-700">Agendar cita</span></a></li>
-            </ul>
-          </div>
-          <div class="px-4 py-3">
-            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Populares</p>
-            <div class="flex flex-wrap gap-1.5">
-              <button *ngFor="let p of busquedasPopulares" (click)="buscarRapido(p)" class="text-xs px-2.5 py-1 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 rounded-full text-gray-700 transition-colors">{{ p }}</button>
-            </div>
-          </div>
-        </ng-container>
-        <div *ngIf="queryBusqueda().trim() && resultadosBusqueda().length > 0" class="py-1">
-          <button *ngFor="let r of resultadosBusqueda()" (click)="abrirResultado(r, $event); colapsarBuscadorInline()" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" [class.bg-blue-100]="r.tipo === 'pagina'" [class.bg-green-100]="r.tipo === 'servicio'" [class.bg-purple-100]="r.tipo === 'proyecto'" [class.bg-orange-100]="r.tipo === 'pagina-dinamica'">
-              <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-gray-900 truncate">{{ r.titulo }}</p>
-              <p *ngIf="r.descripcion" class="text-xs text-gray-500 truncate mt-0.5">{{ r.descripcion }}</p>
-            </div>
-          </button>
-        </div>
-        <div *ngIf="queryBusqueda().trim() && resultadosBusqueda().length === 0" class="py-8 text-center">
-          <p class="text-sm text-gray-700 font-semibold">Sin resultados</p>
-          <p class="text-xs text-gray-500 mt-1">Prueba con otras palabras</p>
-        </div>
-      </div>
-    </div>
+    <!-- Buscador móvil: botón que abre bottom sheet estilo Mercado Libre -->
+    <button
+      (click)="toggleBuscador()"
+      class="w-10 h-10 shrink-0 flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+      title="Buscar"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+    </button>
   </div>
 </nav>
 
@@ -503,6 +437,195 @@
       </p>
     </div>
   </aside>
+</div>
+
+<!-- ============ BUSCADOR MÓVIL BOTTOM SHEET (estilo Mercado Libre) ============ -->
+<!-- Backdrop oscuro -->
+<div
+  class="md:hidden fixed inset-0 z-[59] bg-black/50 transition-opacity duration-300"
+  [class.opacity-0]="!buscadorAbierto"
+  [class.opacity-100]="buscadorAbierto"
+  [class.pointer-events-none]="!buscadorAbierto"
+  (click)="cerrarBuscadorMovil()"
+></div>
+
+<!-- Sheet que sube desde abajo -->
+<div
+  class="md:hidden fixed inset-0 z-[60] bg-white flex flex-col transition-transform duration-300 ease-out"
+  [class.translate-y-0]="buscadorAbierto"
+  [class.translate-y-full]="!buscadorAbierto"
+  [class.pointer-events-none]="!buscadorAbierto"
+>
+  <!-- Header con gradient dinámico igual al nav -->
+  <div
+    class="relative px-3 py-3 flex items-center gap-2 overflow-hidden shrink-0 shadow-lg"
+    [style.background]="
+      'linear-gradient(to bottom, ' +
+      (configuracion?.color_degradado_inicio || '#000000') +
+      ', ' +
+      (configuracion?.color_degradado_fin || '#0a1f3d') +
+      ')'
+    "
+  >
+    <!-- Orbes decorativos -->
+    <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-0 left-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Botón atrás -->
+    <button
+      (click)="cerrarBuscadorMovil()"
+      class="relative w-10 h-10 flex items-center justify-center text-white shrink-0 hover:bg-white/10 rounded-full transition-colors"
+    >
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+
+    <!-- Input grande -->
+    <div class="relative flex-1 flex items-center bg-white rounded-full pl-4 pr-2 h-11 shadow-lg">
+      <svg class="w-5 h-5 text-gray-400 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+      </svg>
+      <input
+        type="text"
+        placeholder="Busca en Vortiz Arquitectos"
+        class="flex-1 text-gray-800 text-sm bg-transparent outline-none min-w-0"
+        [value]="queryBusqueda()"
+        (input)="onInputBusqueda($event)"
+        data-buscador-movil-navbar
+      />
+      <button
+        *ngIf="queryBusqueda()"
+        (click)="limpiarQuery()"
+        class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors shrink-0"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenido scrollable -->
+  <div class="flex-1 overflow-y-auto bg-white">
+    <!-- CON RESULTADOS -->
+    <div *ngIf="queryBusqueda().trim() && resultadosBusqueda().length > 0" class="py-2">
+      <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 px-4 py-2">
+        {{ resultadosBusqueda().length }} {{ resultadosBusqueda().length === 1 ? 'resultado' : 'resultados' }}
+      </p>
+      <button
+        *ngFor="let r of resultadosBusqueda()"
+        (click)="abrirResultado(r, $event); cerrarBuscadorMovil()"
+        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+      >
+        <div
+          class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+          [class.bg-blue-100]="r.tipo === 'pagina'"
+          [class.bg-green-100]="r.tipo === 'servicio'"
+          [class.bg-purple-100]="r.tipo === 'proyecto'"
+          [class.bg-orange-100]="r.tipo === 'pagina-dinamica'"
+        >
+          <svg *ngIf="r.tipo === 'pagina'" class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <svg *ngIf="r.tipo === 'servicio'" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+          <svg *ngIf="r.tipo === 'proyecto'" class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+          <svg *ngIf="r.tipo === 'pagina-dinamica'" class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <p class="text-sm font-semibold text-gray-900 truncate">{{ r.titulo }}</p>
+            <span *ngIf="r.badge" class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded shrink-0">{{ r.badge }}</span>
+          </div>
+          <p *ngIf="r.contexto" class="text-[10px] text-blue-600 font-semibold mt-0.5">{{ r.contexto }}</p>
+          <p *ngIf="r.descripcion" class="text-xs text-gray-500 truncate mt-0.5">{{ r.descripcion }}</p>
+        </div>
+      </button>
+    </div>
+
+    <!-- SIN RESULTADOS -->
+    <div *ngIf="queryBusqueda().trim() && resultadosBusqueda().length === 0" class="py-16 text-center px-6">
+      <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+        <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+        </svg>
+      </div>
+      <p class="text-sm font-semibold text-gray-700">No encontramos «{{ queryBusqueda() }}»</p>
+      <p class="text-xs text-gray-500 mt-1">Prueba con otras palabras</p>
+    </div>
+
+    <!-- SIN QUERY -->
+    <ng-container *ngIf="!queryBusqueda().trim()">
+      <!-- Recientes -->
+      <div *ngIf="busquedasRecientes().length > 0" class="px-4 py-4 border-b border-gray-100">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Búsquedas recientes</p>
+          <button (click)="limpiarTodasRecientes()" class="text-[10px] text-gray-400 hover:text-red-500">Limpiar</button>
+        </div>
+        <ul class="flex flex-col gap-0.5">
+          <li *ngFor="let r of busquedasRecientes()" class="group flex items-center justify-between py-2 px-2 hover:bg-gray-50 rounded-lg">
+            <button (click)="buscarRapido(r)" class="flex items-center gap-2 flex-1 text-left">
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-sm text-gray-700">{{ r }}</span>
+            </button>
+            <button (click)="eliminarReciente($event, r)" class="p-1 text-gray-400 hover:text-red-500">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Sugerencias -->
+      <div class="px-4 py-4 border-b border-gray-100">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Sugerencias</p>
+        <ul class="flex flex-col gap-1">
+          <li>
+            <a routerLink="/servicios" (click)="cerrarBuscadorMovil()" class="flex items-center gap-3 py-3 px-2 rounded-lg hover:bg-gray-50">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+              </svg>
+              <span class="text-sm text-gray-700">Servicios de arquitectura</span>
+            </a>
+          </li>
+          <li>
+            <a routerLink="/proyectos" (click)="cerrarBuscadorMovil()" class="flex items-center gap-3 py-3 px-2 rounded-lg hover:bg-gray-50">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+              </svg>
+              <span class="text-sm text-gray-700">Proyectos realizados</span>
+            </a>
+          </li>
+          <li>
+            <a routerLink="/citas" (click)="cerrarBuscadorMovil()" class="flex items-center gap-3 py-3 px-2 rounded-lg hover:bg-gray-50">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+              </svg>
+              <span class="text-sm text-gray-700">Agendar una cita</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Populares -->
+      <div class="px-4 py-4">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Búsquedas populares</p>
+        <div class="flex flex-wrap gap-2">
+          <button *ngFor="let p of busquedasPopulares" (click)="buscarRapido(p)" class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 rounded-full text-gray-700 transition-colors">{{ p }}</button>
+        </div>
+      </div>
+    </ng-container>
+  </div>
 </div>
 
 <style>

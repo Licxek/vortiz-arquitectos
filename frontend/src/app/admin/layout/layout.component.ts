@@ -190,11 +190,17 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     localStorage.setItem('sidebar_colapsado', String(this.sidebarColapsado));
   }
 
-  @HostListener('document:click')
-  onDocumentClick() {
-    this.menuUsuarioAbierto = false;
-    // Si el buscador está expandido pero vacío, colapsar al hacer clic fuera
-    if (this.buscadorExpandido() && !this.queryBuscador) {
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+
+    // Cerrar menú de usuario si el click es fuera
+    if (!target.closest('.relative')) {
+      this.menuUsuarioAbierto = false;
+    }
+
+    // Colapsar buscador si el click es fuera del wrapper
+    if (this.buscadorExpandido() && !target.closest('.buscador-admin-wrapper')) {
       this.colapsarBuscador();
     }
   }
@@ -349,10 +355,9 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   colapsarBuscador() {
-    this.buscadorExpandido.set(false); // 👈 FALTABA ESTO
+    this.buscadorExpandido.set(false);
     this.buscadorAdminAbierto = false;
     this.queryBuscador = '';
-    this.onQueryBuscadorChange(''); // limpia también el subject/signal interno
   }
 
   toggleBuscadorExpandido(event: Event) {
@@ -426,16 +431,24 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   abrirBuscadorMovil() {
     this.buscadorMovilAbierto.set(true);
     this.buscadorAdminAbierto = true;
+    document.body.style.overflow = 'hidden'; // 🔥 bloquea scroll del body
     setTimeout(() => {
       const input = document.querySelector('[data-buscador-movil]') as HTMLInputElement;
       input?.focus();
-    }, 200);
+    }, 300);
   }
 
   cerrarBuscadorMovil() {
     this.buscadorMovilAbierto.set(false);
     this.buscadorAdminAbierto = false;
     this.queryBuscador = '';
-    this.onQueryBuscadorChange('');
+    document.body.style.overflow = ''; // 🔥 libera scroll del body
   }
+
+  // Método específico para el input del móvil que NO afecta al desktop
+  onQueryBuscadorMovilChange(valor: string) {
+    this.queryBuscador = valor;
+  }
+
+
 }
