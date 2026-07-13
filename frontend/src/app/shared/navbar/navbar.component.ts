@@ -330,10 +330,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape')
   cerrarTodo() {
-    this.menuAbierto = false;
-    if (this.buscadorAbierto) {
-      document.body.style.overflow = ''; // 👈 libera scroll al cerrar con Esc
+    // 🔥 Libera scroll si CUALQUIERA de los overlays estaba abierto
+    if (this.menuAbierto || this.buscadorAbierto) {
+      document.body.style.overflow = '';
     }
+    this.menuAbierto = false;
     this.buscadorAbierto = false;
     this.masAbierto = false;
     this.buscadorEscritorioAbierto = false;
@@ -429,4 +430,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Cierra el menú móvil y libera el scroll del body */
+  cerrarMenuMovil() {
+    this.menuAbierto = false;
+    document.body.style.overflow = '';
+  }
 }
