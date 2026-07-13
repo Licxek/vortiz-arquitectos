@@ -30,16 +30,47 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   private cargarUsuarioInicial(): Usuario | null {
-    const raw = localStorage.getItem('vortiz_user');
-    return raw ? JSON.parse(raw) : null;
+    // 🔒 Al recargar la página, solo cargamos datos mínimos
+    // El resto se obtiene con /auth/me (silencioso, en background)
+    const raw = localStorage.getItem('vortiz_user_min');
+    if (!raw) return null;
+    try {
+      const min = JSON.parse(raw);
+      // Cargamos los datos completos en background al iniciar
+      this.refrescarUsuarioDesdeBackend();
+      return min as Usuario;
+    } catch {
+      return null;
+    }
+  }
+
+  private refrescarUsuarioDesdeBackend() {
+    // Solo si hay token, evitar 401 innecesario
+    if (!this.getToken()) return;
+    this.http.get<Usuario>(`${this.apiUrl}/me`).subscribe({
+      next: (usuario) => {
+        this.usuarioSubject.next(usuario);
+      },
+      // Si falla (token expirado, etc.), el interceptor maneja el 401
+      error: () => {},
+    });
   }
 
   login(correo: string, password: string): Observable<LoginResp> {
     return this.http.post<LoginResp>(`${this.apiUrl}/login`, { correo, password }).pipe(
       tap((resp) => {
         localStorage.setItem('vortiz_token', resp.token);
-        localStorage.setItem('vortiz_user', JSON.stringify(resp.usuario));
-        this.usuarioSubject.next(resp.usuario); // 👈 emitir cambio
+        // 🔒 Guardamos solo lo mínimo en localStorage
+        // Datos completos siempre vienen del BehaviorSubject en memoria
+        localStorage.setItem(
+          'vortiz_user_min',
+          JSON.stringify({
+            id: resp.usuario.id,
+            nombre: resp.usuario.nombre,
+            rol: resp.usuario.rol,
+          }),
+        );
+        this.usuarioSubject.next(resp.usuario);
       }),
     );
   }
@@ -47,10 +78,16 @@ export class AuthService {
   getUser(): Usuario | null {
     return this.usuarioSubject.value;
   }
-
   setUser(usuario: Usuario): void {
-    localStorage.setItem('vortiz_user', JSON.stringify(usuario));
-    this.usuarioSubject.next(usuario); // 👈 emitir cambio
+    localStorage.setItem(
+      'vortiz_user_min',
+      JSON.stringify({
+        id: usuario.id,
+        nombre: usuario.nombre,
+        rol: usuario.rol,
+      }),
+    );
+    this.usuarioSubject.next(usuario);
   }
 
   getToken(): string | null {
@@ -77,7 +114,8 @@ export class AuthService {
 
   private limpiarSesion() {
     localStorage.removeItem('vortiz_token');
-    localStorage.removeItem('vortiz_user');
+    localStorage.removeItem('vortiz_user');       // por si acaso queda del key viejo
+    localStorage.removeItem('vortiz_user_min');   // el nuevo
     this.usuarioSubject.next(null);
   }
 
