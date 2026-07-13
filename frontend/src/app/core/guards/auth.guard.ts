@@ -7,12 +7,10 @@ export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
 
   const token = authService.getToken();
-  const user = authService.getUser();
 
-  // 🎯 Si no hay token O no hay usuario, no dejar pasar
-  if (!token || !user) {
-    // Limpiar cualquier residuo por si acaso
-    authService.logoutLocal();
+  // 🎯 Solo verificamos el token
+  // El user puede aún estar cargándose async - no importa aquí
+  if (!token) {
     router.navigate(['/admin/login']);
     return false;
   }
