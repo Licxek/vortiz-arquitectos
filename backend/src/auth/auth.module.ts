@@ -14,7 +14,7 @@ import { SesionesModule } from '../sesiones/sesiones.module';
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'cambia-esto',
-      signOptions: { expiresIn: '1d' },
+      signOptions: { expiresIn: '7d' },
     }),
     SesionesModule,
   ],
