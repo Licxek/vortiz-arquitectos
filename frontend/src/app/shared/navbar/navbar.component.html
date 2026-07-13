@@ -321,7 +321,7 @@
     [class.opacity-0]="!menuAbierto"
     [class.opacity-50]="menuAbierto"
     [class.pointer-events-none]="!menuAbierto"
-    (click)="menuAbierto = false"
+    (click)="cerrarMenuMovil()"
   ></div>
 
   <aside
@@ -357,7 +357,7 @@
           </span>
         </div>
       </div>
-      <button (click)="menuAbierto = false" class="p-2 rounded-full hover:bg-white/10 transition-colors shrink-0">
+      <button (click)="cerrarMenuMovil()" class="p-2 rounded-full hover:bg-white/10 transition-colors shrink-0">
         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
@@ -371,7 +371,7 @@
       </div>
       <ul class="px-3 flex flex-col gap-0.5 mb-4">
         <li *ngFor="let link of fixedLinks; let i = index" class="transition-all duration-300 ease-out" [class.opacity-0]="!menuAbierto" [class.-translate-x-4]="!menuAbierto" [class.opacity-100]="menuAbierto" [class.translate-x-0]="menuAbierto" [style.transitionDelay]="menuAbierto ? i * 40 + 50 + 'ms' : '0ms'">
-          <a [routerLink]="link.path" (click)="menuAbierto = false" routerLinkActive="bg-blue-50 text-blue-600" class="flex items-center gap-4 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
+          <a [routerLink]="link.path" (click)="cerrarMenuMovil()" routerLinkActive="bg-blue-50 text-blue-600" class="flex items-center gap-4 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
             <div class="w-9 h-9 rounded-lg bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
               <ng-container [ngSwitch]="link.label">
                 <svg *ngSwitchCase="'Inicio'" class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -384,7 +384,7 @@
           </a>
         </li>
         <li *ngFor="let p of paginasDinamicas; let i = index" class="transition-all duration-300 ease-out" [class.opacity-0]="!menuAbierto" [class.-translate-x-4]="!menuAbierto" [class.opacity-100]="menuAbierto" [class.translate-x-0]="menuAbierto" [style.transitionDelay]="menuAbierto ? (fixedLinks.length + i) * 40 + 50 + 'ms' : '0ms'">
-          <a [routerLink]="['/p', p.slug]" (click)="menuAbierto = false" routerLinkActive="bg-blue-50 text-blue-600" class="flex items-center gap-4 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
+          <a [routerLink]="['/p', p.slug]" (click)="cerrarMenuMovil()" routerLinkActive="bg-blue-50 text-blue-600" class="flex items-center gap-4 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
             <div class="w-9 h-9 rounded-lg bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
               <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
@@ -398,7 +398,7 @@
       </div>
       <ul class="px-3 mb-4">
         <li>
-          <a routerLink="/citas" (click)="menuAbierto = false" class="flex items-center gap-4 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
+          <a routerLink="/citas" (click)="cerrarMenuMovil()" class="flex items-center gap-4 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
             <div class="w-9 h-9 rounded-lg bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
               <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             </div>
@@ -412,7 +412,7 @@
       </div>
       <ul class="px-3 mb-4">
         <li>
-          <a [href]="'tel:' + configuracion?.telefono" class="flex items-center gap-4 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
+          <a [href]="'tel:' + configuracion?.telefono" (click)="cerrarMenuMovil()" class="flex items-center gap-4 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
             <div class="w-9 h-9 rounded-lg bg-green-50 group-hover:bg-green-100 flex items-center justify-center transition-colors">
               <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
             </div>
@@ -420,7 +420,7 @@
           </a>
         </li>
         <li>
-          <a [href]="'mailto:' + configuracion?.correo_contacto" class="flex items-center gap-4 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
+          <a [href]="'mailto:' + configuracion?.correo_contacto" (click)="cerrarMenuMovil()" class="flex items-center gap-4 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
             <div class="w-9 h-9 rounded-lg bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
               <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             </div>
