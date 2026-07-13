@@ -164,13 +164,29 @@ main.overflow-y-auto {
   -webkit-overflow-scrolling: touch;
 }
 
-/* 🛡️ Eliminar el "cuadro azul" del tap highlight en Android Chrome */
+/* 🛡️ Eliminar tap highlight + overscroll glow en Android Chrome */
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Ataca el overscroll glow desde múltiples elementos porque el scroll
+   puede estar en html, body, o en el wrapper de Angular */
 html,
-body {
+body,
+app-root {
   -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: none;
+  overscroll-behavior: none !important;
+  overscroll-behavior-y: none !important;
+  overscroll-behavior-x: none !important;
+}
+
+/* Evita el bounce horizontal accidental */
+body {
+  overflow-x: hidden;
+}
+
+/* Focus visible solo con teclado (no con touch) */
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
+  outline: none;
 }
