@@ -144,11 +144,11 @@ export class PerfilService {
       this.citasRepo.count({
         where: { createdAt: Between(primerDia, ultimoDia) },
       }),
-      // Citas con fecha_cita en el mes actual
+      // Citas con fecha en el mes actual
       this.citasRepo
         .createQueryBuilder('c')
-        .where('c.fecha_cita >= :desde', { desde: primerDiaStr })
-        .andWhere('c.fecha_cita <= :hasta', { hasta: ultimoDiaStr })
+        .where('c.fecha >= :desde', { desde: primerDiaStr })
+        .andWhere('c.fecha <= :hasta', { hasta: ultimoDiaStr })
         .getCount(),
       // Páginas publicadas (total actual, no del mes)
       this.paginasRepo.count({
