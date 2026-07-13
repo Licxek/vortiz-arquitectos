@@ -55,6 +55,7 @@ export class MantenimientoComponent implements OnInit, OnDestroy {
     if (this.intervalReloj) clearInterval(this.intervalReloj);
     if (this.intervalCountdown) clearInterval(this.intervalCountdown);
     if (this.intervalTick) clearInterval(this.intervalTick);
+    if (this.timeoutCopiado) clearTimeout(this.timeoutCopiado); // 👈 agregar
   }
 
   private formatearHora(d: Date): string {
@@ -181,4 +182,49 @@ export class MantenimientoComponent implements OnInit, OnDestroy {
   hayRedes = computed(
     () => !!(this.instagramUrl() || this.facebookUrl() || this.linkedinUrl()),
   );
+
+  // ============ COPIAR TELÉFONO ============
+  telefonoCopiado = signal(false);
+  private timeoutCopiado: any = null;
+
+  copiarTelefono() {
+    const tel = this.telefono();
+    if (!tel) return;
+
+    // Intento moderno (Clipboard API)
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(tel).then(
+        () => this.mostrarCopiado(),
+        () => this.copiarFallback(tel),
+      );
+    } else {
+      this.copiarFallback(tel);
+    }
+  }
+
+  private copiarFallback(texto: string) {
+    // Fallback para navegadores antiguos
+    const textarea = document.createElement('textarea');
+    textarea.value = texto;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      this.mostrarCopiado();
+    } catch {
+      // silencio
+    }
+    document.body.removeChild(textarea);
+  }
+
+  private mostrarCopiado() {
+    this.telefonoCopiado.set(true);
+    if (this.timeoutCopiado) clearTimeout(this.timeoutCopiado);
+    this.timeoutCopiado = setTimeout(() => {
+      this.telefonoCopiado.set(false);
+      this.timeoutCopiado = null;
+    }, 2000);
+  }
 }
