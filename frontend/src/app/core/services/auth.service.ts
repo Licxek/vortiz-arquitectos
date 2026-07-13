@@ -23,22 +23,21 @@ interface LoginResp {
 export class AuthService {
   private apiUrl = `${environment.apiUrl}/auth`;
 
-  // 👇 NUEVO: BehaviorSubject reactivo
-  private usuarioSubject = new BehaviorSubject<Usuario | null>(this.cargarUsuarioInicial());
+  // 👇 BehaviorSubject reactivo — se inicializa con lo del localStorage (síncrono)
+  private usuarioSubject = new BehaviorSubject<Usuario | null>(this.leerUsuarioLocalStorage());
   usuario$ = this.usuarioSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    // 🎯 Ahora sí this.http está disponible → refrescar desde backend
+    this.refrescarUsuarioDesdeBackend();
+  }
 
-  private cargarUsuarioInicial(): Usuario | null {
-    // 🔒 Al recargar la página, solo cargamos datos mínimos
-    // El resto se obtiene con /auth/me (silencioso, en background)
+  /** Lee el user mínimo de localStorage (síncrono, sin HTTP) */
+  private leerUsuarioLocalStorage(): Usuario | null {
     const raw = localStorage.getItem('vortiz_user_min');
     if (!raw) return null;
     try {
-      const min = JSON.parse(raw);
-      // Cargamos los datos completos en background al iniciar
-      this.refrescarUsuarioDesdeBackend();
-      return min as Usuario;
+      return JSON.parse(raw) as Usuario;
     } catch {
       return null;
     }
