@@ -38,6 +38,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   scrolled = false;
   buscadorEscritorioAbierto = false;
   cargando = signal(true);
+  // 🔥 Para bloqueo robusto de scroll sin overscroll glow
+  private scrollGuardado = 0;
 
   // 🔍 Búsqueda
   queryBusqueda = signal('');
@@ -187,9 +189,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   toggleMenu() {
     this.menuAbierto = !this.menuAbierto;
-    if (this.menuAbierto) this.buscadorAbierto = false;
-    // 🔥 Bloquear scroll del body cuando el sidebar está abierto
-    document.body.style.overflow = this.menuAbierto ? 'hidden' : '';
+    if (this.menuAbierto) {
+      this.buscadorAbierto = false;
+      this.bloquearScrollBody();
+    } else {
+      this.liberarScrollBody();
+    }
   }
 
   toggleBuscador() {
@@ -330,8 +335,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape')
   cerrarTodo() {
-    // 🔥 Libera scroll si CUALQUIERA de los overlays estaba abierto
-    if (this.menuAbierto || this.buscadorAbierto) {
+    // 🔥 Si el menú móvil estaba abierto, usar el liberador robusto
+    if (this.menuAbierto) {
+      this.liberarScrollBody();
+    }
+    // 🔥 Si el buscador móvil estaba abierto, libera scroll también
+    if (this.buscadorAbierto) {
       document.body.style.overflow = '';
     }
     this.menuAbierto = false;
@@ -433,10 +442,32 @@ export class NavbarComponent implements OnInit, OnDestroy {
   /** Cierra el menú móvil y libera el scroll del body */
   cerrarMenuMovil() {
     this.menuAbierto = false;
-    document.body.style.overflow = '';
+    this.liberarScrollBody();
     // 🔥 Quitar el focus del link tocado para evitar tap highlight residual
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
+  }
+
+  // ============ BLOQUEO ROBUSTO DE SCROLL (sin overscroll glow) ============
+  private bloquearScrollBody() {
+    this.scrollGuardado = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${this.scrollGuardado}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+  }
+
+  private liberarScrollBody() {
+    const scroll = this.scrollGuardado;
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    // Restaurar la posición ANTES de que el navegador tenga chance de mover algo
+    window.scrollTo(0, scroll);
+    this.scrollGuardado = 0;
   }
 }
