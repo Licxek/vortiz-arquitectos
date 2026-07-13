@@ -11,24 +11,17 @@ export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
-        // No mostrar el modal si:
-        // 1. Ya estamos en login (loop)
-        // 2. Es la petición de login (credenciales incorrectas)
         const enLogin = router.url.includes('/admin/login');
         const esLogin = req.url.includes('/auth/login');
+        // 🎯 Peticiones silenciosas NO muestran modal
+        const esSilenciosa = req.headers.get('X-Silent-Auth') === '1';
 
-        if (!enLogin && !esLogin) {
-          // 🎯 Leer el código del backend para diferenciar
+        if (!enLogin && !esLogin && !esSilenciosa) {
           const code = error.error?.code;
 
           if (code === 'SESION_CERRADA_REMOTA') {
-            // Alguien cerró tu sesión desde otro dispositivo (o admin la revocó)
             sessionExpired.mostrar('cerrada-remota');
           } else {
-            // TOKEN_EXPIRADO (JWT vencido por tiempo)
-            // TOKEN_INVALIDO (JWT alterado)
-            // NO_AUTENTICADO (sin token)
-            // O cualquier otro 401 sin code
             sessionExpired.mostrar('expirada');
           }
         }

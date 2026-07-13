@@ -45,14 +45,18 @@ export class AuthService {
   }
 
   private refrescarUsuarioDesdeBackend() {
-    // Solo si hay token, evitar 401 innecesario
     if (!this.getToken()) return;
-    this.http.get<Usuario>(`${this.apiUrl}/me`).subscribe({
+    // 🎯 Header custom para que el interceptor NO muestre modal si esto falla
+    this.http.get<Usuario>(`${this.apiUrl}/me`, {
+      headers: { 'X-Silent-Auth': '1' }
+    }).subscribe({
       next: (usuario) => {
         this.usuarioSubject.next(usuario);
       },
-      // Si falla (token expirado, etc.), el interceptor maneja el 401
-      error: () => {},
+      error: () => {
+        // Falló silenciosamente. Los datos mínimos ya están cargados
+        // desde localStorage, el usuario puede seguir usando la app.
+      },
     });
   }
 

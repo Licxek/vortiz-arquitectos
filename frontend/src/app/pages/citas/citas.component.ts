@@ -288,7 +288,6 @@ export class CitasComponent implements OnInit {
     this.configuracionService.configPublica$.subscribe((c) => {
       if (c) {
         this.configuracion = c;
-        console.log('🔍 Config pública recibida:', c); // 👈 TEMPORAL para debug
         if (c.agenda) {
           this.configAgenda = c.agenda;
           if (this.form().fecha) {
