@@ -434,5 +434,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
   cerrarMenuMovil() {
     this.menuAbierto = false;
     document.body.style.overflow = '';
+    // 🔥 Quitar el focus del link tocado para evitar tap highlight residual
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
   }
 }

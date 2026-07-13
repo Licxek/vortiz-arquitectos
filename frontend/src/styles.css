@@ -163,3 +163,14 @@ main.overflow-y-auto {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
+
+/* 🛡️ Eliminar el "cuadro azul" del tap highlight en Android Chrome */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
