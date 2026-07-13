@@ -71,7 +71,9 @@ export class AuthService {
           JSON.stringify({
             id: resp.usuario.id,
             nombre: resp.usuario.nombre,
+            apellidos: resp.usuario.apellidos,
             rol: resp.usuario.rol,
+            avatar: resp.usuario.avatar,
           }),
         );
         this.usuarioSubject.next(resp.usuario);
@@ -88,7 +90,9 @@ export class AuthService {
       JSON.stringify({
         id: usuario.id,
         nombre: usuario.nombre,
+        apellidos: usuario.apellidos,
         rol: usuario.rol,
+        avatar: usuario.avatar,
       }),
     );
     this.usuarioSubject.next(usuario);
