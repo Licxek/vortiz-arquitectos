@@ -164,29 +164,36 @@ main.overflow-y-auto {
   -webkit-overflow-scrolling: touch;
 }
 
-/* 🛡️ Eliminar tap highlight + overscroll glow en Android Chrome */
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Ataca el overscroll glow desde múltiples elementos porque el scroll
-   puede estar en html, body, o en el wrapper de Angular */
-html,
-body,
-app-root {
-  -webkit-tap-highlight-color: transparent;
+/* 🛡️ Anti tap-highlight + overscroll glow AGRESIVO */
+html {
   overscroll-behavior: none !important;
   overscroll-behavior-y: none !important;
   overscroll-behavior-x: none !important;
+  background-color: #050b18; /* mismo tono que el gradient del navbar */
 }
 
-/* Evita el bounce horizontal accidental */
 body {
-  overflow-x: hidden;
+  overscroll-behavior: none !important;
+  overscroll-behavior-y: none !important;
+  overscroll-behavior-x: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  background-color: #050b18;
 }
 
-/* Focus visible solo con teclado (no con touch) */
-a:focus:not(:focus-visible),
-button:focus:not(:focus-visible) {
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Focus visible SOLO con teclado (no con touch) */
+:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* Contenedores scrolleables tambien */
+*[class*="overflow-y-auto"],
+*[class*="overflow-auto"],
+main {
+  overscroll-behavior: contain;
 }
