@@ -469,4 +469,45 @@ export class NavbarComponent implements OnInit, OnDestroy {
   iconoBgFijo(link: NavItem): string {
     return `linear-gradient(135deg, ${link.color}, ${this.oscurecerHex(link.color, 25)})`;
   }
+
+  /** Fondo pastel suave del color (look flat tipo iOS) */
+  iconoBgSuaveFijo(link: NavItem): string {
+    // Devuelve el color con 15% de opacidad
+    return `${link.color}26`; // 26 en hex = ~15% de opacidad
+  }
+
+  /** Fondo pastel suave para páginas dinámicas */
+  iconoBgSuavePagina(p: Pagina): string {
+    const color = (p as any).color || 'blue';
+    if (typeof color === 'string' && color.startsWith('#')) {
+      return `${color}26`;
+    }
+    const PRESETS: Record<string, string> = {
+      blue: '#3B82F6',
+      green: '#10B981',
+      orange: '#F97316',
+      purple: '#8B5CF6',
+      pink: '#EC4899',
+      gray: '#6B7280',
+    };
+    const hex = PRESETS[color] || PRESETS['blue'];
+    return `${hex}26`;
+  }
+
+  /** Color sólido (para el SVG) de páginas dinámicas */
+  iconoColorPagina(p: Pagina): string {
+    const color = (p as any).color || 'blue';
+    if (typeof color === 'string' && color.startsWith('#')) {
+      return color;
+    }
+    const PRESETS: Record<string, string> = {
+      blue: '#3B82F6',
+      green: '#10B981',
+      orange: '#F97316',
+      purple: '#8B5CF6',
+      pink: '#EC4899',
+      gray: '#6B7280',
+    };
+    return PRESETS[color] || PRESETS['blue'];
+  }
 }
