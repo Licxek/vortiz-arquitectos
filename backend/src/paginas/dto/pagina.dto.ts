@@ -8,6 +8,7 @@ import {
   Length,
   ValidateNested,
   IsObject,
+  IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import type {
@@ -101,6 +102,11 @@ export class CrearPaginaDto {
   @IsString()
   @Length(0, 5000)
   notasInternas?: string;
+
+  // 👇 NUEVO — Programación de publicación
+  @IsOptional()
+  @IsDateString()
+  fechaPublicacion?: string;
 }
 
 export class ActualizarPaginaDto extends PartialType(CrearPaginaDto) {}
