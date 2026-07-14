@@ -45,18 +45,32 @@ export class AuthService {
 
   private refrescarUsuarioDesdeBackend() {
     if (!this.getToken()) return;
-    // 🎯 Header custom para que el interceptor NO muestre modal si esto falla
-    this.http.get<Usuario>(`${this.apiUrl}/me`, {
-      headers: { 'X-Silent-Auth': '1' }
-    }).subscribe({
-      next: (usuario) => {
-        this.usuarioSubject.next(usuario);
-      },
-      error: () => {
-        // Falló silenciosamente. Los datos mínimos ya están cargados
-        // desde localStorage, el usuario puede seguir usando la app.
-      },
-    });
+
+    // 🎯 No refrescar si estamos en rutas públicas del admin
+    // (evita disparar 401 cuando el usuario abre directo /admin/recuperar con token viejo)
+    const rutaActual = window.location.pathname;
+    const rutasPublicas = [
+      '/admin/login',
+      '/admin/recuperar',
+      '/admin/verificar-codigo',
+      '/admin/nueva-password',
+    ];
+    if (rutasPublicas.some((r) => rutaActual.startsWith(r))) {
+      return;
+    }
+
+    this.http
+      .get<Usuario>(`${this.apiUrl}/me`, {
+        headers: { 'X-Silent-Auth': '1' },
+      })
+      .subscribe({
+        next: (usuario) => {
+          this.usuarioSubject.next(usuario);
+        },
+        error: () => {
+          // Falla silenciosa
+        },
+      });
   }
 
   login(correo: string, password: string): Observable<LoginResp> {
