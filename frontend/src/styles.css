@@ -124,42 +124,34 @@
   height: 100vh;
   height: 100dvh; /* dynamic viewport height - se ajusta a la UI del navegador */
 }
-
-/* 🔥 Quitar el tap highlight azul en móvil */
-* {
-  -webkit-tap-highlight-color: transparent;
+ /* 🛡️ Anti tap-highlight + overscroll DEFINITIVO */
+html {
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  background-color: #ffffff; /* 👈 blanco, NO azul */
 }
 
-/* Asegurar que enlaces y botones no muestren el highlight al scrollear */
-a, button, [role="button"] {
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  -webkit-touch-callout: none;
-}
-
-/* Prevenir selección accidental al scrollear en sidebars */
-.sidebar-movil-safe a,
-.sidebar-movil-safe button {
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* 🔥 Quitar el efecto azul de overscroll en Chrome Android (glow effect) */
-html,
 body {
   overscroll-behavior: none;
   overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  -webkit-tap-highlight-color: transparent;
+  background-color: #ffffff; /* 👈 blanco, NO azul */
 }
 
-/* Cuando el sidebar está abierto, bloquear el overscroll del body detrás */
-body:has(.sidebar-movil-safe.translate-x-0) {
-  overflow: hidden;
-  overscroll-behavior: contain;
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Los contenedores scrollables también */
-.sidebar-movil-safe,
-.sidebar-nav,
-main.overflow-y-auto {
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+*[class*="overflow-y-auto"],
+*[class*="overflow-auto"],
+main {
   overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
 }
