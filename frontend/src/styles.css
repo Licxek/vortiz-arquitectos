@@ -161,7 +161,6 @@ main {
 app-navbar {
   display: block;
   isolation: isolate;
-  contain: layout paint style;
 }
 
 app-navbar nav {
@@ -170,16 +169,4 @@ app-navbar nav {
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  isolation: isolate;
-  contain: layout paint;
-}
-
-/* Prevenir overflow del compositor */
-html,
-body {
-  overflow-x: hidden;
-}
-
-body {
-  overflow-y: auto;
 }
