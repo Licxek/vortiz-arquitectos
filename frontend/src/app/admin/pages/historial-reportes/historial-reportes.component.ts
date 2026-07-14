@@ -19,16 +19,16 @@ import {
   ReporteHistorial,
 } from '../../../core/services/historial-reportes.service';
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
-import { SafeUrlPipe } from '../../../shared/pipes/safe-url.pipe';
 import { ActivatedRoute, Router, NavigationEnd, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser'; // ← Agregar si no está
 
 type OrdenTipo = 'reciente' | 'antiguo' | 'pesado' | 'ligero' | 'tipo';
 
 @Component({
   selector: 'app-historial-reportes',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, RouterLink, SafeUrlPipe],
+  imports: [CommonModule, FormsModule, SkeletonComponent, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './historial-reportes.component.html',
 })
@@ -71,9 +71,12 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
   // Modal Preview PDF
   modalPreviewAbierto = signal(false);
   reporteEnPreview = signal<ReporteHistorial | null>(null);
-  urlPreview = signal<string>('');
+  urlPreview = signal<string>(''); // el blob URL crudo (para revocar)
+  urlPreviewSegura = signal<SafeResourceUrl | null>(null); // 👈 NUEVO: URL sanitizada para el iframe
   cargandoPreview = signal(false);
   errorPreview = signal('');
+
+  private sanitizer = inject(DomSanitizer); // 👈 NUEVO
 
   tiposDisponibles = [
     { value: '', label: 'Todos los tipos', color: 'gray' },
@@ -227,6 +230,7 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     const url = this.urlPreview();
     if (url) window.URL.revokeObjectURL(url);
+    this.urlPreviewSegura.set(null); // 👈 AGREGAR
   }
 
   cargar() {
@@ -436,8 +440,15 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
 
     try {
       const blob = await firstValueFrom(this.historialService.descargar(reporte.id));
-      const url = window.URL.createObjectURL(blob);
+
+      // 🔥 Forzar tipo PDF (Chrome Android es puñetero con blobs sin type explícito)
+      const blobPdf = blob.type === 'application/pdf'
+        ? blob
+        : new Blob([blob], { type: 'application/pdf' });
+
+      const url = window.URL.createObjectURL(blobPdf);
       this.urlPreview.set(url);
+      this.urlPreviewSegura.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
       this.cargandoPreview.set(false);
       this.cdr.markForCheck();
     } catch (err: any) {
@@ -454,6 +465,7 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
     this.modalPreviewAbierto.set(false);
     this.reporteEnPreview.set(null);
     this.urlPreview.set('');
+    this.urlPreviewSegura.set(null); // 👈 AGREGAR
     this.errorPreview.set('');
     this.cargandoPreview.set(false);
   }

@@ -1286,8 +1286,8 @@
 
           <!-- PDF iframe -->
           <iframe
-            *ngIf="urlPreview() && !cargandoPreview() && !errorPreview()"
-            [src]="urlPreview() | safeUrl"
+            *ngIf="urlPreviewSegura() && !cargandoPreview() && !errorPreview()"
+            [src]="urlPreviewSegura()"
             class="w-full h-full border-0"
             title="Vista previa del PDF"
           ></iframe>
