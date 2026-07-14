@@ -21,6 +21,7 @@ import {
 } from '../../core/services/buscador-admin.service';
 import { HighlightSearchPipe } from '../pipes/highlight-search.pipe';
 import { obtenerCategoriaConfig, CategoriaConfig } from '../../core/services/categoria-config';
+import { NotificacionesUiService } from '../../core/services/notificaciones-ui.service';
 
 @Component({
   selector: 'app-buscador-admin',
@@ -41,6 +42,7 @@ export class BuscadorAdminComponent implements OnChanges, OnDestroy {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private elementRef = inject(ElementRef);
+  private notifUi = inject(NotificacionesUiService);
 
   resultados = signal<ResultadoBusqueda[]>([]);
   cargando = signal(false);
@@ -111,20 +113,30 @@ export class BuscadorAdminComponent implements OnChanges, OnDestroy {
 
   seleccionar(resultado: ResultadoBusqueda, event?: Event) {
     event?.stopPropagation();
-    console.log('[Buscador] Click en:', resultado.titulo, '→', resultado.ruta);
 
     this.buscadorService.guardarReciente(resultado);
 
+    // 🎯 Interceptar acciones especiales que NO navegan (ejecutan comportamientos)
+    const accion = resultado.queryParams?.['accion'];
+
+    if (accion === 'abrir-notificaciones') {
+      this.notifUi.abrirBell();
+      this.cerrarPanel();
+      return;
+    }
+
+    if (accion === 'marcar-notif-leidas') {
+      this.notifUi.marcarTodasLeidas();
+      this.cerrarPanel();
+      return;
+    }
+
+    // 🚀 Navegación normal para todo lo demás
     const navigationExtras: any = {};
     if (resultado.fragment) navigationExtras.fragment = resultado.fragment;
     if (resultado.queryParams) navigationExtras.queryParams = resultado.queryParams;
 
-    this.router
-      .navigate([resultado.ruta], navigationExtras)
-      .then((exito) =>
-        console.log('[Buscador] Navegación:', exito ? '✓' : '✗', '→', resultado.ruta),
-      )
-      .catch((err) => console.error('[Buscador] Error:', err));
+    this.router.navigate([resultado.ruta], navigationExtras);
 
     this.cerrarPanel();
   }
