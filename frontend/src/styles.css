@@ -157,17 +157,29 @@ main {
 }
 
 
-/* 🛡️ Fix del artefacto "réplica del navbar abajo" en Chrome Android */
-/* Al forzar al navbar en su propia capa de compositing GPU, Chrome deja de crear la copia fantasma */
+/* 🛡️ Fix del cuadro fantasma abajo (bug de compositing del sticky) */
+app-navbar {
+  display: block;
+  isolation: isolate;
+  contain: layout paint style;
+}
+
 app-navbar nav {
   transform: translate3d(0, 0, 0);
   -webkit-transform: translate3d(0, 0, 0);
+  will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  will-change: transform;
+  isolation: isolate;
+  contain: layout paint;
 }
 
-/* Prevenir overflow horizontal que también puede causar artefactos */
+/* Prevenir overflow del compositor */
+html,
 body {
   overflow-x: hidden;
+}
+
+body {
+  overflow-y: auto;
 }

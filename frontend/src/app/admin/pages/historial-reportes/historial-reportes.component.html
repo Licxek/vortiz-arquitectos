@@ -1284,13 +1284,49 @@
             </button>
           </div>
 
-          <!-- PDF iframe -->
+          <!-- PDF iframe (solo desktop) -->
           <iframe
-            *ngIf="urlPreviewSegura() && !cargandoPreview() && !errorPreview()"
+            *ngIf="!esMovil() && urlPreviewSegura() && !cargandoPreview() && !errorPreview()"
             [src]="urlPreviewSegura()"
             class="w-full h-full border-0"
             title="Vista previa del PDF"
           ></iframe>
+
+          <!-- Fallback móvil: preview con botón para abrir -->
+          <div
+            *ngIf="esMovil() && urlPreview() && !cargandoPreview() && !errorPreview()"
+            class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-blue-50 to-white"
+          >
+            <div class="w-20 h-20 bg-gradient-to-br from-[#0a4d7a] to-[#0a5d8f] rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <p class="text-base font-bold text-gray-900 mb-1">{{ r.titulo }}</p>
+            <p class="text-xs text-gray-500 mb-6 max-w-sm">
+              Chrome en Android no permite previsualizar PDFs embebidos. Puedes abrirlo en una pestaña nueva o descargarlo.
+            </p>
+            <div class="flex flex-col gap-2 w-full max-w-xs">
+              <button
+                (click)="abrirEnPestanaNueva()"
+                class="flex items-center justify-center gap-2 w-full px-4 py-3 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white rounded-xl text-sm font-semibold shadow-md transition-all"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                </svg>
+                Abrir en pestaña nueva
+              </button>
+              <button
+                (click)="descargarDesdePreview()"
+                class="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold transition-colors"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Descargar PDF
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Footer info -->
