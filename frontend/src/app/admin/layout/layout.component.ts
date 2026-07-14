@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { NotificacionesBellComponent } from '../../shared/notificaciones-bell/notificaciones-bell.component';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
 import { PerfilService, MetricasMes } from '../../core/services/perfil.service';
-// (Si no está importado ya)
+import { obtenerScrollY, escucharScroll } from '../../core/utils/scroll.util';
 
 interface MenuItem {
   label: string;
@@ -149,10 +149,16 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
         this.statusSitio = data.mantenimiento?.activo ? 'mantenimiento' : 'online';
       }
     });
+
+    // Escuchar scroll de app-root
+    this.cleanupScroll = escucharScroll((y) => {
+      this.scrollHeader.set(y > 20);
+    });
   }
 
   ngOnDestroy() {
     if (this.intervalFecha) clearInterval(this.intervalFecha);
+    this.cleanupScroll?.();
   }
 
   cerrarSesion() {
@@ -328,10 +334,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   get fotoPerfilUrl(): string {
     return (this.usuario as any)?.avatar || '';
   }
-  @HostListener('window:scroll', ['$event'])
-  onWindowScroll(_event: Event) {
-    this.scrollHeader.set(window.scrollY > 20);
-  }
+  onScrollHeader = () => {
+    this.scrollHeader.set(obtenerScrollY() > 20);
+  };
+  private cleanupScroll?: () => void;
 
   // ============ MODAL DE PERFIL ============
   horaInicioSesion = signal(this.formatearHora(new Date()));

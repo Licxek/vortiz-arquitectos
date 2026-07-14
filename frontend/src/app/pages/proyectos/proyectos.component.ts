@@ -7,6 +7,7 @@ import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { ProjectShowcaseComponent } from '../../shared/project-showcase/project-showcase.component';
 import { ActivatedRoute, Router } from '@angular/router';
+import { obtenerScrollY, scrollA } from '../../core/utils/scroll.util';
 
 interface CategoriaFiltro {
   id: string;
@@ -177,7 +178,7 @@ export class ProyectosComponent implements OnInit {
 
   // Métodos
   abrirShowcase(p: Proyecto) {
-    this.scrollPosBeforeModal = window.scrollY;
+    this.scrollPosBeforeModal = obtenerScrollY();
     this.proyectoSeleccionado.set(p);
     document.body.style.overflow = 'hidden';
   }
@@ -193,7 +194,7 @@ export class ProyectosComponent implements OnInit {
     // Función que restaura el scroll de forma robusta
     const restaurarScroll = () => {
       if (scrollPos > 50) {
-        window.scrollTo({ top: scrollPos, behavior: 'instant' as ScrollBehavior });
+        scrollA(scrollPos, false);
       } else if (proyectoCerrado) {
         const el = document.getElementById(`proyecto-${proyectoCerrado.id}`);
         if (el) {

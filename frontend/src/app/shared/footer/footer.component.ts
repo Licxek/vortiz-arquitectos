@@ -67,8 +67,7 @@ export class FooterComponent implements OnInit, OnDestroy {
   private cleanupScroll?: () => void;
 
   scrollArriba() {
-    // Instantáneo (más rápido) — cambia a true si prefieres smooth
-    scrollAlInicio(false);
+    scrollAlInicio(true); // 👈 smooth bonito
   }
 
   ngOnInit() {

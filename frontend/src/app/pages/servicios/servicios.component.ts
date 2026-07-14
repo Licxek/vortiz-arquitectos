@@ -5,6 +5,7 @@ import { CatalogoService, Servicio } from '../../core/services/catalogo.service'
 import { ContenidoService } from '../../core/services/contenido.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
+import { obtenerScrollY, scrollA } from '../../core/utils/scroll.util';
 
 interface CategoriaFiltro {
   id: string;
@@ -93,7 +94,7 @@ export class ServiciosComponent implements OnInit {
   private scrollPosBeforeModal = 0;
 
   abrirServicio(servicio: Servicio) {
-    this.scrollPosBeforeModal = window.scrollY;
+    this.scrollPosBeforeModal = obtenerScrollY();
     this.servicioActivo.set(servicio);
   }
 
@@ -107,7 +108,7 @@ export class ServiciosComponent implements OnInit {
     // Función que restaura el scroll de forma robusta
     const restaurarScroll = () => {
       if (scrollPos > 50) {
-        window.scrollTo({ top: scrollPos, behavior: 'instant' as ScrollBehavior });
+        scrollA(scrollPos, false);
       } else if (servicioCerrado) {
         const el = document.getElementById(`servicio-${servicioCerrado.id}`);
         if (el) {

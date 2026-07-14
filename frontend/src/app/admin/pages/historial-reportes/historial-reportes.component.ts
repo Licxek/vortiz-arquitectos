@@ -22,6 +22,7 @@ import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { ActivatedRoute, Router, NavigationEnd, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser'; // ← Agregar si no está
+import { scrollAlInicio } from '../../../core/utils/scroll.util';
 
 type OrdenTipo = 'reciente' | 'antiguo' | 'pesado' | 'ligero' | 'tipo';
 
@@ -257,7 +258,7 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
     if (p === '...') return;
     const pagina = Math.max(1, Math.min(p, this.totalPaginas()));
     this.paginaActual.set(pagina);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollAlInicio(true); // smooth bonito
   }
 
   cambiarItemsPorPagina(n: number) {

@@ -108,9 +108,14 @@ export class AppComponent {
     // 🎯 Scroll top al cambiar de ruta
     // El scroll vive en <app-root>, no en window, entonces manejamos manualmente
     this.router.events
-      .pipe(filter((e) => e instanceof NavigationEnd))
-      .subscribe(() => {
-        scrollAlInicio(false); // instantáneo
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((event) => {
+        // 🎯 Si la URL trae ?seccion=, la página destino se encargará de scrollear
+        // (buscador, deep links, etc). No pisamos su scrollIntoView.
+        const url = event.urlAfterRedirects || event.url;
+        if (url.includes('seccion=')) return;
+
+        scrollAlInicio(false);
       });
   }
   private calcularOcultarChrome(url: string): boolean {
