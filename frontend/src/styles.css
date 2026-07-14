@@ -156,22 +156,6 @@ main {
   overscroll-behavior: contain;
 }
 
-
-/* 🛡️ Fix del cuadro fantasma abajo (bug de compositing del sticky) */
-app-navbar {
-  display: block;
-  isolation: isolate;
-}
-
-app-navbar nav {
-  transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
-  will-change: transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-
 /* 🔒 Bloquear scroll de fondo cuando el sidebar móvil está abierto */
 html.sidebar-movil-abierto,
 html.sidebar-movil-abierto body {
@@ -183,10 +167,3 @@ html.sidebar-movil-abierto main {
   overflow: hidden !important;
 }
 
-/* 🛡️ Prevenir cambio dinámico del navbar en móvil (causa ghost en compositor) */
-@media (max-width: 767px) {
-  app-navbar nav,
-  app-navbar nav * {
-    transition: none !important;
-  }
-}
