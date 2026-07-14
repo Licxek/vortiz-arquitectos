@@ -96,15 +96,17 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
   ) {}
 
+  private appRoot: HTMLElement | null = null;
+
   private scrollHandler = () => {
-    const y = window.scrollY;
+    const y = this.appRoot?.scrollTop ?? window.scrollY;
     let newScrolled = this.scrolled;
     if (!this.scrolled && y > 100) newScrolled = true;
     else if (this.scrolled && y < 30) newScrolled = false;
     if (newScrolled !== this.scrolled) {
       this.ngZone.run(() => {
         this.scrolled = newScrolled;
-        this.actualizarAlturaNavbar(); // 👈 NUEVO
+        this.actualizarAlturaNavbar();
         this.cdr.markForCheck();
       });
     }
@@ -143,8 +145,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     this.busquedasRecientes.set(this.busquedaService.obtenerRecientes());
 
+    // 🎯 El scroll ahora vive en <app-root>, no en window
+    this.appRoot = document.querySelector('app-root') as HTMLElement | null;
     this.ngZone.runOutsideAngular(() => {
-      window.addEventListener('scroll', this.scrollHandler, { passive: true });
+      if (this.appRoot) {
+        this.appRoot.addEventListener('scroll', this.scrollHandler, { passive: true });
+      } else {
+        window.addEventListener('scroll', this.scrollHandler, { passive: true });
+      }
     });
 
     // Cargar config de páginas fijas para filtrar el navbar
@@ -169,9 +177,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    window.removeEventListener('scroll', this.scrollHandler);
+    if (this.appRoot) {
+      this.appRoot.removeEventListener('scroll', this.scrollHandler);
+    } else {
+      window.removeEventListener('scroll', this.scrollHandler);
+    }
     if (this.busquedaTimer) clearTimeout(this.busquedaTimer);
-    if (this.resizeObserver) this.resizeObserver.disconnect(); // 👈 NUEVO
+    if (this.resizeObserver) this.resizeObserver.disconnect();
   }
 
   /** Si hay 1-2 dinámicas → inline. Si hay 3+ → todas al mega menú. */

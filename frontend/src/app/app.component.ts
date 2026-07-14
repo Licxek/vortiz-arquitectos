@@ -18,6 +18,7 @@ import { LoadingBarComponent } from './shared/loading-bar/loading-bar.component'
 import { DOCUMENT } from '@angular/common';
 import { SessionExpiredModalComponent } from './shared/session-expired-modal/session-expired-modal.component';
 
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -102,6 +103,17 @@ export class AppComponent {
     });
 
     this.config.cargarPublica(); // primera carga (dispara todo)
+
+    // 🎯 Scroll top al cambiar de ruta
+    // El scroll vive en <app-root>, no en window, entonces manejamos manualmente
+    this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
+      .subscribe(() => {
+        const appRoot = this.doc.querySelector('app-root');
+        if (appRoot) {
+          appRoot.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
   }
   private calcularOcultarChrome(url: string): boolean {
     return url.startsWith('/admin') || url.startsWith('/mantenimiento');
