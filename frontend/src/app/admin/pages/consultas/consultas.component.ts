@@ -15,7 +15,8 @@ import { InicioService, CitaBackend } from '../../../core/services/inicio.servic
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { TelefonoFormatoPipe } from '../../../shared/pipes/telefono-formato.pipe';
 import { ConsultaSnapshotsService, ConsultaSnapshot } from '../../../core/services/consulta-snapshots.service';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
+import { filter as rxFilter } from 'rxjs/operators';
 
 interface Consulta {
   id: number;
@@ -52,7 +53,7 @@ interface MensajeChat {
   metodo?: 'email' | 'whatsapp' | 'guardado' | 'inbound';
 }
 
-type Filtro = 'todas' | 'pendientes' | 'urgentes' | 'resueltas' | 'archivadas' | 'historial';
+type Filtro = 'todas' | 'pendientes' | 'urgentes' | 'resueltas' | 'archivadas' | 'historial' | 'mensajes-nuevos';
 
 @Component({
   selector: 'app-consultas',
@@ -63,6 +64,7 @@ type Filtro = 'todas' | 'pendientes' | 'urgentes' | 'resueltas' | 'archivadas' |
 export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
   private inicioService = inject(InicioService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
   private snapshotsService = inject(ConsultaSnapshotsService);
 
@@ -102,8 +104,21 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     document.body.style.overflow = 'hidden';
     this.cargarLocalStorage();
     this.cargar();
-    this.iniciarPollingLista(); // ← NUEVO
+    this.iniciarPollingLista();
     this.cargarSnapshots();
+
+    // 🔍 Escuchar filtros desde el buscador
+    this.aplicarParamsDeUrl();
+
+    // Reaccionar cuando cambien queryParams (buscador ejecuta desde consultas)
+    this.router.events
+      .pipe(rxFilter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => {
+        const url = this.router.url;
+        if (url.startsWith('/admin/consultas')) {
+          this.aplicarParamsDeUrl();
+        }
+      });
   }
 
   ngAfterViewInit() {
@@ -204,6 +219,9 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
     } else if (this.filtro === 'historial') {
       // El historial se maneja aparte con snapshots, no aquí
       resultado = [];
+    } else if (this.filtro === 'mensajes-nuevos') {
+      // Consultas con respuestas nuevas del cliente que aún no vi
+      resultado = resultado.filter((c) => c.tieneRespuestaNoLeida && !c.archivada);
     }
 
     if (this.busqueda.trim()) {
@@ -868,5 +886,27 @@ export class ConsultasComponent implements OnInit, OnDestroy, AfterViewInit {
         },
       });
     });
+  }
+  private aplicarParamsDeUrl() {
+    const params = this.route.snapshot.queryParamMap;
+    const filtroUrl = params.get('filtro');
+
+    if (!filtroUrl) return;
+
+    // Mapeo: filtros del buscador → filtros internos del componente
+    const mapeoFiltros: Record<string, Filtro> = {
+      'urgentes': 'urgentes',
+      'no-leidas': 'pendientes', // No leídas = pendientes por revisar
+      'mensajes-nuevos': 'mensajes-nuevos',
+      'resueltas': 'resueltas',
+      'archivadas': 'archivadas',
+      'pendientes': 'pendientes',
+      'todas': 'todas',
+    };
+
+    const filtroInterno = mapeoFiltros[filtroUrl];
+    if (filtroInterno) {
+      this.cambiarFiltro(filtroInterno);
+    }
   }
 }
