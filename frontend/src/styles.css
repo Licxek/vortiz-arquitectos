@@ -156,10 +156,18 @@ main {
   overscroll-behavior: contain;
 }
 
-html {
-  background-color: #00ff00 !important; /* VERDE FLÚOR - test temporal */
+
+/* 🛡️ Fix del artefacto "réplica del navbar abajo" en Chrome Android */
+/* Al forzar al navbar en su propia capa de compositing GPU, Chrome deja de crear la copia fantasma */
+app-navbar nav {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
 }
 
+/* Prevenir overflow horizontal que también puede causar artefactos */
 body {
-  background-color: #ff00ff !important; /* ROSA/MAGENTA - test temporal */
+  overflow-x: hidden;
 }
