@@ -6,6 +6,7 @@ import { ConfiguracionService, Configuracion } from '../../core/services/configu
 import { RevealDirective } from '../../core/directives/reveal.directive';
 import { SkeletonComponent } from '../skeleton/skeleton.component';
 import { TelefonoFormatoPipe } from '../pipes/telefono-formato.pipe';
+import { scrollAlInicio, obtenerScrollY, escucharScroll } from '../../core/utils/scroll.util';
 
 interface LineaHorario {
   etiqueta: string;   // "Lun – Vie" o "Sáb" o "Dom"
@@ -63,13 +64,11 @@ export class FooterComponent implements OnInit, OnDestroy {
   /** Dirección actual cacheada para detectar cambios reales */
   private direccionCacheada = '';
 
-  @HostListener('window:scroll')
-  onScroll() {
-    this.mostrarArriba = window.scrollY > 400;
-  }
+  private cleanupScroll?: () => void;
 
   scrollArriba() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Instantáneo (más rápido) — cambia a true si prefieres smooth
+    scrollAlInicio(false);
   }
 
   ngOnInit() {
@@ -98,11 +97,21 @@ export class FooterComponent implements OnInit, OnDestroy {
       this.calcularEstadoAbierto();
       this.cdr.markForCheck();
     }, 60000);
+
+    // 🎯 Escuchar scroll de app-root (no window)
+    this.cleanupScroll = escucharScroll((y) => {
+      const nuevoValor = y > 400;
+      if (this.mostrarArriba !== nuevoValor) {
+        this.mostrarArriba = nuevoValor;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   ngOnDestroy() {
     if (this.intervaloEstado) clearInterval(this.intervaloEstado);
     if (this.timeoutCopiado) clearTimeout(this.timeoutCopiado);
+    this.cleanupScroll?.(); // 👈 desuscribir del scroll
   }
 
   /**

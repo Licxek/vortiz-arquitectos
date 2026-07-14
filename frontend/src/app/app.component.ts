@@ -17,6 +17,7 @@ import { ConfiguracionService } from './core/services/configuracion.service';
 import { LoadingBarComponent } from './shared/loading-bar/loading-bar.component'; // 👈 NUEVO
 import { DOCUMENT } from '@angular/common';
 import { SessionExpiredModalComponent } from './shared/session-expired-modal/session-expired-modal.component';
+import { scrollAlInicio } from './core/utils/scroll.util';
 
 
 @Component({
@@ -109,10 +110,7 @@ export class AppComponent {
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe(() => {
-        const appRoot = this.doc.querySelector('app-root');
-        if (appRoot) {
-          appRoot.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        scrollAlInicio(false); // instantáneo
       });
   }
   private calcularOcultarChrome(url: string): boolean {
