@@ -189,12 +189,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   toggleMenu() {
     this.menuAbierto = !this.menuAbierto;
-    if (this.menuAbierto) {
-      this.buscadorAbierto = false;
-      this.bloquearScrollBody();
-    } else {
-      this.liberarScrollBody();
-    }
+    if (this.menuAbierto) this.buscadorAbierto = false;
+    document.body.style.overflow = this.menuAbierto ? 'hidden' : '';
+    document.documentElement.classList.toggle('sidebar-movil-abierto', this.menuAbierto); // 👈 AGREGAR
   }
 
   toggleBuscador() {
@@ -335,13 +332,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape')
   cerrarTodo() {
-    // 🔥 Si el menú móvil estaba abierto, usar el liberador robusto
-    if (this.menuAbierto) {
-      this.liberarScrollBody();
-    }
-    // 🔥 Si el buscador móvil estaba abierto, libera scroll también
-    if (this.buscadorAbierto) {
+    if (this.menuAbierto || this.buscadorAbierto) {
       document.body.style.overflow = '';
+      document.documentElement.classList.remove('sidebar-movil-abierto'); // 👈 AGREGAR
     }
     this.menuAbierto = false;
     this.buscadorAbierto = false;
@@ -439,11 +432,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Cierra el menú móvil y libera el scroll del body */
   cerrarMenuMovil() {
     this.menuAbierto = false;
-    this.liberarScrollBody();
-    // 🔥 Quitar el focus del link tocado para evitar tap highlight residual
+    document.body.style.overflow = '';
+    document.documentElement.classList.remove('sidebar-movil-abierto'); // 👈 AGREGAR
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }

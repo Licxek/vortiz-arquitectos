@@ -170,10 +170,16 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleMenuMovil() {
+   toggleMenuMovil() {
     this.menuMovilAbierto = !this.menuMovilAbierto;
-    // 🔥 Bloquear scroll del body cuando el sidebar está abierto
     document.body.style.overflow = this.menuMovilAbierto ? 'hidden' : '';
+    document.documentElement.classList.toggle('sidebar-movil-abierto', this.menuMovilAbierto); // 👈 AGREGAR
+  }
+
+  cerrarMenuAdminMovil() {
+    this.menuMovilAbierto = false;
+    document.body.style.overflow = '';
+    document.documentElement.classList.remove('sidebar-movil-abierto');
   }
 
   toggleMenuUsuario(event: Event) {
