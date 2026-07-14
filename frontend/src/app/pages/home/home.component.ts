@@ -6,6 +6,7 @@ import { CatalogoService, Servicio, Proyecto } from '../../core/services/catalog
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { ProjectShowcaseComponent } from '../../shared/project-showcase/project-showcase.component';
+import { obtenerScrollY, scrollA } from '../../core/utils/scroll.util';
 
 interface Paso {
   numero: string;
@@ -190,7 +191,7 @@ export class HomeComponent implements OnInit {
   }
 
   abrirServicio(s: Servicio) {
-    this.scrollPosBeforeModal = window.scrollY;
+    this.scrollPosBeforeModal = obtenerScrollY();
     this.servicioActivo.set(s);
     document.body.style.overflow = 'hidden';
   }
@@ -199,7 +200,7 @@ export class HomeComponent implements OnInit {
     this.servicioActivo.set(null);
     document.body.style.overflow = '';
     requestAnimationFrame(() => {
-      window.scrollTo({ top: this.scrollPosBeforeModal, behavior: 'instant' as ScrollBehavior });
+      scrollA(this.scrollPosBeforeModal, false); // false = instant
     });
   }
 

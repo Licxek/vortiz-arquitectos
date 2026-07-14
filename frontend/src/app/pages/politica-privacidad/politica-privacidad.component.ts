@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { ContenidoService } from '../../core/services/contenido.service';
 import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { ActivatedRoute, Router } from '@angular/router';
+import { scrollAlInicio } from '../../core/utils/scroll.util';
 
 interface ItemLista {
   titulo?: string;
@@ -148,7 +149,7 @@ export class PoliticaPrivacidadComponent implements OnInit {
     });
 
     // Scroll top al cargar
-    window.scrollTo({ top: 0, behavior: 'auto' });
+    scrollAlInicio(false); // instant
 
     // 🎯 Escuchar cambios de query params para hacer scroll a sección
     // Funciona tanto al entrar por primera vez como al re-buscar estando en la misma página

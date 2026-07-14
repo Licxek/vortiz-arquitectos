@@ -9,6 +9,7 @@ import { CatalogoService, Servicio } from '../../core/services/catalogo.service'
 import { ContadorDirective } from '../../core/directives/contador.directive';
 import type { BloquePagina } from '../../core/services/paginas.service';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
+import { scrollAlInicio } from '../../core/utils/scroll.util';
 
 @Component({
   selector: 'app-pagina-dinamica',
@@ -36,7 +37,7 @@ export class PaginaDinamicaComponent implements OnInit, OnDestroy {
       if (slug) {
         this.cargarPagina(slug);
         // Subir al inicio al cambiar de página
-        window.scrollTo({ top: 0, behavior: 'auto' });
+        scrollAlInicio(false);
       }
     });
   }
