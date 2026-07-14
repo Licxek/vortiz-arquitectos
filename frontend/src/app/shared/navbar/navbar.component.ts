@@ -264,10 +264,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     event?.stopPropagation();
     event?.preventDefault();
 
-    // 🐛 DEBUG TEMPORAL
-    console.log('🔍 Resultado:', JSON.stringify(r, null, 2));
-    console.log('🔍 seccionId:', r.seccionId);
-
     // Capturar query ANTES de limpiar
     const queryActual = this.queryBusqueda();
 

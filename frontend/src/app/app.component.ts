@@ -107,14 +107,30 @@ export class AppComponent {
 
     // 🎯 Scroll top al cambiar de ruta
     // El scroll vive en <app-root>, no en window, entonces manejamos manualmente
+    let urlAnterior = '';
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe((event) => {
+        const url = event.urlAfterRedirects || event.url;
+
         // 🎯 Si la URL trae ?seccion=, la página destino se encargará de scrollear
         // (buscador, deep links, etc). No pisamos su scrollIntoView.
-        const url = event.urlAfterRedirects || event.url;
-        if (url.includes('seccion=')) return;
+        if (url.includes('seccion=')) {
+          urlAnterior = url;
+          return;
+        }
 
+        // 🎯 Si es la MISMA ruta que la anterior (solo cambió el query params),
+        // no hacemos scroll top — es limpieza de queryParams, no navegación real.
+        // Ejemplo: home?seccion=servicios → home (después de scrollIntoView)
+        const rutaBase = url.split('?')[0];
+        const rutaAnterior = urlAnterior.split('?')[0];
+        if (rutaBase === rutaAnterior && urlAnterior !== '') {
+          urlAnterior = url;
+          return;
+        }
+
+        urlAnterior = url;
         scrollAlInicio(false);
       });
   }
