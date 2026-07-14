@@ -167,3 +167,19 @@ html.sidebar-movil-abierto main {
   overflow: hidden !important;
 }
 
+/* 🛡️ Fix del cuadro fantasma - mover scroll fuera del body (patrón del admin) */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+app-root {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+}
+
