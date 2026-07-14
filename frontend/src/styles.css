@@ -176,11 +176,17 @@ app-navbar nav {
 html.sidebar-movil-abierto,
 html.sidebar-movil-abierto body {
   overflow: hidden !important;
-  touch-action: none;
 }
 
 /* En admin el scroll está dentro del main, no en body */
 html.sidebar-movil-abierto main {
   overflow: hidden !important;
-  touch-action: none;
+}
+
+/* 🛡️ Prevenir cambio dinámico del navbar en móvil (causa ghost en compositor) */
+@media (max-width: 767px) {
+  app-navbar nav,
+  app-navbar nav * {
+    transition: none !important;
+  }
 }
