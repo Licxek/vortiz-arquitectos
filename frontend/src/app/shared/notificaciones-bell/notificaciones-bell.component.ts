@@ -5,6 +5,7 @@ import {
   inject,
   OnInit,
   OnDestroy,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -13,6 +14,7 @@ import {
   Notificacion,
   TipoNotificacion,
 } from '../../core/services/notificaciones.service';
+import { NotificacionesUiService } from '../../core/services/notificaciones-ui.service';
 
 type Filtro = 'todas' | 'citas' | 'consultas';
 type TipoVisual = 'cita' | 'consulta' | 'confirmacion' | 'cancelacion' | 'mensaje' | 'evaluar';
@@ -27,10 +29,31 @@ export class NotificacionesBellComponent implements OnInit, OnDestroy {
   notifService = inject(NotificacionesService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private notifUi = inject(NotificacionesUiService);
 
   abierto = false;
   filtro: Filtro = 'todas';
   private intervalTiempo: any = null;
+
+  constructor() {
+    // 🔔 Reaccionar cuando el buscador pida abrir la campanita
+    effect(() => {
+      const v = this.notifUi.abrirTrigger();
+      if (v > 0) {
+        this.abierto = true;
+        this.cdr.detectChanges();
+      }
+    });
+
+    // ✅ Reaccionar cuando el buscador pida marcar todas como leídas
+    effect(() => {
+      const v = this.notifUi.marcarTodasTrigger();
+      if (v > 0) {
+        this.notifService.marcarTodasLeidas();
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   ngOnInit() {
     this.notifService.inicializar();
