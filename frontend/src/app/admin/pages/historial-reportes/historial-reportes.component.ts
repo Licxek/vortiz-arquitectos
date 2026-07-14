@@ -77,6 +77,7 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
   errorPreview = signal('');
 
   private sanitizer = inject(DomSanitizer); // 👈 NUEVO
+  esMovil = signal(false);
 
   tiposDisponibles = [
     { value: '', label: 'Todos los tipos', color: 'gray' },
@@ -220,6 +221,7 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
   // ============ LIFECYCLE ============
 
   ngOnInit() {
+    this.esMovil.set(this.detectarMovil());
     this.cargar();
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
@@ -619,5 +621,16 @@ export class HistorialReportesComponent implements OnInit, OnDestroy {
   cerrarDropdowns() {
     this.filtroTipoAbierto.set(false);
     this.ordenAbierto.set(false);
+  }
+
+  private detectarMovil(): boolean {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent.toLowerCase();
+    return /android|iphone|ipad|ipod|blackberry|iemobile/i.test(ua);
+  }
+
+  abrirEnPestanaNueva() {
+    const url = this.urlPreview();
+    if (url) window.open(url, '_blank');
   }
 }
