@@ -20,11 +20,12 @@ export class SessionExpiredModalComponent implements OnInit {
   configuracion: Configuracion | null = null;
 
   ngOnInit() {
-    this.configuracionService.getConfiguracion().subscribe({
+    // 🎯 Usar config PÚBLICA (no requiere auth)
+    // Evita que ESTE modal dispare 401 → auto-mostrado infinito
+    this.configuracionService.configPublica$.subscribe({
       next: (data) => (this.configuracion = data),
     });
   }
-
   // ============================================================
   // COMPUTED PROPERTIES
   // ============================================================
