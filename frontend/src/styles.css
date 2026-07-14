@@ -155,3 +155,11 @@ body {
 main {
   overscroll-behavior: contain;
 }
+
+html {
+  background-color: #00ff00 !important; /* VERDE FLÚOR - test temporal */
+}
+
+body {
+  background-color: #ff00ff !important; /* ROSA/MAGENTA - test temporal */
+}
