@@ -170,3 +170,17 @@ app-navbar nav {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
+
+
+/* 🔒 Bloquear scroll de fondo cuando el sidebar móvil está abierto */
+html.sidebar-movil-abierto,
+html.sidebar-movil-abierto body {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
+/* En admin el scroll está dentro del main, no en body */
+html.sidebar-movil-abierto main {
+  overflow: hidden !important;
+  touch-action: none;
+}
