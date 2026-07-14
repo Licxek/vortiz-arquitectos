@@ -20,6 +20,8 @@ import { PaginasFijasService, PaginaFijaConfig } from '../../core/services/pagin
 interface NavItem {
   label: string;
   path: string;
+  icono: string;
+  color: string; // hex, para el gradient
 }
 
 @Component({
@@ -50,10 +52,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private paginasFijasConfig: PaginaFijaConfig[] = [];
 
   fixedLinks: NavItem[] = [
-    { label: 'Inicio', path: '/home' },
-    { label: 'Servicios', path: '/servicios' },
-    { label: 'Proyectos', path: '/proyectos' },
-    { label: 'Nosotros', path: '/nosotros' },
+    { label: 'Inicio',    path: '/home',      icono: 'home',      color: '#3B82F6' }, // azul
+    { label: 'Servicios', path: '/servicios', icono: 'briefcase', color: '#8B5CF6' }, // violeta
+    { label: 'Proyectos', path: '/proyectos', icono: 'building',  color: '#F97316' }, // naranja
+    { label: 'Nosotros',  path: '/nosotros',  icono: 'users',     color: '#10B981' }, // verde
   ];
 
   /** Búsquedas populares dinámicas: salen del catálogo real */
@@ -461,5 +463,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     // Restaurar la posición ANTES de que el navegador tenga chance de mover algo
     window.scrollTo(0, scroll);
     this.scrollGuardado = 0;
+  }
+
+  /** Genera el gradient para un link fijo desde su color HEX */
+  iconoBgFijo(link: NavItem): string {
+    return `linear-gradient(135deg, ${link.color}, ${this.oscurecerHex(link.color, 25)})`;
   }
 }
