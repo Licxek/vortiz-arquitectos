@@ -153,8 +153,24 @@ export interface OpcionSelect {
   `,
 })
 export class SelectConCreacionComponent {
-  @Input() opciones: OpcionSelect[] = [];
-  @Input() value = '';
+  // Signals internos que se actualizan con los @Input setters
+  private opcionesSignal = signal<OpcionSelect[]>([]);
+  private valueSignal = signal<string>('');
+
+  @Input() set opciones(v: OpcionSelect[]) {
+    this.opcionesSignal.set(v || []);
+  }
+  get opciones(): OpcionSelect[] {
+    return this.opcionesSignal();
+  }
+
+  @Input() set value(v: string) {
+    this.valueSignal.set(v || '');
+  }
+  get value(): string {
+    return this.valueSignal();
+  }
+
   @Input() placeholder = 'Selecciona una opción';
   @Input() permitirCrear = true;
   @Input() colorPorValue?: (value: string) => string;
@@ -166,19 +182,20 @@ export class SelectConCreacionComponent {
   busqueda = signal('');
 
   labelSeleccionado = computed(() => {
-    const op = this.opciones.find((o) => o.value === this.value);
+    const op = this.opcionesSignal().find((o) => o.value === this.valueSignal());
     return op?.label || '';
   });
 
   colorSeleccionado = computed(() => {
-    if (!this.colorPorValue || !this.value) return '';
-    return this.colorPorValue(this.value);
+    if (!this.colorPorValue || !this.valueSignal()) return '';
+    return this.colorPorValue(this.valueSignal());
   });
 
   opcionesFiltradas = computed(() => {
     const q = this.busqueda().trim().toLowerCase();
-    if (!q) return this.opciones;
-    return this.opciones.filter((o) => o.label.toLowerCase().includes(q));
+    const opciones = this.opcionesSignal();
+    if (!q) return opciones;
+    return opciones.filter((o) => o.label.toLowerCase().includes(q));
   });
 
   constructor(private el: ElementRef) {}
@@ -203,7 +220,7 @@ export class SelectConCreacionComponent {
     if (!this.permitirCrear || !this.busqueda().trim()) return false;
     const q = this.busqueda().toLowerCase().trim();
     // Solo permitir crear si NO existe una opción idéntica
-    return !this.opciones.some((o) => o.label.toLowerCase() === q);
+    return !this.opcionesSignal().some((o) => o.label.toLowerCase() === q);
   }
 
   onEnter(event: Event) {
