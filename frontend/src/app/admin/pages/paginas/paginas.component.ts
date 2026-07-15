@@ -3623,4 +3623,22 @@ export class PaginasComponent implements OnInit {
       default: return 'Cualquier URL externa o interna del sitio';
     }
   }
+  /** Devuelve los bloques disponibles para navegar (excluye el bloque actual y bloques sin sentido de anclar) */
+  bloquesParaSeccion(bloqueActual: BloqueContenido): { id: number; label: string; tipo: string }[] {
+    return this.formNuevaPagina.bloques
+      .filter((b) => b.id !== bloqueActual.id) // no mostrarse a sí mismo
+      .map((b) => ({
+        id: b.id,
+        tipo: b.tipo,
+        label: this.nombreBloqueParaSeccion(b),
+      }));
+  }
+
+  /** Genera un nombre legible del bloque para el dropdown */
+  private nombreBloqueParaSeccion(bloque: BloqueContenido): string {
+    const tipoLabel = this.obtenerLabelBloque(bloque.tipo);
+    const titulo = (bloque.titulo || '').trim();
+    if (titulo) return `${tipoLabel}: ${titulo}`;
+    return tipoLabel;
+  }
 }

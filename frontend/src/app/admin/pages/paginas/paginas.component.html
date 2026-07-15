@@ -2637,13 +2637,34 @@
                             </button>
                           </div>
 
-                          <input
-                            type="text"
-                            [(ngModel)]="bloque.ctaDestinoValor"
-                            [placeholder]="placeholderCta(bloque.ctaDestinoTipo)"
-                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
-                          />
-                          <p class="text-xs text-gray-500">{{ ayudaCta(bloque.ctaDestinoTipo) }}</p>
+                          <!-- Dropdown especial cuando es "sección" -->
+                          <ng-container *ngIf="bloque.ctaDestinoTipo === 'seccion'; else inputNormal">
+                            <div *ngIf="bloquesParaSeccion(bloque).length === 0" class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                              💡 Agrega más bloques a esta página para poder enlazarlos como sección.
+                            </div>
+                            <select
+                              *ngIf="bloquesParaSeccion(bloque).length > 0"
+                              [(ngModel)]="bloque.ctaDestinoValor"
+                              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                            >
+                              <option value="">— Elige un bloque destino —</option>
+                              <option *ngFor="let b of bloquesParaSeccion(bloque)" [value]="'bloque-' + b.id">
+                                {{ b.label }}
+                              </option>
+                            </select>
+                            <p class="text-xs text-gray-500">Al hacer click, la página hará scroll suave hasta ese bloque.</p>
+                          </ng-container>
+
+                          <!-- Input normal para los otros tipos (URL, WhatsApp, teléfono, email) -->
+                          <ng-template #inputNormal>
+                            <input
+                              type="text"
+                              [(ngModel)]="bloque.ctaDestinoValor"
+                              [placeholder]="placeholderCta(bloque.ctaDestinoTipo)"
+                              class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
+                            />
+                            <p class="text-xs text-gray-500">{{ ayudaCta(bloque.ctaDestinoTipo) }}</p>
+                          </ng-template>
 
                           <!-- Mensaje predeterminado solo para WhatsApp -->
                           <div *ngIf="bloque.ctaDestinoTipo === 'whatsapp'">
