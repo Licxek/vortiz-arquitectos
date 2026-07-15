@@ -31,6 +31,8 @@ interface Pagina {
   color: string;
 }
 
+type CtaDestinoTipo = 'url' | 'whatsapp' | 'telefono' | 'email' | 'seccion';
+
 interface BloqueContenido {
   id: number;
   tipo:
@@ -55,6 +57,11 @@ interface BloqueContenido {
   direccion?: string;
   campos?: string[];
   serviciosIds?: number[];
+  // 👇 NUEVO para CTA
+  ctaDestinoTipo?: CtaDestinoTipo;
+  ctaDestinoValor?: string;
+  ctaMensajePredeterminado?: string; // para WhatsApp
+  ctaAbrirEnNuevaPestana?: boolean;
 }
 
 interface Plantilla {
@@ -1717,6 +1724,10 @@ export class PaginasComponent implements OnInit {
       nuevoBloque.campos = ['Nombre', 'Correo', 'Teléfono', 'Mensaje'];
     } else if (tipo === 'mapa') {
       nuevoBloque.direccion = 'Milpillas 101, La Forestal, Durango';
+    } else if (tipo === 'cta') {
+      nuevoBloque.ctaDestinoTipo = 'url';
+      nuevoBloque.ctaDestinoValor = '';
+      nuevoBloque.ctaAbrirEnNuevaPestana = false;
     }
 
     this.formNuevaPagina.bloques.push(nuevoBloque);
@@ -3564,5 +3575,52 @@ export class PaginasComponent implements OnInit {
       this.guardarColorPersonalizado(hex);
       this.cdr.markForCheck();
     }, 800);
+  }
+
+  /** Construye el href del CTA según el tipo de destino */
+  construirHrefCta(bloque: BloqueContenido): string {
+    const valor = (bloque.ctaDestinoValor || '').trim();
+    if (!valor) return '#';
+
+    switch (bloque.ctaDestinoTipo) {
+      case 'whatsapp': {
+        const numero = valor.replace(/\D/g, '');
+        const mensaje = encodeURIComponent(bloque.ctaMensajePredeterminado || '');
+        return `https://wa.me/${numero}${mensaje ? '?text=' + mensaje : ''}`;
+      }
+      case 'telefono':
+        return `tel:${valor.replace(/\s/g, '')}`;
+      case 'email':
+        return `mailto:${valor}`;
+      case 'seccion':
+        return valor.startsWith('#') ? valor : `#${valor}`;
+      case 'url':
+      default:
+        return valor.startsWith('http') ? valor : `https://${valor}`;
+    }
+  }
+
+  /** Placeholder según el tipo de destino elegido */
+  placeholderCta(tipo?: CtaDestinoTipo): string {
+    switch (tipo) {
+      case 'whatsapp': return '52618XXXXXXX (con lada del país)';
+      case 'telefono': return '+52 618 123 4567';
+      case 'email': return 'contacto@vortizarquitectos.com.mx';
+      case 'seccion': return 'contacto (sin #)';
+      case 'url':
+      default: return 'https://ejemplo.com/pagina';
+    }
+  }
+
+  /** Etiqueta de ayuda según el tipo */
+  ayudaCta(tipo?: CtaDestinoTipo): string {
+    switch (tipo) {
+      case 'whatsapp': return 'Abre WhatsApp con el mensaje predefinido';
+      case 'telefono': return 'En móvil abre la app de llamadas';
+      case 'email': return 'Abre el cliente de correo del usuario';
+      case 'seccion': return 'Scroll a una sección de la misma página (ej. contacto, servicios)';
+      case 'url':
+      default: return 'Cualquier URL externa o interna del sitio';
+    }
   }
 }
