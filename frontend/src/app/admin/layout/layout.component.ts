@@ -398,12 +398,27 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   // ============ MÉTRICAS DEL MES (MODAL PERFIL) ============
-  metricasMes = signal<MetricasMes>({ consultas: 0, citas: 0, paginas: 0, mes: '' });
+  statsPersonales = signal({ proyectosTotales: 0, clientesAtendidos: 0 });
+  cargandoStatsPersonales = signal(true);
   metricasCargadas = false;
   cargandoMetricas = signal(false);
+  metricasMes = signal<MetricasMes>({ consultas: 0, citas: 0, paginas: 0, mes: '' });
 
   private cargarMetricasMes() {
     this.cargandoMetricas.set(true);
+    // 📊 Stats personales del usuario para el dropdown de perfil
+    this.perfilService.obtenerEstadisticas().subscribe({
+      next: (stats) => {
+        this.statsPersonales.set({
+          proyectosTotales: stats.proyectosTotales,
+          clientesAtendidos: stats.clientesAtendidos,
+        });
+        this.cargandoStatsPersonales.set(false);
+      },
+      error: () => {
+        this.cargandoStatsPersonales.set(false);
+      },
+    });
     this.perfilService.obtenerMetricasMes().subscribe({
       next: (data) => {
         this.metricasCargadas = true;

@@ -19,6 +19,7 @@ import { ImageUploadComponent } from '../../../shared/image-upload/image-upload.
 import { SkeletonComponent } from '../../../shared/skeleton/skeleton.component';
 import { ActivatedRoute, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-perfil',

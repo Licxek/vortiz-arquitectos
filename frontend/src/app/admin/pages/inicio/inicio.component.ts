@@ -705,23 +705,67 @@ export class InicioComponent implements OnInit, OnDestroy {
   }
 
   private aplicarParamsDeUrl() {
-    const accion = this.route.snapshot.queryParamMap.get('accion');
+    const params = this.route.snapshot.queryParamMap;
+    const accion = params.get('accion');
+    const periodo = params.get('periodo');
 
-    // Guard: solo ejecutar la acción UNA vez
-    if (accion && !this.accionEjecutada.has(accion)) {
+    // ============ ACCIÓN: nuevo proyecto (redirige) ============
+    if (accion === 'nuevo-proyecto' && !this.accionEjecutada.has(accion)) {
       this.accionEjecutada.add(accion);
+      this.router.navigate(['/admin/proyectos', 'nuevo'], { replaceUrl: true });
+      return;
+    }
 
-      if (accion === 'nuevo-proyecto') {
-        // replaceUrl para que la URL del historial sea limpia y no haya loop
-        this.router.navigate(['/admin/proyectos', 'nuevo'], {
+    // ============ ACCIÓN: refrescar datos ============
+    if (accion === 'refrescar' && !this.accionEjecutada.has(accion)) {
+      this.accionEjecutada.add(accion);
+      this.refrescarManual();
+      // Limpiar URL para que no se repita al volver
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { accion: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+      return;
+    }
+
+    // ============ ACCIÓN: modo focus ============
+    if (accion === 'focus' && !this.accionEjecutada.has(accion)) {
+      this.accionEjecutada.add(accion);
+      // Activar modo focus si no está ya activo
+      if (!this.modoFocus) {
+        this.modoFocus = true;
+        this.cdr.detectChanges();
+      }
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { accion: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+      return;
+    }
+
+    // ============ QUERYPARAM: periodo (hoy | semana | mes | año) ============
+    if (periodo && ['hoy', 'semana', 'mes', 'año'].includes(periodo)) {
+      const key = `periodo-${periodo}`;
+      if (!this.accionEjecutada.has(key)) {
+        this.accionEjecutada.add(key);
+        // Solo cambiar si es distinto al actual (evita recargas innecesarias)
+        if (this.periodoActivo !== periodo) {
+          this.cambiarPeriodo(periodo as any);
+        }
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { periodo: null },
+          queryParamsHandling: 'merge',
           replaceUrl: true,
         });
-        return;
       }
     }
 
-    // Scroll al fragment si existe (#vision-general, etc.)
-    // Scroll al fragment si existe (#vision-general, etc.)
+    // ============ FRAGMENT: scroll a sección ============
     const fragment = this.route.snapshot.fragment;
     if (fragment && !this.accionEjecutada.has(`fragment-${fragment}`)) {
       this.accionEjecutada.add(`fragment-${fragment}`);
@@ -732,7 +776,7 @@ export class InicioComponent implements OnInit, OnDestroy {
           el.classList.add('vortiz-highlight-flash');
           setTimeout(() => el.classList.remove('vortiz-highlight-flash'), 2000);
 
-          // 👇 LIMPIAR el fragment de la URL para que al volver no se vuelva a hacer scroll
+          // Limpiar fragment de URL
           this.router.navigate([], {
             relativeTo: this.route,
             fragment: undefined,
