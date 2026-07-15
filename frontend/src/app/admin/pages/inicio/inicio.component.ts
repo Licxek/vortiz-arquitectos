@@ -776,12 +776,9 @@ export class InicioComponent implements OnInit, OnDestroy {
           el.classList.add('vortiz-highlight-flash');
           setTimeout(() => el.classList.remove('vortiz-highlight-flash'), 2000);
 
-          // Limpiar fragment de URL
-          this.router.navigate([], {
-            relativeTo: this.route,
-            fragment: undefined,
-            replaceUrl: true,
-          });
+          // Limpiar fragment con history API (más confiable que router.navigate)
+          const urlLimpia = window.location.pathname + window.location.search;
+          window.history.replaceState({}, '', urlLimpia);
         }
       }, 600);
     }

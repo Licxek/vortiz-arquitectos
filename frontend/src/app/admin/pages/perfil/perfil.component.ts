@@ -91,6 +91,7 @@ export class PerfilComponent implements OnInit {
 
   sesiones: Sesion[] = [];
   cargandoSesiones = signal(true);
+  private accionEjecutada = new Set<string>();
 
   confirmModal = {
     abierto: false,
@@ -304,29 +305,52 @@ export class PerfilComponent implements OnInit {
   private aplicarParamsDeUrl() {
     const params = this.route.snapshot.queryParamMap;
     const fragment = this.route.snapshot.fragment;
-
-    // Acciones que abren modales o activan modos
     const accion = params.get('accion');
-    if (accion === 'editar') {
+
+    // ============ ACCIÓN: editar perfil ============
+    if (accion === 'editar' && !this.accionEjecutada.has('editar')) {
+      this.accionEjecutada.add('editar');
       setTimeout(() => {
         this.activarEdicion();
         this.cdr.detectChanges();
       }, 300);
-    } else if (accion === 'cambiar-foto') {
+      // Limpiar el accion de la URL
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { accion: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
+
+    // ============ ACCIÓN: cambiar foto ============
+    if (accion === 'cambiar-foto' && !this.accionEjecutada.has('cambiar-foto')) {
+      this.accionEjecutada.add('cambiar-foto');
       setTimeout(() => {
         this.abrirModalFoto();
         this.cdr.detectChanges();
       }, 300);
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { accion: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
     }
 
-    // Scroll + highlight a sección
-    if (fragment) {
+    // ============ FRAGMENT: scroll a sección ============
+    if (fragment && !this.accionEjecutada.has(`fragment-${fragment}`)) {
+      this.accionEjecutada.add(`fragment-${fragment}`);
       setTimeout(() => {
         const el = document.getElementById(fragment);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           el.classList.add('vortiz-highlight-flash');
           setTimeout(() => el.classList.remove('vortiz-highlight-flash'), 2000);
+
+          // Limpiar el fragment de la URL con history API (más confiable que router.navigate)
+          const urlLimpia = window.location.pathname + window.location.search;
+          window.history.replaceState({}, '', urlLimpia);
         }
       }, 400);
     }
