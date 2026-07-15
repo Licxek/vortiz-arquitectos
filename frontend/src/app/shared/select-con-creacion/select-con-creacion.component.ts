@@ -54,10 +54,13 @@ export interface OpcionSelect {
         </svg>
       </button>
 
-      <!-- Dropdown -->
+      <!-- Dropdown (fixed para escapar del overflow del padre) -->
       <div
         *ngIf="abierto()"
-        class="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-[fadeIn_0.15s_ease-out]"
+        class="fixed bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[9999] animate-[fadeIn_0.15s_ease-out]"
+        [style.top]="dropdownStyle().top"
+        [style.left]="dropdownStyle().left"
+        [style.width]="dropdownStyle().width"
       >
         <!-- Buscador / creador -->
         <div class="p-2 border-b border-gray-100 bg-gray-50">
@@ -83,7 +86,7 @@ export interface OpcionSelect {
               (keydown.enter)="onEnter($event)"
               (keydown.escape)="cerrar()"
               [placeholder]="permitirCrear ? 'Buscar o crear nueva...' : 'Buscar...'"
-              class="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] transition-all"
+              class="buscador-dropdown w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] transition-all"
             />
           </div>
           <p *ngIf="permitirCrear && puedeCrear()" class="text-[10px] text-gray-500 mt-1.5 flex items-center gap-1 px-1">
@@ -181,6 +184,13 @@ export class SelectConCreacionComponent {
   abierto = signal(false);
   busqueda = signal('');
 
+  // Posición calculada del dropdown (para escapar del overflow del padre)
+  dropdownStyle = signal<{ top: string; left: string; width: string }>({
+    top: '0px',
+    left: '0px',
+    width: '0px',
+  });
+
   labelSeleccionado = computed(() => {
     const op = this.opcionesSignal().find((o) => o.value === this.valueSignal());
     return op?.label || '';
@@ -204,10 +214,31 @@ export class SelectConCreacionComponent {
     this.abierto.update((v) => !v);
     if (this.abierto()) {
       this.busqueda.set('');
+      this.calcularPosicionDropdown();
       setTimeout(() => {
-        const input = this.el.nativeElement.querySelector('input');
+        const input = this.el.nativeElement.querySelector('input.buscador-dropdown');
         input?.focus();
       }, 50);
+    }
+  }
+
+  /** Calcula la posición del dropdown para renderizarlo en el body (escapar overflow) */
+  private calcularPosicionDropdown() {
+    const boton = this.el.nativeElement.querySelector('button') as HTMLElement;
+    if (!boton) return;
+    const rect = boton.getBoundingClientRect();
+    this.dropdownStyle.set({
+      top: `${rect.bottom + 6}px`,
+      left: `${rect.left}px`,
+      width: `${rect.width}px`,
+    });
+  }
+
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  onScrollResize() {
+    if (this.abierto()) {
+      this.calcularPosicionDropdown();
     }
   }
 
