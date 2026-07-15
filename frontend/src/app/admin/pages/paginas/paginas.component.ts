@@ -628,7 +628,7 @@ export class PaginasComponent implements OnInit {
         icono: '📊',
         campos: [
           {
-            key: 'lista',    // ✅ BIEN — igual que credenciales, hitos, valores
+            key: 'lista', // ✅ BIEN — igual que credenciales, hitos, valores
             label: 'Estadísticas destacadas',
             tipo: 'lista',
             ayuda: 'Los 3 números grandes que aparecen debajo de la bio del arquitecto',
@@ -956,7 +956,8 @@ export class PaginasComponent implements OnInit {
             key: 'descripcion',
             label: 'Descripción / lema',
             tipo: 'textarea',
-            default: 'Tu privacidad es importante para nosotros. Aquí te explicamos cómo tratamos tu información.',
+            default:
+              'Tu privacidad es importante para nosotros. Aquí te explicamos cómo tratamos tu información.',
           },
           {
             key: 'fechaActualizacion',
@@ -982,8 +983,7 @@ export class PaginasComponent implements OnInit {
             key: 'contenido',
             label: 'Texto introductorio',
             tipo: 'textarea',
-            placeholder:
-              'Explica quién es tu empresa y el compromiso con la protección de datos.',
+            placeholder: 'Explica quién es tu empresa y el compromiso con la protección de datos.',
           },
         ],
       },
@@ -1366,7 +1366,12 @@ export class PaginasComponent implements OnInit {
         nombre: 'Modificaciones',
         icono: '🔄',
         campos: [
-          { key: 'titulo', label: 'Título', tipo: 'texto', default: 'Modificaciones a los términos' },
+          {
+            key: 'titulo',
+            label: 'Título',
+            tipo: 'texto',
+            default: 'Modificaciones a los términos',
+          },
           { key: 'contenido', label: 'Contenido', tipo: 'textarea' },
         ],
       },
@@ -2442,6 +2447,7 @@ export class PaginasComponent implements OnInit {
   servicioAEliminar: Servicio | null = null;
   serviciosDraft: Servicio[] = [];
   private tempIdSeq = -1;
+  private scrollItemTarget: string | null = null;
 
   private servicioVacio() {
     return { titulo: '', descripcion: '', categoria: 'tramites', icono: 'document', imagen: '' };
@@ -2467,6 +2473,7 @@ export class PaginasComponent implements OnInit {
       imagen: s.imagen,
     };
     this.servicioFormAbierto = true;
+    this.scrollAlItem(`servicio-item-${s.id}`);
   }
 
   cancelarServicioForm() {
@@ -2647,11 +2654,12 @@ export class PaginasComponent implements OnInit {
       anio: p.anio,
       colorMarca: p.colorMarca,
       descripcion: p.descripcion || '',
-      cliente: p.cliente || '', // 👈 NUEVO
-      imagenesPublicas: [...(p.imagenesPublicas || [])], // 👈 NUEVO
-      videoUrl: p.videoUrl || '', // 👈 NUEVO
+      cliente: p.cliente || '',
+      imagenesPublicas: [...(p.imagenesPublicas || [])],
+      videoUrl: p.videoUrl || '',
     };
     this.proyectoFormAbierto = true;
+    this.scrollAlItem(`proyecto-item-${p.id}`);
   }
 
   cancelarProyectoForm() {
@@ -3558,5 +3566,18 @@ export class PaginasComponent implements OnInit {
       this.guardarColorPersonalizado(hex);
       this.cdr.markForCheck();
     }, 800);
+  }
+
+  /** Scrollea al item editado para que quede visible tras abrir el form */
+  private scrollAlItem(elementId: string) {
+    this.scrollItemTarget = elementId;
+    // Delay para que Angular renderice el form dentro del item
+    setTimeout(() => {
+      const el = document.getElementById(elementId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      this.scrollItemTarget = null;
+    }, 200);
   }
 }
