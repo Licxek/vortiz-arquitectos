@@ -18,6 +18,7 @@ import { ColoresGuardadosService } from '../../../core/services/colores-guardado
 import { SelectConCreacionComponent } from '../../../shared/select-con-creacion/select-con-creacion.component';
 import { CategoriasService, Categoria } from '../../../core/services/categorias.service';
 import { PaginasFijasService } from '../../../core/services/paginas-fijas.service';
+import { TelefonoInputComponent } from '../../../shared/telefono-input/telefono-input.component';
 
 interface Pagina {
   id: number;
@@ -133,6 +134,7 @@ interface BorradorLocal {
     SkeletonComponent,
     ImageGalleryInputComponent,
     SelectConCreacionComponent,
+    TelefonoInputComponent,
   ],
   templateUrl: './paginas.component.html',
 })
@@ -3640,5 +3642,13 @@ export class PaginasComponent implements OnInit {
     const titulo = (bloque.titulo || '').trim();
     if (titulo) return `${tipoLabel}: ${titulo}`;
     return tipoLabel;
+  }
+
+  /** Devuelve las opciones formateadas para el select-con-creacion */
+  opcionesBloquesSeccion(bloque: BloqueContenido): { value: string; label: string }[] {
+    return this.bloquesParaSeccion(bloque).map((b) => ({
+      value: 'bloque-' + b.id,
+      label: b.label,
+    }));
   }
 }
