@@ -4663,6 +4663,8 @@
                       <div
                         *ngFor="let s of serviciosDraft; trackBy: trackServicio"
                         cdkDrag
+                        [id]="'servicio-item-' + s.id"
+                        style="scroll-margin-top: 100px; scroll-margin-bottom: 100px;"
                         class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
                       >
                         <!-- Handle de arrastre -->
@@ -5019,6 +5021,8 @@
                       <div
                         *ngFor="let p of proyectosDraft; trackBy: trackProyecto"
                         cdkDrag
+                        [id]="'proyecto-item-' + p.id"
+                        style="scroll-margin-top: 100px; scroll-margin-bottom: 100px;"
                         class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
                       >
                         <button
