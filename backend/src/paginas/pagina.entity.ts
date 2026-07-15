@@ -15,6 +15,8 @@ export interface SeoPagina {
   keywords: string;
 }
 
+export type CtaDestinoTipo = 'url' | 'whatsapp' | 'telefono' | 'email' | 'seccion';
+
 export interface BloquePagina {
   id: number;
   tipo:
@@ -37,6 +39,12 @@ export interface BloquePagina {
   imagenes?: string[];
   direccion?: string;
   campos?: string[];
+  serviciosIds?: number[];
+  // 👇 NUEVO para CTA multi-destino
+  ctaDestinoTipo?: CtaDestinoTipo;
+  ctaDestinoValor?: string;
+  ctaMensajePredeterminado?: string;
+  ctaAbrirEnNuevaPestana?: boolean;
 }
 
 @Entity({ name: 'paginas' })
