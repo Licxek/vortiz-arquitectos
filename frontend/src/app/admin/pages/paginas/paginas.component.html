@@ -2643,21 +2643,6 @@
                               💡 Agrega más bloques a esta página para poder enlazarlos como sección.
                             </div>
                             <div *ngIf="bloquesParaSeccion(bloque).length > 0" class="mt-3">
-
-                              <div *ngIf="bloquesParaSeccion(bloque).length > 0" class="mt-3">
-                              <!-- DEBUG TEMPORAL -->
-                              <pre class="text-xs bg-yellow-50 p-2 mb-2 rounded">{{ opcionesBloquesSeccion(bloque) | json }}</pre>
-
-                              <app-select-con-creacion
-                                [opciones]="opcionesBloquesSeccion(bloque)"
-                                [value]="bloque.ctaDestinoValor || ''"
-                                (valueChange)="bloque.ctaDestinoValor = $event"
-                                [permitirCrear]="false"
-                                placeholder="— Elige un bloque destino —"
-                              ></app-select-con-creacion>
-                            </div>
-
-
                               <app-select-con-creacion
                                 [opciones]="opcionesBloquesSeccion(bloque)"
                                 [value]="bloque.ctaDestinoValor || ''"

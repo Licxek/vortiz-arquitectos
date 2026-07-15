@@ -78,7 +78,8 @@ export interface OpcionSelect {
             <input
               #inputBusqueda
               type="text"
-              [(ngModel)]="busqueda"
+              [value]="busqueda()"
+              (input)="busqueda.set($any($event.target).value)"
               (keydown.enter)="onEnter($event)"
               (keydown.escape)="cerrar()"
               [placeholder]="permitirCrear ? 'Buscar o crear nueva...' : 'Buscar...'"
@@ -143,7 +144,7 @@ export interface OpcionSelect {
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-xs text-gray-500">Crear nueva categoría</p>
-              <p class="text-sm font-semibold text-gray-900 truncate">"{{ busqueda }}"</p>
+              <p class="text-sm font-semibold text-gray-900 truncate">"{{ busqueda() }}"</p>
             </div>
           </button>
         </div>
@@ -162,7 +163,7 @@ export class SelectConCreacionComponent {
   @Output() nuevaOpcion = new EventEmitter<{ value: string; label: string }>();
 
   abierto = signal(false);
-  busqueda = '';
+  busqueda = signal('');
 
   labelSeleccionado = computed(() => {
     const op = this.opciones.find((o) => o.value === this.value);
@@ -175,8 +176,8 @@ export class SelectConCreacionComponent {
   });
 
   opcionesFiltradas = computed(() => {
-    if (!this.busqueda.trim()) return this.opciones;
-    const q = this.busqueda.toLowerCase();
+    const q = this.busqueda().trim().toLowerCase();
+    if (!q) return this.opciones;
     return this.opciones.filter((o) => o.label.toLowerCase().includes(q));
   });
 
@@ -185,7 +186,7 @@ export class SelectConCreacionComponent {
   toggleAbierto() {
     this.abierto.update((v) => !v);
     if (this.abierto()) {
-      this.busqueda = '';
+      this.busqueda.set('');
       setTimeout(() => {
         const input = this.el.nativeElement.querySelector('input');
         input?.focus();
@@ -195,12 +196,12 @@ export class SelectConCreacionComponent {
 
   cerrar() {
     this.abierto.set(false);
-    this.busqueda = '';
+    this.busqueda.set('');
   }
 
   puedeCrear(): boolean {
-    if (!this.permitirCrear || !this.busqueda.trim()) return false;
-    const q = this.busqueda.toLowerCase().trim();
+    if (!this.permitirCrear || !this.busqueda().trim()) return false;
+    const q = this.busqueda().toLowerCase().trim();
     // Solo permitir crear si NO existe una opción idéntica
     return !this.opciones.some((o) => o.label.toLowerCase() === q);
   }
@@ -220,7 +221,7 @@ export class SelectConCreacionComponent {
   }
 
   crearYSeleccionar() {
-    const label = this.busqueda.trim();
+    const label = this.busqueda().trim();
     if (!label) return;
     // Generar value slug-friendly desde el label
     const value = label
