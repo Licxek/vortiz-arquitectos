@@ -2473,7 +2473,6 @@ export class PaginasComponent implements OnInit {
       imagen: s.imagen,
     };
     this.servicioFormAbierto = true;
-    this.scrollAlItem(`servicio-item-${s.id}`);
   }
 
   cancelarServicioForm() {
@@ -2659,7 +2658,6 @@ export class PaginasComponent implements OnInit {
       videoUrl: p.videoUrl || '',
     };
     this.proyectoFormAbierto = true;
-    this.scrollAlItem(`proyecto-item-${p.id}`);
   }
 
   cancelarProyectoForm() {
@@ -3566,18 +3564,5 @@ export class PaginasComponent implements OnInit {
       this.guardarColorPersonalizado(hex);
       this.cdr.markForCheck();
     }, 800);
-  }
-
-  /** Scrollea al item editado para que quede visible tras abrir el form */
-  private scrollAlItem(elementId: string) {
-    this.scrollItemTarget = elementId;
-    // Delay para que Angular renderice el form dentro del item
-    setTimeout(() => {
-      const el = document.getElementById(elementId);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      this.scrollItemTarget = null;
-    }, 200);
   }
 }
