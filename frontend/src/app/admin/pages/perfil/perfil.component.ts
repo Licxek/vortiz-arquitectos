@@ -793,4 +793,8 @@ export class PerfilComponent implements OnInit {
       },
     });
   }
+
+  irAReportes() {
+    this.router.navigate(['/admin/inicio'], { fragment: 'vision-general' });
+  }
 }
