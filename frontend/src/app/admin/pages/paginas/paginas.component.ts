@@ -3625,10 +3625,13 @@ export class PaginasComponent implements OnInit {
       default: return 'Cualquier URL externa o interna del sitio';
     }
   }
+  // Cache de opciones para el select-con-creacion (mantiene referencia estable)
+  private _opcionesCache = new Map<number, { hash: string; opciones: { value: string; label: string }[] }>();
+
   /** Devuelve los bloques disponibles para navegar (excluye el bloque actual y bloques sin sentido de anclar) */
   bloquesParaSeccion(bloqueActual: BloqueContenido): { id: number; label: string; tipo: string }[] {
     return this.formNuevaPagina.bloques
-      .filter((b) => b.id !== bloqueActual.id) // no mostrarse a sí mismo
+      .filter((b) => b.id !== bloqueActual.id)
       .map((b) => ({
         id: b.id,
         tipo: b.tipo,
@@ -3644,11 +3647,23 @@ export class PaginasComponent implements OnInit {
     return tipoLabel;
   }
 
-  /** Devuelve las opciones formateadas para el select-con-creacion */
+  /** Devuelve las opciones formateadas para el select-con-creacion, cacheadas por bloque para mantener referencia estable */
   opcionesBloquesSeccion(bloque: BloqueContenido): { value: string; label: string }[] {
-    return this.bloquesParaSeccion(bloque).map((b) => ({
+    const bloques = this.bloquesParaSeccion(bloque);
+    // Hash simple del contenido para saber si cambió
+    const hash = bloques.map((b) => `${b.id}:${b.label}`).join('|');
+
+    const cache = this._opcionesCache.get(bloque.id);
+    if (cache && cache.hash === hash) {
+      return cache.opciones; // Misma referencia si no cambió nada
+    }
+
+    // Construir nuevo array solo si algo cambió
+    const opciones = bloques.map((b) => ({
       value: 'bloque-' + b.id,
       label: b.label,
     }));
+    this._opcionesCache.set(bloque.id, { hash, opciones });
+    return opciones;
   }
 }
