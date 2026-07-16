@@ -45,7 +45,6 @@ interface BloqueContenido {
     | 'cta'
     | 'estadisticas'
     | 'servicios'
-    | 'contacto'
     | 'mapa';
   titulo?: string;
   subtitulo?: string;
@@ -298,7 +297,7 @@ export class PaginasComponent implements OnInit {
       id: 'landing',
       nombre: 'Landing Page',
       descripcion: 'Página de aterrizaje con CTA fuerte',
-      bloquesIniciales: ['hero', 'estadisticas', 'servicios', 'cta', 'contacto'],
+      bloquesIniciales: ['hero', 'estadisticas', 'servicios', 'cta'],
       icono: 'rocket',
     },
     {
@@ -345,12 +344,6 @@ export class PaginasComponent implements OnInit {
       label: 'Servicios',
       descripcion: 'Lista de servicios ofrecidos',
       color: 'green',
-    },
-    {
-      tipo: 'contacto',
-      label: 'Formulario contacto',
-      descripcion: 'Formulario de contacto',
-      color: 'orange',
     },
     { tipo: 'mapa', label: 'Mapa', descripcion: 'Mapa con ubicación', color: 'gray' },
   ];
@@ -1722,8 +1715,6 @@ export class PaginasComponent implements OnInit {
       nuevoBloque.imagenes = [];
     } else if (tipo === 'servicios') {
       nuevoBloque.serviciosIds = []; // empieza sin nada seleccionado
-    } else if (tipo === 'contacto') {
-      nuevoBloque.campos = ['Nombre', 'Correo', 'Teléfono', 'Mensaje'];
     } else if (tipo === 'mapa') {
       nuevoBloque.direccion = 'Milpillas 101, La Forestal, Durango';
     } else if (tipo === 'cta') {
@@ -1901,15 +1892,6 @@ export class PaginasComponent implements OnInit {
 
   eliminarImagenGaleria(bloque: BloqueContenido, index: number) {
     if (bloque.imagenes) bloque.imagenes.splice(index, 1);
-  }
-
-  agregarCampoFormulario(bloque: BloqueContenido, campo: string) {
-    if (!bloque.campos) bloque.campos = [];
-    if (campo.trim()) bloque.campos.push(campo.trim());
-  }
-
-  eliminarCampoFormulario(bloque: BloqueContenido, index: number) {
-    if (bloque.campos) bloque.campos.splice(index, 1);
   }
 
   // Map slug → schema key

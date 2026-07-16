@@ -28,7 +28,6 @@ export interface BloquePagina {
     | 'cta'
     | 'estadisticas'
     | 'servicios'
-    | 'contacto'
     | 'mapa';
   titulo?: string;
   subtitulo?: string;

@@ -392,39 +392,6 @@
           </div>
         </section>
 
-        <!-- ============ CONTACTO ============ -->
-        <section *ngSwitchCase="'contacto'" [id]="'bloque-' + bloque.id" class="py-16 md:py-20 bg-gray-50 scroll-mt-20">
-          <div class="max-w-2xl mx-auto px-4">
-            <div class="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100">
-              <h2 *ngIf="bloque.titulo" class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                {{ bloque.titulo }}
-              </h2>
-              <p *ngIf="bloque.subtitulo" class="text-gray-600 mb-6">{{ bloque.subtitulo }}</p>
-
-              <div class="space-y-3" *ngIf="(bloque.campos?.length || 0) > 0">
-                <input
-                  *ngFor="let campo of bloque.campos"
-                  type="text"
-                  [placeholder]="campo"
-                  readonly
-                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 outline-none cursor-pointer focus:border-[#0a4d7a]"
-                />
-              </div>
-
-              <a
-                routerLink="/citas"
-                class="block mt-6 w-full px-6 py-4 bg-[#0a4d7a] hover:bg-[#0a5d8f] text-white text-center rounded-xl text-sm md:text-base font-bold shadow-md transition-all hover:-translate-y-0.5"
-              >
-                {{ bloque.textoBoton || 'Agendar una cita' }}
-              </a>
-
-              <p class="text-xs text-center text-gray-500 mt-4">
-                Te redirigimos a nuestro formulario completo de citas
-              </p>
-            </div>
-          </div>
-        </section>
-
         <!-- ============ MAPA ============ -->
         <section *ngSwitchCase="'mapa'" [id]="'bloque-' + bloque.id" class="py-16 md:py-20 scroll-mt-20">
           <div class="max-w-5xl mx-auto px-4">

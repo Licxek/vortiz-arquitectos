@@ -19,7 +19,7 @@ export interface BloquePagina {
   id: number;
   tipo:
     | 'hero' | 'texto' | 'imagen' | 'galeria' | 'cita'
-    | 'cta' | 'estadisticas' | 'servicios' | 'contacto' | 'mapa';
+    | 'cta' | 'estadisticas' | 'servicios' | 'mapa';
   titulo?: string;
   subtitulo?: string;
   contenido?: string;

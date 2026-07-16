@@ -57,10 +57,11 @@ export interface OpcionSelect {
       <!-- Dropdown (fixed para escapar del overflow del padre) -->
       <div
         *ngIf="abierto()"
-        class="fixed bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[9999] animate-[fadeIn_0.15s_ease-out]"
+        class="fixed bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[9999] animate-[fadeIn_0.15s_ease-out] flex flex-col"
         [style.top]="dropdownStyle().top"
         [style.left]="dropdownStyle().left"
         [style.width]="dropdownStyle().width"
+        [style.maxHeight]="dropdownStyle().maxHeight"
       >
         <!-- Buscador / creador -->
         <div class="p-2 border-b border-gray-100 bg-gray-50">
@@ -98,7 +99,7 @@ export interface OpcionSelect {
         </div>
 
         <!-- Lista de opciones -->
-        <div class="max-h-64 overflow-y-auto">
+        <div class="flex-1 overflow-y-auto min-h-0">
           <!-- Opciones filtradas -->
           <button
             *ngFor="let op of opcionesFiltradas(); trackBy: trackByValue"
@@ -185,10 +186,11 @@ export class SelectConCreacionComponent {
   busqueda = signal('');
 
   // Posición calculada del dropdown (para escapar del overflow del padre)
-  dropdownStyle = signal<{ top: string; left: string; width: string }>({
+  dropdownStyle = signal<{ top: string; left: string; width: string; maxHeight: string }>({
     top: '0px',
     left: '0px',
     width: '0px',
+    maxHeight: '320px',
   });
 
   labelSeleccionado = computed(() => {
@@ -222,15 +224,40 @@ export class SelectConCreacionComponent {
     }
   }
 
-  /** Calcula la posición del dropdown para renderizarlo en el body (escapar overflow) */
+  /** Calcula la posición del dropdown de forma inteligente:
+   *  - Se adapta al ancho del botón
+   *  - Abre hacia abajo por defecto
+   *  - Si no hay espacio abajo, abre hacia arriba
+   *  - Ajusta la altura máxima para no salirse de la pantalla
+   */
   private calcularPosicionDropdown() {
     const boton = this.el.nativeElement.querySelector('button') as HTMLElement;
     if (!boton) return;
+
     const rect = boton.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const espacioAbajo = viewportHeight - rect.bottom - 20; // 20px margen
+    const espacioArriba = rect.top - 20;
+
+    const altoDeseado = 320; // altura ideal del dropdown
+    const abrirArriba = espacioAbajo < 200 && espacioArriba > espacioAbajo;
+
+    let top: number;
+    let maxHeight: number;
+
+    if (abrirArriba) {
+      maxHeight = Math.min(altoDeseado, espacioArriba);
+      top = rect.top - maxHeight - 6;
+    } else {
+      maxHeight = Math.min(altoDeseado, espacioAbajo);
+      top = rect.bottom + 6;
+    }
+
     this.dropdownStyle.set({
-      top: `${rect.bottom + 6}px`,
+      top: `${top}px`,
       left: `${rect.left}px`,
       width: `${rect.width}px`,
+      maxHeight: `${maxHeight}px`,
     });
   }
 
