@@ -6,6 +6,7 @@ import {
   HostListener,
   ElementRef,
   ViewChild,
+  OnDestroy,
   signal,
   computed,
 } from '@angular/core';
@@ -158,7 +159,7 @@ export interface OpcionSelect {
     </div>
   `,
 })
-export class SelectConCreacionComponent {
+export class SelectConCreacionComponent implements OnDestroy {
   // Signals internos que se actualizan con los @Input setters
   private opcionesSignal = signal<OpcionSelect[]>([]);
   private valueSignal = signal<string>('');
@@ -188,6 +189,12 @@ export class SelectConCreacionComponent {
   busqueda = signal('');
 
   @ViewChild('botonPrincipal') botonPrincipal?: ElementRef<HTMLElement>;
+
+  // Listener del scroll que se registra dinámicamente en todos los ancestros
+  private scrollListener = () => {
+    if (this.abierto()) this.calcularPosicionDropdown();
+  };
+  private ancestrosScrolleables: HTMLElement[] = [];
 
   // Posición calculada del dropdown (para escapar del overflow del padre)
   dropdownStyle = signal<{ top: string; left: string; width: string; maxHeight: string }>({
@@ -221,11 +228,41 @@ export class SelectConCreacionComponent {
     if (this.abierto()) {
       this.busqueda.set('');
       this.calcularPosicionDropdown();
+      this.registrarListenersScroll();
       setTimeout(() => {
         const input = this.el.nativeElement.querySelector('input.buscador-dropdown');
         input?.focus();
       }, 50);
+    } else {
+      this.quitarListenersScroll();
     }
+  }
+
+  /** Registra listeners de scroll en TODOS los ancestros scrolleables del botón */
+  private registrarListenersScroll() {
+    this.quitarListenersScroll(); // Limpiar por si acaso
+
+    let el: HTMLElement | null = this.el.nativeElement.parentElement;
+    while (el && el !== document.body) {
+      const style = window.getComputedStyle(el);
+      const overflow = style.overflowY;
+      if (overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') {
+        el.addEventListener('scroll', this.scrollListener, { passive: true });
+        this.ancestrosScrolleables.push(el);
+      }
+      el = el.parentElement;
+    }
+    // También el body por si acaso
+    document.body.addEventListener('scroll', this.scrollListener, { passive: true });
+    this.ancestrosScrolleables.push(document.body);
+  }
+
+  /** Quita todos los listeners de scroll registrados */
+  private quitarListenersScroll() {
+    for (const el of this.ancestrosScrolleables) {
+      el.removeEventListener('scroll', this.scrollListener);
+    }
+    this.ancestrosScrolleables = [];
   }
 
   private calcularPosicionDropdown() {
@@ -291,6 +328,7 @@ export class SelectConCreacionComponent {
   cerrar() {
     this.abierto.set(false);
     this.busqueda.set('');
+    this.quitarListenersScroll();
   }
 
   puedeCrear(): boolean {
@@ -337,4 +375,8 @@ export class SelectConCreacionComponent {
   }
 
   trackByValue = (_: number, op: OpcionSelect) => op.value;
+
+  ngOnDestroy() {
+    this.quitarListenersScroll();
+  }
 }
