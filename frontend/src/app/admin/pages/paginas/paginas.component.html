@@ -2642,26 +2642,60 @@
                             <div *ngIf="bloquesParaSeccion(bloque).length === 0" class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
                               💡 Agrega más bloques a esta página para poder enlazarlos como sección.
                             </div>
-                            <div *ngIf="bloquesParaSeccion(bloque).length > 0" class="mt-3 relative">
-                              <select
-                                [(ngModel)]="bloque.ctaDestinoValor"
-                                class="w-full appearance-none px-4 py-2.5 pr-10 bg-white border border-gray-200 hover:border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-[#0a4d7a] focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer"
-                                [class.text-gray-400]="!bloque.ctaDestinoValor"
+                            <div *ngIf="bloquesParaSeccion(bloque).length > 0" class="mt-3">
+                              <div class="relative group">
+                                <!-- Icono ancla a la izquierda -->
+                                <div class="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md bg-gradient-to-br from-[#0a4d7a]/10 to-[#0a4d7a]/5 flex items-center justify-center pointer-events-none z-10 transition-all group-focus-within:from-[#0a4d7a] group-focus-within:to-[#0a5d8f]">
+                                  <svg
+                                    class="w-3.5 h-3.5 text-[#0a4d7a] transition-colors group-focus-within:text-white"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                  </svg>
+                                </div>
+
+                                <!-- Select -->
+                                <select
+                                  [(ngModel)]="bloque.ctaDestinoValor"
+                                  class="w-full appearance-none pl-12 pr-12 py-3 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 hover:border-[#0a4d7a]/40 hover:shadow-sm rounded-xl text-sm font-medium text-gray-800 outline-none focus:border-[#0a4d7a] focus:ring-4 focus:ring-blue-100 focus:from-white focus:to-white transition-all cursor-pointer"
+                                  [class.text-gray-400]="!bloque.ctaDestinoValor"
+                                  [class.font-normal]="!bloque.ctaDestinoValor"
+                                >
+                                  <option value="" disabled>— Elige un bloque destino —</option>
+                                  <option *ngFor="let b of bloquesParaSeccion(bloque)" [value]="'bloque-' + b.id">
+                                    {{ b.label }}
+                                  </option>
+                                </select>
+
+                                <!-- Chevron con caja -->
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md bg-gray-100 group-hover:bg-gray-200 flex items-center justify-center pointer-events-none transition-colors">
+                                  <svg
+                                    class="w-3.5 h-3.5 text-gray-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </div>
+                              </div>
+
+                              <!-- Info del bloque seleccionado -->
+                              <div
+                                *ngIf="bloque.ctaDestinoValor"
+                                class="mt-2 px-3 py-2 bg-green-50 border border-green-100 rounded-lg flex items-center gap-2 animate-[fadeIn_0.2s_ease-out]"
                               >
-                                <option value="" disabled>— Elige un bloque destino —</option>
-                                <option *ngFor="let b of bloquesParaSeccion(bloque)" [value]="'bloque-' + b.id">
-                                  {{ b.label }}
-                                </option>
-                              </select>
-                              <svg
-                                class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                viewBox="0 0 24 24"
-                              >
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                              </svg>
+                                <svg class="w-4 h-4 text-green-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                <span class="text-xs text-green-800 font-medium">
+                                  Destino: <span class="font-bold">{{ nombreBloqueParaSeccion(bloque) }}</span>
+                                </span>
+                              </div>
                             </div>
                             <p class="text-xs text-gray-500 mt-2">Al hacer click, la página hará scroll suave hasta ese bloque.</p>
                           </ng-container>
@@ -2861,15 +2895,44 @@
                           placeholder="Título de la sección"
                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
                         />
-                        <input
-                          type="text"
-                          [(ngModel)]="bloque.direccion"
-                          placeholder="Dirección a mostrar"
-                          class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] focus:bg-white"
-                        />
-                        <p class="text-xs text-gray-500">
-                          El mapa se generará automáticamente con la dirección
-                        </p>
+
+                        <div>
+                          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                            Dirección
+                          </label>
+                          <app-direccion-autocomplete
+                            [valor]="bloque.direccion || ''"
+                            (valorChange)="bloque.direccion = $event"
+                            placeholder="Ej: Calle Reforma 123, Durango..."
+                          ></app-direccion-autocomplete>
+                          <p class="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Escribe al menos 3 caracteres para ver sugerencias. El mapa se generará automáticamente.
+                          </p>
+                        </div>
+
+                        <!-- Preview del mapa cuando ya hay dirección -->
+                        <div *ngIf="bloque.direccion" class="mt-3">
+                          <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                            Vista previa del mapa
+                          </p>
+                          <div class="rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                            <iframe
+                              [src]="urlMapaPreview(bloque.direccion)"
+                              width="100%"
+                              height="200"
+                              style="border:0;"
+                              loading="lazy"
+                              referrerpolicy="no-referrer-when-downgrade"
+                            ></iframe>
+                          </div>
+                        </div>
                       </div>
                     </ng-container>
                   </div>
