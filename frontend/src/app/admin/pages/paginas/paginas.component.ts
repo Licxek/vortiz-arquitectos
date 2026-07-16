@@ -3649,14 +3649,63 @@ export class PaginasComponent implements OnInit {
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
+  /** Referencia al botón que abrió el dropdown (para reposicionar en scroll) */
+  private botonDropdownSeccionActual: HTMLElement | null = null;
+  private scrollListenerDropdownSeccion = () => this.cerrarDropdownSeccionPorScroll();
+  private ancestrosScrollDropdownSeccion: HTMLElement[] = [];
+
   /** Abre/cierra el dropdown de sección del CTA para un bloque específico */
   toggleDropdownSeccion(bloque: BloqueContenido, boton: HTMLElement): void {
     if (this.dropdownSeccionAbierto === bloque.id) {
-      this.dropdownSeccionAbierto = null;
+      this.cerrarDropdownSeccion();
     } else {
+      this.cerrarDropdownSeccion();
       this.dropdownSeccionAbierto = bloque.id;
+      this.botonDropdownSeccionActual = boton;
       this.calcularPosicionDropdownSeccion(boton);
+      this.registrarScrollListenersDropdownSeccion(boton);
     }
+  }
+
+  /** Cierra el dropdown y limpia los listeners */
+  cerrarDropdownSeccion(): void {
+    this.dropdownSeccionAbierto = null;
+    this.botonDropdownSeccionActual = null;
+    this.quitarScrollListenersDropdownSeccion();
+  }
+
+  /** Cierra el dropdown cuando detecta scroll en cualquier ancestro */
+  private cerrarDropdownSeccionPorScroll(): void {
+    this.cerrarDropdownSeccion();
+    this.cdr.markForCheck?.();
+  }
+
+  /** Registra listeners de scroll en todos los ancestros scrolleables del botón */
+  private registrarScrollListenersDropdownSeccion(boton: HTMLElement): void {
+    this.quitarScrollListenersDropdownSeccion();
+    let el: HTMLElement | null = boton.parentElement;
+    while (el && el !== document.body) {
+      const style = window.getComputedStyle(el);
+      const overflow = style.overflowY;
+      if (overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') {
+        el.addEventListener('scroll', this.scrollListenerDropdownSeccion, { passive: true });
+        this.ancestrosScrollDropdownSeccion.push(el);
+      }
+      el = el.parentElement;
+    }
+    // También el body y window por si acaso
+    document.body.addEventListener('scroll', this.scrollListenerDropdownSeccion, { passive: true });
+    this.ancestrosScrollDropdownSeccion.push(document.body);
+    window.addEventListener('scroll', this.scrollListenerDropdownSeccion, { passive: true });
+  }
+
+  /** Quita todos los listeners de scroll registrados */
+  private quitarScrollListenersDropdownSeccion(): void {
+    for (const el of this.ancestrosScrollDropdownSeccion) {
+      el.removeEventListener('scroll', this.scrollListenerDropdownSeccion);
+    }
+    this.ancestrosScrollDropdownSeccion = [];
+    window.removeEventListener('scroll', this.scrollListenerDropdownSeccion);
   }
 
   /** Calcula la posición fixed del dropdown de sección respecto al viewport */
@@ -3669,7 +3718,6 @@ export class PaginasComponent implements OnInit {
     const espacioAbajo = viewportHeight - rect.bottom - margen;
     const espacioArriba = rect.top - margen;
 
-    // Preferir abrir hacia abajo, solo hacia arriba si NO cabe abajo
     const altoDeseado = 320;
     const abrirArriba = espacioAbajo < 150 && espacioArriba > espacioAbajo;
 
@@ -3684,7 +3732,6 @@ export class PaginasComponent implements OnInit {
       top = rect.bottom + 8;
     }
 
-    // Limitar left al viewport
     const left = Math.max(margen, Math.min(rect.left, viewportWidth - rect.width - margen));
 
     this.dropdownSeccionStyle.set({
@@ -3694,10 +3741,11 @@ export class PaginasComponent implements OnInit {
       maxHeight: `${maxHeight}px`,
     });
   }
+
   /** Selecciona el bloque destino en el CTA y cierra el dropdown */
   seleccionarSeccionDestino(bloque: BloqueContenido, valor: string): void {
     bloque.ctaDestinoValor = valor;
-    this.dropdownSeccionAbierto = null;
+    this.cerrarDropdownSeccion();
     this.marcarCambios();
   }
 

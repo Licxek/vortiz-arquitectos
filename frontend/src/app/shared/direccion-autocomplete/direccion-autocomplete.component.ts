@@ -246,6 +246,7 @@ export class DireccionAutocompleteComponent implements OnDestroy {
     this.busquedaRealizada.set(false);
     this.abierto.set(true);
     this.calcularPosicionDropdown();
+    this.registrarScrollListeners();
 
     if (this.timeoutBusqueda) clearTimeout(this.timeoutBusqueda);
 
@@ -266,12 +267,14 @@ export class DireccionAutocompleteComponent implements OnDestroy {
     if (this._valor.trim().length >= 3) {
       this.abierto.set(true);
       this.calcularPosicionDropdown();
+      this.registrarScrollListeners();
       if (this.sugerencias().length === 0 || this.ultimaQuery !== this._valor.trim()) {
         this.buscarDirecciones(this._valor.trim());
       }
     } else if (this._valor.trim().length > 0) {
       this.abierto.set(true);
       this.calcularPosicionDropdown();
+      this.registrarScrollListeners();
     }
   }
 
@@ -353,6 +356,7 @@ export class DireccionAutocompleteComponent implements OnDestroy {
 
   cerrar(): void {
     this.abierto.set(false);
+    this.quitarScrollListeners();
   }
 
   etiquetaTipo(tipo: string): string {
@@ -434,5 +438,34 @@ export class DireccionAutocompleteComponent implements OnDestroy {
     if (this.abierto()) {
       this.calcularPosicionDropdown();
     }
+  }
+  private scrollListener = () => {
+    if (this.abierto()) this.cerrar();
+  };
+  private ancestrosScrolleables: HTMLElement[] = [];
+
+  private registrarScrollListeners(): void {
+    this.quitarScrollListeners();
+    let el: HTMLElement | null = this.el.nativeElement.parentElement;
+    while (el && el !== document.body) {
+      const style = window.getComputedStyle(el);
+      const overflow = style.overflowY;
+      if (overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') {
+        el.addEventListener('scroll', this.scrollListener, { passive: true });
+        this.ancestrosScrolleables.push(el);
+      }
+      el = el.parentElement;
+    }
+    document.body.addEventListener('scroll', this.scrollListener, { passive: true });
+    this.ancestrosScrolleables.push(document.body);
+    window.addEventListener('scroll', this.scrollListener, { passive: true });
+  }
+
+  private quitarScrollListeners(): void {
+    for (const el of this.ancestrosScrolleables) {
+      el.removeEventListener('scroll', this.scrollListener);
+    }
+    this.ancestrosScrolleables = [];
+    window.removeEventListener('scroll', this.scrollListener);
   }
 }
