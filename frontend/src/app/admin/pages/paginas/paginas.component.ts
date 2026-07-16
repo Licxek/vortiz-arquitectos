@@ -164,6 +164,9 @@ export class PaginasComponent implements OnInit {
   private autoSaveTimer: any = null;
   private actualizadorTiempoTimer: any = null;
   private paginasFijasService = inject(PaginasFijasService);
+  /** ID del bloque cuyo dropdown de sección está abierto (null si ninguno) */
+  dropdownSeccionAbierto: number | null = null;
+
 
   private paginasFijas: Pagina[] = [
     {
@@ -3636,5 +3639,26 @@ export class PaginasComponent implements OnInit {
     const query = encodeURIComponent(direccion);
     const url = `https://maps.google.com/maps?q=${query}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
+  /** Abre/cierra el dropdown de sección del CTA para un bloque específico */
+  toggleDropdownSeccion(bloque: BloqueContenido): void {
+    if (this.dropdownSeccionAbierto === bloque.id) {
+      this.dropdownSeccionAbierto = null;
+    } else {
+      this.dropdownSeccionAbierto = bloque.id;
+    }
+  }
+
+  /** Selecciona el bloque destino en el CTA y cierra el dropdown */
+  seleccionarSeccionDestino(bloque: BloqueContenido, valor: string): void {
+    bloque.ctaDestinoValor = valor;
+    this.dropdownSeccionAbierto = null;
+    this.marcarCambios();
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.dropdownSeccionAbierto = null;
   }
 }

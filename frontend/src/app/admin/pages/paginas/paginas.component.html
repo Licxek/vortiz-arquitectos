@@ -2643,44 +2643,111 @@
                               💡 Agrega más bloques a esta página para poder enlazarlos como sección.
                             </div>
                             <div *ngIf="bloquesParaSeccion(bloque).length > 0" class="mt-3">
-                              <div class="relative group">
-                                <!-- Icono ancla a la izquierda -->
-                                <div class="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md bg-gradient-to-br from-[#0a4d7a]/10 to-[#0a4d7a]/5 flex items-center justify-center pointer-events-none z-10 transition-all group-focus-within:from-[#0a4d7a] group-focus-within:to-[#0a5d8f]">
-                                  <svg
-                                    class="w-3.5 h-3.5 text-[#0a4d7a] transition-colors group-focus-within:text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2.5"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                                  </svg>
-                                </div>
-
-                                <!-- Select -->
-                                <select
-                                  [(ngModel)]="bloque.ctaDestinoValor"
-                                  class="w-full appearance-none pl-12 pr-12 py-3 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 hover:border-[#0a4d7a]/40 hover:shadow-sm rounded-xl text-sm font-medium text-gray-800 outline-none focus:border-[#0a4d7a] focus:ring-4 focus:ring-blue-100 focus:from-white focus:to-white transition-all cursor-pointer"
-                                  [class.text-gray-400]="!bloque.ctaDestinoValor"
-                                  [class.font-normal]="!bloque.ctaDestinoValor"
+                              <div class="relative" (click)="$event.stopPropagation()">
+                                <!-- Botón principal -->
+                                <button
+                                  type="button"
+                                  (click)="toggleDropdownSeccion(bloque)"
+                                  class="w-full flex items-center gap-3 px-3 py-3 bg-gradient-to-br from-white to-gray-50 border-2 rounded-xl text-sm text-left transition-all hover:shadow-sm"
+                                  [class.border-[#0a4d7a]]="dropdownSeccionAbierto === bloque.id"
+                                  [class.ring-4]="dropdownSeccionAbierto === bloque.id"
+                                  [class.ring-blue-100]="dropdownSeccionAbierto === bloque.id"
+                                  [class.border-gray-200]="dropdownSeccionAbierto !== bloque.id"
+                                  [class.hover:border-[#0a4d7a]/40]="dropdownSeccionAbierto !== bloque.id"
                                 >
-                                  <option value="" disabled>— Elige un bloque destino —</option>
-                                  <option *ngFor="let b of bloquesParaSeccion(bloque)" [value]="'bloque-' + b.id">
-                                    {{ b.label }}
-                                  </option>
-                                </select>
-
-                                <!-- Chevron con caja -->
-                                <div class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md bg-gray-100 group-hover:bg-gray-200 flex items-center justify-center pointer-events-none transition-colors">
-                                  <svg
-                                    class="w-3.5 h-3.5 text-gray-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2.5"
-                                    viewBox="0 0 24 24"
+                                  <!-- Icono ancla -->
+                                  <div
+                                    class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all"
+                                    [class.bg-gradient-to-br]="true"
+                                    [class.from-[#0a4d7a]]="dropdownSeccionAbierto === bloque.id || bloque.ctaDestinoValor"
+                                    [class.to-[#0a5d8f]]="dropdownSeccionAbierto === bloque.id || bloque.ctaDestinoValor"
+                                    [class.from-[#0a4d7a]/10]="dropdownSeccionAbierto !== bloque.id && !bloque.ctaDestinoValor"
+                                    [class.to-[#0a4d7a]/5]="dropdownSeccionAbierto !== bloque.id && !bloque.ctaDestinoValor"
                                   >
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                                  </svg>
+                                    <svg
+                                      class="w-4 h-4 transition-colors"
+                                      [class.text-white]="dropdownSeccionAbierto === bloque.id || bloque.ctaDestinoValor"
+                                      [class.text-[#0a4d7a]]="dropdownSeccionAbierto !== bloque.id && !bloque.ctaDestinoValor"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      stroke-width="2.5"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                    </svg>
+                                  </div>
+
+                                  <!-- Label -->
+                                  <span
+                                    class="flex-1 truncate"
+                                    [class.text-gray-800]="bloque.ctaDestinoValor"
+                                    [class.font-semibold]="bloque.ctaDestinoValor"
+                                    [class.text-gray-400]="!bloque.ctaDestinoValor"
+                                  >
+                                    {{ bloque.ctaDestinoValor ? nombreBloqueParaSeccion(bloque) : '— Elige un bloque destino —' }}
+                                  </span>
+
+                                  <!-- Chevron -->
+                                  <div class="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center shrink-0 transition-all"
+                                    [class.rotate-180]="dropdownSeccionAbierto === bloque.id"
+                                  >
+                                    <svg class="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                  </div>
+                                </button>
+
+                                <!-- Lista de opciones (dropdown) -->
+                                <div
+                                  *ngIf="dropdownSeccionAbierto === bloque.id"
+                                  class="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 max-h-72 overflow-y-auto animate-[fadeIn_0.15s_ease-out]"
+                                >
+                                  <!-- Header con contador -->
+                                  <div class="px-3 py-2 bg-gradient-to-br from-blue-50 to-white border-b border-gray-100 flex items-center justify-between">
+                                    <p class="text-[10px] font-bold uppercase tracking-widest text-[#0a4d7a]">
+                                      Bloques disponibles
+                                    </p>
+                                    <span class="text-[10px] font-semibold text-gray-500 px-2 py-0.5 bg-white rounded-full border border-gray-200">
+                                      {{ bloquesParaSeccion(bloque).length }}
+                                    </span>
+                                  </div>
+
+                                  <!-- Opciones -->
+                                  <button
+                                    *ngFor="let b of bloquesParaSeccion(bloque); let i = index"
+                                    type="button"
+                                    (click)="seleccionarSeccionDestino(bloque, 'bloque-' + b.id)"
+                                    class="w-full px-3 py-2.5 text-left hover:bg-blue-50 transition-colors flex items-center gap-3 border-b border-gray-50 last:border-0 group"
+                                    [class.bg-blue-50]="bloque.ctaDestinoValor === ('bloque-' + b.id)"
+                                  >
+                                    <!-- Número/index -->
+                                    <span
+                                      class="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors"
+                                      [class.bg-[#0a4d7a]]="bloque.ctaDestinoValor === ('bloque-' + b.id)"
+                                      [class.text-white]="bloque.ctaDestinoValor === ('bloque-' + b.id)"
+                                      [class.bg-gray-100]="bloque.ctaDestinoValor !== ('bloque-' + b.id)"
+                                      [class.text-gray-600]="bloque.ctaDestinoValor !== ('bloque-' + b.id)"
+                                      [class.group-hover:bg-blue-100]="bloque.ctaDestinoValor !== ('bloque-' + b.id)"
+                                      [class.group-hover:text-[#0a4d7a]]="bloque.ctaDestinoValor !== ('bloque-' + b.id)"
+                                    >
+                                      {{ i + 1 }}
+                                    </span>
+
+                                    <!-- Label -->
+                                    <span class="flex-1 text-sm text-gray-800 truncate">{{ b.label }}</span>
+
+                                    <!-- Check si está seleccionado -->
+                                    <svg
+                                      *ngIf="bloque.ctaDestinoValor === ('bloque-' + b.id)"
+                                      class="w-4 h-4 text-[#0a4d7a] shrink-0"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      stroke-width="2.5"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  </button>
                                 </div>
                               </div>
 
