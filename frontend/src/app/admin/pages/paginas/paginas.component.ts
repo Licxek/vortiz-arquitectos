@@ -19,6 +19,7 @@ import { CategoriasService, Categoria } from '../../../core/services/categorias.
 import { PaginasFijasService } from '../../../core/services/paginas-fijas.service';
 import { TelefonoInputComponent } from '../../../shared/telefono-input/telefono-input.component';
 import { SelectConCreacionComponent } from '../../../shared/select-con-creacion/select-con-creacion.component';
+import { DireccionAutocompleteComponent } from '../../../shared/direccion-autocomplete/direccion-autocomplete.component';
 
 interface Pagina {
   id: number;
@@ -134,6 +135,7 @@ interface BorradorLocal {
     ImageGalleryInputComponent,
     TelefonoInputComponent,
     SelectConCreacionComponent,
+    DireccionAutocompleteComponent,
   ],
   templateUrl: './paginas.component.html',
 })
@@ -3622,10 +3624,17 @@ export class PaginasComponent implements OnInit {
   }
 
   /** Genera un nombre legible del bloque para el dropdown */
-  private nombreBloqueParaSeccion(bloque: BloqueContenido): string {
+  nombreBloqueParaSeccion(bloque: BloqueContenido): string {
     const tipoLabel = this.obtenerLabelBloque(bloque.tipo);
     const titulo = (bloque.titulo || '').trim();
     if (titulo) return `${tipoLabel}: ${titulo}`;
     return tipoLabel;
+  }
+
+  /** Genera la URL del iframe de Google Maps embed para preview del bloque mapa */
+  urlMapaPreview(direccion: string): SafeResourceUrl {
+    const query = encodeURIComponent(direccion);
+    const url = `https://maps.google.com/maps?q=${query}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 }
