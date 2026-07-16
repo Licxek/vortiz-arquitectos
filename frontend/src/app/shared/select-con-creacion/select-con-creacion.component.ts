@@ -228,92 +228,45 @@ export class SelectConCreacionComponent {
     }
   }
 
-  /** Encuentra el ancestro scrolleable más cercano que REALMENTE contiene visualmente al botón */
-  private encontrarContenedorScroll(): HTMLElement {
-    const boton = this.botonPrincipal?.nativeElement;
-    if (!boton) return document.body;
-
-    const botonRect = boton.getBoundingClientRect();
-    let el: HTMLElement | null = this.el.nativeElement.parentElement;
-
-    while (el && el !== document.body) {
-      const style = window.getComputedStyle(el);
-      const overflow = style.overflowY;
-      const esScrolleable =
-        overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay';
-
-      if (esScrolleable) {
-        // Verificar que el contenedor REALMENTE contenga visualmente al botón
-        const contRect = el.getBoundingClientRect();
-        const contieneBoton =
-          botonRect.top >= contRect.top &&
-          botonRect.bottom <= contRect.bottom + 1; // +1 pixel tolerancia
-
-        if (contieneBoton) {
-          return el;
-        }
-        // Si no lo contiene, seguimos subiendo
-      }
-      el = el.parentElement;
-    }
-    return document.body;
-  }
-
-  /** Calcula la posición del dropdown de forma inteligente:
-   *  - Se limita a los bordes del contenedor scrolleable (modal padre)
-   *  - Abre hacia abajo por defecto, arriba si no hay espacio
-   *  - Ajusta la altura máxima para no salirse del contenedor
-   */
   private calcularPosicionDropdown() {
     const boton = this.botonPrincipal?.nativeElement;
     if (!boton) return;
 
     const rect = boton.getBoundingClientRect();
-    const contenedor = this.encontrarContenedorScroll();
-    const contRect =
-      contenedor === document.body
-        ? { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth }
-        : contenedor.getBoundingClientRect();
 
-        // 🐛 DEBUG TEMPORAL
-    console.log('🎯 DROPDOWN DEBUG', {
-      boton_texto: boton.textContent?.trim().slice(0, 30),
-      boton_top: rect.top,
-      boton_bottom: rect.bottom,
-      contenedor_tag: contenedor.tagName,
-      contenedor_class: contenedor.className.slice(0, 60),
-      contenedor_top: contRect.top,
-      contenedor_bottom: contRect.bottom,
-    });
+    // Usar el viewport visual del navegador (no importa qué contenedor scrolleable exista)
+    // getBoundingClientRect siempre devuelve coordenadas relativas al viewport visible
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
 
-    // Márgenes internos del contenedor (para no pegarse al borde)
+    // Márgenes de seguridad
     const margen = 12;
-    const limiteTop = contRect.top + margen;
-    const limiteBottom = contRect.bottom - margen;
-
-    const espacioAbajo = limiteBottom - rect.bottom;
-    const espacioArriba = rect.top - limiteTop;
-
     const altoDeseado = 320;
-    // Solo abrir hacia arriba si el espacio abajo es muy chico (menos de 120px)
-    // Y hay bastante más espacio arriba
-    const abrirArriba = espacioAbajo < 120 && espacioArriba > 200;
+
+    // Espacio disponible EN LA PANTALLA (viewport)
+    const espacioAbajo = viewportHeight - rect.bottom - margen;
+    const espacioArriba = rect.top - margen;
+
+    // Solo abrir hacia arriba si REALMENTE no cabe abajo
+    const abrirArriba = espacioAbajo < 150 && espacioArriba > espacioAbajo;
 
     let top: number;
     let maxHeight: number;
 
     if (abrirArriba) {
-      maxHeight = Math.min(altoDeseado, espacioArriba);
+      maxHeight = Math.min(altoDeseado, Math.max(120, espacioArriba));
       top = rect.top - maxHeight - 6;
     } else {
-      // Abrir hacia abajo (comportamiento por defecto)
       maxHeight = Math.min(altoDeseado, Math.max(120, espacioAbajo));
       top = rect.bottom + 6;
     }
 
+    // Limitar ancho al viewport
+    const left = Math.max(margen, Math.min(rect.left, viewportWidth - rect.width - margen));
+
     this.dropdownStyle.set({
       top: `${top}px`,
-      left: `${rect.left}px`,
+      left: `${left}px`,
       width: `${rect.width}px`,
       maxHeight: `${maxHeight}px`,
     });
@@ -327,22 +280,12 @@ export class SelectConCreacionComponent {
     }
   }
 
-  /** En scroll del window, cerramos para evitar posiciones raras */
-  @HostListener('window:scroll', ['$event'])
-  onWindowScroll(event: Event) {
+  /** En cualquier scroll de la página (incluyendo dentro de containers), reposicionar */
+  @HostListener('window:scroll')
+  @HostListener('document:scroll')
+  onWindowScroll() {
     if (!this.abierto()) return;
-    const contenedor = this.encontrarContenedorScroll();
-    const target = event.target as unknown as Node;
-
-    // Si el scroll viene del document o body (scroll global), cerramos
-    const esScrollGlobal =
-      target === document || target === document.documentElement || contenedor === document.body;
-
-    if (esScrollGlobal) {
-      this.cerrar();
-    } else {
-      this.calcularPosicionDropdown();
-    }
+    this.calcularPosicionDropdown();
   }
 
   cerrar() {
