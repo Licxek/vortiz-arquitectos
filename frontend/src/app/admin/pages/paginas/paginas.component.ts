@@ -15,10 +15,10 @@ import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { ImageGalleryInputComponent } from '../../../shared/image-gallery-input/image-gallery-input.component';
 import { ColoresGuardadosService } from '../../../core/services/colores-guardados.service';
-import { SelectConCreacionComponent } from '../../../shared/select-con-creacion/select-con-creacion.component';
 import { CategoriasService, Categoria } from '../../../core/services/categorias.service';
 import { PaginasFijasService } from '../../../core/services/paginas-fijas.service';
 import { TelefonoInputComponent } from '../../../shared/telefono-input/telefono-input.component';
+import { SelectConCreacionComponent } from '../../../shared/select-con-creacion/select-con-creacion.component';
 
 interface Pagina {
   id: number;
@@ -132,8 +132,8 @@ interface BorradorLocal {
     ImageUploadComponent,
     SkeletonComponent,
     ImageGalleryInputComponent,
-    SelectConCreacionComponent,
     TelefonoInputComponent,
+    SelectConCreacionComponent,
   ],
   templateUrl: './paginas.component.html',
 })
@@ -3627,25 +3627,5 @@ export class PaginasComponent implements OnInit {
     const titulo = (bloque.titulo || '').trim();
     if (titulo) return `${tipoLabel}: ${titulo}`;
     return tipoLabel;
-  }
-
-  /** Devuelve las opciones formateadas para el select-con-creacion, cacheadas por bloque para mantener referencia estable */
-  opcionesBloquesSeccion(bloque: BloqueContenido): { value: string; label: string }[] {
-    const bloques = this.bloquesParaSeccion(bloque);
-    // Hash simple del contenido para saber si cambió
-    const hash = bloques.map((b) => `${b.id}:${b.label}`).join('|');
-
-    const cache = this._opcionesCache.get(bloque.id);
-    if (cache && cache.hash === hash) {
-      return cache.opciones; // Misma referencia si no cambió nada
-    }
-
-    // Construir nuevo array solo si algo cambió
-    const opciones = bloques.map((b) => ({
-      value: 'bloque-' + b.id,
-      label: b.label,
-    }));
-    this._opcionesCache.set(bloque.id, { hash, opciones });
-    return opciones;
   }
 }
