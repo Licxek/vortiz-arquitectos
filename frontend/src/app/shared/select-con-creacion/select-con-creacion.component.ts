@@ -5,8 +5,6 @@ import {
   EventEmitter,
   HostListener,
   ElementRef,
-  ViewChild,
-  OnDestroy,
   signal,
   computed,
 } from '@angular/core';
@@ -27,7 +25,6 @@ export interface OpcionSelect {
     <div class="relative" (click)="$event.stopPropagation()">
       <!-- Botón principal -->
       <button
-        #botonPrincipal
         type="button"
         (click)="toggleAbierto()"
         class="w-full flex items-center justify-between px-3 py-2.5 bg-white border border-gray-200 hover:border-gray-300 rounded-lg text-sm text-left transition-all"
@@ -57,14 +54,10 @@ export interface OpcionSelect {
         </svg>
       </button>
 
-      <!-- Dropdown (fixed para escapar del overflow del padre) -->
+      <!-- Dropdown -->
       <div
         *ngIf="abierto()"
-        class="fixed bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[9999] animate-[fadeIn_0.15s_ease-out] flex flex-col"
-        [style.top]="dropdownStyle().top"
-        [style.left]="dropdownStyle().left"
-        [style.width]="dropdownStyle().width"
-        [style.maxHeight]="dropdownStyle().maxHeight"
+        class="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-[fadeIn_0.15s_ease-out]"
       >
         <!-- Buscador / creador -->
         <div class="p-2 border-b border-gray-100 bg-gray-50">
@@ -85,12 +78,11 @@ export interface OpcionSelect {
             <input
               #inputBusqueda
               type="text"
-              [value]="busqueda()"
-              (input)="busqueda.set($any($event.target).value)"
+              [(ngModel)]="busqueda"
               (keydown.enter)="onEnter($event)"
               (keydown.escape)="cerrar()"
               [placeholder]="permitirCrear ? 'Buscar o crear nueva...' : 'Buscar...'"
-              class="buscador-dropdown w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] transition-all"
+              class="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0a4d7a] transition-all"
             />
           </div>
           <p *ngIf="permitirCrear && puedeCrear()" class="text-[10px] text-gray-500 mt-1.5 flex items-center gap-1 px-1">
@@ -102,7 +94,7 @@ export interface OpcionSelect {
         </div>
 
         <!-- Lista de opciones -->
-        <div class="flex-1 overflow-y-auto min-h-0">
+        <div class="max-h-64 overflow-y-auto">
           <!-- Opciones filtradas -->
           <button
             *ngFor="let op of opcionesFiltradas(); trackBy: trackByValue"
@@ -151,7 +143,7 @@ export interface OpcionSelect {
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-xs text-gray-500">Crear nueva categoría</p>
-              <p class="text-sm font-semibold text-gray-900 truncate">"{{ busqueda() }}"</p>
+              <p class="text-sm font-semibold text-gray-900 truncate">"{{ busqueda }}"</p>
             </div>
           </button>
         </div>
@@ -159,25 +151,9 @@ export interface OpcionSelect {
     </div>
   `,
 })
-export class SelectConCreacionComponent implements OnDestroy {
-  // Signals internos que se actualizan con los @Input setters
-  private opcionesSignal = signal<OpcionSelect[]>([]);
-  private valueSignal = signal<string>('');
-
-  @Input() set opciones(v: OpcionSelect[]) {
-    this.opcionesSignal.set(v || []);
-  }
-  get opciones(): OpcionSelect[] {
-    return this.opcionesSignal();
-  }
-
-  @Input() set value(v: string) {
-    this.valueSignal.set(v || '');
-  }
-  get value(): string {
-    return this.valueSignal();
-  }
-
+export class SelectConCreacionComponent {
+  @Input() opciones: OpcionSelect[] = [];
+  @Input() value = '';
   @Input() placeholder = 'Selecciona una opción';
   @Input() permitirCrear = true;
   @Input() colorPorValue?: (value: string) => string;
@@ -186,39 +162,22 @@ export class SelectConCreacionComponent implements OnDestroy {
   @Output() nuevaOpcion = new EventEmitter<{ value: string; label: string }>();
 
   abierto = signal(false);
-  busqueda = signal('');
-
-  @ViewChild('botonPrincipal') botonPrincipal?: ElementRef<HTMLElement>;
-
-  // Listener del scroll que se registra dinámicamente en todos los ancestros
-  private scrollListener = () => {
-    if (this.abierto()) this.calcularPosicionDropdown();
-  };
-  private ancestrosScrolleables: HTMLElement[] = [];
-
-  // Posición calculada del dropdown (para escapar del overflow del padre)
-  dropdownStyle = signal<{ top: string; left: string; width: string; maxHeight: string }>({
-    top: '0px',
-    left: '0px',
-    width: '0px',
-    maxHeight: '320px',
-  });
+  busqueda = '';
 
   labelSeleccionado = computed(() => {
-    const op = this.opcionesSignal().find((o) => o.value === this.valueSignal());
+    const op = this.opciones.find((o) => o.value === this.value);
     return op?.label || '';
   });
 
   colorSeleccionado = computed(() => {
-    if (!this.colorPorValue || !this.valueSignal()) return '';
-    return this.colorPorValue(this.valueSignal());
+    if (!this.colorPorValue || !this.value) return '';
+    return this.colorPorValue(this.value);
   });
 
   opcionesFiltradas = computed(() => {
-    const q = this.busqueda().trim().toLowerCase();
-    const opciones = this.opcionesSignal();
-    if (!q) return opciones;
-    return opciones.filter((o) => o.label.toLowerCase().includes(q));
+    if (!this.busqueda.trim()) return this.opciones;
+    const q = this.busqueda.toLowerCase();
+    return this.opciones.filter((o) => o.label.toLowerCase().includes(q));
   });
 
   constructor(private el: ElementRef) {}
@@ -226,116 +185,24 @@ export class SelectConCreacionComponent implements OnDestroy {
   toggleAbierto() {
     this.abierto.update((v) => !v);
     if (this.abierto()) {
-      this.busqueda.set('');
-      this.calcularPosicionDropdown();
-      this.registrarListenersScroll();
+      this.busqueda = '';
       setTimeout(() => {
-        const input = this.el.nativeElement.querySelector('input.buscador-dropdown');
+        const input = this.el.nativeElement.querySelector('input');
         input?.focus();
       }, 50);
-    } else {
-      this.quitarListenersScroll();
     }
-  }
-
-  /** Registra listeners de scroll en TODOS los ancestros scrolleables del botón */
-  private registrarListenersScroll() {
-    this.quitarListenersScroll(); // Limpiar por si acaso
-
-    let el: HTMLElement | null = this.el.nativeElement.parentElement;
-    while (el && el !== document.body) {
-      const style = window.getComputedStyle(el);
-      const overflow = style.overflowY;
-      if (overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') {
-        el.addEventListener('scroll', this.scrollListener, { passive: true });
-        this.ancestrosScrolleables.push(el);
-      }
-      el = el.parentElement;
-    }
-    // También el body por si acaso
-    document.body.addEventListener('scroll', this.scrollListener, { passive: true });
-    this.ancestrosScrolleables.push(document.body);
-  }
-
-  /** Quita todos los listeners de scroll registrados */
-  private quitarListenersScroll() {
-    for (const el of this.ancestrosScrolleables) {
-      el.removeEventListener('scroll', this.scrollListener);
-    }
-    this.ancestrosScrolleables = [];
-  }
-
-  private calcularPosicionDropdown() {
-    const boton = this.botonPrincipal?.nativeElement;
-    if (!boton) return;
-
-    const rect = boton.getBoundingClientRect();
-
-    // Usar el viewport visual del navegador (no importa qué contenedor scrolleable exista)
-    // getBoundingClientRect siempre devuelve coordenadas relativas al viewport visible
-    const viewportHeight = window.innerHeight;
-    const viewportWidth = window.innerWidth;
-
-    // Márgenes de seguridad
-    const margen = 12;
-    const altoDeseado = 320;
-
-    // Espacio disponible EN LA PANTALLA (viewport)
-    const espacioAbajo = viewportHeight - rect.bottom - margen;
-    const espacioArriba = rect.top - margen;
-
-    // Solo abrir hacia arriba si REALMENTE no cabe abajo
-    const abrirArriba = espacioAbajo < 150 && espacioArriba > espacioAbajo;
-
-    let top: number;
-    let maxHeight: number;
-
-    if (abrirArriba) {
-      maxHeight = Math.min(altoDeseado, Math.max(120, espacioArriba));
-      top = rect.top - maxHeight - 6;
-    } else {
-      maxHeight = Math.min(altoDeseado, Math.max(120, espacioAbajo));
-      top = rect.bottom + 6;
-    }
-
-    // Limitar ancho al viewport
-    const left = Math.max(margen, Math.min(rect.left, viewportWidth - rect.width - margen));
-
-    this.dropdownStyle.set({
-      top: `${top}px`,
-      left: `${left}px`,
-      width: `${rect.width}px`,
-      maxHeight: `${maxHeight}px`,
-    });
-  }
-
-  /** Reposicionar en resize de ventana */
-  @HostListener('window:resize')
-  onResize() {
-    if (this.abierto()) {
-      this.calcularPosicionDropdown();
-    }
-  }
-
-  /** En cualquier scroll de la página (incluyendo dentro de containers), reposicionar */
-  @HostListener('window:scroll')
-  @HostListener('document:scroll')
-  onWindowScroll() {
-    if (!this.abierto()) return;
-    this.calcularPosicionDropdown();
   }
 
   cerrar() {
     this.abierto.set(false);
-    this.busqueda.set('');
-    this.quitarListenersScroll();
+    this.busqueda = '';
   }
 
   puedeCrear(): boolean {
-    if (!this.permitirCrear || !this.busqueda().trim()) return false;
-    const q = this.busqueda().toLowerCase().trim();
+    if (!this.permitirCrear || !this.busqueda.trim()) return false;
+    const q = this.busqueda.toLowerCase().trim();
     // Solo permitir crear si NO existe una opción idéntica
-    return !this.opcionesSignal().some((o) => o.label.toLowerCase() === q);
+    return !this.opciones.some((o) => o.label.toLowerCase() === q);
   }
 
   onEnter(event: Event) {
@@ -353,7 +220,7 @@ export class SelectConCreacionComponent implements OnDestroy {
   }
 
   crearYSeleccionar() {
-    const label = this.busqueda().trim();
+    const label = this.busqueda.trim();
     if (!label) return;
     // Generar value slug-friendly desde el label
     const value = label
@@ -375,8 +242,4 @@ export class SelectConCreacionComponent implements OnDestroy {
   }
 
   trackByValue = (_: number, op: OpcionSelect) => op.value;
-
-  ngOnDestroy() {
-    this.quitarListenersScroll();
-  }
 }
