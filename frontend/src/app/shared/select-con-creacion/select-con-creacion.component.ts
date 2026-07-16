@@ -5,6 +5,7 @@ import {
   EventEmitter,
   HostListener,
   ElementRef,
+  ViewChild,
   signal,
   computed,
 } from '@angular/core';
@@ -25,6 +26,7 @@ export interface OpcionSelect {
     <div class="relative" (click)="$event.stopPropagation()">
       <!-- Botón principal -->
       <button
+        #botonPrincipal
         type="button"
         (click)="toggleAbierto()"
         class="w-full flex items-center justify-between px-3 py-2.5 bg-white border border-gray-200 hover:border-gray-300 rounded-lg text-sm text-left transition-all"
@@ -185,6 +187,8 @@ export class SelectConCreacionComponent {
   abierto = signal(false);
   busqueda = signal('');
 
+  @ViewChild('botonPrincipal') botonPrincipal?: ElementRef<HTMLElement>;
+
   // Posición calculada del dropdown (para escapar del overflow del padre)
   dropdownStyle = signal<{ top: string; left: string; width: string; maxHeight: string }>({
     top: '0px',
@@ -224,14 +228,31 @@ export class SelectConCreacionComponent {
     }
   }
 
-  /** Encuentra el ancestro scrolleable más cercano (el modal o body) */
+  /** Encuentra el ancestro scrolleable más cercano que REALMENTE contiene visualmente al botón */
   private encontrarContenedorScroll(): HTMLElement {
+    const boton = this.botonPrincipal?.nativeElement;
+    if (!boton) return document.body;
+
+    const botonRect = boton.getBoundingClientRect();
     let el: HTMLElement | null = this.el.nativeElement.parentElement;
+
     while (el && el !== document.body) {
       const style = window.getComputedStyle(el);
       const overflow = style.overflowY;
-      if (overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') {
-        return el;
+      const esScrolleable =
+        overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay';
+
+      if (esScrolleable) {
+        // Verificar que el contenedor REALMENTE contenga visualmente al botón
+        const contRect = el.getBoundingClientRect();
+        const contieneBoton =
+          botonRect.top >= contRect.top &&
+          botonRect.bottom <= contRect.bottom + 1; // +1 pixel tolerancia
+
+        if (contieneBoton) {
+          return el;
+        }
+        // Si no lo contiene, seguimos subiendo
       }
       el = el.parentElement;
     }
@@ -244,7 +265,7 @@ export class SelectConCreacionComponent {
    *  - Ajusta la altura máxima para no salirse del contenedor
    */
   private calcularPosicionDropdown() {
-    const boton = this.el.nativeElement.querySelector('button') as HTMLElement;
+    const boton = this.botonPrincipal?.nativeElement;
     if (!boton) return;
 
     const rect = boton.getBoundingClientRect();
