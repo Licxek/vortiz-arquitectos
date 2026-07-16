@@ -224,32 +224,55 @@ export class SelectConCreacionComponent {
     }
   }
 
+  /** Encuentra el ancestro scrolleable más cercano (el modal o body) */
+  private encontrarContenedorScroll(): HTMLElement {
+    let el: HTMLElement | null = this.el.nativeElement.parentElement;
+    while (el && el !== document.body) {
+      const style = window.getComputedStyle(el);
+      const overflow = style.overflowY;
+      if (overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') {
+        return el;
+      }
+      el = el.parentElement;
+    }
+    return document.body;
+  }
+
   /** Calcula la posición del dropdown de forma inteligente:
-   *  - Se adapta al ancho del botón
-   *  - Abre hacia abajo por defecto
-   *  - Si no hay espacio abajo, abre hacia arriba
-   *  - Ajusta la altura máxima para no salirse de la pantalla
+   *  - Se limita a los bordes del contenedor scrolleable (modal padre)
+   *  - Abre hacia abajo por defecto, arriba si no hay espacio
+   *  - Ajusta la altura máxima para no salirse del contenedor
    */
   private calcularPosicionDropdown() {
     const boton = this.el.nativeElement.querySelector('button') as HTMLElement;
     if (!boton) return;
 
     const rect = boton.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const espacioAbajo = viewportHeight - rect.bottom - 20; // 20px margen
-    const espacioArriba = rect.top - 20;
+    const contenedor = this.encontrarContenedorScroll();
+    const contRect =
+      contenedor === document.body
+        ? { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth }
+        : contenedor.getBoundingClientRect();
 
-    const altoDeseado = 320; // altura ideal del dropdown
+    // Márgenes internos del contenedor (para no pegarse al borde)
+    const margen = 12;
+    const limiteTop = contRect.top + margen;
+    const limiteBottom = contRect.bottom - margen;
+
+    const espacioAbajo = limiteBottom - rect.bottom;
+    const espacioArriba = rect.top - limiteTop;
+
+    const altoDeseado = 320;
     const abrirArriba = espacioAbajo < 200 && espacioArriba > espacioAbajo;
 
     let top: number;
     let maxHeight: number;
 
     if (abrirArriba) {
-      maxHeight = Math.min(altoDeseado, espacioArriba);
+      maxHeight = Math.min(altoDeseado, Math.max(120, espacioArriba));
       top = rect.top - maxHeight - 6;
     } else {
-      maxHeight = Math.min(altoDeseado, espacioAbajo);
+      maxHeight = Math.min(altoDeseado, Math.max(120, espacioAbajo));
       top = rect.bottom + 6;
     }
 
@@ -261,10 +284,28 @@ export class SelectConCreacionComponent {
     });
   }
 
-  @HostListener('window:scroll')
+  /** Reposicionar en resize de ventana */
   @HostListener('window:resize')
-  onScrollResize() {
+  onResize() {
     if (this.abierto()) {
+      this.calcularPosicionDropdown();
+    }
+  }
+
+  /** En scroll del window, cerramos para evitar posiciones raras */
+  @HostListener('window:scroll', ['$event'])
+  onWindowScroll(event: Event) {
+    if (!this.abierto()) return;
+    const contenedor = this.encontrarContenedorScroll();
+    const target = event.target as unknown as Node;
+
+    // Si el scroll viene del document o body (scroll global), cerramos
+    const esScrollGlobal =
+      target === document || target === document.documentElement || contenedor === document.body;
+
+    if (esScrollGlobal) {
+      this.cerrar();
+    } else {
       this.calcularPosicionDropdown();
     }
   }
