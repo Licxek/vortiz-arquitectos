@@ -254,6 +254,17 @@ export class SelectConCreacionComponent {
         ? { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth }
         : contenedor.getBoundingClientRect();
 
+        // 🐛 DEBUG TEMPORAL
+    console.log('🎯 DROPDOWN DEBUG', {
+      boton_texto: boton.textContent?.trim().slice(0, 30),
+      boton_top: rect.top,
+      boton_bottom: rect.bottom,
+      contenedor_tag: contenedor.tagName,
+      contenedor_class: contenedor.className.slice(0, 60),
+      contenedor_top: contRect.top,
+      contenedor_bottom: contRect.bottom,
+    });
+
     // Márgenes internos del contenedor (para no pegarse al borde)
     const margen = 12;
     const limiteTop = contRect.top + margen;
