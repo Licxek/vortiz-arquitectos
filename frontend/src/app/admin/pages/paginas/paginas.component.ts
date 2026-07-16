@@ -167,15 +167,6 @@ export class PaginasComponent implements OnInit {
   /** ID del bloque cuyo dropdown de sección está abierto (null si ninguno) */
   dropdownSeccionAbierto: number | null = null;
 
-  /** Posición calculada del dropdown de sección (fixed) */
-  dropdownSeccionStyle = signal<{ top: string; left: string; width: string; maxHeight: string }>({
-    top: '0px',
-    left: '0px',
-    width: '0px',
-    maxHeight: '320px',
-  });
-
-
   private paginasFijas: Pagina[] = [
     {
       id: -1,
@@ -3642,11 +3633,23 @@ export class PaginasComponent implements OnInit {
     return tipoLabel;
   }
 
+  /** Cache de URLs seguras para evitar regenerar SafeResourceUrl en cada CD cycle
+   *  (lo cual causaba parpadeo del iframe) */
+  private _cacheUrlMapa = new Map<string, SafeResourceUrl>();
+
   /** Genera la URL del iframe de Google Maps embed para preview del bloque mapa */
   urlMapaPreview(direccion: string): SafeResourceUrl {
-    const query = encodeURIComponent(direccion);
+    const key = (direccion || '').trim();
+    if (!key) return this.sanitizer.bypassSecurityTrustResourceUrl('about:blank');
+
+    const cached = this._cacheUrlMapa.get(key);
+    if (cached) return cached;
+
+    const query = encodeURIComponent(key);
     const url = `https://maps.google.com/maps?q=${query}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    const safe = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    this._cacheUrlMapa.set(key, safe);
+    return safe;
   }
 
   /** Referencia al botón que abrió el dropdown (para reposicionar en scroll) */
@@ -3655,15 +3658,11 @@ export class PaginasComponent implements OnInit {
   private ancestrosScrollDropdownSeccion: HTMLElement[] = [];
 
   /** Abre/cierra el dropdown de sección del CTA para un bloque específico */
-  toggleDropdownSeccion(bloque: BloqueContenido, boton: HTMLElement): void {
+  toggleDropdownSeccion(bloque: BloqueContenido): void {
     if (this.dropdownSeccionAbierto === bloque.id) {
-      this.cerrarDropdownSeccion();
+      this.dropdownSeccionAbierto = null;
     } else {
-      this.cerrarDropdownSeccion();
       this.dropdownSeccionAbierto = bloque.id;
-      this.botonDropdownSeccionActual = boton;
-      this.calcularPosicionDropdownSeccion(boton);
-      this.registrarScrollListenersDropdownSeccion(boton);
     }
   }
 
@@ -3706,66 +3705,6 @@ export class PaginasComponent implements OnInit {
     }
     this.ancestrosScrollDropdownSeccion = [];
     window.removeEventListener('scroll', this.scrollListenerDropdownSeccion);
-  }
-
-  /** Busca el modal padre (ancestro con overflow oculto que ES la ventana del modal) */
-  private encontrarModalPadre(boton: HTMLElement): DOMRect | null {
-    let el: HTMLElement | null = boton.parentElement;
-    while (el && el !== document.body) {
-      // Detectar el div del modal por sus clases características
-      // Los modales tienen "h-[92vh]" y "rounded-2xl shadow-2xl"
-      const classes = el.className || '';
-      if (
-        (classes.includes('h-[92vh]') || classes.includes('max-w-7xl')) &&
-        classes.includes('rounded-2xl') &&
-        classes.includes('shadow-2xl')
-      ) {
-        return el.getBoundingClientRect();
-      }
-      el = el.parentElement;
-    }
-    return null;
-  }
-
-  /** Calcula la posición fixed del dropdown limitándolo al modal padre */
-  private calcularPosicionDropdownSeccion(boton: HTMLElement): void {
-    const rect = boton.getBoundingClientRect();
-    const modal = this.encontrarModalPadre(boton);
-    const margen = 12;
-
-    // Usar bordes del modal si existe, sino del viewport
-    const limiteTop = modal ? modal.top + margen : margen;
-    const limiteBottom = modal ? modal.bottom - margen : window.innerHeight - margen;
-    const limiteLeft = modal ? modal.left + margen : margen;
-    const limiteRight = modal ? modal.right - margen : window.innerWidth - margen;
-
-    const espacioAbajo = limiteBottom - rect.bottom;
-    const espacioArriba = rect.top - limiteTop;
-
-    const altoDeseado = 320;
-    // Abrir hacia arriba solo si abajo no cabe y arriba hay más espacio
-    const abrirArriba = espacioAbajo < 150 && espacioArriba > espacioAbajo;
-
-    let top: number;
-    let maxHeight: number;
-
-    if (abrirArriba) {
-      maxHeight = Math.min(altoDeseado, Math.max(120, espacioArriba));
-      top = rect.top - maxHeight - 8;
-    } else {
-      maxHeight = Math.min(altoDeseado, Math.max(120, espacioAbajo));
-      top = rect.bottom + 8;
-    }
-
-    // Limitar left a los bordes del modal
-    const left = Math.max(limiteLeft, Math.min(rect.left, limiteRight - rect.width));
-
-    this.dropdownSeccionStyle.set({
-      top: `${top}px`,
-      left: `${left}px`,
-      width: `${rect.width}px`,
-      maxHeight: `${maxHeight}px`,
-    });
   }
 
   /** Selecciona el bloque destino en el CTA y cierra el dropdown */
