@@ -263,15 +263,18 @@ export class SelectConCreacionComponent {
     const espacioArriba = rect.top - limiteTop;
 
     const altoDeseado = 320;
-    const abrirArriba = espacioAbajo < 200 && espacioArriba > espacioAbajo;
+    // Solo abrir hacia arriba si el espacio abajo es muy chico (menos de 120px)
+    // Y hay bastante más espacio arriba
+    const abrirArriba = espacioAbajo < 120 && espacioArriba > 200;
 
     let top: number;
     let maxHeight: number;
 
     if (abrirArriba) {
-      maxHeight = Math.min(altoDeseado, Math.max(120, espacioArriba));
+      maxHeight = Math.min(altoDeseado, espacioArriba);
       top = rect.top - maxHeight - 6;
     } else {
+      // Abrir hacia abajo (comportamiento por defecto)
       maxHeight = Math.min(altoDeseado, Math.max(120, espacioAbajo));
       top = rect.bottom + 6;
     }
