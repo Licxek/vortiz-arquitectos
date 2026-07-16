@@ -2646,9 +2646,8 @@
                               <div class="relative" (click)="$event.stopPropagation()">
                                 <!-- Botón principal -->
                                 <button
-                                  #btnDropdownSeccion
                                   type="button"
-                                  (click)="toggleDropdownSeccion(bloque, btnDropdownSeccion)"
+                                  (click)="toggleDropdownSeccion(bloque)"
                                   class="w-full flex items-center gap-3 px-3 py-3 bg-gradient-to-br from-white to-gray-50 border-2 rounded-xl text-sm text-left transition-all hover:shadow-sm"
                                   [class.border-[#0a4d7a]]="dropdownSeccionAbierto === bloque.id"
                                   [class.ring-4]="dropdownSeccionAbierto === bloque.id"
@@ -2698,14 +2697,10 @@
                                   </div>
                                 </button>
 
-                                <!-- Lista de opciones (dropdown) -->
+                                <!-- Lista de opciones (inline dentro del bloque CTA) -->
                                 <div
                                   *ngIf="dropdownSeccionAbierto === bloque.id"
-                                  class="fixed bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[9999] flex flex-col animate-[fadeIn_0.15s_ease-out]"
-                                  [style.top]="dropdownSeccionStyle().top"
-                                  [style.left]="dropdownSeccionStyle().left"
-                                  [style.width]="dropdownSeccionStyle().width"
-                                  [style.maxHeight]="dropdownSeccionStyle().maxHeight"
+                                  class="mt-2 bg-white rounded-xl shadow-lg border-2 border-[#0a4d7a] overflow-hidden flex flex-col max-h-96 animate-[fadeIn_0.15s_ease-out]"
                                 >
                                   <!-- Header con contador -->
                                   <div class="px-3 py-2 bg-gradient-to-br from-blue-50 to-white border-b border-gray-100 flex items-center justify-between">
