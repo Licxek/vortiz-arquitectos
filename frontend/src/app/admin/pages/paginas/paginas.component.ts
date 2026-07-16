@@ -3708,31 +3708,57 @@ export class PaginasComponent implements OnInit {
     window.removeEventListener('scroll', this.scrollListenerDropdownSeccion);
   }
 
-  /** Calcula la posición fixed del dropdown de sección respecto al viewport */
+  /** Busca el modal padre (ancestro con overflow oculto que ES la ventana del modal) */
+  private encontrarModalPadre(boton: HTMLElement): DOMRect | null {
+    let el: HTMLElement | null = boton.parentElement;
+    while (el && el !== document.body) {
+      // Detectar el div del modal por sus clases características
+      // Los modales tienen "h-[92vh]" y "rounded-2xl shadow-2xl"
+      const classes = el.className || '';
+      if (
+        (classes.includes('h-[92vh]') || classes.includes('max-w-7xl')) &&
+        classes.includes('rounded-2xl') &&
+        classes.includes('shadow-2xl')
+      ) {
+        return el.getBoundingClientRect();
+      }
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  /** Calcula la posición fixed del dropdown limitándolo al modal padre */
   private calcularPosicionDropdownSeccion(boton: HTMLElement): void {
     const rect = boton.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const viewportWidth = window.innerWidth;
+    const modal = this.encontrarModalPadre(boton);
     const margen = 12;
 
-    const espacioAbajo = viewportHeight - rect.bottom - margen;
-    const espacioArriba = rect.top - margen;
+    // Usar bordes del modal si existe, sino del viewport
+    const limiteTop = modal ? modal.top + margen : margen;
+    const limiteBottom = modal ? modal.bottom - margen : window.innerHeight - margen;
+    const limiteLeft = modal ? modal.left + margen : margen;
+    const limiteRight = modal ? modal.right - margen : window.innerWidth - margen;
+
+    const espacioAbajo = limiteBottom - rect.bottom;
+    const espacioArriba = rect.top - limiteTop;
 
     const altoDeseado = 320;
+    // Abrir hacia arriba solo si abajo no cabe y arriba hay más espacio
     const abrirArriba = espacioAbajo < 150 && espacioArriba > espacioAbajo;
 
     let top: number;
     let maxHeight: number;
 
     if (abrirArriba) {
-      maxHeight = Math.min(altoDeseado, Math.max(150, espacioArriba));
+      maxHeight = Math.min(altoDeseado, Math.max(120, espacioArriba));
       top = rect.top - maxHeight - 8;
     } else {
-      maxHeight = Math.min(altoDeseado, Math.max(150, espacioAbajo));
+      maxHeight = Math.min(altoDeseado, Math.max(120, espacioAbajo));
       top = rect.bottom + 8;
     }
 
-    const left = Math.max(margen, Math.min(rect.left, viewportWidth - rect.width - margen));
+    // Limitar left a los bordes del modal
+    const left = Math.max(limiteLeft, Math.min(rect.left, limiteRight - rect.width));
 
     this.dropdownSeccionStyle.set({
       top: `${top}px`,
