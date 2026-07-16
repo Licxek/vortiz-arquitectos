@@ -167,6 +167,14 @@ export class PaginasComponent implements OnInit {
   /** ID del bloque cuyo dropdown de sección está abierto (null si ninguno) */
   dropdownSeccionAbierto: number | null = null;
 
+  /** Posición calculada del dropdown de sección (fixed) */
+  dropdownSeccionStyle = signal<{ top: string; left: string; width: string; maxHeight: string }>({
+    top: '0px',
+    left: '0px',
+    width: '0px',
+    maxHeight: '320px',
+  });
+
 
   private paginasFijas: Pagina[] = [
     {
@@ -3642,14 +3650,50 @@ export class PaginasComponent implements OnInit {
   }
 
   /** Abre/cierra el dropdown de sección del CTA para un bloque específico */
-  toggleDropdownSeccion(bloque: BloqueContenido): void {
+  toggleDropdownSeccion(bloque: BloqueContenido, boton: HTMLElement): void {
     if (this.dropdownSeccionAbierto === bloque.id) {
       this.dropdownSeccionAbierto = null;
     } else {
       this.dropdownSeccionAbierto = bloque.id;
+      this.calcularPosicionDropdownSeccion(boton);
     }
   }
 
+  /** Calcula la posición fixed del dropdown de sección respecto al viewport */
+  private calcularPosicionDropdownSeccion(boton: HTMLElement): void {
+    const rect = boton.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const margen = 12;
+
+    const espacioAbajo = viewportHeight - rect.bottom - margen;
+    const espacioArriba = rect.top - margen;
+
+    // Preferir abrir hacia abajo, solo hacia arriba si NO cabe abajo
+    const altoDeseado = 320;
+    const abrirArriba = espacioAbajo < 150 && espacioArriba > espacioAbajo;
+
+    let top: number;
+    let maxHeight: number;
+
+    if (abrirArriba) {
+      maxHeight = Math.min(altoDeseado, Math.max(150, espacioArriba));
+      top = rect.top - maxHeight - 8;
+    } else {
+      maxHeight = Math.min(altoDeseado, Math.max(150, espacioAbajo));
+      top = rect.bottom + 8;
+    }
+
+    // Limitar left al viewport
+    const left = Math.max(margen, Math.min(rect.left, viewportWidth - rect.width - margen));
+
+    this.dropdownSeccionStyle.set({
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${rect.width}px`,
+      maxHeight: `${maxHeight}px`,
+    });
+  }
   /** Selecciona el bloque destino en el CTA y cierra el dropdown */
   seleccionarSeccionDestino(bloque: BloqueContenido, valor: string): void {
     bloque.ctaDestinoValor = valor;

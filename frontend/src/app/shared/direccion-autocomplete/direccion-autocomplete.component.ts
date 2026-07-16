@@ -5,6 +5,7 @@ import {
   EventEmitter,
   HostListener,
   ElementRef,
+  ViewChild,
   signal,
   OnDestroy,
 } from '@angular/core';
@@ -59,6 +60,7 @@ interface SugerenciaDireccion {
         </div>
 
         <input
+          #inputDireccion
           type="text"
           [value]="valor"
           (input)="onInput($any($event.target).value)"
@@ -101,13 +103,17 @@ interface SugerenciaDireccion {
         </div>
       </div>
 
-      <!-- Sugerencias -->
+      <!-- Sugerencias (fixed para escapar del modal) -->
       <div
         *ngIf="abierto() && sugerencias().length > 0"
-        class="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 max-h-80 overflow-y-auto animate-[fadeIn_0.15s_ease-out]"
+        class="fixed bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[9999] flex flex-col animate-[fadeIn_0.15s_ease-out]"
+        [style.top]="dropdownStyle().top"
+        [style.left]="dropdownStyle().left"
+        [style.width]="dropdownStyle().width"
+        [style.maxHeight]="dropdownStyle().maxHeight"
       >
         <!-- Header -->
-        <div class="px-3 py-2 bg-gradient-to-br from-blue-50 to-white border-b border-gray-100 flex items-center justify-between">
+        <div class="px-3 py-2 bg-gradient-to-br from-blue-50 to-white border-b border-gray-100 flex items-center justify-between shrink-0">
           <p class="text-[10px] font-bold uppercase tracking-widest text-[#0a4d7a] flex items-center gap-1.5">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -119,42 +125,46 @@ interface SugerenciaDireccion {
           </span>
         </div>
 
-        <!-- Lista -->
-        <button
-          *ngFor="let s of sugerencias(); let i = index; trackBy: trackByPlaceId"
-          type="button"
-          (click)="seleccionar(s)"
-          class="w-full px-3 py-3 text-left hover:bg-blue-50 transition-colors flex items-start gap-3 border-b border-gray-50 last:border-0 group"
-        >
-          <!-- Icono numerado -->
-          <span class="w-7 h-7 rounded-md bg-gray-100 group-hover:bg-blue-100 flex items-center justify-center shrink-0 transition-colors mt-0.5">
-            <svg
-              class="w-3.5 h-3.5 text-gray-500 group-hover:text-[#0a4d7a] transition-colors"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-          </span>
+        <!-- Lista con scroll interno -->
+        <div class="flex-1 overflow-y-auto min-h-0">
+          <button
+            *ngFor="let s of sugerencias(); let i = index; trackBy: trackByPlaceId"
+            type="button"
+            (click)="seleccionar(s)"
+            class="w-full px-3 py-3 text-left hover:bg-blue-50 transition-colors flex items-start gap-3 border-b border-gray-50 last:border-0 group"
+          >
+            <span class="w-7 h-7 rounded-md bg-gray-100 group-hover:bg-blue-100 flex items-center justify-center shrink-0 transition-colors mt-0.5">
+              <svg
+                class="w-3.5 h-3.5 text-gray-500 group-hover:text-[#0a4d7a] transition-colors"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </span>
 
-          <div class="flex-1 min-w-0">
-            <p class="text-sm text-gray-800 leading-tight font-medium line-clamp-2">
-              {{ s.display_name }}
-            </p>
-            <p *ngIf="s.type" class="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wider font-semibold">
-              {{ etiquetaTipo(s.type) }}
-            </p>
-          </div>
-        </button>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-gray-800 leading-tight font-medium line-clamp-2">
+                {{ s.display_name }}
+              </p>
+              <p *ngIf="s.type" class="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wider font-semibold">
+                {{ etiquetaTipo(s.type) }}
+              </p>
+            </div>
+          </button>
+        </div>
       </div>
 
-      <!-- Empty state -->
+      <!-- Empty state (también fixed) -->
       <div
         *ngIf="abierto() && !cargando() && busquedaRealizada() && sugerencias().length === 0 && valor.trim().length >= 3"
-        class="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30 px-4 py-5 animate-[fadeIn_0.15s_ease-out]"
+        class="fixed bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[9999] px-4 py-5 animate-[fadeIn_0.15s_ease-out]"
+        [style.top]="dropdownStyle().top"
+        [style.left]="dropdownStyle().left"
+        [style.width]="dropdownStyle().width"
       >
         <div class="flex flex-col items-center gap-2 text-center">
           <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
@@ -168,10 +178,13 @@ interface SugerenciaDireccion {
         </div>
       </div>
 
-      <!-- Hint mientras escribe (menos de 3 caracteres) -->
+      <!-- Hint (también fixed) -->
       <div
         *ngIf="abierto() && valor.trim().length > 0 && valor.trim().length < 3"
-        class="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-30 px-4 py-3 animate-[fadeIn_0.15s_ease-out]"
+        class="fixed bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[9999] px-4 py-3 animate-[fadeIn_0.15s_ease-out]"
+        [style.top]="dropdownStyle().top"
+        [style.left]="dropdownStyle().left"
+        [style.width]="dropdownStyle().width"
       >
         <p class="text-xs text-gray-500 flex items-center gap-2">
           <svg class="w-3.5 h-3.5 text-blue-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -207,6 +220,16 @@ export class DireccionAutocompleteComponent implements OnDestroy {
   private timeoutBusqueda: any = null;
   private ultimaQuery = '';
 
+  @ViewChild('inputDireccion') inputDireccion?: ElementRef<HTMLElement>;
+
+  /** Posición fixed del dropdown */
+  dropdownStyle = signal<{ top: string; left: string; width: string; maxHeight: string }>({
+    top: '0px',
+    left: '0px',
+    width: '0px',
+    maxHeight: '320px',
+  });
+
   constructor(private el: ElementRef) {}
 
   ngOnDestroy(): void {
@@ -222,6 +245,7 @@ export class DireccionAutocompleteComponent implements OnDestroy {
     this.valorChange.emit(nuevoValor);
     this.busquedaRealizada.set(false);
     this.abierto.set(true);
+    this.calcularPosicionDropdown();
 
     if (this.timeoutBusqueda) clearTimeout(this.timeoutBusqueda);
 
@@ -233,20 +257,21 @@ export class DireccionAutocompleteComponent implements OnDestroy {
       return;
     }
 
-    // Debounce 350ms
     this.timeoutBusqueda = setTimeout(() => {
       this.buscarDirecciones(trimmed);
     }, 350);
   }
 
   onFocus(): void {
-    // Al enfocar, si ya hay texto y sugerencias previas, mostrarlas
     if (this._valor.trim().length >= 3) {
       this.abierto.set(true);
-      // Si no hay sugerencias cargadas para este texto, buscar
+      this.calcularPosicionDropdown();
       if (this.sugerencias().length === 0 || this.ultimaQuery !== this._valor.trim()) {
         this.buscarDirecciones(this._valor.trim());
       }
+    } else if (this._valor.trim().length > 0) {
+      this.abierto.set(true);
+      this.calcularPosicionDropdown();
     }
   }
 
@@ -255,10 +280,15 @@ export class DireccionAutocompleteComponent implements OnDestroy {
     this.ultimaQuery = query;
 
     try {
-      // Nominatim de OpenStreetMap
+      // Bounding box aproximado de Durango, MX para priorizar resultados locales
+      // Formato: viewbox=lon1,lat1,lon2,lat2 (viewbox left,top,right,bottom)
+      const viewboxDurango = '-104.8,24.2,-104.5,24.15';
+
+      // Nominatim: búsqueda amplia con bias a México y Durango
       const url =
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}` +
-        `&limit=8&countrycodes=mx&addressdetails=0&accept-language=es`;
+        `&limit=10&countrycodes=mx&addressdetails=1&accept-language=es` +
+        `&viewbox=${viewboxDurango}&bounded=0`;
 
       const respuesta = await fetch(url, {
         headers: {
@@ -266,16 +296,31 @@ export class DireccionAutocompleteComponent implements OnDestroy {
         },
       });
 
-      // Si el query cambió mientras buscábamos, ignorar respuesta
       if (this.ultimaQuery !== query) return;
-
       if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
 
-      const data: SugerenciaDireccion[] = await respuesta.json();
+      let data: SugerenciaDireccion[] = await respuesta.json();
+
+      // Si NO hay resultados, intentar una segunda búsqueda SIN filtro de país
+      // (a veces Nominatim se confunde con direcciones específicas)
+      if (data.length === 0) {
+        const urlFallback =
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}` +
+          `&limit=10&addressdetails=1&accept-language=es`;
+
+        const respuestaFallback = await fetch(urlFallback, {
+          headers: { 'Accept-Language': 'es' },
+        });
+
+        if (this.ultimaQuery !== query) return;
+        if (respuestaFallback.ok) {
+          data = await respuestaFallback.json();
+        }
+      }
+
       this.sugerencias.set(data || []);
       this.busquedaRealizada.set(true);
 
-      // Asegurar que el dropdown esté abierto si hay resultados o si hicimos búsqueda
       if (this._valor.trim().length >= 3) {
         this.abierto.set(true);
       }
@@ -343,6 +388,51 @@ export class DireccionAutocompleteComponent implements OnDestroy {
   onClickFuera(event: MouseEvent): void {
     if (!this.el.nativeElement.contains(event.target)) {
       this.cerrar();
+    }
+  }
+  /** Calcula la posición fixed del dropdown de sugerencias */
+  private calcularPosicionDropdown(): void {
+    const input = this.inputDireccion?.nativeElement;
+    if (!input) return;
+
+    const rect = input.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const margen = 12;
+
+    const espacioAbajo = viewportHeight - rect.bottom - margen;
+    const espacioArriba = rect.top - margen;
+
+    const altoDeseado = 320;
+    // Preferir abrir hacia abajo
+    const abrirArriba = espacioAbajo < 150 && espacioArriba > espacioAbajo;
+
+    let top: number;
+    let maxHeight: number;
+
+    if (abrirArriba) {
+      maxHeight = Math.min(altoDeseado, Math.max(150, espacioArriba));
+      top = rect.top - maxHeight - 8;
+    } else {
+      maxHeight = Math.min(altoDeseado, Math.max(150, espacioAbajo));
+      top = rect.bottom + 8;
+    }
+
+    const left = Math.max(margen, Math.min(rect.left, viewportWidth - rect.width - margen));
+
+    this.dropdownStyle.set({
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${rect.width}px`,
+      maxHeight: `${maxHeight}px`,
+    });
+  }
+
+  /** Reposiciona el dropdown si la ventana cambia de tamaño */
+  @HostListener('window:resize')
+  onResize(): void {
+    if (this.abierto()) {
+      this.calcularPosicionDropdown();
     }
   }
 }
