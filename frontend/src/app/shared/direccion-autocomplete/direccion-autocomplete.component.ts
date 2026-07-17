@@ -112,14 +112,10 @@ interface SugerenciaDireccion {
         </div>
       </div>
 
-      <!-- Sugerencias (fixed para escapar del modal) -->
+      <!-- Sugerencias (inline dentro del bloque mapa) -->
       <div
         *ngIf="abierto() && sugerencias().length > 0"
-        class="fixed bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[9999] flex flex-col animate-[fadeIn_0.15s_ease-out]"
-        [style.top]="dropdownStyle().top"
-        [style.left]="dropdownStyle().left"
-        [style.width]="dropdownStyle().width"
-        [style.maxHeight]="dropdownStyle().maxHeight"
+        class="mt-2 bg-white rounded-xl shadow-lg border-2 border-[#0a4d7a] overflow-hidden flex flex-col max-h-64 animate-[fadeIn_0.15s_ease-out]"
       >
         <!-- Header -->
         <div
@@ -192,7 +188,7 @@ interface SugerenciaDireccion {
         </div>
       </div>
 
-      <!-- Empty state (también fixed) -->
+      <!-- Empty state (inline) -->
       <div
         *ngIf="
           abierto() &&
@@ -201,10 +197,7 @@ interface SugerenciaDireccion {
           sugerencias().length === 0 &&
           valor.trim().length >= 3
         "
-        class="fixed bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[9999] px-4 py-5 animate-[fadeIn_0.15s_ease-out]"
-        [style.top]="dropdownStyle().top"
-        [style.left]="dropdownStyle().left"
-        [style.width]="dropdownStyle().width"
+        class="mt-2 bg-white rounded-xl shadow-lg border-2 border-gray-200 overflow-hidden px-4 py-5 animate-[fadeIn_0.15s_ease-out]"
       >
         <div class="flex flex-col items-center gap-2 text-center">
           <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
@@ -228,13 +221,10 @@ interface SugerenciaDireccion {
         </div>
       </div>
 
-      <!-- Hint (también fixed) -->
+      <!-- Hint (inline) -->
       <div
         *ngIf="abierto() && valor.trim().length > 0 && valor.trim().length < 3"
-        class="fixed bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[9999] px-4 py-3 animate-[fadeIn_0.15s_ease-out]"
-        [style.top]="dropdownStyle().top"
-        [style.left]="dropdownStyle().left"
-        [style.width]="dropdownStyle().width"
+        class="mt-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden px-4 py-3 animate-[fadeIn_0.15s_ease-out]"
       >
         <p class="text-xs text-gray-500 flex items-center gap-2">
           <svg
@@ -282,14 +272,6 @@ export class DireccionAutocompleteComponent implements OnDestroy {
 
   @ViewChild('inputDireccion') inputDireccion?: ElementRef<HTMLElement>;
 
-  /** Posición fixed del dropdown */
-  dropdownStyle = signal<{ top: string; left: string; width: string; maxHeight: string }>({
-    top: '0px',
-    left: '0px',
-    width: '0px',
-    maxHeight: '320px',
-  });
-
   constructor(private el: ElementRef) {}
 
   ngOnDestroy(): void {
@@ -306,7 +288,6 @@ export class DireccionAutocompleteComponent implements OnDestroy {
     this.valorChange.emit(nuevoValor);
     this.busquedaRealizada.set(false);
     this.abierto.set(true);
-    this.calcularPosicionDropdown();
     this.registrarScrollListeners();
 
     if (this.timeoutBusqueda) clearTimeout(this.timeoutBusqueda);
@@ -327,18 +308,13 @@ export class DireccionAutocompleteComponent implements OnDestroy {
   onFocus(): void {
     if (this._valor.trim().length >= 3) {
       this.abierto.set(true);
-      this.calcularPosicionDropdown();
-      this.registrarScrollListeners();
       if (this.sugerencias().length === 0 || this.ultimaQuery !== this._valor.trim()) {
         this.buscarDirecciones(this._valor.trim());
       }
     } else if (this._valor.trim().length > 0) {
       this.abierto.set(true);
-      this.calcularPosicionDropdown();
-      this.registrarScrollListeners();
     }
   }
-
   /** Quita el primer número de casa de la query (ej: "Milpillas 101, La Forestal" → "Milpillas, La Forestal") */
   private quitarNumeroCasa(query: string): string {
     // Quitar patrones como "Nombre 123" o "Nombre 123-B"
@@ -476,71 +452,7 @@ export class DireccionAutocompleteComponent implements OnDestroy {
       this.cerrar();
     }
   }
-  /** Busca el modal padre para limitar el dropdown a sus bordes */
-  private encontrarModalPadre(input: HTMLElement): DOMRect | null {
-    let el: HTMLElement | null = input.parentElement;
-    while (el && el !== document.body) {
-      const classes = el.className || '';
-      if (
-        (classes.includes('h-[92vh]') || classes.includes('max-w-7xl')) &&
-        classes.includes('rounded-2xl') &&
-        classes.includes('shadow-2xl')
-      ) {
-        return el.getBoundingClientRect();
-      }
-      el = el.parentElement;
-    }
-    return null;
-  }
 
-  /** Calcula la posición fixed del dropdown limitándolo al modal padre */
-  private calcularPosicionDropdown(): void {
-    const input = this.inputDireccion?.nativeElement;
-    if (!input) return;
-
-    const rect = input.getBoundingClientRect();
-    const modal = this.encontrarModalPadre(input);
-    const margen = 12;
-
-    const limiteTop = modal ? modal.top + margen : margen;
-    const limiteBottom = modal ? modal.bottom - margen : window.innerHeight - margen;
-    const limiteLeft = modal ? modal.left + margen : margen;
-    const limiteRight = modal ? modal.right - margen : window.innerWidth - margen;
-
-    const espacioAbajo = limiteBottom - rect.bottom;
-    const espacioArriba = rect.top - limiteTop;
-
-    const altoDeseado = 320;
-    const abrirArriba = espacioAbajo < 150 && espacioArriba > espacioAbajo;
-
-    let top: number;
-    let maxHeight: number;
-
-    if (abrirArriba) {
-      maxHeight = Math.min(altoDeseado, Math.max(120, espacioArriba));
-      top = rect.top - maxHeight - 8;
-    } else {
-      maxHeight = Math.min(altoDeseado, Math.max(120, espacioAbajo));
-      top = rect.bottom + 8;
-    }
-
-    const left = Math.max(limiteLeft, Math.min(rect.left, limiteRight - rect.width));
-
-    this.dropdownStyle.set({
-      top: `${top}px`,
-      left: `${left}px`,
-      width: `${rect.width}px`,
-      maxHeight: `${maxHeight}px`,
-    });
-  }
-
-  /** Reposiciona el dropdown si la ventana cambia de tamaño */
-  @HostListener('window:resize')
-  onResize(): void {
-    if (this.abierto()) {
-      this.calcularPosicionDropdown();
-    }
-  }
   private scrollListener = () => {
     if (this.abierto()) this.cerrar();
   };
