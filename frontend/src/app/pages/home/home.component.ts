@@ -7,6 +7,7 @@ import { FormatoTextoPipe } from '../../shared/pipes/formato-texto.pipe';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { ProjectShowcaseComponent } from '../../shared/project-showcase/project-showcase.component';
 import { obtenerScrollY, scrollA } from '../../core/utils/scroll.util';
+import { ConfiguracionService } from '../../core/services/configuracion.service';
 
 interface Paso {
   numero: string;
@@ -79,8 +80,12 @@ export class HomeComponent implements OnInit {
   ctaBoton2 = '';
   ctaImagenFondo = '';
 
+  // ============ WHATSAPP (desde configuración) ============
+  whatsappUrl = signal<string>('https://wa.me/');
+
   private contenidoService = inject(ContenidoService);
   private catalogo = inject(CatalogoService);
+  private configuracionService = inject(ConfiguracionService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -155,6 +160,23 @@ export class HomeComponent implements OnInit {
           replaceUrl: true,
         });
       }, 600);
+    });
+
+    // 🎯 Cargar número de WhatsApp desde configuración
+    this.configuracionService.obtenerCompleta().subscribe((c: any) => {
+      const numero = c?.contacto?.whatsapp;
+      if (!numero) return;
+
+      // Limpiar: dejar solo dígitos
+      let soloDigitos = String(numero).replace(/\D/g, '');
+      if (!soloDigitos) return;
+
+      // Si tiene 10 dígitos (formato MX sin código de país), agregar 52
+      if (soloDigitos.length === 10) {
+        soloDigitos = '52' + soloDigitos;
+      }
+
+      this.whatsappUrl.set(`https://wa.me/${soloDigitos}`);
     });
 
   }
